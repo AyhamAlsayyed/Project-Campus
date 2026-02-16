@@ -1,0 +1,44 @@
+/*=========================Toggling Light and dark mode========================= */
+.toggle {
+    width: 70px;
+    height: 32px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    padding: 0;
+    transition: background 0.25s ease;
+}
+
+.toggleDark {
+    background: linear-gradient(200deg, #3120e9 0%, #a6279c 100%);
+}
+
+.toggleLight {
+    background: #d9d9d9;
+}
+
+.toggleCircle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: absolute;
+    top: 2px;
+    left: 4px;
+
+    pointer-events: none;
+
+    background: white;
+    transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
+}
+
+/* Make the circle move to the right */
+.toggleDark .toggleCircle {
+    transform: translateX(34px);
+}
