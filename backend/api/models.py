@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -25,17 +27,29 @@ class UserProfile(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name="profile",
-        db_column="user_id",  # keeps ERD-style column name
+        db_column="user_id",
     )
 
-    full_name = models.CharField(max_length=255, blank=True, null=True)
+    full_name = models.CharField(max_length=255, blank=True)
 
     profile_image = models.URLField(blank=True, null=True)
     banner_image = models.URLField(blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
+    # ayham: what do you mean by status:
+    """
+        active / enrolled → currently registered in courses
+        new / admitted → accepted but hasn’t started yet
+        deferred → postponed start to a later semester
+        on_leave / suspended → temporarily not studying but can return
+        withdrawn → left the university voluntarily
+        dismissed / expelled → removed by the university
+        graduated → completed the program
+        alumni → graduated and no longer an active student
+        exchange / visiting → temporary student from another university
+        part_time → studying with reduced course load
+        full_time → normal study load
+    """
 
-    # Better to use Django's built-in User.is_active for account status.
-    # Keep this only if you want extra states besides active/inactive.
     class Status(models.TextChoices):
         ACTIVE = "active", "Active"
         SUSPENDED = "suspended", "Suspended"
@@ -53,7 +67,7 @@ class UserProfile(models.Model):
 
 class Page(models.Model):
     page_id = models.BigAutoField(primary_key=True, db_column="page_id")
-
+    # ayham: there is no owner in the erd
     owner_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="pages", db_column="user_id")
 
     page_name = models.CharField(max_length=255)
@@ -84,6 +98,7 @@ class Admin(models.Model):
 
 
 class Instructor(models.Model):
+    # ayham:: just take a look at the academictitle.
     class AcademicTitle(models.TextChoices):
         DOCTOR = "dr", "Doctor"
         PROFESSOR = "prof", "Professor"
@@ -108,16 +123,14 @@ class Instructor(models.Model):
         max_length=20,
         choices=AcademicTitle.choices,
         blank=True,
-        null=True,
     )
 
-    department = models.CharField(max_length=100, blank=True, null=True)
+    department = models.CharField(max_length=100, blank=True)
 
     instructor_type = models.CharField(
         max_length=10,
         choices=InstructorType.choices,
         blank=True,
-        null=True,
     )
 
     university_page = models.ForeignKey(
@@ -150,8 +163,20 @@ class Student(models.Model):
         related_name="students",
         db_column="university_page_id",
     )
-    major = models.CharField(max_length=100, blank=True, null=True)
-    academic_level = models.CharField(max_length=50, blank=True, null=True)
+
+    class AcademicLevel(models.TextChoices):
+        FRESHMAN = "freshman", "Freshman"
+        SOPHOMORE = "sophomore", "Sophomore"
+        JUNIOR = "junior", "Junior"
+        SENIOR = "senior", "Senior"
+        FIFTH_YEAR = "fifth_year", "Fifth Year"
+        GRADUATE = "graduate", "Graduate"
+        MASTER = "master", "Master"
+        PHD = "phd", "PhD"
+
+    # ayham: should we make the "major" here to be predefined as i did to the academic_level?
+    major = models.CharField(max_length=100, blank=True)
+    academic_level = models.CharField(max_length=20, choices=AcademicLevel.choices, blank=True)
 
     class Meta:
         db_table = "student"
@@ -196,7 +221,7 @@ class Notification(models.Model):
     notification_id = models.BigAutoField(primary_key=True, db_column="notification_id")
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications", db_column="user_id")
-
+    # ayham: wdym by "type" (push,email or in app)
     type = models.CharField(max_length=50)
     content = models.TextField()
 
@@ -213,7 +238,16 @@ class Community(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
 
-    privacy = models.CharField(max_length=50, default="public")
+    # ayham: do we want to add any other choices here(uni only)
+    class privacy(models.TextChoices):
+        PUBLIC = "public", "Public"
+        PRIVATE = "private", "Private"
+
+    privacy = models.CharField(
+        max_length=10,
+        choices=privacy.choices,
+        deafult=privacy.PUBLIC,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -250,7 +284,7 @@ class Event(models.Model):
     description = models.TextField(blank=True, null=True)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField(blank=True, null=True)
-    location = models.CharField(max_length=255, blank=True, null=True)
+    location = models.CharField(max_length=255, blank=True)
 
     class Meta:
         db_table = "event"
@@ -264,6 +298,12 @@ class EventReminder(models.Model):
 
     reminder_time = models.DateTimeField()
 
+    # ayham: i made the reminder to be one day before the start date unless there is a passed parameter
+    def save(self, *args, **kwargs):
+        if not self.reminder_id and self.event and self.event.start_date:
+            self.reminder_time = self.event.start_date - timedelta(hours=1)
+        super().save(*args, **kwargs)
+
     class Meta:
         db_table = "event_reminder"
         constraints = [
@@ -275,6 +315,7 @@ class Post(models.Model):
     post_id = models.BigAutoField(primary_key=True, db_column="post_id")
 
     content_text = models.TextField(blank=True, null=True)
+    # ayham: give me the "post_types" so i can predefine them
     post_type = models.CharField(max_length=50)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -313,8 +354,9 @@ class PostMedia(models.Model):
     media_id = models.BigAutoField(primary_key=True, db_column="media_id")
 
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="media", db_column="post_id")
-
+    # ayham: should we make the "media_type" here to be predefined (image, video, ...)?
     media_type = models.CharField(max_length=50)
+    # ayham: wdym by "media_url" and "order_index"(if the posst have more than one pic/vid?)
     media_url = models.URLField()
     order_index = models.PositiveIntegerField(default=0)
 
@@ -332,7 +374,7 @@ class Comment(models.Model):
 
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-
+    # this is the author of the comment if he is a "user" (person and not a page)
     author_user = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -341,6 +383,7 @@ class Comment(models.Model):
         related_name="comments_as_user",
         db_column="author_user_id",
     )
+    # and this is the author of the comment if he is a "page"
     author_page = models.ForeignKey(
         Page,
         on_delete=models.SET_NULL,
@@ -349,7 +392,7 @@ class Comment(models.Model):
         related_name="comments_as_page",
         db_column="author_page_id",
     )
-
+    # if its the top comment it will save "null"
     parent_comment = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
@@ -446,7 +489,7 @@ class Message(models.Model):
     )
 
     content = models.TextField(blank=True, null=True)
-
+    # this is the author of the massage if he is a "user" (person and not a page)
     sender_user = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -455,6 +498,7 @@ class Message(models.Model):
         related_name="sent_messages",
         db_column="sender_user_id",
     )
+    # and this is the author of the massage if he is a "page"
     sender_page = models.ForeignKey(
         Page,
         on_delete=models.SET_NULL,
@@ -474,7 +518,7 @@ class MessageMedia(models.Model):
     media_id = models.BigAutoField(primary_key=True, db_column="media_id")
 
     message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="media", db_column="message_id")
-
+    # same as thing in "class PostMedia"
     media_type = models.CharField(max_length=50)
     media_url = models.URLField()
     order_index = models.PositiveIntegerField(default=0)
@@ -494,7 +538,7 @@ class MessageReaction(models.Model):
     page = models.ForeignKey(
         Page, on_delete=models.SET_NULL, null=True, blank=True, related_name="message_reactions", db_column="page_id"
     )
-
+    # ayham: should we make the "message_reaction_type" here to be predefined(like, love, sad, angry)?
     message_reaction_type = models.CharField(max_length=50)
 
     class Meta:
@@ -528,9 +572,11 @@ class Report(models.Model):
     )
 
     reported_content_id = models.BigIntegerField(db_column="reported_content_id")
+    # ayham: should we make the "content_type" here to be predefined?
     content_type = models.CharField(max_length=50)
 
     reason = models.TextField()
+    # ayham: final_action?
     final_action = models.CharField(max_length=50, blank=True, null=True)
 
     university_page = models.ForeignKey(
