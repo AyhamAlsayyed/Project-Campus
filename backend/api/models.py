@@ -31,6 +31,7 @@ class UserProfile(models.Model):
     )
 
     full_name = models.CharField(max_length=255, blank=True)
+    academic_email = models.EmailField(blank=True)
 
     profile_image = models.URLField(blank=True, null=True)
     banner_image = models.URLField(blank=True, null=True)
