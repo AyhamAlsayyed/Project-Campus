@@ -48,8 +48,11 @@ const en = {
             project: "PROJECT",
             campus: "CAMPUS",
             username: "Create User name",
-            email: "Academic Email",
+            academicEmail: "Academic Email",
+            personalEmail: "Personal Email",
             password: "Password",
+            confirmPassword: "Confirm Password",
+            resendCode: "Send Verification Code",
             needHelp: {
                 text: "Need ",
                 link: "help",

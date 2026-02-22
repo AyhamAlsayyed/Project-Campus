@@ -32,6 +32,7 @@ const ar = {
             signup: "إنشاء حساب",
             username: "اسم المستخدم",
             password: "كلمة المرور",
+            
             rememberMe: "تذكرني",
             needHelp: {
                 text: "هل تحتاج إلى",
@@ -49,8 +50,11 @@ const ar = {
             login: "تسجيل الدخول",
             signup: "إنشاء حساب",
             username: "إنشاء اسم مستخدم",
-            email: "البريد الأكاديمي",
+            academicEmail: "البريد الأكاديمي",
+            personalEmail: "البريد الشخصي",
             password: "كلمة المرور",
+            resendCode: "إرسال رمز التحقق",
+            confirmPassword: "تأكيد كلمة المرور",
             needHelp: {
                 text: "هل تحتاج إلى",
                 link: " مساعدة",

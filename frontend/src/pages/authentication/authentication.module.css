@@ -174,7 +174,18 @@ button {
 
 }
 
-
+.resendButton {
+    margin: 0 100px;
+    padding: 12px 16px;
+    width: calc(70% - 80px);
+    height: 55px;
+    border-radius: 35px;
+    border: none;
+    background: linear-gradient(-60deg, rgba(166, 39, 156, 0.85), rgba(49, 32, 169, 0.85));
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+}
 .activeTab {
     background-color: white;
     color: var(--text-main);
@@ -196,7 +207,7 @@ button {
 
 .copyright {
     text-align: center;
-    padding: 20px 0;
+    margin-top: 5%;
     color: rgba(0, 0, 0, 0.45);
     font-size: 0.7rem;
 }
