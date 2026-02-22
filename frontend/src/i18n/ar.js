@@ -24,22 +24,44 @@ const ar = {
         ]
     },
     auth: {
-        homepage: "الصفحة الرئيسية",
-        project: "PROJECT",
-        campus: "CAMPUS",
-        login: "تسجيل الدخول",
-        signup: "إنشاء حساب",
-        username: "اسم المستخدم",
-        password: "كلمة المرور",
-        rememberMe: "تذكرني",
-        needHelp: {
-            text: "هل تحتاج إلى",
-            link: " مساعدة",
-            afterLink: "؟"
+
+        Login: {
+            homepage: "الصفحة الرئيسية",
+            project: "PROJECT",
+            campus: "CAMPUS",
+            login: "تسجيل الدخول",
+            signup: "إنشاء حساب",
+            username: "اسم المستخدم",
+            password: "كلمة المرور",
+            rememberMe: "تذكرني",
+            needHelp: {
+                text: "هل تحتاج إلى",
+                link: " مساعدة",
+                afterLink: "؟"
+            },
+            submitLogin: "تسجيل الدخول",
+            submitSignup: "إنشاء حساب",
+            copyright: "الحرم الجامعي، شركة @ 2026. جميع الحقوق محفوظة."
         },
-        submitLogin: "تسجيل الدخول",
-        submitSignup: "إنشاء حساب",
-        copyright: "الحرم الجامعي، شركة @ 2026. جميع الحقوق محفوظة."
+        Signup: {
+            homepage: "الصفحة الرئيسية",
+            project: "PROJECT",
+            campus: "CAMPUS",
+            login: "تسجيل الدخول",
+            signup: "إنشاء حساب",
+            username: "إنشاء اسم مستخدم",
+            email: "البريد الأكاديمي",
+            password: "كلمة المرور",
+            needHelp: {
+                text: "هل تحتاج إلى",
+                link: " مساعدة",
+                afterLink: "؟"
+            },
+            submitSignup: "إنشاء حساب",
+            copyright: "الحرم الجامعي، شركة @ 2026. جميع الحقوق محفوظة."
+        }
+       
+
     }
 
 }

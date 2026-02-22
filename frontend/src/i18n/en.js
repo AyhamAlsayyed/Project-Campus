@@ -24,25 +24,56 @@ const en = {
 
     },
     auth: {
-        homepage: "Home page",
-        project: "PROJECT",
-        campus: "CAMPUS",
-        login: "Log In",
-        signup: "Sign Up",
-        username: "Username",
-        password: "Password",
-        rememberMe: "Remember me",
-        needHelp:{
-            text: "Need ",
-            link: "help",
-            afterLink: "?"
+
+        Login: {
+            homepage: "Homepage",
+            login: "Login",
+            signup: "Sign Up",
+            project: "PROJECT",
+            campus: "CAMPUS",
+            username: "Username",
+            password: "Password",
+            needHelp: {
+                text: "Need ",
+                link: "help",
+                afterLink: "?"
+            },
+            rememberMe: "Remember me",
+            submitLogin: "Login",
+            copyright: "© 2024 Project Campus. All rights reserved."
         },
-        submitLogin: "Log in",
-        submitSignup: "Sign up",
-        copyright: "Campus, Inc @ 2026. All rights reserved."
+        Signup: {
+            homepage: "Homepage",
+            login: "Login",
+            signup: "Sign Up",
+            project: "PROJECT",
+            campus: "CAMPUS",
+            username: "Create User name",
+            email: "Academic Email",
+            password: "Password",
+            needHelp: {
+                text: "Need ",
+                link: "help",
+                afterLink: "?"
+            },
+            submitSignup: "Sign Up",
+            copyright: "© 2024 Project Campus. All rights reserved."
+        }
+    }
+
+
+
+
+
+
+}
+
+
+
         
     }
         
 
 }
+
 export default en;

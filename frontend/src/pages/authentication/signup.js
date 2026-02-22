@@ -3,18 +3,54 @@ import darkMode from '../../Assets/Pictures/LogoDarkMode.png';
 import LanguageDropdown from '../../components/pagelayout/languageDrop';
 import { useNavigate } from 'react-router-dom';
 import { TEXT } from '../../i18n';
-import { useState , useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 
 
 export default function Signup() {
     const navigate = useNavigate();
-     const [language, setLanguage] = useState('en');
-    const t = (TEXT[language] || TEXT.en).auth;
+    const [language, setLanguage] = useState('en');
+    const [form, setForm] = useState({
+        username: '',
+        email: ''
+
+    })
+    const [error, setError] = useState('');
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setForm(prev => ({ ...prev, [name]: value }));
+    };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        try {
+            const response = await fetch('http://localhost:8080/api/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(form),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                setError(data.message || 'Signup failed');
+                return;
+            }
+            navigate('/login');
+
+        } catch (error) {
+            setError('An error occurred. Please try again later.');
+        }
+    }
+
+
+
+    const t = (TEXT[language] || TEXT.en).auth.Signup;
     useEffect(() => {
-            document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-        }, [language]);
-        
+        document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    }, [language]);
+
     return (
         <div className={styles.darkContainer}>
             <div className={styles.header}>
@@ -30,18 +66,33 @@ export default function Signup() {
                         <button className={styles.tabButton} onClick={() => navigate('/login')}>{t.login}</button>
                         <button className={styles.tabButton + " " + styles.activeTab} >{t.signup}</button>
                     </div>
-                    <div className={styles.form}>
+                    <form className={styles.form} onSubmit={handleSubmit}>
                         <div className={styles.formHeader}>
                             <p className={styles.titleOne}>{t.project}</p>
                             <h1 className={styles.titleTwo}>{t.campus}</h1>
                         </div>
-                        <input type="text" placeholder={t.username} className={styles.input} />
-                        <input type="email" placeholder={t.password} className={styles.input} />
+                        {error && <p className={styles.error}>{error}</p>}
+                        <input
+                            type="text"
+                            name="username"
+                            placeholder={t.username}
+                            value={form.username}
+                            className={styles.input}
+                            onChange={handleChange}
+                        />
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder={t.email}
+                            value={form.email}
+                            className={styles.input}
+                            onChange={handleChange}
+                        />
                         <p className={styles.helpTextTwo}>{t.needHelp.text} <a href='/LandingPage'>{t.needHelp.link}</a>{t.needHelp.afterLink}</p>
                         <button type="submit" className={styles.submitButton}>{t.submitSignup}</button>
                         <span className={styles.copyright}>{t.copyright}</span>
 
-                    </div>
+                    </form>
                 </div>
             </div>
             <div className={styles.footer}>
