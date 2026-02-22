@@ -24,6 +24,7 @@ const ar = {
         ]
     },
     auth: {
+
         Login: {
             homepage: "الصفحة الرئيسية",
             project: "PROJECT",
@@ -60,6 +61,7 @@ const ar = {
             copyright: "الحرم الجامعي، شركة @ 2026. جميع الحقوق محفوظة."
         }
        
+
     }
 
 }

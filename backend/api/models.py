@@ -1,7 +1,9 @@
 from datetime import timedelta
 
-from django.contrib.auth.models import User
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 
 """
 DJANGO_USER_FIELDS = {
@@ -22,9 +24,19 @@ DJANGO_USER_FIELDS = {
 """
 
 
+# helper functions:
+
+
+def validate_exactly_one(instance, field_a, field_b):
+    a = getattr(instance, field_a)
+    b = getattr(instance, field_b)
+    if bool(a) == bool(b):
+        raise ValidationError(f"Exactly one of '{field_a}' or '{field_b}' must be set.")
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="profile",
         db_column="user_id",
@@ -35,27 +47,15 @@ class UserProfile(models.Model):
     profile_image = models.URLField(blank=True, null=True)
     banner_image = models.URLField(blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
-    # ayham: what do you mean by status:
-    """
-        active / enrolled → currently registered in courses
-        new / admitted → accepted but hasn’t started yet
-        deferred → postponed start to a later semester
-        on_leave / suspended → temporarily not studying but can return
-        withdrawn → left the university voluntarily
-        dismissed / expelled → removed by the university
-        graduated → completed the program
-        alumni → graduated and no longer an active student
-        exchange / visiting → temporary student from another university
-        part_time → studying with reduced course load
-        full_time → normal study load
-    """
 
     class Status(models.TextChoices):
-        ACTIVE = "active", "Active"
+        ONLINE = "online", "Online"
+        AWAY = "away", "Away"
+        DO_NOT_DISTURB = "dnd", "Do Not Disturb"
+        OFFLINE = "offline", "Offline"
         SUSPENDED = "suspended", "Suspended"
-        DEACTIVATED = "deactivated", "Deactivated"
 
-    status = models.CharField(max_length=12, choices=Status.choices, default=Status.ACTIVE)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.ONLINE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -67,8 +67,6 @@ class UserProfile(models.Model):
 
 class Page(models.Model):
     page_id = models.BigAutoField(primary_key=True, db_column="page_id")
-    # ayham: there is no owner in the erd
-    owner_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="pages", db_column="user_id")
 
     page_name = models.CharField(max_length=255)
     page_type = models.CharField(max_length=50)
@@ -86,7 +84,7 @@ class Page(models.Model):
 
 class Admin(models.Model):
     user = models.OneToOneField(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         primary_key=True,
         db_column="user_id",
@@ -98,21 +96,19 @@ class Admin(models.Model):
 
 
 class Instructor(models.Model):
-    # ayham:: just take a look at the academictitle.
     class AcademicTitle(models.TextChoices):
         DOCTOR = "dr", "Doctor"
         PROFESSOR = "prof", "Professor"
-        ASSISTANT_PROF = "asst_prof", "Assistant Professor"
-        ASSOCIATE_PROF = "assoc_prof", "Associate Professor"
+        ASSISTANT = "asst", "Assistant"
         LECTURER = "lecturer", "Lecturer"
-        INSTRUCTOR = "instructor", "Instructor"
+        ADVISER = "adviser", "Adviser"
 
     class InstructorType(models.TextChoices):
         FULL_TIME = "full_time", "Full Time"
         PART_TIME = "part_time", "Part Time"
 
     user = models.OneToOneField(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         primary_key=True,
         db_column="user_id",
@@ -148,7 +144,7 @@ class Instructor(models.Model):
 
 class Student(models.Model):
     user = models.OneToOneField(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         primary_key=True,
         db_column="user_id",
@@ -165,12 +161,8 @@ class Student(models.Model):
     )
 
     class AcademicLevel(models.TextChoices):
-        FRESHMAN = "freshman", "Freshman"
-        SOPHOMORE = "sophomore", "Sophomore"
-        JUNIOR = "junior", "Junior"
-        SENIOR = "senior", "Senior"
-        FIFTH_YEAR = "fifth_year", "Fifth Year"
-        GRADUATE = "graduate", "Graduate"
+        DIPLOMA = "diploma", "Diploma"
+        BACHELOR = "bachelor", "Bachelor"
         MASTER = "master", "Master"
         PHD = "phd", "PhD"
 
@@ -192,13 +184,13 @@ class Friendship(models.Model):
     friendship_id = models.BigAutoField(primary_key=True, db_column="friendship_id")
 
     user1 = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="friendships_sent",
         db_column="user1_id",
     )
     user2 = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="friendships_received",
         db_column="user2_id",
@@ -220,9 +212,21 @@ class Friendship(models.Model):
 class Notification(models.Model):
     notification_id = models.BigAutoField(primary_key=True, db_column="notification_id")
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications", db_column="user_id")
-    # ayham: wdym by "type" (push,email or in app)
-    type = models.CharField(max_length=50)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications", db_column="user_id"
+    )
+
+    class Type(models.TextChoices):
+        EVENTS = "events", "Events"
+        COMMENTS = "comments", "Comments"
+        ACCEPTED_FRIEND_REQUEST = "accepted_friend_request", "Accepted friend request"
+        MESSAGES = "messages", "Messages"
+        ANNOUNCEMENTS = "announcements", "Announcements"
+
+    type = models.CharField(
+        max_length=30,
+        choices=Type.choices,
+    )
     content = models.TextField()
 
     is_read = models.BooleanField(default=False)
@@ -238,15 +242,14 @@ class Community(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
 
-    # ayham: do we want to add any other choices here(uni only)
-    class privacy(models.TextChoices):
+    class Privacy(models.TextChoices):
         PUBLIC = "public", "Public"
         PRIVATE = "private", "Private"
 
     privacy = models.CharField(
         max_length=10,
-        choices=privacy.choices,
-        deafult=privacy.PUBLIC,
+        choices=Privacy.choices,
+        default=Privacy.PUBLIC,
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -263,9 +266,20 @@ class CommunityMember(models.Model):
     community = models.ForeignKey(
         Community, on_delete=models.CASCADE, related_name="memberships", db_column="community_id"
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="community_memberships", db_column="user_id")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="community_memberships", db_column="user_id"
+    )
 
-    role = models.CharField(max_length=50, default="member")
+    class Role(models.TextChoices):
+        OWNER = "owner", "Owner"
+        ADMIN = "admin", "Admin"
+        MEMBER = "member", "Member"
+
+    role = models.CharField(
+        max_length=50,
+        choices=Role.choices,
+        default=Role.MEMBER,
+    )
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -294,13 +308,14 @@ class EventReminder(models.Model):
     reminder_id = models.BigAutoField(primary_key=True, db_column="reminder_id")
 
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="reminders", db_column="event_id")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="event_reminders", db_column="user_id")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="event_reminders", db_column="user_id"
+    )
 
-    reminder_time = models.DateTimeField()
+    reminder_time = models.DateTimeField(null=True, blank=True)
 
-    # ayham: i made the reminder to be one day before the start date unless there is a passed parameter
     def save(self, *args, **kwargs):
-        if not self.reminder_id and self.event and self.event.start_date:
+        if self._state.adding and not self.reminder_time and self.event and self.event.start_date:
             self.reminder_time = self.event.start_date - timedelta(hours=1)
         super().save(*args, **kwargs)
 
@@ -315,13 +330,23 @@ class Post(models.Model):
     post_id = models.BigAutoField(primary_key=True, db_column="post_id")
 
     content_text = models.TextField(blank=True, null=True)
-    # ayham: give me the "post_types" so i can predefine them
-    post_type = models.CharField(max_length=50)
+
+    class PostType(models.TextChoices):
+        ANNOUNCEMENT = "announcement", "Announcement"
+        ADVERTISMENT = "advertisement", "Advertisement"
+        ACADEMY = "academy", "Academy"
+        NORMAL = "normal", "Normal"
+
+    post_type = models.CharField(
+        max_length=20,
+        choices=PostType.choices,
+        default=PostType.NORMAL,
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     author_user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -346,17 +371,41 @@ class Post(models.Model):
         db_column="community_id",
     )
 
+    def clean(self):
+        validate_exactly_one(self, "author_user", "author_page")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     class Meta:
         db_table = "post"
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    (Q(author_user__isnull=False) & Q(author_page__isnull=True))
+                    | (Q(author_user__isnull=True) & Q(author_page__isnull=False))
+                ),
+                name="chk_post_author",
+            ),
+        ]
 
 
 class PostMedia(models.Model):
     media_id = models.BigAutoField(primary_key=True, db_column="media_id")
 
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="media", db_column="post_id")
-    # ayham: should we make the "media_type" here to be predefined (image, video, ...)?
-    media_type = models.CharField(max_length=50)
-    # ayham: wdym by "media_url" and "order_index"(if the posst have more than one pic/vid?)
+
+    class MediaType(models.TextChoices):
+        IMAGE = "image", "Image"
+        VIDEO = "video", "Video"
+        URL = "url", "URL"
+
+    media_type = models.CharField(
+        max_length=10,
+        choices=MediaType.choices,
+    )
+    # ayham: wdym by "media_url" light
     media_url = models.URLField()
     order_index = models.PositiveIntegerField(default=0)
 
@@ -376,17 +425,18 @@ class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     # this is the author of the comment if he is a "user" (person and not a page)
     author_user = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
         related_name="comments_as_user",
         db_column="author_user_id",
     )
     # and this is the author of the comment if he is a "page"
+    # you said you WANT CASCADE here (deleting page deletes its comments)
     author_page = models.ForeignKey(
         Page,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
         related_name="comments_as_page",
@@ -395,30 +445,88 @@ class Comment(models.Model):
     # if its the top comment it will save "null"
     parent_comment = models.ForeignKey(
         "self",
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
         related_name="replies",
         db_column="parent_comment_id",
     )
 
+    def clean(self):
+        validate_exactly_one(self, "author_user", "author_page")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     class Meta:
         db_table = "comment"
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    (Q(author_user__isnull=False) & Q(author_page__isnull=True))
+                    | (Q(author_user__isnull=True) & Q(author_page__isnull=False))
+                ),
+                name="chk_comment_author",
+            ),
+        ]
 
 
 class PostReaction(models.Model):
     post_reaction_id = models.BigAutoField(primary_key=True, db_column="post_reaction_id")
 
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="reactions", db_column="post_id")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="post_reactions", db_column="user_id")
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="post_reactions",
+        db_column="user_id",
+    )
+
     page = models.ForeignKey(
         Page, on_delete=models.SET_NULL, null=True, blank=True, related_name="post_reactions", db_column="page_id"
     )
 
+    def clean(self):
+        validate_exactly_one(self, "user", "page")
+
+        # SQLite safety: enforce "one reaction per actor per post" in app layer too
+        qs = PostReaction.objects.filter(post_id=self.post_id)
+        if self.user_id is not None:
+            qs = qs.filter(user_id=self.user_id)
+        else:
+            qs = qs.filter(page_id=self.page_id)
+
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+
+        if qs.exists():
+            raise ValidationError("Duplicate reaction: this actor already reacted to this post.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     class Meta:
         db_table = "post_reaction"
         constraints = [
-            models.UniqueConstraint(fields=["post", "user", "page"], name="uniq_post_reaction_actor"),
+            models.CheckConstraint(
+                check=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
+                name="chk_post_reaction_author",
+            ),
+            models.UniqueConstraint(
+                fields=["post", "user"],
+                condition=Q(user__isnull=False),
+                name="uniq_post_reaction_user",
+            ),
+            models.UniqueConstraint(
+                fields=["post", "page"],
+                condition=Q(page__isnull=False),
+                name="uniq_post_reaction_page",
+            ),
         ]
 
 
@@ -426,22 +534,66 @@ class CommentReaction(models.Model):
     comment_reaction_id = models.BigAutoField(primary_key=True, db_column="comment_reaction_id")
 
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name="reactions", db_column="comment_id")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comment_reactions", db_column="user_id")
-    page = models.ForeignKey(
-        Page, on_delete=models.SET_NULL, null=True, blank=True, related_name="comment_reactions", db_column="page_id"
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="comment_reactions",
+        db_column="user_id",
     )
+
+    page = models.ForeignKey(
+        Page, on_delete=models.CASCADE, null=True, blank=True, related_name="comment_reactions", db_column="page_id"
+    )
+
+    def clean(self):
+        validate_exactly_one(self, "user", "page")
+
+        # SQLite safety: enforce "one reaction per actor per comment" in app layer too
+        qs = CommentReaction.objects.filter(comment_id=self.comment_id)
+        if self.user_id is not None:
+            qs = qs.filter(user_id=self.user_id)
+        else:
+            qs = qs.filter(page_id=self.page_id)
+
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+
+        if qs.exists():
+            raise ValidationError("Duplicate reaction: this actor already reacted to this comment.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     class Meta:
         db_table = "comment_reaction"
         constraints = [
-            models.UniqueConstraint(fields=["comment", "user", "page"], name="uniq_comment_reaction_actor"),
+            models.CheckConstraint(
+                check=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
+                name="chk_comment_reaction_author",
+            ),
+            models.UniqueConstraint(
+                fields=["comment", "user"],
+                condition=Q(user__isnull=False),
+                name="uniq_comment_reaction_user",
+            ),
+            models.UniqueConstraint(
+                fields=["comment", "page"],
+                condition=Q(page__isnull=False),
+                name="uniq_comment_reaction_page",
+            ),
         ]
 
 
 class FollowPage(models.Model):
     id = models.BigAutoField(primary_key=True)
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="page_follows", db_column="user_id")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="page_follows", db_column="user_id"
+    )
+
     page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name="followers", db_column="page_id")
 
     followed_at = models.DateTimeField(auto_now_add=True)
@@ -469,15 +621,68 @@ class ConversationMember(models.Model):
     conversation = models.ForeignKey(
         Conversation, on_delete=models.CASCADE, related_name="members", db_column="conversation_id"
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="conversations", db_column="user_id")
+    # ayham2: here you want if the user/page is deleted the convo is not? right
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="conversations",
+        db_column="user_id",
+    )
+
     page = models.ForeignKey(
         Page, on_delete=models.SET_NULL, null=True, blank=True, related_name="conversations", db_column="page_id"
     )
 
+    class Role(models.TextChoices):
+        OWNER = "owner", "Owner"
+        ADMIN = "admin", "Admin"
+        MEMBER = "member", "Member"
+
+    role = models.CharField(
+        max_length=50,
+        choices=Role.choices,
+        default=Role.MEMBER,
+    )
+
+    def clean(self):
+        validate_exactly_one(self, "user", "page")
+
+        # SQLite safety: enforce "member can't be added twice to same conversation"
+        qs = ConversationMember.objects.filter(conversation_id=self.conversation_id)
+        if self.user_id is not None:
+            qs = qs.filter(user_id=self.user_id)
+        else:
+            qs = qs.filter(page_id=self.page_id)
+
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+
+        if qs.exists():
+            raise ValidationError("Duplicate member: this actor is already in this conversation.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     class Meta:
         db_table = "conversation_member"
         constraints = [
-            models.UniqueConstraint(fields=["conversation", "user", "page"], name="uniq_conversation_member_actor"),
+            models.CheckConstraint(
+                check=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
+                name="chk_conversation_member_author",
+            ),
+            models.UniqueConstraint(
+                fields=["conversation", "user"],
+                condition=Q(user__isnull=False),
+                name="uniq_conversation_user",
+            ),
+            models.UniqueConstraint(
+                fields=["conversation", "page"],
+                condition=Q(page__isnull=False),
+                name="uniq_conversation_page",
+            ),
         ]
 
 
@@ -489,9 +694,10 @@ class Message(models.Model):
     )
 
     content = models.TextField(blank=True, null=True)
+    # ayham2: here you want if the user/page is deleted the message is not? right
     # this is the author of the massage if he is a "user" (person and not a page)
     sender_user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -510,16 +716,41 @@ class Message(models.Model):
 
     sent_at = models.DateTimeField(auto_now_add=True)
 
+    def clean(self):
+        validate_exactly_one(self, "sender_user", "sender_page")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     class Meta:
         db_table = "message"
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    (Q(sender_user__isnull=False) & Q(sender_page__isnull=True))
+                    | (Q(sender_user__isnull=True) & Q(sender_page__isnull=False))
+                ),
+                name="chk_message_sender",
+            ),
+        ]
 
 
 class MessageMedia(models.Model):
     media_id = models.BigAutoField(primary_key=True, db_column="media_id")
 
     message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="media", db_column="message_id")
+
     # same as thing in "class PostMedia"
-    media_type = models.CharField(max_length=50)
+    class MediaType(models.TextChoices):
+        IMAGE = "image", "Image"
+        VIDEO = "video", "Video"
+        URL = "url", "URL"
+
+    media_type = models.CharField(
+        max_length=10,
+        choices=MediaType.choices,
+    )
     media_url = models.URLField()
     order_index = models.PositiveIntegerField(default=0)
 
@@ -534,19 +765,59 @@ class MessageReaction(models.Model):
     message_reaction_id = models.BigAutoField(primary_key=True, db_column="message_reaction_id")
 
     message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="reactions", db_column="message_id")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="message_reactions", db_column="user_id")
-    page = models.ForeignKey(
-        Page, on_delete=models.SET_NULL, null=True, blank=True, related_name="message_reactions", db_column="page_id"
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="message_reactions",
+        db_column="user_id",
     )
-    # ayham: should we make the "message_reaction_type" here to be predefined(like, love, sad, angry)?
+    page = models.ForeignKey(
+        Page, on_delete=models.CASCADE, null=True, blank=True, related_name="message_reactions", db_column="page_id"
+    )
     message_reaction_type = models.CharField(max_length=50)
+
+    def clean(self):
+        validate_exactly_one(self, "user", "page")
+
+        # SQLite safety: enforce "one reaction type per actor per message"
+        qs = MessageReaction.objects.filter(
+            message_id=self.message_id,
+            message_reaction_type=self.message_reaction_type,
+        )
+        if self.user_id is not None:
+            qs = qs.filter(user_id=self.user_id)
+        else:
+            qs = qs.filter(page_id=self.page_id)
+
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+
+        if qs.exists():
+            raise ValidationError("Duplicate reaction: this actor already used this reaction type on this message.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     class Meta:
         db_table = "message_reaction"
         constraints = [
+            # FIXED: this must check user/page (NOT sender_user/sender_page)
+            models.CheckConstraint(
+                check=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
+                name="chk_message_reaction_author",
+            ),
             models.UniqueConstraint(
-                fields=["message", "user", "page", "message_reaction_type"],
-                name="uniq_msg_reaction",
+                fields=["message", "user", "message_reaction_type"],
+                condition=Q(user__isnull=False),
+                name="uniq_msg_reaction_user_type",
+            ),
+            models.UniqueConstraint(
+                fields=["message", "page", "message_reaction_type"],
+                condition=Q(page__isnull=False),
+                name="uniq_msg_reaction_page_type",
             ),
         ]
 
@@ -555,7 +826,7 @@ class Report(models.Model):
     report_id = models.BigAutoField(primary_key=True, db_column="report_id")
 
     reporter_user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -572,12 +843,40 @@ class Report(models.Model):
     )
 
     reported_content_id = models.BigIntegerField(db_column="reported_content_id")
-    # ayham: should we make the "content_type" here to be predefined?
-    content_type = models.CharField(max_length=50)
+
+    class ContentType(models.TextChoices):
+        HARASSMENT_ABUSE = "harassment_abuse", "Harassment & Abuse"
+        VIOLENCE_HARM = "violence_harm", "Violence & Harm"
+        SEXUAL_CONTENT_EXPLOITATION = "sexual_content_exploitation", "Sexual Content & Exploitation"
+        CHILD_SAFETY = "child_safety", "Child Safety"
+        HATE_EXTREMISM = "hate_extremism", "Hate & Extremism"
+        SELF_HARM_DANGEROUS_BEHAVIOR = "self_harm_dangerous_behavior", "Self-Harm & Dangerous Behavior"
+        MISINFORMATION_MANIPULATION = "misinformation_manipulation", "Misinformation & Manipulation"
+        PRIVACY_IMPERSONATION = "privacy_impersonation", "Privacy & Impersonation"
+        SPAM_SCAMS_FRAUD = "spam_scams_fraud", "Spam, Scams & Fraud"
+        ILLEGAL_IP_VIOLATIONS = "illegal_ip_violations", "Illegal & Intellectual Property Violations"
+
+    content_type = models.CharField(
+        max_length=50,
+        choices=ContentType.choices,
+    )
 
     reason = models.TextField()
-    # ayham: final_action?
-    final_action = models.CharField(max_length=50, blank=True, null=True)
+
+    class FinalAction(models.TextChoices):
+        CONTENT_REMOVAL = "content_removal", "Content removal"
+        WARNING_STRIKE = "warning_strike", "Warning / Strike"
+        TEMP_RESTRICTION = "temp_restriction", "Temporary restriction (limited features or short suspension)"
+        TEMP_SUSPENSION = "temp_suspension", "Temporary suspension"
+        PERMANENT_BAN = "permanent_ban", "Permanent ban"
+        ACCOUNT_DELETION = "account_deletion", "Account deletion"
+        CONTENT_LABELING = "content_labeling", "Content labeling (warning / sensitive tag)"
+        REPORT_AUTHORITIES = "report_authorities", "Report to authorities (for severe illegal cases)"
+
+    final_action = models.CharField(
+        max_length=50,
+        choices=FinalAction.choices,
+    )
 
     university_page = models.ForeignKey(
         Page,
