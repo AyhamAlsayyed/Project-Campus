@@ -2,7 +2,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from './pages/landingpage/LandingPage';
 import Login from './pages/authentication/login';
 import Signup from './pages/authentication/signup';
+
 import Homepage from './pages/homepage/Homepage';
+
+
 
 function App() {
   return (

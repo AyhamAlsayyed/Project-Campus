@@ -50,6 +50,7 @@ const ar = {
             login: "تسجيل الدخول",
             signup: "إنشاء حساب",
             username: "إنشاء اسم مستخدم",
+
             academicEmail: "البريد الأكاديمي",
             personalEmail: "البريد الشخصي",
             password: "كلمة المرور",
@@ -57,6 +58,7 @@ const ar = {
             confirmPassword: "تأكيد كلمة المرور",
             loading: "جار التحميل...",
             createAccount : "إنشاء حساب",
+
             needHelp: {
                 text: "هل تحتاج إلى",
                 link: " مساعدة",
@@ -66,6 +68,10 @@ const ar = {
             copyright: "الحرم الجامعي، شركة @ 2026. جميع الحقوق محفوظة."
         }
        
+
+
+
+
     }
 
 }
