@@ -433,7 +433,6 @@ class Comment(models.Model):
         db_column="author_user_id",
     )
     # and this is the author of the comment if he is a "page"
-    # you said you WANT CASCADE here (deleting page deletes its comments)
     author_page = models.ForeignKey(
         Page,
         on_delete=models.CASCADE,
@@ -493,7 +492,6 @@ class PostReaction(models.Model):
     def clean(self):
         validate_exactly_one(self, "user", "page")
 
-        # SQLite safety: enforce "one reaction per actor per post" in app layer too
         qs = PostReaction.objects.filter(post_id=self.post_id)
         if self.user_id is not None:
             qs = qs.filter(user_id=self.user_id)
@@ -550,7 +548,6 @@ class CommentReaction(models.Model):
     def clean(self):
         validate_exactly_one(self, "user", "page")
 
-        # SQLite safety: enforce "one reaction per actor per comment" in app layer too
         qs = CommentReaction.objects.filter(comment_id=self.comment_id)
         if self.user_id is not None:
             qs = qs.filter(user_id=self.user_id)
@@ -621,7 +618,6 @@ class ConversationMember(models.Model):
     conversation = models.ForeignKey(
         Conversation, on_delete=models.CASCADE, related_name="members", db_column="conversation_id"
     )
-    # ayham2: here you want if the user/page is deleted the convo is not? right
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -649,7 +645,6 @@ class ConversationMember(models.Model):
     def clean(self):
         validate_exactly_one(self, "user", "page")
 
-        # SQLite safety: enforce "member can't be added twice to same conversation"
         qs = ConversationMember.objects.filter(conversation_id=self.conversation_id)
         if self.user_id is not None:
             qs = qs.filter(user_id=self.user_id)
@@ -694,7 +689,6 @@ class Message(models.Model):
     )
 
     content = models.TextField(blank=True, null=True)
-    # ayham2: here you want if the user/page is deleted the message is not? right
     # this is the author of the massage if he is a "user" (person and not a page)
     sender_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -781,7 +775,6 @@ class MessageReaction(models.Model):
     def clean(self):
         validate_exactly_one(self, "user", "page")
 
-        # SQLite safety: enforce "one reaction type per actor per message"
         qs = MessageReaction.objects.filter(
             message_id=self.message_id,
             message_reaction_type=self.message_reaction_type,
@@ -804,7 +797,6 @@ class MessageReaction(models.Model):
     class Meta:
         db_table = "message_reaction"
         constraints = [
-            # FIXED: this must check user/page (NOT sender_user/sender_page)
             models.CheckConstraint(
                 check=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
                 name="chk_message_reaction_author",
