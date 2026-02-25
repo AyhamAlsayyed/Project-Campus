@@ -26,6 +26,14 @@ export default function Signup() {
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
     };
+    const getButtonText = () =>{
+        if (loading) return t.loading;
+        if (step == 0) return t.submitSignup;
+        if (step == 1) return t.confirmCode;
+        if(step == 2) return t.createAccount;
+        
+        
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -243,7 +251,7 @@ export default function Signup() {
 
                             <p className={styles.helpTextTwo}>{t.needHelp.text} <a href='/LandingPage'>{t.needHelp.link}</a>{t.needHelp.afterLink}</p>
                             <button type="submit" className={styles.submitButton} disabled={loading}>
-                                {loading ? t.loading : t.submitSignup}</button>
+                                {getButtonText()}</button>
                             <span className={styles.copyright}>{t.copyright}</span>
 
                         </form>

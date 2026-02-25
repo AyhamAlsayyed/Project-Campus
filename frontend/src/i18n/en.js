@@ -52,7 +52,11 @@ const en = {
             personalEmail: "Personal Email",
             password: "Password",
             confirmPassword: "Confirm Password",
-            resendCode: "Send Verification Code",
+            resendCode: "resend Verification Code",
+            loading: "Loading...",
+            sendCode    : "Send Verification Code",
+            confirmCode  : "Confirm Code",
+            createAccount : "Create Account",
             needHelp: {
                 text: "Need ",
                 link: "help",

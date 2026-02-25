@@ -1,0 +1,133 @@
+.darkContainer {
+    min-height: 100vh;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
+    font-family: "Aktiv Grotesk", sans-serif;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+
+}
+
+.header {
+    margin-top: 2%;
+    height: 110px;
+    width: 100%;
+
+}
+.headerInner{
+    height:100%;
+    width: min(1800px, 90%);
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    min-width: 260px;
+}
+
+
+.title {
+    font-family: "Aktiv Grotesk", sans-serif;
+    background: transparent;
+    border: none;
+    font-weight: 800;
+    font-size: 2.5rem;
+    color: var(--text-accent);
+    cursor: pointer;
+}
+
+.darkModeIcon {
+    height: 100px;
+}
+.headerCenter {
+    display: flex;
+    max-width: 900px;
+    justify-content: center;
+    flex: 1;
+    margin: 0 40px;
+}
+
+.searchWrap {
+    font-family: "Aktiv Grotesk", sans-serif;
+    border-radius: 999px;
+    height: 44px;
+    width: min(800px, 80%);
+    display: flex;
+    align-items: center;
+    padding:0 16px;
+    background: rgba(255, 255, 255, 0.12);
+    
+    color: var(--text-accent);
+    
+}
+.searchInput{
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 1rem;
+    color: var(--text-accent);
+}
+
+.searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+.headerRight{
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    min-width: auto;
+    justify-content: flex-end;
+}
+
+.themeToggler {
+    margin-right: 40px;
+ 
+}
+.iconButton {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+
+ 
+  color: var(--text-accent);
+}
+
+
+.content{
+    display: flex;
+    width: min(1800px, 90%);
+    margin: 0 auto;
+    gap: 40px;
+    margin-top: 20px;
+}
+.sideBarNav{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 200px;
+    margin: 2% 0 0 1%;
+}
+.sideBarButton{
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: none;
+    background: transparent;
+    font-size: 1.1rem;
+    color: var(--text-accent);
+    cursor: pointer;
+}
+

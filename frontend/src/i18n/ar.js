@@ -55,6 +55,8 @@ const ar = {
             password: "كلمة المرور",
             resendCode: "إرسال رمز التحقق",
             confirmPassword: "تأكيد كلمة المرور",
+            loading: "جار التحميل...",
+            createAccount : "إنشاء حساب",
             needHelp: {
                 text: "هل تحتاج إلى",
                 link: " مساعدة",
