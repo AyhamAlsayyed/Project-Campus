@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 """
 DJANGO_USER_FIELDS = {
@@ -43,7 +44,7 @@ class UserProfile(models.Model):
     )
 
     full_name = models.CharField(max_length=255, blank=True)
-
+    academic_email = models.EmailField(blank=True)
     profile_image = models.URLField(blank=True, null=True)
     banner_image = models.URLField(blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
@@ -63,6 +64,30 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
+class EmailVerification(models.Model):
+    id = models.BigAutoField(primary_key=True)
+
+    username = models.CharField(max_length=150)
+    academic_email = models.EmailField(db_column="academic_email")
+    code = models.CharField(max_length=6)
+
+    is_verified = models.BooleanField(default=False)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def set_expiry(self, minutes=10):
+        self.expires_at = timezone.now() + timedelta(minutes=minutes)
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    class Meta:
+        db_table = "email_verification"
+        indexes = [
+            models.Index(fields=["academic_email"]),
+        ]
 
 
 class Page(models.Model):
