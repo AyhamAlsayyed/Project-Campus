@@ -32,7 +32,7 @@ const ar = {
             signup: "إنشاء حساب",
             username: "اسم المستخدم",
             password: "كلمة المرور",
-            
+
             rememberMe: "تذكرني",
             needHelp: {
                 text: "هل تحتاج إلى",
@@ -67,7 +67,7 @@ const ar = {
             submitSignup: "إنشاء حساب",
             copyright: "الحرم الجامعي، شركة @ 2026. جميع الحقوق محفوظة."
         }
-       
+
 
 
 

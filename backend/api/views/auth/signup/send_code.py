@@ -1,12 +1,14 @@
 import random
 
-from django.core.mail import send_mail
+from django.contrib.auth import get_user_model
+
+# from django.core.mail import send_mail
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from api.models import EmailVerification
+from ....models import EmailVerification
 
 # if we want to add another uni we can just add the domain here:
 ALLOWED_DOMAINS = ["students.ptuk.edu.ps"]
@@ -20,6 +22,9 @@ def is_valid_academic_email_domain(email):
     return domain in ALLOWED_DOMAINS
 
 
+User = get_user_model()
+
+
 @api_view(["POST"])
 def send_code(request):
     EmailVerification.objects.filter(expires_at__lt=timezone.now()).delete()
@@ -30,9 +35,16 @@ def send_code(request):
     if not username or not academic_email:
         return Response({"message": "username and academicEmail  are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # enform domain
+    # Enforce username uniqueness
+    # (ayham: do we want it to be case sensitive?)
+    if User.objects.filter(username__iexact=username).exists():
+        return Response({"message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
+
+    """
+    #Enform domain
     if not is_valid_academic_email_domain(academic_email):
         return Response({"message": "academicEmail is invalid"}, status=status.HTTP_400_BAD_REQUEST)
+        """
 
     # prevent spam
     last = EmailVerification.objects.filter(academic_email=academic_email).order_by("-created_at").first()
@@ -51,7 +63,7 @@ def send_code(request):
 
     # the email will be just printed for testing
     print(f"[send-code] academic_email: {academic_email} code: {code}")
-
+    """
     send_mail(
         subject="Your PTUK verification code",
         message=f"Your verification code is: {code}",
@@ -59,5 +71,5 @@ def send_code(request):
         recipient_list=[academic_email],
         fail_silently=False,
     )
-
+"""
     return Response({"message": "Verification code sent"}, status=status.HTTP_200_OK)

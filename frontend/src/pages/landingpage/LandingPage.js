@@ -36,7 +36,7 @@ export default function LandingPage() {
                     <p className={styles.headerText}>{t.seeColleges}</p>
                     <LanguageDropDown language={language} onChange={setLanguage} />
                     <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-                   
+
 
                 </div>
                 <div className={styles.headerRight}>
@@ -57,9 +57,9 @@ export default function LandingPage() {
                     <button className={styles.getStarted} onClick={() => navigate('/signup')}>{t.getStarted}</button>
                 </div>
                  <span className={styles.copyright}>Campus, Inc @ 2026. All rights reserved.</span>
-                
+
             </div>
-           
+
 
         </div>
     )
