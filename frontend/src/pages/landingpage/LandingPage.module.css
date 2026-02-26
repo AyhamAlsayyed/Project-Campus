@@ -40,8 +40,8 @@
 
 .headerText {
     font-size: clamp(1.5rem, 2rem, 3rem);
-    
-    
+
+
     color: var(--text-accent);
 }
 
@@ -95,7 +95,7 @@
     font-size: clamp(2rem, 3rem, 5rem);
     color: var(--text-accent);
     margin-bottom: 0;
-    
+
 }
 
 .bodySecondTitle {
@@ -119,7 +119,7 @@
     font-size: clamp(1.5rem, 2rem, 3rem);
     color: var(--subtitle-text);
     font-style: italic;
-    
+
 }
 
 /* Transitions when switching between themes */
@@ -199,8 +199,8 @@
 
 /*Making the page responsive for phones*/
 @media (max-width: 768px) {
-  
-    
+
+
     .darkContainer,
     .lightContainer {
         padding: 16px 24px 0;

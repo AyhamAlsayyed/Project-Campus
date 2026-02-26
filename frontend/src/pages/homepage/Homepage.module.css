@@ -63,9 +63,9 @@
     align-items: center;
     padding:0 16px;
     background: rgba(255, 255, 255, 0.12);
-    
+
     color: var(--text-accent);
-    
+
 }
 .searchInput{
     width: 100%;
@@ -89,7 +89,7 @@
 
 .themeToggler {
     margin-right: 40px;
- 
+
 }
 .iconButton {
   position: relative;
@@ -101,7 +101,7 @@
   border-radius: 999px;
   cursor: pointer;
 
- 
+
   color: var(--text-accent);
 }
 
@@ -130,4 +130,3 @@
     color: var(--text-accent);
     cursor: pointer;
 }
-

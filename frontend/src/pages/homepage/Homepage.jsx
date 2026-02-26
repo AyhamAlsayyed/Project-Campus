@@ -47,7 +47,7 @@ export default function Homepage() {
                 </div>
             </div>
             <div className={styles.content}>
-                <div className={styles.sideBarNav}> 
+                <div className={styles.sideBarNav}>
                     <button className={styles.sideBarButton}><Home size={24} color="#333" />Home page</button>
                     <button className={styles.sideBarButton}><Users size={24} color="#333" /> Communities</button>
                     <button className={styles.sideBarButton}><GraduationCap size={24} color="#333" /> Universities</button>
