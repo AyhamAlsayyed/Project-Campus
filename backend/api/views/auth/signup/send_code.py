@@ -47,11 +47,11 @@ def send_code(request):
     # Enforce username uniqueness
     if User.objects.filter(username__iexact=username).exists():
         return Response({"message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
-    """
+
     # Enform domain
     if not is_valid_academic_email_domain(academic_email):
         return Response({"message": "academicEmail is invalid"}, status=status.HTTP_400_BAD_REQUEST)
-    """
+
     # prevent spam
     last = EmailVerification.objects.filter(academic_email=academic_email).order_by("-created_at").first()
 
