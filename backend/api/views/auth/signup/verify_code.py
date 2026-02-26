@@ -1,11 +1,13 @@
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from ....models import EmailVerification
 
 
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def verify_code(request):
     academic_email = (request.data.get("academicEmail") or "").strip().lower()
     code = (request.data.get("code") or "").strip()

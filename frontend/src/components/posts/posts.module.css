@@ -6,7 +6,7 @@
   background: rgba(25, 25, 25, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.42);
-  
+
 }
 
 /* Header row */
@@ -149,7 +149,7 @@
     font-family: "Aktiv Grotesk", sans-serif;
     border-radius: 999px;
     height: 20px;
- 
+
     display: flex;
     align-items: center;
     padding: 0 16px;

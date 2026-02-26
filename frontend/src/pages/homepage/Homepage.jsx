@@ -92,7 +92,7 @@ export default function Homepage() {
                             <div className={styles.emptyState}>
                                 <div className={styles.emptyIcon}>📰</div>
                                 <h2 className={styles.emptyTitle}>No posts yet</h2>
-                               
+
                             </div>
 
                         ) : (
@@ -110,7 +110,7 @@ export default function Homepage() {
                 </div>
                 <div className={styles.rightSection}>
                     <div className={styles.createPostSection}>
-                        
+
                     </div>
 
                 </div>
