@@ -1,8 +1,7 @@
 import random
 
 from django.contrib.auth import get_user_model
-
-# from django.core.mail import send_mail
+from django.core.mail import send_mail
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -40,11 +39,9 @@ def send_code(request):
     if User.objects.filter(username__iexact=username).exists():
         return Response({"message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
 
-    """
-    #Enform domain
+    # Enform domain
     if not is_valid_academic_email_domain(academic_email):
         return Response({"message": "academicEmail is invalid"}, status=status.HTTP_400_BAD_REQUEST)
-        """
 
     # prevent spam
     last = EmailVerification.objects.filter(academic_email=academic_email).order_by("-created_at").first()
@@ -63,7 +60,6 @@ def send_code(request):
 
     # the email will be just printed for testing
     print(f"[send-code] academic_email: {academic_email} code: {code}")
-    """
     send_mail(
         subject="Your PTUK verification code",
         message=f"Your verification code is: {code}",
@@ -71,5 +67,5 @@ def send_code(request):
         recipient_list=[academic_email],
         fail_silently=False,
     )
-"""
+
     return Response({"message": "Verification code sent"}, status=status.HTTP_200_OK)
