@@ -49,7 +49,7 @@ export default function Signup() {
         }
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8080/api/views/auth/send-code', {
+            const response = await fetch("http://localhost:8080/api/auth/send-code/", {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username: form.username, academicEmail: form.academicEmail, personalEmail: form.personalEmail })
@@ -77,7 +77,7 @@ export default function Signup() {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:8080/api/views/auth/verify-code', {
+            const response = await fetch('http://localhost:8080/api/auth/verify-code/', {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ academicEmail: form.academicEmail, code: form.code })
@@ -106,7 +106,7 @@ export default function Signup() {
         }
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8080/api/views/auth/signup', {
+            const response = await fetch('http://localhost:8080/auth/signup/', {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -133,7 +133,7 @@ export default function Signup() {
         setError('');
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8080/api/views/auth/send-code', {
+            const response = await fetch('http://localhost:8080/api/auth/send-code/', {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

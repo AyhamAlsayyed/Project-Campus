@@ -107,19 +107,14 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-
     direction: ltr;
-   
     text-align: left;
-
     unicode-bidi: isolate;
 }
 
 .helpTextOne {
     margin: 0 40px;
     font-size: 0.9rem;
-
-
     font-style: italic;
     color: rgba(0, 0, 0, 0.45);
 }
@@ -249,10 +244,6 @@ button {
     flex-direction: row-reverse;
     transform: translateX(20px);
 }
-
-
-
-
 
 
 .footer {

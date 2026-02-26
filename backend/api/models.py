@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+
 from django.utils import timezone
 
 """
@@ -407,7 +408,7 @@ class Post(models.Model):
         db_table = "post"
         constraints = [
             models.CheckConstraint(
-                check=(
+                condition=(
                     (Q(author_user__isnull=False) & Q(author_page__isnull=True))
                     | (Q(author_user__isnull=True) & Q(author_page__isnull=False))
                 ),
@@ -487,7 +488,7 @@ class Comment(models.Model):
         db_table = "comment"
         constraints = [
             models.CheckConstraint(
-                check=(
+                condition=(
                     (Q(author_user__isnull=False) & Q(author_page__isnull=True))
                     | (Q(author_user__isnull=True) & Q(author_page__isnull=False))
                 ),
@@ -537,7 +538,7 @@ class PostReaction(models.Model):
         db_table = "post_reaction"
         constraints = [
             models.CheckConstraint(
-                check=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
+                condition=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
                 name="chk_post_reaction_author",
             ),
             models.UniqueConstraint(
@@ -593,7 +594,7 @@ class CommentReaction(models.Model):
         db_table = "comment_reaction"
         constraints = [
             models.CheckConstraint(
-                check=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
+                condition=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
                 name="chk_comment_reaction_author",
             ),
             models.UniqueConstraint(
@@ -690,7 +691,7 @@ class ConversationMember(models.Model):
         db_table = "conversation_member"
         constraints = [
             models.CheckConstraint(
-                check=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
+                condition=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
                 name="chk_conversation_member_author",
             ),
             models.UniqueConstraint(
@@ -746,7 +747,7 @@ class Message(models.Model):
         db_table = "message"
         constraints = [
             models.CheckConstraint(
-                check=(
+                condition=(
                     (Q(sender_user__isnull=False) & Q(sender_page__isnull=True))
                     | (Q(sender_user__isnull=True) & Q(sender_page__isnull=False))
                 ),
@@ -823,7 +824,7 @@ class MessageReaction(models.Model):
         db_table = "message_reaction"
         constraints = [
             models.CheckConstraint(
-                check=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
+                condition=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
                 name="chk_message_reaction_author",
             ),
             models.UniqueConstraint(

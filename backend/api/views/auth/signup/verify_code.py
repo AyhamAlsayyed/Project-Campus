@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from backend.api.models import EmailVerification
+from api.models import EmailVerification
 
 
 @api_view(["POST"])
