@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TEXT } from '../../i18n';
 
-export default function Signup() {
+export default function Login() {
     const navigate = useNavigate();
     const [language, setLanguage] = useState('en');
     const t = (TEXT[language] || TEXT.en).auth.Login;

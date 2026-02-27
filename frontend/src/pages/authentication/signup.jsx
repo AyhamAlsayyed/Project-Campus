@@ -110,10 +110,7 @@ export default function Signup() {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    username: form.username,
-                    academicEmail: form.academicEmail,
-                    personalEmail: form.personalEmail
-                    , code: form.code,
+                    personalEmail: form.personalEmail,
                     password: form.password
                 })
             });
@@ -127,6 +124,7 @@ export default function Signup() {
         } finally {
             setLoading(false);
         }
+        navigate('/login')
 
     }
     const handleReSend = async () => {
