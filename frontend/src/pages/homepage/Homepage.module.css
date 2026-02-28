@@ -115,7 +115,7 @@
 
 .content {
     display: flex;
-    width: min(1800px, 90%);
+    width: min(1800px, 100%);
     margin: 0 auto;
     gap: 40px;
     width: 100%;
@@ -124,13 +124,14 @@
 
 .sideBarNav {
     display: flex;
+    flex: 0 0 300px;
     flex-direction: column;
     border-radius: 30px;
     padding: 40px 0 0 40px;
     gap: 30px;
     background-color: rgba(61, 60, 60, 0.45);
     height: 500px;
-    width: 15%;
+    width: 30%;
     margin: 2% 0 0 6%;
 }
 
@@ -162,21 +163,20 @@
 
 .postContainer {
     background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
-    width: 46%;
+    width: 100%;
+    flex: 1;
     border-radius: 30px;
     height: 100vh;
     z-index: 1;
+    min-width: 900px;
     position: relative;
-    margin: 2% 28% 0 auto;
+    margin: 2% 0 0 0;
 }
 
 .innerContainer {
     background-color: rgba(61, 60, 60);
     height: 100vh;
     position: absolute;
-
-
-
     border-radius: 30px;
     width: 100%;
     top: 10px;
@@ -184,4 +184,138 @@
 
 
 
+}
+/* Right side container */
+.rightSection {
+flex: 0 0 380px;
+  width: 25%;
+  margin:2% 7% 0 0;
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main create post card */
+.createPostSection {
+  background-color: rgba(61, 60, 60, 0.45);
+  width: 100%;
+  height: 200px;
+  border-radius: 30px;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: var(--text-accent);
+}
+
+/* Top row */
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Avatar + greeting container */
+.leftSide {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Profile image */
+.userProfilePicture {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Greeting text */
+.greeting {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Sub text */
+.question {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* Weather section */
+.weather {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* Action buttons row */
+.actionsRow {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 0.85rem;
+}
+
+/* Media / File / Poll buttons */
+.actionButton {
+  background: transparent;
+  border: none;
+  color: var(--text-accent);
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 12px;
+  transition: 0.2s ease;
+}
+
+.actionButton:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Poll container */
+.pollContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+/* Poll inputs */
+.pollInput {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-accent);
+}
+
+/* Add option button */
+.addOption {
+  background: transparent;
+  border: none;
+  color: #b38cff;
+  cursor: pointer;
+  font-size: 0.8rem;
+  text-align: left;
+  padding: 4px 0;
+}
+
+/* Post text input */
+.postInput {
+  width: 90%;
+  padding: 12px 16px;
+  border-radius: 20px;
+  border: none;
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-accent);
+}
+
+.postInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
 }
