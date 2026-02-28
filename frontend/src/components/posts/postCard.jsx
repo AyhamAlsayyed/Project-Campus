@@ -3,7 +3,7 @@ import { Share2 } from "lucide-react";
 export default function PostCard({ post }) {
     return (
         <article className={styles.card}>
-          
+
             <div className={styles.topRow}>
                 <div className={styles.user}>
                     <img
@@ -25,18 +25,18 @@ export default function PostCard({ post }) {
                 </button>
             </div>
 
-          
+
             {post.content ? <p className={styles.text}>{post.content}</p> : null}
 
-         
+
             {post.image ? (
                 <div className={styles.media}>
                     <img src={post.image} alt="" />
-                 
+
                 </div>
             ) : null}
 
-          
+
             <div className={styles.actions}>
                 <div className={styles.leftActions}>
                     <button className={styles.iconBtn} type="button">

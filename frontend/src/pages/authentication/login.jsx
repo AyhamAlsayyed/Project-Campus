@@ -15,7 +15,7 @@ export default function Login() {
     const handlesubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('http://localhost:8080/api/auth/login', {
+            const response = await fetch('http://localhost:8000/api/views/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -28,8 +28,13 @@ export default function Login() {
                 return;
 
             }
+            // ayham
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+            }
 
-
+            navigate('/home');
+            // ayham
         }
         catch (error) {
             setError('An error occurred. Please try again later.');

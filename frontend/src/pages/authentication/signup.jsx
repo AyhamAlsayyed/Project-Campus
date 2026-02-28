@@ -52,7 +52,7 @@ export default function Signup() {
             const response = await fetch('http://localhost:8000/api/views/auth/send_code', {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: form.username, academicEmail: form.academicEmail, personalEmail: form.personalEmail })
+                body: JSON.stringify({ username: form.username, academicEmail: form.academicEmail })
             });
             const data = await response.json().catch(() => { });
             if (!response.ok) {

@@ -1,10 +1,13 @@
 import random
+import re
 
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
+
+# from django.core.mail import send_mail
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from ....models import EmailVerification
@@ -25,6 +28,7 @@ User = get_user_model()
 
 
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def send_code(request):
     EmailVerification.objects.filter(expires_at__lt=timezone.now()).delete()
 
@@ -34,8 +38,13 @@ def send_code(request):
     if not username or not academic_email:
         return Response({"message": "username and academicEmail  are required"}, status=status.HTTP_400_BAD_REQUEST)
 
+    if not re.fullmatch(r"[a-z]+", username):
+        return Response(
+            {"message": "Username must contain only lowercase letters"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     # Enforce username uniqueness
-    # (ayham: do we want it to be case sensitive?)
     if User.objects.filter(username__iexact=username).exists():
         return Response({"message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -60,12 +69,12 @@ def send_code(request):
 
     # the email will be just printed for testing
     print(f"[send-code] academic_email: {academic_email} code: {code}")
-    send_mail(
+    """send_mail(
         subject="Your PTUK verification code",
         message=f"Your verification code is: {code}",
         from_email=None,
         recipient_list=[academic_email],
         fail_silently=False,
-    )
+    )"""
 
     return Response({"message": "Verification code sent"}, status=status.HTTP_200_OK)
