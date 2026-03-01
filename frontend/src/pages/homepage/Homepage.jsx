@@ -84,8 +84,11 @@ export default function Homepage() {
         loadUser();
     }, [])
     return (
+      
+
+   
         <div className={styles.darkContainer}>
-            <div className={styles.header}>
+            <div className={`${styles.header} ${styles.page}`}>
                 <div className={styles.headerInner}>
                     <div className={styles.headerLeft}>
                         <img src={darkModeIcon} alt="Dark Mode Icon" className={styles.darkModeIcon} />
@@ -108,9 +111,9 @@ export default function Homepage() {
 
                 </div>
             </div>
-            <div className={styles.content}>
+            <div className={`${styles.content} ${styles.page}`}>
                 <div className={styles.sideBarNav}>
-                    <button className={styles.sideBarButton}><Home size={24} color="#808080" />Home page</button>
+                    <button className={`${styles.sideBarButton} ${styles.active}`}><Home size={24}/>Home page</button>
                     <button className={styles.sideBarButton}><Users size={24} color="#808080" /> Communities</button>
                     <button className={styles.sideBarButton}><GraduationCap size={24} color="#808080" /> Universities</button>
                     <button className={styles.sideBarButton}><Calendar size={24} color="#808080" />Events</button>
@@ -167,7 +170,7 @@ export default function Homepage() {
                                 </div>
                             </div>
                             <div className={styles.weather}>
-                                <span>🌤</span>
+                                <span className={styles.weatherIcon}>🌤</span>
                                 <span>19°C</span>
                             </div>
                         </div>
