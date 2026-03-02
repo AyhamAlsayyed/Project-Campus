@@ -49,7 +49,7 @@ export default function Signup() {
         }
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/views/auth/send_code', {
+            const response = await fetch('http://localhost:8000/api/auth/send_code/', {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username: form.username, academicEmail: form.academicEmail })
@@ -77,7 +77,7 @@ export default function Signup() {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:8000/api/views/auth/verify_code', {
+            const response = await fetch('http://localhost:8000/api/auth/verify_code/', {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ academicEmail: form.academicEmail, code: form.code })
@@ -106,10 +106,12 @@ export default function Signup() {
         }
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/views/auth/signup', {
+            const response = await fetch('http://localhost:8000/api/auth/signup/', {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
+                    username: form.username,
+                    academicEmail: form.academicEmail,
                     personalEmail: form.personalEmail,
                     password: form.password
                 })
@@ -131,7 +133,7 @@ export default function Signup() {
         setError('');
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/views/auth/send_code', {
+            const response = await fetch('http://localhost:8000/api/auth/send_code/', {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

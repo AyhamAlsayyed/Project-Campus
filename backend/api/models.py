@@ -94,7 +94,27 @@ class Page(models.Model):
     page_id = models.BigAutoField(primary_key=True, db_column="page_id")
 
     page_name = models.CharField(max_length=255)
-    page_type = models.CharField(max_length=50)
+
+    class PageType(models.TextChoices):
+        UNIVERSITY = "university", "University"
+        EDUCATIONAL = "educational", "Educational"
+        LIBRARY = "library", "Library"
+        LAB = "lab", "Lab"
+        CAFETERIA = "cafeteria", "Cafeteria"
+        CAFE = "cafe", "Cafe"
+        RESTAURANT = "restaurant", "Restaurant"
+        SHOP = "shop", "Shop"
+        GYM = "gym", "Gym"
+        STUDENT_CLUB = "student_club", "Student Club"
+        SERVICE = "service", "Service"
+        OTHER = "other", "Other"
+
+    page_type = models.CharField(
+        max_length=20,
+        choices=PageType.choices,
+        default=PageType.OTHER,
+    )
+
     description = models.TextField(blank=True, null=True)
 
     verified = models.BooleanField(default=False)
@@ -105,6 +125,25 @@ class Page(models.Model):
 
     def __str__(self):
         return self.page_name
+
+
+class UniversityDomain(models.Model):
+    id = models.BigAutoField(primary_key=True)
+
+    page = models.ForeignKey(
+        Page,
+        on_delete=models.CASCADE,
+        related_name="email_domains",
+        db_column="page_id",
+    )
+
+    domain = models.CharField(max_length=255, unique=True)
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "university_domain"
+        indexes = [models.Index(fields=["domain"])]
 
 
 class Admin(models.Model):
