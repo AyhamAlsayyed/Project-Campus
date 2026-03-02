@@ -195,11 +195,7 @@ export default function Homepage() {
                             <div className={styles.leftSide}>
 
                                 <img
-                                    src={
-                                        user?.avatar
-                                            ? `${API}${user.avatar}`
-                                            : "/default-avatar.png"
-                                    }
+                                    src={user?.avatar || "/default-avatar.png"}
                                     alt=""
                                     className={styles.userProfilePicture}
                                 />

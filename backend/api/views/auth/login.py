@@ -36,6 +36,13 @@ def login(request):
 
     profile = getattr(user, "profile", None)
 
+    avatar = None
+    if profile and getattr(profile, "profile_image", None):
+        try:
+            avatar = request.build_absolute_uri(profile.profile_image.url)
+        except Exception:
+            avatar = None
+
     return Response(
         {
             "message": "Login successful",
@@ -45,7 +52,7 @@ def login(request):
             "user": {
                 "id": user.id,
                 "username": user.username,
-                "avatar": getattr(profile, "profile_image", None) if profile else None,
+                "avatar": avatar,
             },
         },
         status=status.HTTP_200_OK,
