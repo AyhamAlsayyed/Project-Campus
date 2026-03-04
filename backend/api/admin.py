@@ -24,6 +24,7 @@ from .models import (
     PostReaction,
     Report,
     Student,
+    UniversityDomain,
     UserProfile,
 )
 
@@ -51,3 +52,4 @@ admin.site.register(Message)
 admin.site.register(MessageMedia)
 admin.site.register(MessageReaction)
 admin.site.register(Report)
+admin.site.register(UniversityDomain)

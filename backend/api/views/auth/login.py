@@ -1,9 +1,9 @@
 from django.contrib.auth import authenticate
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 @api_view(["POST"])
@@ -20,23 +20,39 @@ def login(request):
 
     user = authenticate(request, username=username, password=password)
     if not user:
-        return Response({"message": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(
+            {"message": "Invalid credentials"},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
 
     if not user.is_active:
-        return Response({"message": "Account disabled"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"message": "Account disabled"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
-    token, _ = Token.objects.get_or_create(user=user)
+    refresh = RefreshToken.for_user(user)
+    access = refresh.access_token
 
     profile = getattr(user, "profile", None)
+
+    avatar = None
+    if profile and getattr(profile, "profile_image", None):
+        try:
+            avatar = request.build_absolute_uri(profile.profile_image.url)
+        except Exception:
+            avatar = None
 
     return Response(
         {
             "message": "Login successful",
-            "token": token.key,
+            # This is the JWT token
+            "access": str(access),
+            "refresh": str(refresh),
             "user": {
                 "id": user.id,
                 "username": user.username,
-                "avatar": getattr(profile, "profile_image", None) if profile else None,
+                "avatar": avatar,
             },
         },
         status=status.HTTP_200_OK,
