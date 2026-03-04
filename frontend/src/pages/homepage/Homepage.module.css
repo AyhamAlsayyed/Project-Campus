@@ -6,7 +6,7 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 
 }
 
@@ -95,7 +95,7 @@
   flex: 0 0 var(--right-col);
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 40px;
   justify-content: flex-end;
 }
 
@@ -141,9 +141,7 @@
   margin: 10px auto;
 }
 
-
 .sideBarButton {
-
   height: 52px;
   width: 100%;
   display: flex;
@@ -203,7 +201,8 @@
   width: 100%;
   flex: 1;
   border-radius: 30px;
-  height: 100vh;
+  height: auto;
+  min-height: 100vh;
   z-index: 1;
   min-width: 900px;
   position: relative;
@@ -212,7 +211,8 @@
 
 .innerContainer {
   background-color: rgba(61, 60, 60);
-  height: 100vh;
+  height: auto;
+  min-height: calc(100% - 10px);
   position: absolute;
   border-radius: 30px;
   width: 100%;
@@ -225,6 +225,7 @@
   flex: 0 0 380px;
   width: 25%;
   margin: 2% 0 0 0;
+  gap: 70px;
 
   display: flex;
   flex-direction: column;

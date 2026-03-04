@@ -6,6 +6,7 @@ import ThemeToggler from '../../components/pagelayout/themeToggle';
 import { useState, useEffect } from 'react';
 import { MessageSquare, Bell, UserCircle, Search } from "lucide-react"
 import PostCard from '../../components/posts/postCard'
+import WeeklyNews from '../../components/weeklynews/weeklynews';
 import {
     Home,
     Users,
@@ -84,9 +85,9 @@ export default function Homepage() {
         loadUser();
     }, [])
     return (
-      
 
-   
+
+
         <div className={styles.darkContainer}>
             <div className={`${styles.header} ${styles.page}`}>
                 <div className={styles.headerInner}>
@@ -106,14 +107,22 @@ export default function Homepage() {
                         <ThemeToggler theme={theme} toggleTheme={toggleTheme} />
                         <button className={styles.iconButton}><MessageSquare size={24} color="#333" /></button>
                         <button className={styles.iconButton}><Bell size={24} color="#333" /></button>
-                        <button className={styles.iconButton}><UserCircle size={24} color="#333" /></button>
+                        <button className={styles.iconButton}><img
+                            src={
+                                user?.avatar
+                                    ? `http://localhost:8000${user.avatar}`
+                                    : "/default-avatar.png"
+                            }
+                            alt="Profile"
+                            className={styles.userProfilePicture}
+                        /></button>
                     </div>
 
                 </div>
             </div>
             <div className={`${styles.content} ${styles.page}`}>
                 <div className={styles.sideBarNav}>
-                    <button className={`${styles.sideBarButton} ${styles.active}`}><Home size={24}/>Home page</button>
+                    <button className={`${styles.sideBarButton} ${styles.active}`}><Home size={24} />Home page</button>
                     <button className={styles.sideBarButton}><Users size={24} color="#808080" /> Communities</button>
                     <button className={styles.sideBarButton}><GraduationCap size={24} color="#808080" /> Universities</button>
                     <button className={styles.sideBarButton}><Calendar size={24} color="#808080" />Events</button>
@@ -236,6 +245,8 @@ export default function Homepage() {
                             className={styles.postInput}
                         />
                     </div>
+                    <WeeklyNews />
+                    
 
                 </div>
 
