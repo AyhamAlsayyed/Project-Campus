@@ -69,36 +69,34 @@ export default function Homepage() {
 
     // ✅ LOAD POSTS
     const loadPosts = async () => {
+      if (!token) {
+        setLoading(false)
+        setError("No token found")
+        return
+      }
 
-        if (!token) {
-            setLoading(false)
-            setError("No token found")
-            return
+      try {
+        const res = await fetch(`${API}/api/posts/feed/?limit=20`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        const data = await res.json().catch(() => [])
+
+        if (!res.ok) {
+          setError(data?.message || "Failed to load posts")
+          setPosts([])
+          return
         }
 
-        try {
-            const res = await fetch(`${API}/api/posts/`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-
-            const data = await res.json().catch(() => [])
-
-            if (!res.ok) {
-                setError("Failed to load posts")
-                setPosts([])
-                return
-            }
-
-            setPosts(Array.isArray(data) ? data : [])
-
-        } catch {
-            setError("Something went wrong")
-            setPosts([])
-        } finally {
-            setLoading(false)
-        }
+        setPosts(Array.isArray(data) ? data : [])
+      } catch {
+        setError("Something went wrong")
+        setPosts([])
+      } finally {
+        setLoading(false)
+      }
     }
 
     useEffect(() => {

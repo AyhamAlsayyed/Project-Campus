@@ -472,7 +472,7 @@ class PostMedia(models.Model):
     )
 
     media_file = models.FileField(upload_to="messages/", blank=True, null=True)
-    media_url = models.URLField()
+    media_url = models.URLField(blank=True, null=True)
     order_index = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -814,7 +814,7 @@ class MessageMedia(models.Model):
     )
 
     media_file = models.FileField(upload_to="messages/", blank=True, null=True)
-    media_url = models.URLField()
+    media_url = models.URLField(blank=True, null=True)
     order_index = models.PositiveIntegerField(default=0)
 
     class Meta:
