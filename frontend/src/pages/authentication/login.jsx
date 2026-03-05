@@ -15,7 +15,7 @@ export default function Login() {
     const handlesubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('http://localhost:8000/api/views/auth/login', {
+            const response = await fetch('http://localhost:8000/api/auth/login/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -29,8 +29,12 @@ export default function Login() {
 
             }
             // ayham
-            if (data.token) {
-                localStorage.setItem('token', data.token);
+            if (data.access && data.refresh) {
+              localStorage.setItem("access", data.access);
+              localStorage.setItem("refresh", data.refresh);
+            } else {
+              setError("No tokens returned from server");
+              return;
             }
 
             navigate('/home');
