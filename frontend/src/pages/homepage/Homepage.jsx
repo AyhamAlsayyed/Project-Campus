@@ -1,7 +1,8 @@
 
 import styles from './Homepage.module.css'
 import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png'
-
+import Header from '../../components/pagelayout/header/header';
+import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import ThemeToggler from '../../components/pagelayout/themeToggle';
 import { useState, useEffect } from 'react';
 import { MessageSquare, Bell, UserCircle, Search } from "lucide-react"
@@ -90,49 +91,12 @@ export default function Homepage() {
 
         <div className={styles.darkContainer}>
             <div className={`${styles.header} ${styles.page}`}>
-                <div className={styles.headerInner}>
-                    <div className={styles.headerLeft}>
-                        <img src={darkModeIcon} alt="Dark Mode Icon" className={styles.darkModeIcon} />
-                        <h1 className={styles.title}>CAMPUS</h1>
-                    </div>
-                    <div className={styles.headerCenter}>
-                        <div className={styles.searchWrap}>
-                            <Search className={styles.searchIcon} size={24} color="#333" />
-                            <input className={styles.searchInput} type="text" placeholder="What are you looking for?" />
-                        </div>
-
-                    </div>
-
-                    <div className={styles.headerRight}>
-                        <ThemeToggler theme={theme} toggleTheme={toggleTheme} />
-                        <button className={styles.iconButton}><MessageSquare size={24} color="#333" /></button>
-                        <button className={styles.iconButton}><Bell size={24} color="#333" /></button>
-                        <button className={styles.iconButton}><img
-                            src={
-                                user?.avatar
-                                    ? `http://localhost:8000${user.avatar}`
-                                    : "/default-avatar.png"
-                            }
-                            alt="Profile"
-                            className={styles.userProfilePicture}
-                        /></button>
-                    </div>
-
-                </div>
+                <Header theme={theme} toggleTheme={toggleTheme} user={user} onTitleClick={loadPosts} />
+               
             </div>
             <div className={`${styles.content} ${styles.page}`}>
-                <div className={styles.sideBarNav}>
-                    <button className={`${styles.sideBarButton} ${styles.active}`}><Home size={24} />Home page</button>
-                    <button className={styles.sideBarButton}><Users size={24} color="#808080" /> Communities</button>
-                    <button className={styles.sideBarButton}><GraduationCap size={24} color="#808080" /> Universities</button>
-                    <button className={styles.sideBarButton}><Calendar size={24} color="#808080" />Events</button>
-                    <div className={styles.divider}></div>
-                    <button className={styles.sideBarButton}><Info size={24} color="#808080" />About us</button>
-                    <button className={styles.sideBarButton}><FileText size={24} color="#808080" />Privacy Policy</button>
-                    <button className={styles.sideBarButton}><HelpCircle size={24} color="#808080" />Help</button>
-                    <span className={styles.copyright}>© 2024 Project Campus. All rights reserved.</span>
-
-                </div>
+                <SideBarNav/>
+                
                 <div className={styles.postContainer}>
                     <div className={styles.innerContainer}>
                         {error ? (
