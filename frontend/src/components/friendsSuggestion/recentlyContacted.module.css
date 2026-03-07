@@ -1,0 +1,185 @@
+.container {
+  width: 100%;
+}
+
+.recentlyContactedWrap {
+    position: relative;
+  width: 100%;
+  margin-top: 22px;
+
+
+}
+
+.pill {
+ position: absolute;
+  top: -45px;
+  left: 10px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  border-radius: 18px 18px 0 0;
+  font-weight: 800;
+  height: 25px;
+  width: 45%;
+  letter-spacing: 0.6px;
+  font-size: 0.95rem;
+  color: rgba(255,255,255,0.92);
+  background-color: rgba(61, 60, 60, 0.95);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 0 0 10px rgba(0,0,0,0); 
+}
+
+.recentlyContactedWrapper {
+  position: relative;
+  border-radius: 26px;
+  padding: 18px;
+  background: rgba(42, 42, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+  z-index: 2;
+}
+
+.searchContactWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
+  padding: 12px 16px;
+  margin-bottom: 22px;
+}
+
+.searchIcon {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.searchInput {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  color: var(--text-accent);
+  font-size: 0.95rem;
+}
+
+.searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.contactList {
+  display: flex;
+  flex-direction: column;
+}
+
+.contactCard {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.contactCard:last-child {
+  border-bottom: none;
+}
+
+.contactLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.contactAvatarWrap {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+}
+
+.contactAvatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.statusDot {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(61, 60, 60, 1);
+}
+
+.online {
+  background: #22c55e;
+}
+
+.dnd {
+  background: #ff2d55;
+}
+
+.offline {
+  background: #9ca3af;
+}
+
+.contactInfo {
+  min-width: 0;
+}
+
+.contactTopLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contactStatus {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.contactName {
+  margin: 4px 0 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-accent);
+}
+
+.contactRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.contactMessage {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: right;
+  max-width: 150px;
+  line-height: 1.2rem;
+}
+
+.contactBottomRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.contactTime {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.contactMessageIcon {
+  color: rgba(255, 255, 255, 0.7);
+}

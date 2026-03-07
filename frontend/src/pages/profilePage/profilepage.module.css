@@ -384,3 +384,17 @@
   flex-direction: column;
   gap: 14px;
 }
+.rightSection{
+  flex: 0 0 380px;
+  width: 25%;
+  margin: 2% 0 0 0;
+  gap: 70px;
+
+  display: flex;
+  flex-direction: column;
+}
+.content{
+  width: min(1800px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+}

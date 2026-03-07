@@ -3,6 +3,7 @@ import Header from '../../components/pagelayout/header/header';
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import PostCard from '../../components/posts/postCard';
+import FriendsSuggestion from '../../components/friendsSuggestion/recentlyContacted'
 import {
     User,
     UserPlus,
@@ -23,6 +24,8 @@ export default function ProfilePage() {
     const [postsError, setPostsError] = useState("");
     const { pathname } = useLocation();
     const navigate = useNavigate();
+  
+
 
     const isActive = (path) => pathname === path || pathname.startsWith(path + "/");
 
@@ -146,8 +149,6 @@ export default function ProfilePage() {
                 </nav>
                 <div className={styles.profileContent}>
 
-
-
                     {userLoading ? (
                         <div className={styles.notice}>Loading profile...</div>
                     ) : userError ? (
@@ -168,9 +169,6 @@ export default function ProfilePage() {
                                 Edit ✎
                             </button>
                         </div>
-
-
-
 
                         <div className={styles.profileHeaderRow}>
                             <div className={styles.avatarWrap}>
@@ -237,12 +235,13 @@ export default function ProfilePage() {
                                 posts.map((post) => <PostCard key={post.id} post={post} />)
                             )}
                         </div>
-
-
                     </div>
 
 
 
+                </div>
+                <div className={styles.rightSection}>
+                    <FriendsSuggestion />
                 </div>
             </div>
 
