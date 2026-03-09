@@ -1,3 +1,7 @@
+import AssetOne from "../Assets/Pictures/asset-1.png"
+import AssetTwo from "../Assets/Pictures/asset-2.png"
+import AssetThree from "../Assets/Pictures/asset-3.png"
+import AssetFour from "../Assets/Pictures/asset-4.png"
 const en = {
     landing: {
         seeColleges: "See colleges",
@@ -10,15 +14,21 @@ const en = {
         slides: [
             {
                 description: "“The platform is super clean and intuitive, I feel at home!”",
+                image: AssetOne
+                
             },
             {
-                description: "“I love connecting with students from other universties here.”"
+                description: "“I love connecting with students from other universties here.”",
+                image: AssetTwo
+            },
+           
+            {
+                description: "“I can see all my university info in one place, it's so easy! ”",
+                image: AssetThree
             },
             {
-                description: "“I can see all my university info in one place, it's so easy! ”"
-            },
-            {
-                description: "Finding professors and contatcing them has never been simpler.”"
+                description: "Finding professors and contatcing them has never been simpler.”",
+                image: AssetFour
             }
         ]
 

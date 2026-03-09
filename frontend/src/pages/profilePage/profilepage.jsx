@@ -3,7 +3,7 @@ import Header from '../../components/pagelayout/header/header';
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import PostCard from '../../components/posts/postCard';
-import FriendsSuggestion from '../../components/friendsSuggestion/recentlyContacted'
+import FriendsSuggestion from '../../components/recentlycontacted/recentlyContacted'
 import {
     User,
     UserPlus,

@@ -23,20 +23,20 @@
 /* “WEEKLY NEWS” pill */
 .pill {
    position: absolute;
-  top: -35px;
+  top: -45px;
   left: 10px;
   z-index: 1;
   display: flex;
   align-items: center;
-  padding: 10px 16px;
-  border-radius: 16px;
+  padding: 12px 20px;
+  border-radius: 18px 18px 0 0;
   font-weight: 800;
   height: 25px;
-  width: 35%;
+  width: 40%;
   letter-spacing: 0.6px;
   font-size: 0.95rem;
   color: rgba(255,255,255,0.92);
-  background: rgba(55,55,55,0.85);
+  background-color: rgba(61, 60, 60, 0.95);
   border: 1px solid rgba(255,255,255,0.10);
   box-shadow: 0 0 0 10px rgba(0,0,0,0); 
 }
