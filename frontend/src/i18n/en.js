@@ -57,7 +57,6 @@ const en = {
             sendCode    : "Send Verification Code",
             confirmCode  : "Confirm Code",
             createAccount : "Create Account",
-
             needHelp: {
                 text: "Need ",
                 link: "help",
