@@ -109,7 +109,7 @@
     color: transparent;
 
     direction: ltr;
-   
+
     text-align: left;
 
     unicode-bidi: isolate;
@@ -150,6 +150,7 @@ button {
     border: 1px solid rgba(204, 204, 204, 0.5);
     font-size: 1rem;
 }
+
 
 .sideTabs {
     position: absolute;

@@ -24,7 +24,6 @@ const en = {
 
     },
     auth: {
-
         Login: {
             homepage: "Homepage",
             login: "Login",
@@ -76,11 +75,5 @@ const en = {
 }
 
 
-
-        
-    }
-        
-
-}
 
 export default en;

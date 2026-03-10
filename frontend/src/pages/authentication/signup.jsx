@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 
 
 export default function Signup() {
-    const navigate = useNavigate();
+      const navigate = useNavigate();
     const [language, setLanguage] = useState('en');
     const [step, setStep] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -31,8 +31,8 @@ export default function Signup() {
         if (step == 0) return t.submitSignup;
         if (step == 1) return t.confirmCode;
         if(step == 2) return t.createAccount;
-        
-        
+
+
     }
 
     const handleSubmit = async (e) => {
@@ -49,10 +49,10 @@ export default function Signup() {
         }
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8080/api/auth/send-code', {
+            const response = await fetch('http://localhost:8000/api/auth/send_code/', {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: form.username, academicEmail: form.academicEmail, personalEmail: form.personalEmail })
+                body: JSON.stringify({ username: form.username, academicEmail: form.academicEmail })
             });
             const data = await response.json().catch(() => { });
             if (!response.ok) {
@@ -77,7 +77,7 @@ export default function Signup() {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:8080/api/auth/verify-code', {
+            const response = await fetch('http://localhost:8000/api/auth/verify_code/', {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ academicEmail: form.academicEmail, code: form.code })
@@ -106,14 +106,13 @@ export default function Signup() {
         }
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8080/api/auth/signup', {
+            const response = await fetch('http://localhost:8000/api/auth/signup/', {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     username: form.username,
                     academicEmail: form.academicEmail,
-                    personalEmail: form.personalEmail
-                    , code: form.code,
+                    personalEmail: form.personalEmail,
                     password: form.password
                 })
             });
@@ -127,19 +126,19 @@ export default function Signup() {
         } finally {
             setLoading(false);
         }
+        navigate('/login')
 
     }
     const handleReSend = async () => {
         setError('');
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8080/api/auth/send-code', {
+            const response = await fetch('http://localhost:8000/api/auth/send_code/', {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     username: form.username,
                     academicEmail: form.academicEmail,
-                    personalEmail: form.personalEmail
                 })
 
             });

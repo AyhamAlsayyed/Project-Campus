@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 """
 DJANGO_USER_FIELDS = {
@@ -43,9 +44,9 @@ class UserProfile(models.Model):
     )
 
     full_name = models.CharField(max_length=255, blank=True)
-
-    profile_image = models.URLField(blank=True, null=True)
-    banner_image = models.URLField(blank=True, null=True)
+    academic_email = models.EmailField(blank=True)
+    profile_image = models.ImageField(upload_to="profiles/", blank=True, null=True)
+    banner_image = models.ImageField(upload_to="banners/", blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
 
     class Status(models.TextChoices):
@@ -65,11 +66,55 @@ class UserProfile(models.Model):
         return self.user.username
 
 
+class EmailVerification(models.Model):
+    id = models.BigAutoField(primary_key=True)
+
+    username = models.CharField(max_length=150)
+    academic_email = models.EmailField(db_column="academic_email")
+    code = models.CharField(max_length=6)
+
+    is_verified = models.BooleanField(default=False)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def set_expiry(self, minutes=10):
+        self.expires_at = timezone.now() + timedelta(minutes=minutes)
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    class Meta:
+        db_table = "email_verification"
+        indexes = [
+            models.Index(fields=["academic_email"]),
+        ]
+
+
 class Page(models.Model):
     page_id = models.BigAutoField(primary_key=True, db_column="page_id")
 
     page_name = models.CharField(max_length=255)
-    page_type = models.CharField(max_length=50)
+
+    class PageType(models.TextChoices):
+        UNIVERSITY = "university", "University"
+        EDUCATIONAL = "educational", "Educational"
+        LIBRARY = "library", "Library"
+        LAB = "lab", "Lab"
+        CAFETERIA = "cafeteria", "Cafeteria"
+        CAFE = "cafe", "Cafe"
+        RESTAURANT = "restaurant", "Restaurant"
+        SHOP = "shop", "Shop"
+        GYM = "gym", "Gym"
+        STUDENT_CLUB = "student_club", "Student Club"
+        SERVICE = "service", "Service"
+        OTHER = "other", "Other"
+
+    page_type = models.CharField(
+        max_length=20,
+        choices=PageType.choices,
+        default=PageType.OTHER,
+    )
+
     description = models.TextField(blank=True, null=True)
 
     verified = models.BooleanField(default=False)
@@ -80,6 +125,25 @@ class Page(models.Model):
 
     def __str__(self):
         return self.page_name
+
+
+class UniversityDomain(models.Model):
+    id = models.BigAutoField(primary_key=True)
+
+    page = models.ForeignKey(
+        Page,
+        on_delete=models.CASCADE,
+        related_name="email_domains",
+        db_column="page_id",
+    )
+
+    domain = models.CharField(max_length=255, unique=True)
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "university_domain"
+        indexes = [models.Index(fields=["domain"])]
 
 
 class Admin(models.Model):
@@ -399,14 +463,16 @@ class PostMedia(models.Model):
     class MediaType(models.TextChoices):
         IMAGE = "image", "Image"
         VIDEO = "video", "Video"
+        FILE = "file", "File"
         URL = "url", "URL"
 
     media_type = models.CharField(
         max_length=10,
         choices=MediaType.choices,
     )
-    # ayham: wdym by "media_url" light
-    media_url = models.URLField()
+
+    media_file = models.FileField(upload_to="messages/", blank=True, null=True)
+    media_url = models.URLField(blank=True, null=True)
     order_index = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -739,13 +805,16 @@ class MessageMedia(models.Model):
     class MediaType(models.TextChoices):
         IMAGE = "image", "Image"
         VIDEO = "video", "Video"
+        FILE = "file", "File"
         URL = "url", "URL"
 
     media_type = models.CharField(
         max_length=10,
         choices=MediaType.choices,
     )
-    media_url = models.URLField()
+
+    media_file = models.FileField(upload_to="messages/", blank=True, null=True)
+    media_url = models.URLField(blank=True, null=True)
     order_index = models.PositiveIntegerField(default=0)
 
     class Meta:

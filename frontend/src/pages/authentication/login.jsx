@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TEXT } from '../../i18n';
 
-export default function Signup() {
+export default function Login() {
     const navigate = useNavigate();
     const [language, setLanguage] = useState('en');
     const t = (TEXT[language] || TEXT.en).auth.Login;
@@ -15,7 +15,7 @@ export default function Signup() {
     const handlesubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('http://localhost:8080/api/auth/login', {
+            const response = await fetch('http://localhost:8000/api/auth/login/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -28,8 +28,17 @@ export default function Signup() {
                 return;
 
             }
+            // ayham
+            if (data.access && data.refresh) {
+              localStorage.setItem("access", data.access);
+              localStorage.setItem("refresh", data.refresh);
+            } else {
+              setError("No tokens returned from server");
+              return;
+            }
 
-
+            navigate('/home');
+            // ayham
         }
         catch (error) {
             setError('An error occurred. Please try again later.');

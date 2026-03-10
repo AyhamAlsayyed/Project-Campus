@@ -1,44 +1,54 @@
-/*=========================Toggling Light and dark mode========================= */
 .toggle {
-    width: 70px;
-    height: 32px;
-    border-radius: 999px;
-    border: none;
-    cursor: pointer;
-    position: relative;
-    padding: 0;
-    transition: background 0.25s ease;
+  --w: 56px;
+  --h: 22px;
+  --pad: 2px;
+  --knob: 18px;
+
+  width: var(--w);
+  height: var(--h);
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+
+  /* prevent inherited sizing weirdness */
+  font-size: 0;
+  line-height: 0;
+
+  transition: background 0.25s ease;
 }
 
 .toggleDark {
-    background: linear-gradient(200deg, #3120e9 0%, #a6279c 100%);
+  background: linear-gradient(200deg, #3120e9 0%, #a6279c 100%);
 }
 
 .toggleLight {
-    background: #d9d9d9;
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .toggleCircle {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    font-size: 14px;
+  width: var(--knob);
+  height: var(--knob);
+  border-radius: 50%;
+  background: #fff;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  position: absolute;
+  top: var(--pad);
+  left: var(--pad);
 
-    position: absolute;
-    top: 2px;
-    left: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    pointer-events: none;
+  /* this controls the icon size */
+  font-size: 12px;
+  line-height: 1;
 
-    background: white;
-    transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
+  transition: transform 0.25s ease;
 }
 
-/* Make the circle move to the right */
+/* move knob to the right perfectly */
 .toggleDark .toggleCircle {
-    transform: translateX(34px);
+  transform: translateX(calc(var(--w) - (2 * var(--pad)) - var(--knob)));
 }

@@ -4,6 +4,10 @@ import Login from './pages/authentication/login';
 import Signup from './pages/authentication/signup';
 import Homepage from './pages/homepage/Homepage';
 
+import Homepage from './pages/homepage/Homepage';
+
+
+
 function App() {
   return (
     <BrowserRouter>
@@ -15,7 +19,7 @@ function App() {
           <Route path="/home" element={<Homepage />} />
       </Routes>
     </BrowserRouter>
-    
+
   );
 }
 
