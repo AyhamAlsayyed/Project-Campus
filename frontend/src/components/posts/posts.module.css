@@ -156,7 +156,39 @@
     background: rgba(255, 255, 255, 0.12);
     color: var(--text-accent);
 }
+.media {
+  position: relative;
+  width: 100%;
+  margin-top: 10px;
+}
 
+.mediaItem {
+  width: 100%;
+  border-radius: 16px;
+  max-height: 500px;
+  object-fit: cover;
+}
+
+.leftArrow,
+.rightArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.5);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.leftArrow {
+  left: 10px;
+}
+
+.rightArrow {
+  right: 10px;
+}
 .reactions {
   display: flex;
   align-items: center;

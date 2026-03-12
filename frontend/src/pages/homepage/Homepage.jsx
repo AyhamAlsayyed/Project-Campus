@@ -35,7 +35,7 @@ export default function Homepage() {
     const API = "http://localhost:8000"
     const token = localStorage.getItem("access")
 
-    // ✅ LOAD USER
+
     const loadUser = async () => {
 
         if (!token) {
@@ -68,7 +68,7 @@ export default function Homepage() {
         }
     }
 
-    // ✅ LOAD POSTS
+
     const loadPosts = async () => {
       if (!token) {
         setLoading(false)
@@ -122,7 +122,7 @@ export default function Homepage() {
 
         <div className={styles.darkContainer}>
 
-            {/* HEADER */}
+            
             <div className={`${styles.header} ${styles.page}`}>
                 <div className={styles.headerInner}>
 
@@ -278,9 +278,6 @@ export default function Homepage() {
                         />
                     </div>
                     <WeeklyNews />
-                    
-
-                    </div>
                 </div>
 
             </div>

@@ -1,7 +1,16 @@
 import styles from "./posts.module.css";
 import { Share2 } from "lucide-react";
+import { useState } from "react";
 
 export default function PostCard({ post }) {
+  const [current, setCurrent] = useState(0);
+  const nextSlide = () => {
+    setCurrent((prev) => (prev + 1) % post.media.length);
+  }
+  const prevSlide = () => {
+    setCurrent((prev) => (prev == 0 ? post.media.length - 1 : prev - 1));
+  }
+
 
   return (
     <article className={styles.card}>
@@ -44,25 +53,39 @@ export default function PostCard({ post }) {
 
       {post.media?.length > 0 && (
         <div className={styles.media}>
-          {post.media.map((m, i) => {
 
-            if (!m?.url) return null;
+          {post.media.length > 1 && (
+            <button
+              className={styles.leftArrow}
+              onClick={prevSlide}
+            >
+              ◀
+            </button>
+          )}
 
-            if (m.type === "image") {
-              return <img key={i} src={m.url} alt="" />;
-            }
+          {post.media[current]?.type === "image" && (
+            <img
+              src={post.media[current].url}
+              alt=""
+              className={styles.mediaItem}
+            />
+          )}
 
-            if (m.type === "video") {
-              return (
-                <video key={i} controls>
-                  <source src={m.url} />
-                </video>
-              );
-            }
+          {post.media[current]?.type === "video" && (
+            <video controls className={styles.mediaItem}>
+              <source src={post.media[current].url} />
+            </video>
+          )}
 
-            return null;
+          {post.media.length > 1 && (
+            <button
+              className={styles.rightArrow}
+              onClick={nextSlide}
+            >
+              ▶
+            </button>
+          )}
 
-          })}
         </div>
       )}
 

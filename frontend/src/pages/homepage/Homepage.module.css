@@ -1,7 +1,7 @@
 .darkContainer {
   min-height: 100vh;
   box-sizing: border-box;
-  background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
+
   font-family: "Aktiv Grotesk", sans-serif;
   display: flex;
   flex-direction: column;

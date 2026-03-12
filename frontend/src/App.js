@@ -3,8 +3,8 @@ import LandingPage from './pages/landingpage/LandingPage';
 import Login from './pages/authentication/login';
 import Signup from './pages/authentication/signup';
 import Homepage from './pages/homepage/Homepage';
+import './index.css';
 
-import Homepage from './pages/homepage/Homepage';
 
 
 
