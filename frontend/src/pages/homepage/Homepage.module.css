@@ -1,7 +1,7 @@
 .darkContainer {
   min-height: 100vh;
   box-sizing: border-box;
-
+   
   font-family: "Aktiv Grotesk", sans-serif;
   display: flex;
   flex-direction: column;
@@ -211,9 +211,9 @@
 
 .innerContainer {
   background-color: rgba(61, 60, 60);
-  height: auto;
-  min-height: calc(100% - 10px);
-  position: absolute;
+  
+  
+ 
   border-radius: 30px;
   width: 100%;
   top: 10px;
