@@ -1,7 +1,7 @@
 .toggle {
   --w: 56px;
   --h: 22px;
-  --pad: 2px;
+  --pad: -2px;
   --knob: 18px;
 
   width: var(--w);
@@ -23,6 +23,26 @@
   background: linear-gradient(200deg, #3120e9 0%, #a6279c 100%);
 }
 
+.iconGradient {
+  width: 27px;
+  height: 27px;
+
+  
+  background: linear-gradient(200deg, #3120e9 0%, #a6279c 100%);
+
+ 
+  -webkit-mask-image: url('../../Assets/icons/dark-mode.png');
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+
+  mask-image: url('../../Assets/icons/dark-mode.png');
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+
+  display: inline-block;
+}
 .toggleLight {
   background: rgba(255, 255, 255, 0.25);
 }
@@ -40,15 +60,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 5px;
 
   /* this controls the icon size */
   font-size: 12px;
   line-height: 1;
-
+  
   transition: transform 0.25s ease;
 }
-
+.toggleLight .toggleCircle{
+  background:linear-gradient(200deg, #3120e9 0%, #a6279c 100%);;
+}
 /* move knob to the right perfectly */
 .toggleDark .toggleCircle {
-  transform: translateX(calc(var(--w) - (2 * var(--pad)) - var(--knob)));
+   transform: translateX(calc(var(--w) - (2 * var(--pad)) - var(--knob)));
 }

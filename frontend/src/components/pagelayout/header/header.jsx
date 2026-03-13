@@ -1,9 +1,10 @@
 import styles from "./header.module.css";
 import ThemeToggler from "../../pagelayout/themeToggle";
 import darkModeIcon from "../../../Assets/Pictures/LogoDarkMode.png";
-import { MessageSquare, Bell, Search, Home } from "lucide-react";
+import {  Search, Home } from "lucide-react";
 import { useNavigate ,useLocation } from "react-router-dom";
-
+import MessageSquare from "../../../Assets/icons/messages.png"
+import Bell from '../../../Assets/icons/notifications.png'
 export default function Header({ theme, toggleTheme, user, onTitleClick }) {
   const avatarSrc = user?.avatar
     ? `http://localhost:8000${user.avatar}`
@@ -45,10 +46,10 @@ export default function Header({ theme, toggleTheme, user, onTitleClick }) {
       <div className={styles.headerRight}>
         <ThemeToggler theme={theme} toggleTheme={toggleTheme} />
         <button className={styles.iconButton} type="button">
-          <MessageSquare size={24} />
+          <img src={MessageSquare} width={27} height={27} alt="Messages" style={{ filter: "invert(1)" }}  />
         </button>
         <button className={styles.iconButton} type="button">
-          <Bell size={24} />
+          <img src={Bell} width={27} height={27} alt="Notifications" style={{ filter: "invert(1)" }} />
         </button>
         <button className={styles.iconButton} type="button" onClick={handleAvatarClick}>
           {location.pathname === "/profile" ? (<Home size={24} />) : (
