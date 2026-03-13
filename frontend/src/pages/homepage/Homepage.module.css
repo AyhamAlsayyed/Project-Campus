@@ -202,7 +202,8 @@
   flex: 1;
   border-radius: 30px;
   height: auto;
-  min-height: 100vh;
+
+ 
   z-index: 1;
   min-width: 900px;
   position: relative;
@@ -211,9 +212,6 @@
 
 .innerContainer {
   background-color: rgba(61, 60, 60);
-  
-  
- 
   border-radius: 30px;
   width: 100%;
   top: 10px;
@@ -235,7 +233,7 @@
 .createPostSection {
   background-color: rgba(61, 60, 60, 0.45);
   width: 90%;
-  height: 150px;
+  min-height: 150px;
   border-radius: 30px;
   padding: 25px;
   display: flex;

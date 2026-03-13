@@ -4,11 +4,14 @@ import { useState } from "react";
 
 export default function PostCard({ post }) {
   const [current, setCurrent] = useState(0);
+  const validMedia = post.media?.filter(
+    (item) => item?.url && item?.type
+  ) || [];
   const nextSlide = () => {
-    setCurrent((prev) => (prev + 1) % post.media.length);
+    setCurrent((prev) => (prev + 1) % validMedia.length);
   }
   const prevSlide = () => {
-    setCurrent((prev) => (prev == 0 ? post.media.length - 1 : prev - 1));
+    setCurrent((prev) => (prev == 0 ? validMedia.length - 1 : prev - 1));
   }
 
 
@@ -51,10 +54,10 @@ export default function PostCard({ post }) {
       )}
 
 
-      {post.media?.length > 0 && (
+      {validMedia.length > 0 && (
         <div className={styles.media}>
 
-          {post.media.length > 1 && (
+          {validMedia.length > 1 && (
             <button
               className={styles.leftArrow}
               onClick={prevSlide}
@@ -63,27 +66,38 @@ export default function PostCard({ post }) {
             </button>
           )}
 
-          {post.media[current]?.type === "image" && (
+          {validMedia[current]?.type === "image" && (
             <img
-              src={post.media[current].url}
+              src={validMedia[current].url}
               alt=""
               className={styles.mediaItem}
             />
           )}
 
-          {post.media[current]?.type === "video" && (
+          {validMedia[current]?.type === "video" && (
             <video controls className={styles.mediaItem}>
-              <source src={post.media[current].url} />
+              <source src={validMedia[current].url} />
             </video>
           )}
 
-          {post.media.length > 1 && (
+          {validMedia.length > 1 && (
             <button
               className={styles.rightArrow}
               onClick={nextSlide}
             >
               ▶
             </button>
+          )}
+          {validMedia.length > 1 && (
+            <div className={styles.dots}>
+              {validMedia.map((_, index) => (
+                <span
+                  key={index}
+                  className={`${styles.dot} ${index === current ? styles.activeDot : ""
+                    }`}
+                />
+              ))}
+            </div>
           )}
 
         </div>
