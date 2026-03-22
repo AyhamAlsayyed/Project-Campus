@@ -17,7 +17,7 @@ export default function Homepage() {
     const [error, setError] = useState("")
     const [user, setUser] = useState(null)
     const [content, setContent] = useState("")
-    const [image, setImage] = useState(null)
+    const [images, setImages] = useState([]);
     const [file, setFile] = useState(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [userError, setUserError] = useState("")
@@ -94,22 +94,23 @@ export default function Homepage() {
 
 
     const handleMediaUpload = (e) => {
-        setImage(e.target.files[0]);
+        const selectedFiles = Array.from(e.target.files);
+        setImages(prev => [...prev, ...selectedFiles]);
     };
 
     const handleFileUpload = (e) => {
         setFile(e.target.files[0]);
     };
     const handleCreatePost = async () => {
-        if (!content.trim() && !image && !file && !isPollOpen) return;
+        if (!content.trim() && !images.length && !file && !isPollOpen) return;
 
         const formData = new FormData();
 
         formData.append("content", content);
 
-        if (image) {
-            formData.append("image", image);
-        }
+        images.forEach((img) => {
+            formData.append("images", img);
+        });
 
         if (file) {
             formData.append("file", file);
@@ -139,7 +140,7 @@ export default function Homepage() {
 
 
             setContent("");
-            setImage(null);
+            setImages([]);
             setFile(null);
             setPollOptions(["", ""]);
             setIsPollOpen(false);
@@ -279,6 +280,18 @@ export default function Homepage() {
                                     placeholder={`What's on your mind, ${user?.username || "User"}?`}
                                     className={styles.modalInput}
                                 />
+                                {images.length > 0 && (
+                                    <div className={styles.previewContainer}>
+                                        {images.map((img, i) => (
+                                            <img
+                                                key={i}
+                                                src={URL.createObjectURL(img)}
+                                                alt=""
+                                                className={styles.previewImage}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
 
 
                                 <div className={styles.actionsRow}>
@@ -290,7 +303,7 @@ export default function Homepage() {
 
                                     <label className={styles.actionButton}>
                                         📁 File
-                                        <input hidden type="file" onChange={handleFileUpload} />
+                                        <input hidden type="file" multiple onChange={handleFileUpload} />
                                     </label>
 
                                     <button
@@ -350,7 +363,7 @@ export default function Homepage() {
                                 )}
 
                                 {/* POST BUTTON */}
-                                <button className={styles.postButton} onClick={handleCreatePost} disabled={!content && !image && !file && !isPollOpen}>Post</button>
+                                <button className={styles.postButton} onClick={handleCreatePost} disabled={!content && !images.length && !file && !isPollOpen}>Post</button>
 
                             </div>
                         </div>
