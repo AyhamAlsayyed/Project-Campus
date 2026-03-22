@@ -7,36 +7,27 @@ import { useState, useEffect } from 'react';
 import { MessageSquare, Bell, UserCircle, Search } from "lucide-react"
 import PostCard from '../../components/posts/postCard'
 import WeeklyNews from '../../components/weeklynews/weeklynews';
-import {
-    Home,
-    Users,
-    GraduationCap,
-    Calendar,
-    Info,
-    FileText,
-    HelpCircle
-} from "lucide-react"
+
 
 export default function Homepage() {
-
     const [theme, setTheme] = useState("dark")
     const toggleTheme = () => setTheme(prev => prev === "light" ? "dark" : "light")
-
     const [posts, setPosts] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
-
     const [user, setUser] = useState(null)
+    const [content, setContent] = useState("")
+    const [image, setImage] = useState(null)
+    const [file, setFile] = useState(null)
+    const [isModalOpen, setIsModalOpen] = useState(false)
     const [userError, setUserError] = useState("")
     const [userLoading, setUserLoading] = useState(true)
-
     const [isPollOpen, setIsPollOpen] = useState(false)
     const [pollOptions, setPollOptions] = useState(["", ""])
-
     const API = "http://localhost:8000"
     const token = localStorage.getItem("access")
 
-  
+
     const loadUser = async () => {
 
         if (!token) {
@@ -69,7 +60,7 @@ export default function Homepage() {
         }
     }
 
-  
+
     const loadPosts = async () => {
         if (!token) {
             setLoading(false)
@@ -103,12 +94,63 @@ export default function Homepage() {
 
 
     const handleMediaUpload = (e) => {
-        const file = e.target.files[0]
-    }
+        setImage(e.target.files[0]);
+    };
 
     const handleFileUpload = (e) => {
-        const file = e.target.files[0]
-    }
+        setFile(e.target.files[0]);
+    };
+    const handleCreatePost = async () => {
+        if (!content.trim() && !image && !file && !isPollOpen) return;
+
+        const formData = new FormData();
+
+        formData.append("content", content);
+
+        if (image) {
+            formData.append("image", image);
+        }
+
+        if (file) {
+            formData.append("file", file);
+        }
+
+        if (isPollOpen) {
+            pollOptions
+                .filter(opt => opt.trim())
+                .forEach((opt, index) => {
+                    formData.append(`poll_options[${index}]`, opt);
+                });
+        }
+
+        try {
+            const res = await fetch(`${API}/api/posts/`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            if (!res.ok) {
+                console.error("Failed to create post");
+                return;
+            }
+
+
+            setContent("");
+            setImage(null);
+            setFile(null);
+            setPollOptions(["", ""]);
+            setIsPollOpen(false);
+            setIsModalOpen(false);
+
+            loadPosts();
+
+        } catch (err) {
+            console.error("Error:", err);
+        }
+    };
     useEffect(() => {
         loadPosts();
         loadUser();
@@ -151,84 +193,168 @@ export default function Homepage() {
                     </div>
                 </div>
 
-                {/* RIGHT */}
+
                 <div className={styles.rightSection}>
-                    <div className={styles.createPostSection}>
+                    <div className={styles.createPostSection} onClick={() => setIsModalOpen(true)}>
 
                         <div className={styles.topRow}>
                             <div className={styles.leftSide}>
-
                                 <img
                                     src={user?.avatar || "/default-avatar.png"}
                                     alt=""
                                     className={styles.userProfilePicture}
                                 />
 
-                                <div>
-                                    <p className={styles.greeting}>
-                                        Good morning, {user?.full_name || user?.username || "User"}!
-                                    </p>
-                                    <p className={styles.question}>What’s on your mind?</p>
-                                </div>
+                                <input
+                                    type="text"
+                                    placeholder={`What did you learn?`}
+                                    className={styles.postInput}
+                                    onFocus={() => setIsModalOpen(true)}
+                                    readOnly
+                                />
                             </div>
 
-                            <div className={styles.weather}>
-                                🌤 19°C
-                            </div>
-                        </div>
+                            {/* RIGHT SIDE BUTTONS */}
+                            <div className={styles.actionButtons}>
 
-                        <div className={styles.actionsRow}>
-                            <label className={styles.actionButton}>
-                                📷 Media
-                                <input hidden type="file" onChange={handleMediaUpload} />
-                            </label>
+                                <label className={styles.actionButton}>
+                                    📷
+                                    <input hidden type="file" onChange={handleMediaUpload} />
+                                </label>
 
-                            <label className={styles.actionButton}>
-                                📁 File
-                                <input hidden type="file" onChange={handleFileUpload} />
-                            </label>
-
-                            <button
-                                type="button"
-                                className={styles.actionButton}
-                                onClick={() => setIsPollOpen(prev => !prev)}
-                            >
-                                📊 Poll
-                            </button>
-                        </div>
-
-                        {isPollOpen && (
-                            <div className={styles.pollContainer}>
-                                {pollOptions.map((option, i) => (
-                                    <input
-                                        key={i}
-                                        value={option}
-                                        onChange={(e) => {
-                                            const updated = [...pollOptions]
-                                            updated[i] = e.target.value
-                                            setPollOptions(updated)
-                                        }}
-                                        placeholder={`Option ${i + 1}`}
-                                        className={styles.pollInput}
-                                    />
-                                ))}
+                                <label className={styles.actionButton}>
+                                    📁
+                                    <input hidden type="file" onChange={handleFileUpload} />
+                                </label>
 
                                 <button
                                     type="button"
-                                    onClick={() => setPollOptions([...pollOptions, ""])}
-                                    className={styles.addOption}
+                                    className={styles.actionButton}
+                                    onClick={() => setIsPollOpen(prev => !prev)}
                                 >
-                                    + Add Option
+                                    📊
                                 </button>
-                            </div>
-                        )}
 
-                        <input
-                            type="text"
-                            placeholder="What did you learn today?..."
-                            className={styles.postInput}
-                        />
+                            </div>
+                        </div>
+
                     </div>
+                    {isModalOpen && (
+                        <div
+                            className={styles.modalOverlay}
+                            onClick={() => setIsModalOpen(false)}
+                        >
+                            <div
+                                className={styles.modal}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+
+
+                                <div className={styles.modalHeader}>
+                                    <h3>Create post</h3>
+                                    <button
+                                        className={styles.closeButton}
+                                        onClick={() => setIsModalOpen(false)}
+                                    >
+                                        ✕
+                                    </button>
+
+                                </div>
+
+
+                                <div className={styles.leftSide}>
+                                    <img
+                                        src={user?.avatar || "/default-avatar.png"}
+                                        alt=""
+                                        className={styles.userProfilePicture}
+                                    />
+
+                                    <strong>{user?.full_name || user?.username}</strong>
+                                </div>
+
+
+                                <textarea
+                                    value={content}
+                                    onChange={(e) => setContent(e.target.value)}
+                                    placeholder={`What's on your mind, ${user?.username || "User"}?`}
+                                    className={styles.modalInput}
+                                />
+
+
+                                <div className={styles.actionsRow}>
+
+                                    <label className={styles.actionButton}>
+                                        📷 Media
+                                        <input hidden type="file" onChange={handleMediaUpload} />
+                                    </label>
+
+                                    <label className={styles.actionButton}>
+                                        📁 File
+                                        <input hidden type="file" onChange={handleFileUpload} />
+                                    </label>
+
+                                    <button
+                                        type="button"
+                                        className={styles.actionButton}
+                                        onClick={() => {
+                                            if (isPollOpen) {
+                                                setIsPollOpen(false);
+                                                setPollOptions(["", ""]);
+                                            } else {
+                                                setIsPollOpen(true);
+                                            }
+                                        }}
+                                    >
+                                        📊
+                                    </button>
+
+                                </div>
+                                {isPollOpen && (
+                                    <div className={styles.pollContainer}>
+                                        {pollOptions.map((option, i) => (
+                                            <div key={i} className={styles.pollOptionRow}>
+                                                <input
+                                                    value={option}
+                                                    onChange={(e) => {
+                                                        const updated = [...pollOptions];
+                                                        updated[i] = e.target.value;
+                                                        setPollOptions(updated);
+                                                    }}
+                                                    placeholder={`Option ${i + 1}`}
+                                                    className={styles.pollInput}
+                                                />
+
+
+                                                {pollOptions.length > 2 && (
+                                                    <button
+                                                        className={styles.removeOption}
+                                                        onClick={() => {
+                                                            const updated = pollOptions.filter((_, index) => index !== i);
+                                                            setPollOptions(updated);
+                                                        }}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setPollOptions([...pollOptions, ""])}
+                                            className={styles.addOption}
+                                        >
+                                            + Add Option
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* POST BUTTON */}
+                                <button className={styles.postButton} onClick={handleCreatePost} disabled={!content && !image && !file && !isPollOpen}>Post</button>
+
+                            </div>
+                        </div>
+                    )}
                     <WeeklyNews />
 
 
@@ -236,6 +362,6 @@ export default function Homepage() {
             </div>
 
         </div>
-       
+
     )
 }

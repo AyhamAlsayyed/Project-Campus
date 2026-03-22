@@ -37,7 +37,8 @@ export default function SidebarNav() {
           onClick={() => navigate(path)}
           className={`${styles.sideBarButton} ${isActive(path) ? styles.active : ""}`}
         >
-          <img src={icon} alt="" className={styles.icon} width={22} height={22} style={{ filter: "invert(1)" }} />
+          <img src={icon} alt="" className={styles.icon} width={path == "/communities" ? 20 : 22} height={path == "/communities" ? 20 : 22} style={{ filter: "invert(1)" }} />
+        
           {label}
         </button>
       ))}
