@@ -1,0 +1,40 @@
+.darkContainer {
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
+  font-family: "Aktiv Grotesk", sans-serif;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: visible;
+
+}
+.page {
+  width: min(1800px, 90%);
+  margin: 0 auto;
+  --left-col: 300px;
+  --right-col: 380px;
+  --col-gap: 40px;
+}
+.header {
+  display: flex;
+  margin-top: 2%;
+  height: 110px;
+  width: 100%;
+
+}
+
+.headerInner,
+.content {
+  width: min(1800px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+}
+.content {
+  display: flex;
+  margin: 20px 0 0 0;
+  gap: var(--col-gap);
+  margin-top: 20px;
+  align-items: flex-start;
+}
+
