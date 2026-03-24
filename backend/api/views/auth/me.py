@@ -4,6 +4,33 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 
+def get_user_academic_info(user):
+    result = {}
+
+    student = getattr(user, "student_profile", None)
+    if student:
+        result["role"] = "student"
+        result["major"] = student.major
+        result["academic"] = student.academic_level
+        result["university_page_name"] = student.university_page.page_name
+        return result
+
+    instructor = getattr(user, "instructor_profile", None)
+    if instructor:
+        result["role"] = "instructor"
+        result["department"] = instructor.department
+        result["university_page_name"] = instructor.university_page.page_name if instructor.university_page else None
+        return result
+
+    admin = getattr(user, "admin_profile", None)
+    if admin:
+        result["role"] = "admin"
+        return result
+
+    result["role"] = "unknown"
+    return result
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def me(request):
@@ -15,9 +42,10 @@ def me(request):
         avatar = request.build_absolute_uri(profile.profile_image.url)
 
     cover = None
-    if profile and getattr(profile, "cover_image", None):
-        cover = request.build_absolute_uri(profile.cover_image.url)
+    if profile and getattr(profile, "banner_image", None):
+        cover = request.build_absolute_uri(profile.banner_image.url)
 
+    user_info = get_user_academic_info(user)
     return Response(
         {
             "id": user.id,
@@ -27,9 +55,9 @@ def me(request):
             "bio": getattr(profile, "bio", ""),
             "avatar": avatar,
             "cover": cover,
-            "university": getattr(profile, "university", "") if profile else "",
-            "major": getattr(profile, "major", "") if profile else "",
-            "role": getattr(profile, "role", "") if profile else "",
+            "university": user_info["university_page_name"],
+            "major": user_info["major"],
+            "role": user_info["role"],
         },
         status=status.HTTP_200_OK,
     )

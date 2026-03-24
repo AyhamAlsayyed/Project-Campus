@@ -14,4 +14,5 @@ urlpatterns = [
     path("auth/login/", login),
     path("auth/me/", me),
     path("posts/feed/", feed, name="posts_feed"),
+    path("posts/", feed, name="user_posts"),
 ]

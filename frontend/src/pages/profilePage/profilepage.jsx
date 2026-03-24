@@ -72,7 +72,7 @@ export default function ProfilePage() {
     }
     const loadPosts = async (userId) => {
         try {
-            const res = await fetch(`http://localhost:8000/api/posts/user=${userId}`, {
+            const res = await fetch(`http://localhost:8000/api/posts?user=${userId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -110,10 +110,11 @@ export default function ProfilePage() {
     const avatarUrl =
         user?.avatar_url ||
         user?.avatar ||
-        user?.profile_picture ||
-        user?.profilePicture ||
         "";
-    const coverUrl = user?.cover_url || user?.cover || "";
+    const coverUrl =
+        user?.cover_url ||
+        user?.cover ||
+        "";
 
     return (
         <div className={styles.darkContainer}>

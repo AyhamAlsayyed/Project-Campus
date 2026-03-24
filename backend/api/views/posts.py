@@ -39,58 +39,62 @@ def feed(request):
     limit = int(request.query_params.get("limit") or 20)
     limit = max(1, min(limit, 50))
 
-    user = request.user
+    user_id = request.GET.get("user")
+    if user_id:
+        qs = Post.objects.filter(author_user_id=user_id).order_by("-created_at")
+    else:
+        user = request.user
 
-    community_ids = list(CommunityMember.objects.filter(user=user).values_list("community_id", flat=True))
-    followed_page_ids = list(FollowPage.objects.filter(user=user).values_list("page_id", flat=True))
-    uni_page_id = _get_user_university_page_id(user)
+        community_ids = list(CommunityMember.objects.filter(user=user).values_list("community_id", flat=True))
+        followed_page_ids = list(FollowPage.objects.filter(user=user).values_list("page_id", flat=True))
+        uni_page_id = _get_user_university_page_id(user)
 
-    qs = (
-        Post.objects.all()
-        .annotate(
-            reactions_count=Count("reactions", distinct=True),
-            comments_count=Count("comments", distinct=True),
-            p_university=Case(
-                When(author_page_id=uni_page_id, then=Value(50)),
-                default=Value(0),
-                output_field=IntegerField(),
-            ),
-            p_community=Case(
-                When(community_id__in=community_ids, then=Value(30)),
-                default=Value(0),
-                output_field=IntegerField(),
-            ),
-            p_following=Case(
-                When(author_page_id__in=followed_page_ids, then=Value(20)),
-                default=Value(0),
-                output_field=IntegerField(),
-            ),
-            p_engagement=ExpressionWrapper(
-                (F("reactions_count") * Value(2)) + F("comments_count"),
-                output_field=IntegerField(),
-            ),
-        )
-        .annotate(
-            p_engagement_capped=Case(
-                When(p_engagement__gte=20, then=Value(20)),
-                default=F("p_engagement"),
-                output_field=IntegerField(),
-            ),
-            p_fresh=Case(
-                When(created_at__gte=Now() - timedelta(hours=6), then=Value(20)),
-                When(created_at__gte=Now() - timedelta(hours=24), then=Value(10)),
-                When(created_at__gte=Now() - timedelta(days=3), then=Value(5)),
-                default=Value(0),
-                output_field=IntegerField(),
-            ),
-        )
-        .annotate(
-            score=F("p_university") + F("p_community") + F("p_following") + F("p_engagement_capped") + F("p_fresh")
-        )
-        .order_by("-score", "-created_at")
-        .select_related("author_user", "author_page", "community")
-        .prefetch_related("media")
-    )[:limit]
+        qs = (
+            Post.objects.all()
+            .annotate(
+                reactions_count=Count("reactions", distinct=True),
+                comments_count=Count("comments", distinct=True),
+                p_university=Case(
+                    When(author_page_id=uni_page_id, then=Value(50)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+                p_community=Case(
+                    When(community_id__in=community_ids, then=Value(30)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+                p_following=Case(
+                    When(author_page_id__in=followed_page_ids, then=Value(20)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+                p_engagement=ExpressionWrapper(
+                    (F("reactions_count") * Value(2)) + F("comments_count"),
+                    output_field=IntegerField(),
+                ),
+            )
+            .annotate(
+                p_engagement_capped=Case(
+                    When(p_engagement__gte=20, then=Value(20)),
+                    default=F("p_engagement"),
+                    output_field=IntegerField(),
+                ),
+                p_fresh=Case(
+                    When(created_at__gte=Now() - timedelta(hours=6), then=Value(20)),
+                    When(created_at__gte=Now() - timedelta(hours=24), then=Value(10)),
+                    When(created_at__gte=Now() - timedelta(days=3), then=Value(5)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+            )
+            .annotate(
+                score=F("p_university") + F("p_community") + F("p_following") + F("p_engagement_capped") + F("p_fresh")
+            )
+            .order_by("-score", "-created_at")
+            .select_related("author_user", "author_page", "community")
+            .prefetch_related("media")
+        )[:limit]
 
     data = []
     for p in qs:
@@ -128,9 +132,30 @@ def feed(request):
                 "author_avatar": author_avatar,
                 "tag": author_tag,
                 "media": media_items,
-                "likes_count": p.reactions_count,
-                "comments_count": p.comments_count,
+                # "likes_count": p.reactions_count,
+                # "comments_count": p.comments_count,
             }
         )
 
     return Response(data, status=200)
+
+
+"""
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def user_posts_view(request):
+    user_id = request.GET.get("user")
+
+    posts = Post.objects.filter(author_user_id=user_id).order_by("-created_at")
+
+    data = [
+        {
+            "id": post.post_id,
+            #"content": post.content,
+            "created_at": post.created_at,
+        }
+        for post in posts
+    ]
+
+    return Response(data, status=200)
+"""
