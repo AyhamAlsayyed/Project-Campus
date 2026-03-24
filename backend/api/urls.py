@@ -5,7 +5,8 @@ from .views.auth.me import me
 from .views.auth.signup.send_code import send_code
 from .views.auth.signup.signup import signup
 from .views.auth.signup.verify_code import verify_code
-from .views.posts import feed
+from .views.posts.post_create import create_post
+from .views.posts.posts import feed
 
 urlpatterns = [
     path("auth/send_code/", send_code),
@@ -15,4 +16,5 @@ urlpatterns = [
     path("auth/me/", me),
     path("posts/feed/", feed, name="posts_feed"),
     path("posts/", feed, name="user_posts"),
+    path("posts/create/", create_post, name="create_post"),
 ]

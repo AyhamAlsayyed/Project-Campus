@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ..models import CommunityMember, FollowPage, Post
+from ...models import CommunityMember, FollowPage, Post
 
 
 def _get_user_university_page_id(user):
@@ -138,24 +138,3 @@ def feed(request):
         )
 
     return Response(data, status=200)
-
-
-"""
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def user_posts_view(request):
-    user_id = request.GET.get("user")
-
-    posts = Post.objects.filter(author_user_id=user_id).order_by("-created_at")
-
-    data = [
-        {
-            "id": post.post_id,
-            #"content": post.content,
-            "created_at": post.created_at,
-        }
-        for post in posts
-    ]
-
-    return Response(data, status=200)
-"""

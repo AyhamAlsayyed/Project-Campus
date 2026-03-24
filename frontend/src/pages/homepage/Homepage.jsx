@@ -125,7 +125,7 @@ export default function Homepage() {
         }
 
         try {
-            const res = await fetch(`${API}/api/posts/`, {
+            const res = await fetch(`${API}/api/posts/create/`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
