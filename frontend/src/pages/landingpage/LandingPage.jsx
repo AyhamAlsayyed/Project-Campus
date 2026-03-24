@@ -51,6 +51,9 @@ export default function LandingPage() {
                     <p className={styles.bodySecondTitle}>{t.campus}</p>
                     <p key={currentIndex} className={`${styles.bodyDescription} ${styles.fade}`}>{currentSlide.description}</p>
                 </div>
+                <div className={styles.secondHalf}>
+                    <img key={currentIndex} src={currentSlide.image} alt="Slide" className={styles.slideImage} />
+                </div>
             </div>
             <div className={styles.bottomSection}>
                 <div className={styles.bottomContent}>

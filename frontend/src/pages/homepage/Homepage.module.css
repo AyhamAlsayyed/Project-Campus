@@ -26,91 +26,6 @@
 
 }
 
-.headerInner {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  gap: var(--col-gap);
-
-}
-
-.headerLeft {
-  flex: 0 0 var(--left-col);
-  display: flex;
-  align-items: center;
-  gap: 30px;
-
-}
-
-
-.title {
-  font-family: "Aktiv Grotesk", sans-serif;
-  background: transparent;
-  border: none;
-  font-weight: 800;
-  font-size: 2.5rem;
-  color: var(--text-accent);
-  cursor: pointer;
-}
-
-.darkModeIcon {
-  height: 70px;
-}
-
-.headerCenter {
-  display: flex;
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-.searchWrap {
-  font-family: "Aktiv Grotesk", sans-serif;
-  border-radius: 999px;
-  height: 44px;
-  width: 90%;
-  transform: translateX(6%);
-  max-width: none;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--text-accent);
-
-}
-
-.searchInput {
-  width: 100%;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 1rem;
-  color: var(--text-accent);
-}
-
-.searchInput::placeholder {
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.headerRight {
-  flex: 0 0 var(--right-col);
-  display: flex;
-  align-items: center;
-  gap: 40px;
-  justify-content: flex-end;
-}
-
-.iconButton {
-  position: relative;
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  color: var(--text-accent);
-}
-
 
 .content {
   display: flex;
@@ -120,74 +35,6 @@
   align-items: flex-start;
 }
 
-.sideBarNav {
-  display: flex;
-  flex: 0 0 var(--left-col);
-  flex-direction: column;
-  border-radius: 30px;
-  padding: 40px 28px;
-  gap: 18px;
-  background-color: rgba(61, 60, 60, 0.45);
-  height: 600px;
-  width: auto;
-  margin: 2% 0 0 0;
-  position: relative;
-}
-
-.divider {
-  height: 1px;
-  width: 88%;
-  background: rgba(255, 255, 255, 0.28);
-  margin: 10px auto;
-}
-
-.sideBarButton {
-  height: 52px;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 1.1rem;
-  position: relative;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
-  padding: 0 14px;
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.sideBarButton:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.active {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.active::before {
-  content: "";
-  position: absolute;
-  left: -14px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-top: 7px solid transparent;
-  border-bottom: 7px solid transparent;
-  border-left: 10px solid #b38cff;
-}
-
-
-.copyright {
-  text-align: center;
-  margin-top: auto;
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 0.72rem;
-  padding-top: 20px;
-}
 
 .headerInner,
 .content {
@@ -197,7 +44,7 @@
 }
 
 .postContainer {
-  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
+   background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
   width: 100%;
   flex: 1;
   border-radius: 30px;
@@ -233,7 +80,7 @@
 .createPostSection {
   background-color: rgba(61, 60, 60, 0.45);
   width: 90%;
-  min-height: 150px;
+  height: auto;
   border-radius: 30px;
   padding: 25px;
   display: flex;
@@ -245,7 +92,7 @@
 /* Top row */
 .topRow {
   display: flex;
-  justify-content: space-between;
+
   align-items: center;
 }
 
@@ -255,12 +102,14 @@
   display: flex;
   align-items: center;
   gap: 15px;
+  flex: 1;
+  min-width: 0;
 }
 
 /* Profile image */
 .userProfilePicture {
-  width: 55px;
-  height: 55px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -280,7 +129,7 @@
 }
 
 /* Weather section */
-.weather {
+.actionButtons {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -342,7 +191,8 @@
 
 /* Post text input */
 .postInput {
-  width: 90%;
+  width: 100%;
+  min-width: 0;
   padding: 12px 16px;
   border-radius: 20px;
   border: none;
@@ -357,5 +207,132 @@
 
 .weather {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0,0,0,0.6);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 999;
+}
+
+.modal {
+  width: 500px;
+  background: rgba(61, 60, 60, 0.95);
+  border-radius: 20px;
+  padding: 20px;
+  color: var(--text-accent);
+}
+.closeButton {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.previewContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.previewImage {
+    width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.closePollButton {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #888;
+  transition: 0.2s;
+}
+
+.closePollButton:hover {
+  color: red;
+}
+
+.pollOptionRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.removeOption {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 16px;
+  transition: 0.2s;
+}
+
+.removeOption:hover {
+  color: red;
+}
+.closeButton:hover {
+  background: rgba(255,255,255,0.2);
+  transform: scale(1.05);
+}
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.modalInput {
+  width: 100%;
+  height: 120px;
+  margin-top: 10px;
+
+  background: transparent;
+  border: none;
+  outline: none;
+
+  color: var(--text-accent);
+  font-size: 1.1rem;
+  resize: none;
+}
+
+.postButton {
+  width: 100%;
+  margin-top: 15px;
+  padding: 10px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #3a3b3c;
+  color: white;
+  cursor: pointer;
 }

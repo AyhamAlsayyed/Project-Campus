@@ -262,3 +262,24 @@
 .shareBtn:hover {
   background: rgba(255, 255, 255, 0.08);
 }
+.pollBox {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pollOption {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #2a2a2a;
+  color: white;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.2s;
+}
+
+.pollOption:hover {
+  background: #3a3a3a;
+}

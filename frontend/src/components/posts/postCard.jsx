@@ -102,6 +102,15 @@ export default function PostCard({ post }) {
 
         </div>
       )}
+      {post.poll_options && post.poll_options.length > 0 && (
+        <div className={styles.pollBox}>
+          {post.poll_options.map((opt, i) => (
+            <button key={i} className={styles.pollOption}>
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
 
 
       <div className={styles.actions}>

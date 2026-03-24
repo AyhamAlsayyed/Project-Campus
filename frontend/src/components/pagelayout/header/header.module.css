@@ -1,0 +1,88 @@
+.headerInner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--col-gap);
+  width: min(1800px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.headerLeft {
+  flex: 0 0 var(--left-col);
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.title {
+  font-family: "Aktiv Grotesk", sans-serif;
+  background: transparent;
+  border: none;
+  font-weight: 800;
+  font-size: 2.5rem;
+  color: var(--text-accent);
+  cursor: pointer;
+}
+
+.darkModeIcon {
+  height: 70px;
+}
+
+.headerCenter {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.searchWrap {
+  border-radius: 999px;
+  height: 44px;
+  width: 90%;
+  transform: translateX(6%);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-accent);
+}
+
+.searchInput {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 1rem;
+  color: var(--text-accent);
+}
+
+.searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.headerRight {
+  flex: 0 0 var(--right-col);
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  justify-content: flex-end;
+}
+
+.iconButton {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-accent);
+}
+
+.userProfilePicture {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
