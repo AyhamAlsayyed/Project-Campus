@@ -27,10 +27,10 @@
   width: 27px;
   height: 27px;
 
-  
+
   background: linear-gradient(200deg, #3120e9 0%, #a6279c 100%);
 
- 
+
   -webkit-mask-image: url('../../Assets/icons/dark-mode.png');
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
@@ -65,7 +65,7 @@
   /* this controls the icon size */
   font-size: 12px;
   line-height: 1;
-  
+
   transition: transform 0.25s ease;
 }
 .toggleLight .toggleCircle{
