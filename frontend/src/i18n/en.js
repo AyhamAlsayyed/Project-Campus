@@ -15,13 +15,13 @@ const en = {
             {
                 description: "“The platform is super clean and intuitive, I feel at home!”",
                 image: AssetOne
-                
+
             },
             {
                 description: "“I love connecting with students from other universties here.”",
                 image: AssetTwo
             },
-           
+
             {
                 description: "“I can see all my university info in one place, it's so easy! ”",
                 image: AssetThree
@@ -67,7 +67,6 @@ const en = {
             sendCode    : "Send Verification Code",
             confirmCode  : "Confirm Code",
             createAccount : "Create Account",
-
             needHelp: {
                 text: "Need ",
                 link: "help",

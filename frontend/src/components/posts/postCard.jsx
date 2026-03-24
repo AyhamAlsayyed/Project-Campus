@@ -1,7 +1,19 @@
 import styles from "./posts.module.css";
 import { Share2 } from "lucide-react";
+import { useState } from "react";
 
 export default function PostCard({ post }) {
+  const [current, setCurrent] = useState(0);
+  const validMedia = post.media?.filter(
+    (item) => item?.url && item?.type
+  ) || [];
+  const nextSlide = () => {
+    setCurrent((prev) => (prev + 1) % validMedia.length);
+  }
+  const prevSlide = () => {
+    setCurrent((prev) => (prev == 0 ? validMedia.length - 1 : prev - 1));
+  }
+
 
   return (
     <article className={styles.card}>
@@ -42,27 +54,52 @@ export default function PostCard({ post }) {
       )}
 
 
-      {post.media?.length > 0 && (
+      {validMedia.length > 0 && (
         <div className={styles.media}>
-          {post.media.map((m, i) => {
 
-            if (!m?.url) return null;
+          {validMedia.length > 1 && (
+            <button
+              className={styles.leftArrow}
+              onClick={prevSlide}
+            >
+              ◀
+            </button>
+          )}
 
-            if (m.type === "image") {
-              return <img key={i} src={m.url} alt="" />;
-            }
+          {validMedia[current]?.type === "image" && (
+            <img
+              src={validMedia[current].url}
+              alt=""
+              className={styles.mediaItem}
+            />
+          )}
 
-            if (m.type === "video") {
-              return (
-                <video key={i} controls>
-                  <source src={m.url} />
-                </video>
-              );
-            }
+          {validMedia[current]?.type === "video" && (
+            <video controls className={styles.mediaItem}>
+              <source src={validMedia[current].url} />
+            </video>
+          )}
 
-            return null;
+          {validMedia.length > 1 && (
+            <button
+              className={styles.rightArrow}
+              onClick={nextSlide}
+            >
+              ▶
+            </button>
+          )}
+          {validMedia.length > 1 && (
+            <div className={styles.dots}>
+              {validMedia.map((_, index) => (
+                <span
+                  key={index}
+                  className={`${styles.dot} ${index === current ? styles.activeDot : ""
+                    }`}
+                />
+              ))}
+            </div>
+          )}
 
-          })}
         </div>
       )}
       {post.poll_options && post.poll_options.length > 0 && (

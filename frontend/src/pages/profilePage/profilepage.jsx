@@ -17,6 +17,7 @@ import {
 export default function ProfilePage() {
     const [theme, setTheme] = useState("dark");
     const [user, setUser] = useState(null);
+    const token = localStorage.getItem("access")
     const [userLoading, setUserLoading] = useState(true);
     const [userError, setUserError] = useState("");
     const [posts, setPosts] = useState([]);
@@ -24,7 +25,7 @@ export default function ProfilePage() {
     const [postsError, setPostsError] = useState("");
     const { pathname } = useLocation();
     const navigate = useNavigate();
-  
+
 
 
     const isActive = (path) => pathname === path || pathname.startsWith(path + "/");
@@ -45,8 +46,10 @@ export default function ProfilePage() {
         try {
             const res = await fetch("http://localhost:8000/api/auth/me/", {
                 method: "GET",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
             })
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
@@ -69,8 +72,10 @@ export default function ProfilePage() {
     }
     const loadPosts = async (userId) => {
         try {
-            const res = await fetch(`http://localhost:8000/api/posts/user=${user?.id}`, {
-                credentials: "include",
+            const res = await fetch(`http://localhost:8000/api/posts?user=${userId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
             })
             const data = await res.json().catch(() => [])
             if (!res.ok) {
@@ -95,8 +100,8 @@ export default function ProfilePage() {
         setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
     };
     const username = user?.username || "Username";
-    const role = user?.role || "/student";
-    const fullName = user?.full_name || user?.fullName || "Full real name";
+    const role = user?.role || "Role";
+    const fullName = user?.full_name || user?.fullName || "Full name";
     const university = user?.university || "University";
     const major = user?.major || "Major";
     const bio = user?.bio || "No bio yet.";
@@ -105,10 +110,11 @@ export default function ProfilePage() {
     const avatarUrl =
         user?.avatar_url ||
         user?.avatar ||
-        user?.profile_picture ||
-        user?.profilePicture ||
         "";
-    const coverUrl = user?.cover_url || user?.cover || "";
+    const coverUrl =
+        user?.cover_url ||
+        user?.cover ||
+        "";
 
     return (
         <div className={styles.darkContainer}>
@@ -188,7 +194,7 @@ export default function ProfilePage() {
                             <div className={styles.profileMeta}>
                                 <div className={styles.nameRow}>
                                     <h2 className={styles.username}>{username}</h2>
-                                    <span className={styles.role}>{role}</span>
+                                    <span className={styles.role}>/{role}</span>
                                 </div>
 
                                 <div className={styles.subRow}>

@@ -1,0 +1,5 @@
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+DJANGO_SECRET_KEY = "django-insecure-fbl7-+#hf-52_0+rjk!y+qfjboxmi801qw*z)o-et$q5fz0a#*"
+DJANGO_SECRET_KEY = "Bo1Yz2I21lp4-lhDB27n6tUG-hRmf2-uHvueIxkawz5X6hN92F"
+

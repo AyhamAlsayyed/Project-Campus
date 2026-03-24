@@ -20,7 +20,7 @@ export default function WeeklyNews() {
                 start_date: "02/02/2026",
                 end_date: "05/02/2026"
             },
-           
+
         ]);
     }, [])
     if (!items.length) {
