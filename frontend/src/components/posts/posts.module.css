@@ -283,3 +283,66 @@
 .pollOption:hover {
   background: #3a3a3a;
 }
+/* Like Button Styles */
+.heart {
+  font-size: 1.4rem;
+  transition: transform 0.2s ease;
+}
+
+.liked .heart {
+  color: #ff2d55; /* Hot pink/red for liked state */
+  transform: scale(1.1);
+}
+
+.count {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Menu Dropdown Styles */
+.menuContainer {
+  position: relative;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  width: 140px;
+  z-index: 10;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: #eee;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.menuItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.menuDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 8px;
+}
+
+.danger {
+  color: #ff2d55;
+}

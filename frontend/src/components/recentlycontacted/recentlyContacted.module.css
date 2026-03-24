@@ -1,9 +1,11 @@
 .container {
   width: 100%;
+ 
+  top: 50px;
 }
 
 .recentlyContactedWrap {
-    position: relative;
+  position: relative;
   width: 100%;
   margin-top: 22px;
 

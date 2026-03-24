@@ -18,8 +18,8 @@ export default function Community(){
             <div className={`${styles.content} ${styles.page}`}>
                 <SideBarNav theme={theme} toggleTheme={toggleTheme} user={user} />
                 <div className={styles.mainContent}>
-                    <h1>
-                        Looking for 
+                    <h1 className={styles.title}>
+                        Looking for <span className={styles.highlight}>communities</span> to be part of?
                     </h1>
                     
                 </div>

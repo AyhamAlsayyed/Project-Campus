@@ -3,7 +3,9 @@
   flex: 0 0 var(--left-col);
   flex-direction: column;
   border-radius: 30px;
+  position: sticky;
   padding: 40px 28px;
+  top: 100px;
   gap: 18px;
   background-color: rgba(61, 60, 60, 0.45);
   height: 600px;
