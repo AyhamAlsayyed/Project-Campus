@@ -1,0 +1,144 @@
+.communityItem {
+  position: relative;
+  width:  85%;
+  border-radius: 18px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* OVERLAY */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.75),
+    rgba(0,0,0,0.4),
+    rgba(0,0,0,0.2)
+  );
+}
+
+/* CONTENT */
+.content {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 16px 20px;
+}
+.description{
+  display: -webkit-box;
+  -webkit-line-clamp: 1; 
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all; 
+  color: rgba(255,255,255,0.75);
+  font-size: 14px;
+  margin: 0;
+}
+.fullText {
+    display: block;
+    color: rgba(255,255,255,0.75);
+    font-size: 14px;
+    margin: 0;
+}
+
+.readMore {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    cursor: pointer;
+    width: fit-content;
+    text-decoration: underline;
+}
+
+.readMore:hover {
+    color: white;
+}
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.left h3 {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.left p {
+  color: rgba(255,255,255,0.75);
+  font-size: 14px;
+}
+
+.readMore {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+}
+
+/* VERIFIED */
+.verified {
+  font-size: 12px;
+  color: #a855f7;
+}
+
+/* BUTTON */
+.btn {
+  border: none;
+  padding: 8px 18px;
+  border-radius: 999px;
+  color: white;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: 0.2s;
+}
+
+.view {
+  background: rgba(255,255,255,0.2);
+}
+
+.join {
+  background: linear-gradient(90deg, #a855f7, #d946ef);
+}
+
+.btn:hover {
+  transform: scale(1.05);
+}
+.small {
+  min-height: 70px;
+  height: auto;
+  width: 100%;
+}
+
+.small .content {
+  padding: 10px 14px;
+}
+
+.small h3 {
+  font-size: 15px;
+}
+
+.small p {
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.small .btn {
+  padding: 6px 12px;
+  font-size: 12px;
+}
