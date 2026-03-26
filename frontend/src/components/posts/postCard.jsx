@@ -2,6 +2,8 @@ import styles from "./posts.module.css";
 
 import { useState } from "react";
 import { Share2, MoreHorizontal, Bookmark, Ban, Flag } from "lucide-react";
+import Like from '../../Assets/icons/like.png';
+import LikeActive from '../../Assets/icons/like-active.png'
 export default function PostCard({ post }) {
   const [current, setCurrent] = useState(0);
   const [isLiked, setIsLiked] = useState(post.is_liked || false);
@@ -26,18 +28,18 @@ export default function PostCard({ post }) {
       });
 
       if (!res.ok) {
-     
+
         setIsLiked(originalLiked);
         setLikesCount(prev => (originalLiked ? prev + 1 : prev - 1));
       }
     } catch (err) {
-      
+
       setIsLiked(originalLiked);
     }
   };
   const handleMenuAction = async (actionType) => {
     const token = localStorage.getItem("access");
-    setShowMenu(false); 
+    setShowMenu(false);
 
     try {
       const res = await fetch(`http://localhost:8000/api/posts/${post.id}/${actionType}/`, {
@@ -187,7 +189,9 @@ export default function PostCard({ post }) {
             onClick={handleLike}
             type="button"
           >
-            <span className={styles.heart}>{isLiked ? "♥" : "♡"}</span>
+            <span className={styles.heart}>{isLiked ?
+              <img src={LikeActive} alt="Profile" className={styles.likeActive} width={22} height={22} /> :
+              <img src={Like} alt="Profile" className={styles.like} width={22} height={22} />}</span>
             <span className={styles.count}>{likesCount}</span>
           </button>
 
