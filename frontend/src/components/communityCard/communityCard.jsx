@@ -30,11 +30,11 @@ export default function CommunityCard({ community, variant = "large" }) {
                         {isExpanded ? "show less" : "read more"}
                     </span>
                     </p>
-                    
-                   
+
+
                     </div>
 
-                    
+
                 </div>
 
                 <button

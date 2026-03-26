@@ -122,7 +122,7 @@ export default function ProfilePage() {
                 <Header theme={theme} toggleTheme={toggleTheme} />
             </div>
             <div className={`${styles.page} ${styles.content}`}>
-                
+
                 <nav className={styles.sideBarNav}>
                     {mainItems.map(({ label, path, Icon }) => (
                         <button
