@@ -99,6 +99,10 @@
   object-fit: cover;
   max-height: 360px;
 }
+.like{
+ 
+filter: brightness(0) invert(0.7);
+}
 
 /* Actions */
 .actions {
