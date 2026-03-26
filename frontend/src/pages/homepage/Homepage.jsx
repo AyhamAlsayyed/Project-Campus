@@ -4,7 +4,7 @@ import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import ThemeToggler from '../../components/pagelayout/themeToggle';
 import { useState, useEffect } from 'react';
-import { MessageSquare, Bell, UserCircle, Search } from "lucide-react"
+import { X } from "lucide-react";
 import PostCard from '../../components/posts/postCard'
 import WeeklyNews from '../../components/weeklynews/weeklynews';
 
@@ -18,12 +18,19 @@ export default function Homepage() {
     const [user, setUser] = useState(null)
     const [content, setContent] = useState("")
     const [images, setImages] = useState([]);
-    const [file, setFile] = useState(null)
+    const [files, setFiles] = useState([])
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [userError, setUserError] = useState("")
     const [userLoading, setUserLoading] = useState(true)
     const [isPollOpen, setIsPollOpen] = useState(false)
     const [pollOptions, setPollOptions] = useState(["", ""])
+    const resetPostState = () => {
+        setContent("");
+        setImages([]);
+        setFiles([]);
+        setPollOptions(["", ""]);
+        setIsPollOpen(false);
+    };
     const API = "http://localhost:8000"
     const token = localStorage.getItem("access")
 
@@ -99,10 +106,11 @@ export default function Homepage() {
     };
 
     const handleFileUpload = (e) => {
-        setFile(e.target.files[0]);
+        const selectedFiles = Array.from(e.target.files);
+        setFiles(prev => [...prev, ...selectedFiles]);
     };
     const handleCreatePost = async () => {
-        if (!content.trim() && !images.length && !file && !isPollOpen) return;
+        if (!content.trim() && !images.length && !files && !isPollOpen) return;
 
         const formData = new FormData();
 
@@ -112,8 +120,8 @@ export default function Homepage() {
             formData.append("images", img);
         });
 
-        if (file) {
-            formData.append("file", file);
+        if (files) {
+            formData.append("file", files);
         }
 
         if (isPollOpen) {
@@ -141,7 +149,7 @@ export default function Homepage() {
 
             setContent("");
             setImages([]);
-            setFile(null);
+            setFiles([]);
             setPollOptions(["", ""]);
             setIsPollOpen(false);
             setIsModalOpen(false);
@@ -162,7 +170,7 @@ export default function Homepage() {
 
         <div className={styles.darkContainer}>
 
-            
+
             <div className={`${styles.header} ${styles.page}`}>
                 <Header theme={theme} toggleTheme={toggleTheme} user={user} />
 
@@ -243,7 +251,10 @@ export default function Homepage() {
                     {isModalOpen && (
                         <div
                             className={styles.modalOverlay}
-                            onClick={() => setIsModalOpen(false)}
+                            onClick={() => {
+                                setIsModalOpen(false);
+                                resetPostState();
+                            }}
                         >
                             <div
                                 className={styles.modal}
@@ -255,7 +266,10 @@ export default function Homepage() {
                                     <h3>Create post</h3>
                                     <button
                                         className={styles.closeButton}
-                                        onClick={() => setIsModalOpen(false)}
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            resetPostState();
+                                        }}
                                     >
                                         ✕
                                     </button>
@@ -283,15 +297,45 @@ export default function Homepage() {
                                 {images.length > 0 && (
                                     <div className={styles.previewContainer}>
                                         {images.map((img, i) => (
-                                            <img
-                                                key={i}
-                                                src={URL.createObjectURL(img)}
-                                                alt=""
-                                                className={styles.previewImage}
-                                            />
+                                            <div key={i} className={styles.previewWrapper}>
+                                                <img
+                                                    src={URL.createObjectURL(img)}
+                                                    alt=""
+                                                    className={styles.previewImage}
+                                                />
+
+                                                <button
+                                                    className={styles.removeImage}
+                                                    onClick={() =>
+                                                        setImages(prev => prev.filter((_, index) => index !== i))
+                                                    }
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
                                         ))}
                                     </div>
                                 )}
+                                {files.length > 0 && (
+                                    <div className={styles.filePreviewContainer}>
+                                        {files.map((f, i) => (
+                                            <div key={i} className={styles.fileItem}>
+                                                📁 {f.name}
+
+                                                <button
+                                                    className={styles.removeFile}
+                                                    onClick={() =>
+                                                        setFiles(prev => prev.filter((_, index) => index !== i))
+                                                    }
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+
 
 
                                 <div className={styles.actionsRow}>
@@ -363,7 +407,7 @@ export default function Homepage() {
                                 )}
 
                                 {/* POST BUTTON */}
-                                <button className={styles.postButton} onClick={handleCreatePost} disabled={!content && !images.length && !file && !isPollOpen}>Post</button>
+                                <button className={styles.postButton} onClick={handleCreatePost} disabled={!content && !images.length && !files && !isPollOpen}>Post</button>
 
                             </div>
                         </div>

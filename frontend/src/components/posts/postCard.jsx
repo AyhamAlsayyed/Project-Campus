@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Share2, MoreHorizontal, Bookmark, Ban, Flag } from "lucide-react";
 export default function PostCard({ post }) {
   const [current, setCurrent] = useState(0);
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(post.is_liked || false);
   const [likesCount, setLikesCount] = useState(post.likes_count || 0);
   const [showMenu, setShowMenu] = useState(false);
   const handleLike = async () => {

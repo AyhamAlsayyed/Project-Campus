@@ -50,6 +50,8 @@
 }
 
 .innerContainer {
+  padding-top:5px ;
+  margin-top: 1%;
   background-color: rgba(61, 60, 60);
   border-radius: 30px;
   width: 100%;
@@ -80,7 +82,54 @@
   gap: 18px;
   color: var(--text-accent);
 }
+.previewWrapper {
+  position: relative;
+}
 
+.removeImage,
+.removeFile {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+
+  width: 24px;
+  height: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+
+  color: white;
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.removeImage:hover,
+.removeFile:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+.filePreviewContainer {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fileItem {
+  position: relative;
+  padding: 10px;
+  background: #2a2a2a;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 /* Top row */
 .topRow {
   display: flex;

@@ -6,10 +6,12 @@ import { useNavigate ,useLocation } from "react-router-dom";
 import MessageSquare from "../../../Assets/icons/messages.png"
 import Bell from '../../../Assets/icons/notifications.png'
 export default function Header({ theme, toggleTheme, user }) {
-  const avatarSrc = user?.avatar
-    ? `http://localhost:8000${user.avatar}`
-    : "/default-avatar.png";
-
+ const avatarSrc = user?.avatar
+  ? user.avatar.startsWith("http")
+    ? user.avatar
+    : `http://localhost:8000${user.avatar}`
+  : "/default-avatar.png";
+  
   const navigate = useNavigate();
   const location = useLocation();
 
