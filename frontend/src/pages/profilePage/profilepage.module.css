@@ -1,8 +1,8 @@
 html {
-  height: auto; 
+  height: auto;
   min-height: auto;
   display: flow-root;
- 
+
 }
 
 body {
@@ -11,14 +11,14 @@ body {
   min-height: 100vh;
   background: transparent; /* ✅ important */
     background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
-  background-attachment: fixed; 
+  background-attachment: fixed;
   background-size: cover;
 }
 
 .darkContainer {
   min-height: 100%;
   box-sizing: border-box;
- 
+
   font-family: "Aktiv Grotesk", sans-serif;
   display: flex;
   flex-direction: column;
@@ -118,7 +118,7 @@ body {
 }
 .profileContent{
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
   background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
   flex: 1;
   border-radius: 30px;
@@ -127,7 +127,7 @@ body {
   min-width: 900px;
   position: relative;
   margin: 2% 0 0 0;
-  
+
 
   padding-top: 10px;
 }
@@ -137,7 +137,7 @@ background-color: rgba(61, 60, 60);
   width: 100%;
   z-index: 1;
 
-  flex: 1; 
+  flex: 1;
   height: auto;
 }
 .notice {
@@ -400,15 +400,15 @@ background-color: rgba(61, 60, 60);
   height: 300px;
 
   position: relative;
-  border-radius: 30px 30px 18px 18px; 
+  border-radius: 30px 30px 18px 18px;
   overflow: hidden;
 
-  z-index: -1; 
+  z-index: -1;
 
   background: rgba(255,255,255,0.04);
 
-  
-  box-shadow: 
+
+  box-shadow:
     0 8px 25px rgba(0,0,0,0.35),
     inset 0 0 40px rgba(255,255,255,0.03);
 }
@@ -432,7 +432,7 @@ background-color: rgba(61, 60, 60);
   flex-direction: column;
 }
 .content{
-  
+
   margin-left: auto;
   margin-right: auto;
 }

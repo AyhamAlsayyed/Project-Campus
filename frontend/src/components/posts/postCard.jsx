@@ -26,18 +26,18 @@ export default function PostCard({ post }) {
       });
 
       if (!res.ok) {
-     
+
         setIsLiked(originalLiked);
         setLikesCount(prev => (originalLiked ? prev + 1 : prev - 1));
       }
     } catch (err) {
-      
+
       setIsLiked(originalLiked);
     }
   };
   const handleMenuAction = async (actionType) => {
     const token = localStorage.getItem("access");
-    setShowMenu(false); 
+    setShowMenu(false);
 
     try {
       const res = await fetch(`http://localhost:8000/api/posts/${post.id}/${actionType}/`, {

@@ -36,11 +36,11 @@
 }
 .description{
   display: -webkit-box;
-  -webkit-line-clamp: 1; 
-  -webkit-box-orient: vertical;  
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  word-break: break-all; 
+  word-break: break-all;
   color: rgba(255,255,255,0.75);
   font-size: 14px;
   margin: 0;

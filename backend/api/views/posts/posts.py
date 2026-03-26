@@ -1,13 +1,23 @@
 from datetime import timedelta
 
-from django.db.models import Case, Count, F, IntegerField, Value, When
+from django.db.models import (
+    Case,
+    Count,
+    Exists,
+    F,
+    IntegerField,
+    OuterRef,
+    Q,
+    Value,
+    When,
+)
 from django.db.models.expressions import ExpressionWrapper
 from django.db.models.functions import Now
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import CommunityMember, FollowPage, Post
+from ...models import CommunityMember, FollowPage, Post, PostReaction
 
 
 def _get_user_university_page_id(user):
@@ -40,20 +50,26 @@ def feed(request):
     limit = max(1, min(limit, 50))
 
     user_id = request.GET.get("user")
+    qs = Post.objects.all()
+
+    qs = qs.annotate(
+        reactions_count=Count("reactions", filter=Q(reactions__user__isnull=False), distinct=True),
+        comments_count=Count("comments", distinct=True),
+        is_liked=Exists(PostReaction.objects.filter(post_id=OuterRef("post_id"), user=request.user)),
+    )
+
     if user_id:
-        qs = Post.objects.filter(author_user_id=user_id).order_by("-created_at")
-    else:
-        user = request.user
+        qs = qs.filter(author_user_id=user_id).order_by("-created_at")
+
+    if not user_id:
+        user = request.user if request.user.is_authenticated else None
 
         community_ids = list(CommunityMember.objects.filter(user=user).values_list("community_id", flat=True))
         followed_page_ids = list(FollowPage.objects.filter(user=user).values_list("page_id", flat=True))
         uni_page_id = _get_user_university_page_id(user)
 
         qs = (
-            Post.objects.all()
-            .annotate(
-                reactions_count=Count("reactions", distinct=True),
-                comments_count=Count("comments", distinct=True),
+            qs.annotate(
                 p_university=Case(
                     When(author_page_id=uni_page_id, then=Value(50)),
                     default=Value(0),
@@ -94,7 +110,8 @@ def feed(request):
             .order_by("-score", "-created_at")
             .select_related("author_user", "author_page", "community")
             .prefetch_related("media")
-        )[:limit]
+        )
+    qs = qs[:limit]
 
     data = []
     for p in qs:
@@ -132,8 +149,9 @@ def feed(request):
                 "author_avatar": author_avatar,
                 "tag": author_tag,
                 "media": media_items,
-                # "likes_count": p.reactions_count,
-                # "comments_count": p.comments_count,
+                "likes_count": p.reactions_count,
+                "comments_count": p.comments_count,
+                "is_liked": p.is_liked,
             }
         )
 

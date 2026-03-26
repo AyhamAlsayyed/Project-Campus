@@ -162,7 +162,7 @@ export default function Homepage() {
 
         <div className={styles.darkContainer}>
 
-            
+
             <div className={`${styles.header} ${styles.page}`}>
                 <Header theme={theme} toggleTheme={toggleTheme} user={user} />
 
