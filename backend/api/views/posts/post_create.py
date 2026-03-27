@@ -13,7 +13,7 @@ def create_post(request):
     user = request.user
     content = request.data.get("content", "")
     images = request.FILES.getlist("images")
-    files = request.FILES.getlist("file")
+    files = request.FILES.getlist("files")
     community_id = request.data.get("community")
     community = None
     if community_id:
