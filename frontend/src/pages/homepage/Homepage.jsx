@@ -3,6 +3,7 @@ import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png'
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import ThemeToggler from '../../components/pagelayout/themeToggle';
+import CommentModal from '../../components/comments/commentsModal';
 import { useState, useEffect } from 'react';
 import { X } from "lucide-react";
 import PostCard from '../../components/posts/postCard'
@@ -19,6 +20,7 @@ export default function Homepage() {
     const [content, setContent] = useState("")
     const [images, setImages] = useState([]);
     const [files, setFiles] = useState([])
+    const [selectedPost, setSelectedPost] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [userError, setUserError] = useState("")
     const [userLoading, setUserLoading] = useState(true)
@@ -66,6 +68,13 @@ export default function Homepage() {
             setUserLoading(false)
         }
     }
+    const openComments = (post) => {
+        setSelectedPost(post);
+    };
+
+    const closeComments = () => {
+        setSelectedPost(null);
+    };
 
 
     const loadPosts = async () => {
@@ -194,7 +203,11 @@ export default function Homepage() {
                         ) : (
                             <div className={styles.feed}>
                                 {posts.map(post => (
-                                    <PostCard key={post.id} post={post} />
+                                    <PostCard
+                                        key={post.id}
+                                        post={post}
+                                        openComments={openComments}
+                                    />
                                 ))}
                             </div>
                         )}
@@ -410,6 +423,7 @@ export default function Homepage() {
                                 <button className={styles.postButton} onClick={handleCreatePost} disabled={!content && !images.length && !files && !isPollOpen}>Post</button>
 
                             </div>
+
                         </div>
                     )}
                     <WeeklyNews />
@@ -417,6 +431,12 @@ export default function Homepage() {
 
                 </div>
             </div>
+            {selectedPost && (
+                <CommentModal
+                    post={selectedPost}
+                    onClose={closeComments}
+                />
+            )}
 
         </div>
 

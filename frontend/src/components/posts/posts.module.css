@@ -104,15 +104,18 @@
 filter: brightness(0) invert(0.7);
 }
 .filesContainer {
-  margin-top: 10px;
+  margin-top: 20px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
 }
 
 .fileItem {
+  display: inline-block;
   background: #2a2a2a;
   padding: 8px 10px;
+  margin-top: 10px;
+
   border-radius: 8px;
   color: #ddd;
   text-decoration: none;
@@ -299,6 +302,31 @@ filter: brightness(0) invert(0.7);
   cursor: pointer;
   text-align: left;
   transition: 0.2s;
+}
+.commentInputPill {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 280px; /* Adjust based on your card width */
+  height: 32px;
+  background: rgba(255, 255, 255, 0.06); /* Subtly lighter than the card bg */
+  border-radius: 16px; /* Perfect pill shape */
+  padding: 0 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.commentInputPill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.placeholderText {
+  color: rgba(255, 255, 255, 0.35); /* Muted text color */
+  font-size: 13px;
+  font-weight: 400;
+  user-select: none;
 }
 
 .pollOption:hover {

@@ -4,11 +4,28 @@ import { useState } from "react";
 import { Share2, MoreHorizontal, Bookmark, Ban, Flag } from "lucide-react";
 import Like from '../../Assets/icons/like.png';
 import LikeActive from '../../Assets/icons/like-active.png'
-export default function PostCard({ post }) {
+export default function PostCard({ post, openComments }) {
   const [current, setCurrent] = useState(0);
   const [isLiked, setIsLiked] = useState(post.is_liked || false);
   const [likesCount, setLikesCount] = useState(post.likes_count || 0);
   const [showMenu, setShowMenu] = useState(false);
+  const formatTimeAgo = (dateString) => {
+    const now = new Date();
+    const past = new Date(dateString);
+
+    const diffInSeconds = Math.floor((now - past) / 1000);
+
+    const minutes = Math.floor(diffInSeconds / 60);
+    const hours = Math.floor(diffInSeconds / 3600);
+    const days = Math.floor(diffInSeconds / 86400);
+
+    if (diffInSeconds < 60) return "just now";
+    if (minutes < 60) return `${minutes} min ago`;
+    if (hours < 24) return `${hours} hr ago`;
+    if (days < 7) return `${days} d ago`;
+
+    return past.toLocaleDateString(); // fallback
+  };
   const handleLike = async () => {
     const token = localStorage.getItem("access");
     if (!token) return;
@@ -62,13 +79,14 @@ export default function PostCard({ post }) {
   const validMedia = post.media?.filter(
     (item) => item?.url && item?.type
   ) || [];
+  const files = validMedia.filter(m => m.type === "file");
   const nextSlide = () => {
     setCurrent((prev) => (prev + 1) % validMedia.length);
   }
   const prevSlide = () => {
     setCurrent((prev) => (prev == 0 ? validMedia.length - 1 : prev - 1));
   }
- console.log(post)
+  console.log(post)
 
   return (
     <article className={styles.card}>
@@ -93,7 +111,7 @@ export default function PostCard({ post }) {
             </div>
 
             <span className={styles.time}>
-              {post.created_at || ""}
+              {formatTimeAgo(post.created_at)}
             </span>
           </div>
         </div>
@@ -123,7 +141,7 @@ export default function PostCard({ post }) {
       )}
 
 
-      {validMedia.length > 0 && (
+      {validMedia.length > 0 && validMedia[current]?.type !== "file" && (
         <div className={styles.media}>
 
           {validMedia.length > 1 && (
@@ -171,9 +189,9 @@ export default function PostCard({ post }) {
 
         </div>
       )}
-      {post.files && post.files.length > 0 && (
+      {files.length > 0 && (
         <div className={styles.filesContainer}>
-          {post.files.map((file, i) => (
+          {files.map((file, i) => (
             <a
               key={i}
               href={file.url}
@@ -181,7 +199,7 @@ export default function PostCard({ post }) {
               rel="noopener noreferrer"
               className={styles.fileItem}
             >
-              📁 {file.name || "Download file"}
+              📁 {file.url.split("/").pop()}
             </a>
           ))}
         </div>
@@ -225,11 +243,9 @@ export default function PostCard({ post }) {
           )}
 
           {post.post_type !== "advertisement" && (
-            <input
-              className={styles.searchInput}
-              type="text"
-              placeholder="Add a comment..."
-            />
+            <div className={styles.commentInputPill} onClick={() => openComments(post)}>
+              <span className={styles.placeholderText}>Add a comment ...</span>
+            </div>
           )}
 
         </div>
