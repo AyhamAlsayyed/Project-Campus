@@ -155,12 +155,7 @@ export default function CommunityPage() {
                             Recommended
                         </button>
 
-                        <button
-                            className={`${styles.filterBtn} ${filter === "recent" ? styles.active : ""}`}
-                            onClick={() => setFilter("recent")}
-                        >
-                            Most Recent
-                        </button>
+                       
 
                         <button
                             className={`${styles.filterBtn} ${filter === "popular" ? styles.active : ""}`}

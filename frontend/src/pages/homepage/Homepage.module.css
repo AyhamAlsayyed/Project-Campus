@@ -52,7 +52,7 @@
 .innerContainer {
   padding-top:5px ;
   margin-top: 1%;
-  background-color: rgba(61, 60, 60);
+  background-color: #333333;
   border-radius: 30px;
   width: 100%;
   top: 10px;
@@ -72,7 +72,7 @@
 
 /* Main create post card */
 .createPostSection {
-  background-color: rgba(61, 60, 60, 0.45);
+  background-color: #333333;
   width: 90%;
   height: auto;
   border-radius: 30px;

@@ -96,13 +96,13 @@
   transition: all 0.2s ease;
 }
 
-/* Hover effect */
+
 .filterBtn:hover {
   background-color: #3a3a3a;
   color: #fff;
 }
 
-/* ACTIVE (like second image) */
+
 .active {
   background-color: #4a4a4a;
   color: #fff;

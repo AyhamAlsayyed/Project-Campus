@@ -36,8 +36,8 @@
   letter-spacing: 0.6px;
   font-size: 0.95rem;
   color: rgba(255,255,255,0.92);
-  background-color: rgba(61, 60, 60, 0.95);
-  border: 1px solid rgba(255,255,255,0.10);
+  background-color: #424243;
+  border: 1px solid #424243;
   box-shadow: 0 0 0 10px rgba(0,0,0,0);
 }
 

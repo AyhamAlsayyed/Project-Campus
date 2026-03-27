@@ -11,6 +11,7 @@ export default function Community() {
     const [loading, setLoading] = useState(true)
     const [user, setUser] = useState(null)
     const [communities, setCommunities] = useState([]);
+    const [filter, setFilter] = useState("recommended");
     const loadUser = async () => {
         const token = localStorage.getItem("access");
 
@@ -32,11 +33,12 @@ export default function Community() {
     };
     useEffect(() => {
         const fetchCommunities = async () => {
+            setLoading(true); 
             try {
-                const res = await fetch("http://localhost:8000/api/communities/");
+            
+                const res = await fetch(`http://localhost:8000/api/communities/?filter=${filter}`);
                 const data = await res.json();
 
-                // optional mapping (if using Django snake_case)
                 const formatted = data.map(c => ({
                     ...c,
                     isJoined: c.is_joined,
@@ -52,11 +54,9 @@ export default function Community() {
                 setLoading(false);
             }
         };
-        loadUser();
 
         fetchCommunities();
-    }, []);
-
+    }, [filter]); // Re-
 
     const toggleTheme = () => { setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light')); }
     return (
@@ -71,7 +71,32 @@ export default function Community() {
                     <h1 className={styles.title}>
                         Looking for - <br /> <span className={styles.highlight}>COMMUNITIES</span> to be part of?
                     </h1>
+                     <div className={styles.filters}>
+                        <button
+                            className={`${styles.filterBtn} ${filter === "recommended" ? styles.active : ""}`}
+                            onClick={() => setFilter("recommended")}
+                        >
+                            Recommended
+                        </button>
+
+                       
+
+                        <button
+                            className={`${styles.filterBtn} ${filter === "popular" ? styles.active : ""}`}
+                            onClick={() => setFilter("popular")}
+                        >
+                            Popular
+                        </button>
+
+                        <button
+                            className={`${styles.filterBtn} ${filter === "trending" ? styles.active : ""}`}
+                            onClick={() => setFilter("trending")}
+                        >
+                            Trending
+                        </button>
+                    </div>
                     <div className={styles.communitiesContainer}>
+
                         <div className={styles.innerContainer}>
                             {communities.map((community, index) => (
                                 <div key={index} className={styles.itemWrapper}>

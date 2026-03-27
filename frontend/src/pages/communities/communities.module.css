@@ -82,7 +82,36 @@
   width: 100%;
 
 }
+.filters {
+  display: flex;
+  gap: 10px;
+  margin: 15px 0;
+}
 
+.filterBtn {
+  padding:  10px;
+  border-radius: 999px;
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+
+  background-color: #2a2a2a;
+  color: #aaa;
+
+  transition: all 0.2s ease;
+}
+
+
+.filterBtn:hover {
+  background-color: #3a3a3a;
+  color: #fff;
+}
+.active {
+  background-color: #4a4a4a;
+  color: #fff;
+  font-weight: 500;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
+}
 .divider {
   height: 1px;
   width: 50%;
