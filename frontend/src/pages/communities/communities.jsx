@@ -3,14 +3,33 @@ import styles from './communities.module.css';
 import Header from '../../components/pagelayout/header/header'
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import CommunityCard from '../../components/communityCard/communityCard'
-import { useState , useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 
 export default function Community() {
     const [theme, setTheme] = useState('dark');
-    const [loading , setLoading] = useState(true)
+    const [loading, setLoading] = useState(true)
     const [user, setUser] = useState(null)
     const [communities, setCommunities] = useState([]);
+    const loadUser = async () => {
+        const token = localStorage.getItem("access");
+
+        if (!token) return;
+
+        try {
+            const res = await fetch("http://localhost:8000/api/auth/me/", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const data = await res.json();
+            setUser(data);
+
+        } catch (err) {
+            console.error("Failed to load user");
+        }
+    };
     useEffect(() => {
         const fetchCommunities = async () => {
             try {
@@ -21,7 +40,9 @@ export default function Community() {
                 const formatted = data.map(c => ({
                     ...c,
                     isJoined: c.is_joined,
-                    isVerified: c.is_verified
+                    isVerified: c.is_verified,
+                    isPrivate: c.is_private,
+                    requestSent: c.request_sent
                 }));
 
                 setCommunities(formatted);
@@ -31,6 +52,7 @@ export default function Community() {
                 setLoading(false);
             }
         };
+        loadUser();
 
         fetchCommunities();
     }, []);
@@ -53,7 +75,10 @@ export default function Community() {
                         <div className={styles.innerContainer}>
                             {communities.map((community, index) => (
                                 <div key={index} className={styles.itemWrapper}>
-                                    <CommunityCard community={community} />
+                                    <CommunityCard
+                                        community={community}
+                                        setCommunities={setCommunities}
+                                    />
                                     {index !== communities.length - 1 && (
                                         <div className={styles.divider} />
                                     )}
@@ -78,6 +103,7 @@ export default function Community() {
                                 <CommunityCard
                                     key={index}
                                     community={community}
+                                    setCommunities={setCommunities}
                                     variant="small"
                                 />
                             ))}

@@ -1,28 +1,35 @@
 import { useState, useEffect } from "react";
 import styles from "./weeklynews.module.css";
 
-export default function WeeklyNews() {
+export default function WeeklyNews({ communityId }) {
     const [items, setItems] = useState([]);
     const [idx, setIdx] = useState(0);
-    useEffect(() => {
-        setItems([
-            {
-                title: "Palestinian Medical Institution",
-                description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam nonummy nibh",
-                image_url: "https://images.unsplash.com/photo-1581093588401-22b42b7f5f13",
-                start_date: "12/12/2025",
-                end_date: "01/01/2026"
-            },
-            {
-                title: "Engineering Career Fair",
-                description: "Meet top companies and explore internship opportunities.",
-                image_url: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d",
-                start_date: "02/02/2026",
-                end_date: "05/02/2026"
-            },
+    const [news, setNews] = useState([]);
+ 
+    const fetchNews = async () => {
+        try {
+            let url = "";
 
-        ]);
-    }, [])
+            if (communityId) {
+          
+                url = `http://localhost:8000/api/communities/${communityId}/news/`;
+            } else {
+           
+                url = `http://localhost:8000/api/news/`;
+            }
+
+            const res = await fetch(url);
+            const data = await res.json();
+
+            setNews(data);
+
+        } catch (err) {
+            console.error("Failed to load news");
+        }
+    };
+    useEffect(() => {
+        fetchNews();
+    }, [communityId]);
     if (!items.length) {
         return (
             <div className={styles.container}>
