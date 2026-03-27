@@ -11,7 +11,7 @@ export default function CommunityCard({ community, variant = "large" ,setCommuni
     const handleAction = async () => {
         const token = localStorage.getItem("access");
 
-        // ✅ If already joined → go to page
+        
         if (community.isJoined) {
             navigate(`/communities/${community.id}`);
             return;

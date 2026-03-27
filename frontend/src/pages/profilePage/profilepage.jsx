@@ -3,6 +3,7 @@ import Header from '../../components/pagelayout/header/header';
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import PostCard from '../../components/posts/postCard';
+import CommentModal from '../../components/comments/commentsModal'
 import FriendsSuggestion from '../../components/recentlycontacted/recentlyContacted'
 import {
     User,
@@ -20,6 +21,7 @@ export default function ProfilePage() {
     const token = localStorage.getItem("access")
     const [userLoading, setUserLoading] = useState(true);
     const [userError, setUserError] = useState("");
+    const [selectedPost, setSelectedPost] = useState(null);                
     const [posts, setPosts] = useState([]);
     const [postsLoading, setPostsLoading] = useState(true);
     const [postsError, setPostsError] = useState("");
@@ -98,6 +100,13 @@ export default function ProfilePage() {
     }, [])
     const toggleTheme = () => {
         setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
+    };
+    const openComments = (post) => {
+        setSelectedPost(post);
+    };
+
+    const closeComments = () => {
+        setSelectedPost(null);
     };
     const username = user?.username || "Username";
     const role = user?.role || "Role";
@@ -239,7 +248,13 @@ export default function ProfilePage() {
                             ) : posts.length === 0 ? (
                                 <div className={styles.notice}>No posts yet.</div>
                             ) : (
-                                posts.map((post) => <PostCard key={post.id} post={post} />)
+                                posts.map((post) => (
+                                    <PostCard
+                                        key={post.id}
+                                        post={post}
+                                        openComments={openComments}
+                                    />
+                                ))
                             )}
                         </div>
                     </div>
@@ -251,6 +266,12 @@ export default function ProfilePage() {
                     <FriendsSuggestion />
                 </div>
             </div>
+            {selectedPost && (
+                <CommentModal
+                    post={selectedPost}
+                    onClose={closeComments}
+                />
+            )}
 
         </div>
 

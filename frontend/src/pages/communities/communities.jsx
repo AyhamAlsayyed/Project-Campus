@@ -33,9 +33,9 @@ export default function Community() {
     };
     useEffect(() => {
         const fetchCommunities = async () => {
-            setLoading(true); 
+            setLoading(true);
             try {
-            
+
                 const res = await fetch(`http://localhost:8000/api/communities/?filter=${filter}`);
                 const data = await res.json();
 
@@ -56,7 +56,10 @@ export default function Community() {
         };
 
         fetchCommunities();
-    }, [filter]); // Re-
+    }, [filter]);
+    useEffect(() => {
+        loadUser();
+    }, []);
 
     const toggleTheme = () => { setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light')); }
     return (
@@ -71,7 +74,7 @@ export default function Community() {
                     <h1 className={styles.title}>
                         Looking for - <br /> <span className={styles.highlight}>COMMUNITIES</span> to be part of?
                     </h1>
-                     <div className={styles.filters}>
+                    <div className={styles.filters}>
                         <button
                             className={`${styles.filterBtn} ${filter === "recommended" ? styles.active : ""}`}
                             onClick={() => setFilter("recommended")}
@@ -79,7 +82,7 @@ export default function Community() {
                             Recommended
                         </button>
 
-                       
+
 
                         <button
                             className={`${styles.filterBtn} ${filter === "popular" ? styles.active : ""}`}
