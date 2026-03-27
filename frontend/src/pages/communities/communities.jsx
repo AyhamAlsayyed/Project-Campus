@@ -11,6 +11,25 @@ export default function Community() {
     const [loading , setLoading] = useState(true)
     const [user, setUser] = useState(null)
     const [communities, setCommunities] = useState([]);
+     const loadUser = async () => {
+        const token = localStorage.getItem("access");
+
+        if (!token) return;
+
+        try {
+            const res = await fetch("http://localhost:8000/api/auth/me/", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const data = await res.json();
+            setUser(data);
+
+        } catch (err) {
+            console.error("Failed to load user");
+        }
+    };
     useEffect(() => {
         const fetchCommunities = async () => {
             try {
@@ -31,6 +50,7 @@ export default function Community() {
                 setLoading(false);
             }
         };
+        loadUser();
 
         fetchCommunities();
     }, []);

@@ -6,6 +6,7 @@ import ProfilePage from './pages/profilePage/profilepage';
 import Homepage from './pages/homepage/Homepage';
 import Communities from './pages/communities/communities';
 import ProtectedRoute from "./components/auth/protectedRoute";
+import CommunityPage from './pages/communityPage/communityPage'
 
 
 
@@ -39,6 +40,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Communities />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/communities/:id"
+          element={
+            <ProtectedRoute>
+              <CommunityPage/>
             </ProtectedRoute>
           }
         />

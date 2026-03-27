@@ -68,7 +68,7 @@ export default function PostCard({ post }) {
   const prevSlide = () => {
     setCurrent((prev) => (prev == 0 ? validMedia.length - 1 : prev - 1));
   }
-
+ console.log(post)
 
   return (
     <article className={styles.card}>
@@ -169,6 +169,21 @@ export default function PostCard({ post }) {
             </div>
           )}
 
+        </div>
+      )}
+      {post.files && post.files.length > 0 && (
+        <div className={styles.filesContainer}>
+          {post.files.map((file, i) => (
+            <a
+              key={i}
+              href={file.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.fileItem}
+            >
+              📁 {file.name || "Download file"}
+            </a>
+          ))}
         </div>
       )}
       {post.poll_options && post.poll_options.length > 0 && (
