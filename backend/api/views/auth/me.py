@@ -50,8 +50,8 @@ def me(request):
         {
             "id": user.id,
             "username": user.username,
-            "full_name": getattr(user, "full_name", ""),
-            "academic_email": getattr(user, "academic_email", ""),
+            "full_name": getattr(profile, "full_name", ""),
+            "academic_email": getattr(profile, "academic_email", ""),
             "bio": getattr(profile, "bio", ""),
             "avatar": avatar,
             "cover": cover,
