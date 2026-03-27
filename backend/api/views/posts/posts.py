@@ -17,7 +17,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import CommunityMember, FollowPage, Post, PostReaction
+from ...models import CommunityMember, FollowPage, Friendship, Post, PostReaction
 
 
 def _get_user_university_page_id(user):
@@ -66,8 +66,22 @@ def feed(request):
 
         community_ids = list(CommunityMember.objects.filter(user=user).values_list("community_id", flat=True))
         followed_page_ids = list(FollowPage.objects.filter(user=user).values_list("page_id", flat=True))
+        friendships = Friendship.objects.filter(Q(user1=user) | Q(user2=user))
+        accepted_ids = []
+        blocked_ids = []
+
+        for f in friendships:
+            other_id = f.user2_id if f.user1_id == user.id else f.user1_id
+
+            if f.status == Friendship.Status.ACCEPTED:
+                accepted_ids.append(other_id)
+            elif f.status == Friendship.Status.BLOCKED:
+                blocked_ids.append(other_id)
+
         uni_page_id = _get_user_university_page_id(user)
 
+        qs = qs.exclude(author_user_id__in=blocked_ids)
+        qs = qs.exclude(author_user_id=user.id)
         qs = (
             qs.annotate(
                 p_university=Case(
@@ -82,6 +96,11 @@ def feed(request):
                 ),
                 p_following=Case(
                     When(author_page_id__in=followed_page_ids, then=Value(20)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+                p_friendship=Case(
+                    When(author_user_id__in=accepted_ids, then=Value(30)),
                     default=Value(0),
                     output_field=IntegerField(),
                 ),
@@ -105,7 +124,12 @@ def feed(request):
                 ),
             )
             .annotate(
-                score=F("p_university") + F("p_community") + F("p_following") + F("p_engagement_capped") + F("p_fresh")
+                score=F("p_university")
+                + F("p_community")
+                + F("p_following")
+                + F("p_friendship")
+                + F("p_engagement_capped")
+                + F("p_fresh")
             )
             .order_by("-score", "-created_at")
             .select_related("author_user", "author_page", "community")
