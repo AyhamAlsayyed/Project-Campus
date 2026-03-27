@@ -120,9 +120,9 @@ export default function Homepage() {
             formData.append("images", img);
         });
 
-        if (files) {
-            formData.append("file", files);
-        }
+        files.forEach((file) => {
+            formData.append("media", file);
+        });
 
         if (isPollOpen) {
             pollOptions
