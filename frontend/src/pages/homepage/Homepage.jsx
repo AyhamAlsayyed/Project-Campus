@@ -121,7 +121,7 @@ export default function Homepage() {
         });
 
         files.forEach((file) => {
-            formData.append("media", file);
+            formData.append("files", file);
         });
 
         if (isPollOpen) {

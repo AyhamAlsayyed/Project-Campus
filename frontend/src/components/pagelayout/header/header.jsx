@@ -11,7 +11,7 @@ export default function Header({ theme, toggleTheme, user }) {
     ? user.avatar
     : `http://localhost:8000${user.avatar}`
   : "/default-avatar.png";
-  
+
   const navigate = useNavigate();
   const location = useLocation();
 

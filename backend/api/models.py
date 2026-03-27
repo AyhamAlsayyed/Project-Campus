@@ -116,7 +116,8 @@ class Page(models.Model):
     )
 
     description = models.TextField(blank=True, null=True)
-
+    profile_image = models.ImageField(upload_to="profiles/", blank=True, null=True)
+    banner_image = models.ImageField(upload_to="banners/", blank=True, null=True)
     verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
