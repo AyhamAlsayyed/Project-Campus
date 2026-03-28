@@ -60,7 +60,11 @@ export default function Community() {
         };
 
         fetchCommunities();
+<<<<<<< HEAD
     }, [filter]); // Re-
+=======
+    }, [filter]);
+>>>>>>> d83d7a25748c713eb1f2ec62331739fbbeea83ed
     useEffect(() => {
         loadUser();
     }, []);
@@ -78,7 +82,7 @@ export default function Community() {
                     <h1 className={styles.title}>
                         Looking for - <br /> <span className={styles.highlight}>COMMUNITIES</span> to be part of?
                     </h1>
-                     <div className={styles.filters}>
+                    <div className={styles.filters}>
                         <button
                             className={`${styles.filterBtn} ${filter === "recommended" ? styles.active : ""}`}
                             onClick={() => setFilter("recommended")}
