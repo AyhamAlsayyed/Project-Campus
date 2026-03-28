@@ -521,7 +521,7 @@ class Comment(models.Model):
         related_name="comments_as_page",
         db_column="author_page_id",
     )
-    # if its the top comment it will save "null"
+    # if it's the top comment it will save "null"
     parent_comment = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,

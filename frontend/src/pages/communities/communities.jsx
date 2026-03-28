@@ -60,11 +60,7 @@ export default function Community() {
         };
 
         fetchCommunities();
-<<<<<<< HEAD
-    }, [filter]); // Re-
-=======
     }, [filter]);
->>>>>>> d83d7a25748c713eb1f2ec62331739fbbeea83ed
     useEffect(() => {
         loadUser();
     }, []);
