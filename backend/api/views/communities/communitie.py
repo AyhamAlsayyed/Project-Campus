@@ -90,3 +90,44 @@ def communities(request):
         )
 
     return Response(data)
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def join_community(request, community_id):
+    user = request.user
+
+    CommunityMember.objects.get_or_create(
+        user=user,
+        community_id=community_id,
+        defaults={"status": "approved"}
+    )
+
+    return Response({"message": "Joined successfully"})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def request_join_community(request, community_id):
+    user = request.user
+
+    CommunityMember.objects.get_or_create(
+        user=user,
+        community_id=community_id,
+        defaults={"status": "pending"}
+    )
+
+    return Response({"message": "Request sent"})
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def community_detail(request, community_id):
+    try:
+        c = Community.objects.get(community_id=community_id)
+    except Community.DoesNotExist:
+        return Response({"error": "Not found"}, status=404)
+
+    return Response({
+        "id": c.community_id,
+        "name": c.name,
+        "description": c.description,
+        "is_private": c.privacy == "private",
+    })

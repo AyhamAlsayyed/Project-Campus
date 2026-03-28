@@ -435,6 +435,7 @@ export default function Homepage() {
                 <CommentModal
                     post={selectedPost}
                     onClose={closeComments}
+                     currentUser={user}
                 />
             )}
 

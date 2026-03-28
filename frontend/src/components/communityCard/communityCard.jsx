@@ -1,7 +1,7 @@
 import styles from './communityCard.module.css'
 import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
-export default function CommunityCard({ community, variant = "large" ,setCommunities}) {
+export default function CommunityCard({ community, variant = "large", setCommunities }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const handleToggle = (e) => {
         e.preventDefault()
@@ -11,7 +11,7 @@ export default function CommunityCard({ community, variant = "large" ,setCommuni
     const handleAction = async () => {
         const token = localStorage.getItem("access");
 
-        
+
         if (community.isJoined) {
             navigate(`/communities/${community.id}`);
             return;
@@ -82,12 +82,18 @@ export default function CommunityCard({ community, variant = "large" ,setCommuni
 
                 </div>
 
-                <button onClick={handleAction} disabled={community.requestSent}>
-                    {community.isJoined
-                        ? "View"
-                        : community.isPrivate
-                            ? (community.requestSent ? "Requested" : "Request to Join")
-                            : "Join"}
+                <button
+                    className={`${styles.actionBtn} ${community.isJoined ? styles.viewBtn : styles.joinBtn}`}
+                    onClick={handleAction}
+                    disabled={community.requestSent && !community.isJoined}
+                >
+                    {community.isJoined ? (
+                        "View"
+                    ) : community.requestSent ? (
+                        "Requested"
+                    ) : (
+                        "Join"
+                    )}
                 </button>
             </div>
         </div>

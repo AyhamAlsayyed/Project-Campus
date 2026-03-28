@@ -1,7 +1,7 @@
 .communityItem {
   position: relative;
-  width:  85%;
-  border-radius: 18px;
+  width:  90%;
+  border-radius: 24px;
   overflow: hidden;
   background-size: cover;
   background-position: center;
@@ -98,16 +98,38 @@
 }
 
 /* BUTTON */
-.btn {
+.actionBtn {
+  padding: 8px 24px;
+  border-radius: 12px;
   border: none;
-  padding: 8px 18px;
-  border-radius: 999px;
-  color: white;
+  font-weight: 600;
   cursor: pointer;
-  backdrop-filter: blur(6px);
-  transition: 0.2s;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  font-size: 14px;
+}
+.joinBtn {
+  background: #a855f7; /* Solid purple matching mockup */
+  color: white;
 }
 
+.viewBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.actionBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.actionBtn:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.3);
+  cursor: not-allowed;
+}
 .view {
   background: rgba(255,255,255,0.2);
 }

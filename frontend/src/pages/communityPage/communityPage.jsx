@@ -29,7 +29,14 @@ export default function CommunityPage() {
     const [isPollOpen, setIsPollOpen] = useState(false);
     const [pollOptions, setPollOptions] = useState(["", ""]);
     const fetchCommunity = async () => {
-        const res = await fetch(`/api/communities/${id}/`);
+        const token = localStorage.getItem("access");
+
+        const res = await fetch(`http://localhost:8000/api/communities/${id}/`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
         const data = await res.json();
         setCommunity(data);
     };
@@ -155,7 +162,7 @@ export default function CommunityPage() {
                             Recommended
                         </button>
 
-                       
+
 
                         <button
                             className={`${styles.filterBtn} ${filter === "popular" ? styles.active : ""}`}

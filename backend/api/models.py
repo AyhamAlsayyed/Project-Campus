@@ -530,6 +530,14 @@ class Comment(models.Model):
         related_name="replies",
         db_column="parent_comment_id",
     )
+    replying_to_user = models.ForeignKey(
+        'auth.User',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="replies_received"
+    )
+
 
     def clean(self):
         validate_exactly_one(self, "author_user", "author_page")

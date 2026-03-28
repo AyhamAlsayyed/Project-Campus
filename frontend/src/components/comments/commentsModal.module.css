@@ -39,7 +39,68 @@
     font-weight: 700;
     color: rgba(255, 255, 255, 0.92);
 }
+.replyBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #2a2a2a;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.commentBlock {
+  margin-bottom: 12px;
+}
 
+.replyRow {
+  display: flex;
+  gap: 8px;
+  margin-left: 40px; /* 👈 indentation */
+  margin-top: 6px;
+}
+
+.replyAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.replyBubble {
+  background: #2a2a2a;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+.replyingTo {
+  color: #4da6ff;
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+.closeReplyBtn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: #444;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.deleteBtn {
+  color: #ff4d4f;
+  cursor: pointer;
+}
+
+.deleteBtn:hover {
+  text-decoration: underline;
+}
+.closeReplyBtn:hover {
+  background: #666;
+}
 .closeButton {
     position: absolute;
     right: 0px;

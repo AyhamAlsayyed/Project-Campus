@@ -270,6 +270,7 @@ export default function ProfilePage() {
                 <CommentModal
                     post={selectedPost}
                     onClose={closeComments}
+                    currentUser={user}
                 />
             )}
 

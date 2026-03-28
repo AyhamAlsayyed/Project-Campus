@@ -72,6 +72,7 @@ export default function PostCard({ post, openComments }) {
       console.error(`Failed to ${actionType} post`);
     }
   };
+  console.log(post)
   const toggleMenu = () => {
     setShowMenu(prev => !prev);
   }
