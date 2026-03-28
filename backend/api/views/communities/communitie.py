@@ -19,6 +19,17 @@ from rest_framework.response import Response
 from ...models import Community, CommunityMember
 
 
+def file_url(request, f):
+    if not f:
+        return None
+    if isinstance(f, str):
+        return request.build_absolute_uri(f) if f.startswith("/") else f
+    try:
+        return request.build_absolute_uri(f.url)
+    except Exception:
+        return None
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def communities(request):
@@ -81,6 +92,7 @@ def communities(request):
                 "id": c.community_id,
                 "name": c.name,
                 "description": c.description,
+                "image": file_url(request, c.banner_image),
                 "is_private": c.privacy == "private",
                 "is_verified": False,
                 "is_joined": c.is_joined,
@@ -90,16 +102,14 @@ def communities(request):
         )
 
     return Response(data)
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def join_community(request, community_id):
     user = request.user
 
-    CommunityMember.objects.get_or_create(
-        user=user,
-        community_id=community_id,
-        defaults={"status": "approved"}
-    )
+    CommunityMember.objects.get_or_create(user=user, community_id=community_id, defaults={"status": "approved"})
 
     return Response({"message": "Joined successfully"})
 
@@ -109,13 +119,10 @@ def join_community(request, community_id):
 def request_join_community(request, community_id):
     user = request.user
 
-    CommunityMember.objects.get_or_create(
-        user=user,
-        community_id=community_id,
-        defaults={"status": "pending"}
-    )
+    CommunityMember.objects.get_or_create(user=user, community_id=community_id, defaults={"status": "pending"})
 
     return Response({"message": "Request sent"})
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -125,9 +132,11 @@ def community_detail(request, community_id):
     except Community.DoesNotExist:
         return Response({"error": "Not found"}, status=404)
 
-    return Response({
-        "id": c.community_id,
-        "name": c.name,
-        "description": c.description,
-        "is_private": c.privacy == "private",
-    })
+    return Response(
+        {
+            "id": c.community_id,
+            "name": c.name,
+            "description": c.description,
+            "is_private": c.privacy == "private",
+        }
+    )
