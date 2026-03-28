@@ -317,6 +317,8 @@ class Community(models.Model):
         default=Privacy.PUBLIC,
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    banner_image = models.ImageField(upload_to="banners/", blank=True, null=True)
+    verified = models.BooleanField(default=False)
 
     class Meta:
         db_table = "community"
@@ -345,6 +347,17 @@ class CommunityMember(models.Model):
         choices=Role.choices,
         default=Role.MEMBER,
     )
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

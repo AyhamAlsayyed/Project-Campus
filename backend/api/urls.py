@@ -5,6 +5,7 @@ from .views.auth.me import me
 from .views.auth.signup.send_code import send_code
 from .views.auth.signup.signup import signup
 from .views.auth.signup.verify_code import verify_code
+from .views.communities.communitie import communities
 from .views.posts.like import toggle_like
 from .views.posts.post_create import create_post
 from .views.posts.posts import feed
@@ -19,4 +20,5 @@ urlpatterns = [
     path("posts/", feed, name="user_posts"),
     path("posts/create/", create_post, name="create_post"),
     path("posts/<int:post_id>/like/", toggle_like),
+    path("communities/", communities),
 ]

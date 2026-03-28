@@ -33,10 +33,14 @@ export default function Community() {
     };
     useEffect(() => {
         const fetchCommunities = async () => {
-            setLoading(true); 
+            setLoading(true);
             try {
-            
-                const res = await fetch(`http://localhost:8000/api/communities/?filter=${filter}`);
+                const token = localStorage.getItem("access");
+                const res = await fetch("http://localhost:8000/api/communities/?filter=${filter}", {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    },
+                });
                 const data = await res.json();
 
                 const formatted = data.map(c => ({
@@ -57,6 +61,9 @@ export default function Community() {
 
         fetchCommunities();
     }, [filter]); // Re-
+    useEffect(() => {
+        loadUser();
+    }, []);
 
     const toggleTheme = () => { setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light')); }
     return (
@@ -79,7 +86,7 @@ export default function Community() {
                             Recommended
                         </button>
 
-                       
+
 
                         <button
                             className={`${styles.filterBtn} ${filter === "popular" ? styles.active : ""}`}
