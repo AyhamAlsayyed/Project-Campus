@@ -9,13 +9,13 @@
 }
 
 .modal {
-    width: 650px; /* Matching the wider post card look */
+    width: 650px;
     max-height: 90vh;
-    border-radius: 20px; /* From PostCard styling */
+    border-radius: 20px;
     padding: 16px 16px 14px;
-    background: rgba(25, 25, 25, 0.72); /* Matching the specific dark theme */
-    border: 1px solid rgba(255, 255, 255, 0.08); /* Subtle white border */
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.42); /* Deep shadow */
+    background: rgba(25, 25, 25); 
+    border: 1px solid rgba(255, 255, 255, 0.08); 
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.42); 
     display: flex;
     flex-direction: column;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
@@ -110,7 +110,29 @@
     font-size: 18px;
     cursor: pointer;
 }
+.viewRepliesToggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #a8a8a8;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+    margin-bottom: 12px;
+    margin-left: 48px; /* Aligns with the text, past the avatar */
+    transition: color 0.2s ease;
+}
 
+.viewRepliesToggle:hover {
+    color: #ffffff;
+}
+
+.toggleLine {
+    width: 24px;
+    height: 1px;
+    background-color: #a8a8a8;
+}
 .content {
     overflow-y: auto;
     flex: 1;
@@ -248,7 +270,7 @@
 }
 
 .commentBubble {
-    background: rgba(255, 255, 255, 0.04); /* Subtly darker/translucent */
+    background: rgba(255, 255, 255, 0.04); 
     padding: 8px 12px;
     border-radius: 15px;
     max-width: fit-content;

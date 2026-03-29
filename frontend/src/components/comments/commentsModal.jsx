@@ -9,16 +9,34 @@ export default function CommentModal({ post, onClose, currentUser }) {
     const [isLiked, setIsLiked] = useState(post.is_liked || false);
     const [likesCount, setLikesCount] = useState(post.likes_count || 0);
     const [currentSlide, setCurrentSlide] = useState(0);
-
+    const [expandedReplies, setExpandedReplies] = useState({})
     const [loading, setLoading] = useState(true);
     const [parentComment, setParentComment] = useState(null)
     const visualMedia = post.media?.filter(item => item.type === "image" || item.type === "video") || [];
     const files = post.media?.filter(item => item.type === "file") || [];
     const parentComments = comments.filter(c => !c.parent_comment);
     const replies = comments.filter(c => c.parent_comment);
-    const getReplies = (commentId) => {
-        return replies.filter(r => r.parent_comment === commentId);
+    const toggleReplies = (commentId) => {
+        setExpandedReplies((prev) => ({
+            ...prev,
+            [commentId]: !prev[commentId]
+        }));
     };
+    const getReplies = (commentId) => {
+        let allReplies = [];
+
+        const findReplies = (id) => {
+            const directReplies = replies.filter(r => r.parent_comment === id);
+            directReplies.forEach(r => {
+                allReplies.push(r);
+                findReplies(r.id);
+            });
+        };
+
+        findReplies(commentId);
+        return allReplies;
+    };
+
     useEffect(() => {
         const fetchComments = async () => {
             try {
@@ -36,6 +54,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
         };
         fetchComments();
     }, [post.id]);
+
     const deleteComment = async (commentId) => {
         const token = localStorage.getItem("access");
 
@@ -75,10 +94,8 @@ export default function CommentModal({ post, onClose, currentUser }) {
                 },
                 body: JSON.stringify({
                     text: newComment,
-                    parent_comment: parentComment
-                        ? (parentComment.parent_comment || parentComment.id)
-                        : null,
-                    replying_to: parentComment ? parentComment.user_id : null,
+                    parent_comment: parentComment ? parentComment.id : null,
+                    replying_to: parentComment ? parentComment.user : null,
                 }),
             });
 
@@ -270,74 +287,86 @@ export default function CommentModal({ post, onClose, currentUser }) {
 
                     {/* COMMENTS LIST */}
                     <div className={styles.commentsSection}>
-                        {parentComments.map((c) => (
-                            <div key={c.id} className={styles.commentBlock}>
+                        {parentComments.map((c) => {
+                            const replies = getReplies(c.id);
+                            const isExpanded = expandedReplies[c.id];
 
-                                {/* MAIN COMMENT */}
-                                <div className={styles.commentRow}>
-                                    <img src={c.user_avatar || "/default-avatar.png"} className={styles.commentAvatar} />
+                            return (
+                                <div key={c.id} className={styles.commentBlock}>
+                                    {/* MAIN COMMENT */}
+                                    <div className={styles.commentRow}>
+                                        <img src={c.user_avatar || "/default-avatar.png"} className={styles.commentAvatar} alt="" />
 
-                                    <div className={styles.commentContent}>
-                                        <div className={styles.commentBubble}>
-                                            <div className={styles.commentAuthor}>{c.user}</div>
-                                            <p>{c.text}</p>
-                                        </div>
-
-                                        <div className={styles.commentActions}>
-                                            <span onClick={() => toggleLike(c.id)}>Like</span>
-                                            <span onClick={() => setParentComment(c)}>Reply</span>
-
-                                            {c.user === currentUser.username && (
-                                                <span
-                                                    className={styles.deleteBtn}
-                                                    onClick={() => deleteComment(c.id)}
-                                                >
-                                                    Delete
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* 🔥 REPLIES */}
-                                {getReplies(c.id).map((reply) => (
-                                    <div key={reply.id} className={styles.replyRow}>
-
-                                        <img src={reply.user_avatar || "/default-avatar.png"} className={styles.replyAvatar} />
-
-                                        <div className={styles.replyContent}>
-                                            <div className={styles.replyBubble}>
-                                                <b>{reply.user}</b>
-                                                <p>
-                                                    <span className={styles.replyingTo}>
-                                                        @{reply.replying_to || c.user}
-                                                    </span>{" "}
-                                                    {reply.text}
-                                                </p>
+                                        <div className={styles.commentContent}>
+                                            <div className={styles.commentBubble}>
+                                                <div className={styles.commentAuthor}>{c.user}</div>
+                                                <p>{c.text}</p>
                                             </div>
 
                                             <div className={styles.commentActions}>
-                                                <div className={styles.commentActions}>
-                                                    <span onClick={() => toggleLike(reply.id)}>Like</span>
-                                                    <span onClick={() => setParentComment(reply || c)}>Reply</span>
+                                                <span onClick={() => toggleLike(c.id)}>Like</span>
+                                                <span onClick={() => setParentComment(c)}>Reply</span>
 
-                                                    {reply.user === currentUser.username && (
-                                                        <span
-                                                            className={styles.deleteBtn}
-                                                            onClick={() => deleteComment(reply.id)}
-                                                        >
-                                                            Delete
-                                                        </span>
-                                                    )}
+                                                {c.user === currentUser?.username && (
+                                                    <span
+                                                        className={styles.deleteBtn}
+                                                        onClick={() => deleteComment(c.id)}
+                                                    >
+                                                        Delete
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 🔥 INSTAGRAM-STYLE TOGGLE BUTTON */}
+                                    {replies.length > 0 && (
+                                        <div
+                                            className={styles.viewRepliesToggle}
+                                            onClick={() => toggleReplies(c.id)}
+                                        >
+                                            <span className={styles.toggleLine}></span>
+                                            <span>{isExpanded ? "Hide replies" : `View replies (${replies.length})`}</span>
+                                        </div>
+                                    )}
+
+                                    {/* 🔥 REPLIES (Only renders if isExpanded is true) */}
+                                    {isExpanded && replies.map((reply) => (
+                                        <div key={reply.id} className={styles.replyRow}>
+                                            <img src={reply.user_avatar || "/default-avatar.png"} className={styles.replyAvatar} alt="" />
+
+                                            <div className={styles.replyContent}>
+                                                <div className={styles.replyBubble}>
+                                                    <b>{reply.user}</b>
+                                                    <p>
+                                                        <span className={styles.replyingTo}>
+                                                            @{reply.replying_to || c.user}
+                                                        </span>{" "}
+                                                        {reply.text}
+                                                    </p>
+                                                </div>
+
+                                                <div className={styles.commentActions}>
+                                                    <div className={styles.commentActions}>
+                                                        <span onClick={() => toggleLike(reply.id)}>Like</span>
+                                                        <span onClick={() => setParentComment(reply || c)}>Reply</span>
+
+                                                        {reply.user === currentUser?.username && (
+                                                            <span
+                                                                className={styles.deleteBtn}
+                                                                onClick={() => deleteComment(reply.id)}
+                                                            >
+                                                                Delete
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-
-                                    </div>
-                                ))}
-
-                            </div>
-                        ))}
+                                    ))}
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
                 {parentComment && (
