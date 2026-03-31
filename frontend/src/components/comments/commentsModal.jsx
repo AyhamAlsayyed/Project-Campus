@@ -101,7 +101,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
 
             if (res.ok) {
                 const savedComment = await res.json();
-                setComments([savedComment, ...comments]);
+                setComments([ ...comments, savedComment]);
                 setNewComment("");
                 setParentComment(null);
             }

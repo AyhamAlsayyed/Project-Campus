@@ -212,19 +212,19 @@ export default function CommunityPage() {
                             {/* RIGHT SIDE BUTTONS */}
                             <div className={styles.actionButtons}>
 
-                                <label className={styles.actionButton}>
+                                <label className={styles.actionButtonOne}>
                                     📷
                                     <input hidden type="file" onChange={handleMediaUpload} />
                                 </label>
 
-                                <label className={styles.actionButton}>
+                                <label className={styles.actionButtonOne}>
                                     📁
                                     <input hidden type="file" onChange={handleFileUpload} />
                                 </label>
 
                                 <button
                                     type="button"
-                                    className={styles.actionButton}
+                                    className={styles.actionButtonOne}
                                     onClick={() => setIsPollOpen(prev => !prev)}
                                 >
                                     📊

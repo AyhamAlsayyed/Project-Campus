@@ -227,16 +227,34 @@
   opacity: 0.8;
 }
 
-/* Action buttons row */
+
 .actionsRow {
   display: flex;
   align-items: center;
-  gap: 20px;
-  font-size: 0.85rem;
+  gap: 12px; 
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+.actionButton {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-accent);
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: 0.2s ease;
+  font-weight: 500;
+}
+.actionButton:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
 }
 
 /* Media / File / Poll buttons */
-.actionButton {
+.actionButtonOne {
   background: transparent;
   border: none;
   color: var(--text-accent);
@@ -246,7 +264,7 @@
   transition: 0.2s ease;
 }
 
-.actionButton:hover {
+.actionButtonOne:hover {
   background-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -307,39 +325,42 @@
   left: 0;
   width: 100%;
   height: 100%;
-
   background: rgba(0,0,0,0.6);
-
   display: flex;
   justify-content: center;
   align-items: center;
-
   z-index: 999;
 }
 
 .modal {
   width: 500px;
-  background: rgba(61, 60, 60, 0.95);
+  background: #242526; 
+  border: 1px solid rgba(255, 255, 255, 0.1); 
   border-radius: 20px;
-  padding: 20px;
+  padding: 24px;
   color: var(--text-accent);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6); 
 }
 .closeButton {
   position: absolute;
-  right: 10px;
-  top: 10px;
+  right: 0; 
+  top: -5px;
   width: 36px;
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.1);
-  color: white;
+  background: rgba(255, 255, 255, 0.05);
+  color: #b0b3b8;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   cursor: pointer;
   transition: 0.2s ease;
+}
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
 }
 
 .previewContainer {
@@ -394,35 +415,55 @@
 }
 .modalHeader {
   display: flex;
-  justify-content: space-between;
+  justify-content: center; /* Center the title */
   position: relative;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Separator line */
 }
-
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
 .modalInput {
   width: 100%;
   height: 120px;
-  margin-top: 10px;
-
+  margin-top: 15px;
   background: transparent;
   border: none;
   outline: none;
-
   color: var(--text-accent);
   font-size: 1.1rem;
   resize: none;
 }
+.modalInput::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
 
 .postButton {
   width: 100%;
-  margin-top: 15px;
-  padding: 10px;
-
+  margin-top: 20px;
+  padding: 12px;
   border: none;
-  border-radius: 10px;
-
-  background: #3a3b3c;
+  border-radius: 12px;
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
   color: white;
+  font-weight: 600;
+  font-size: 1.05rem;
   cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.postButton:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.postButton:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.3);
+  cursor: not-allowed;
+  transform: none;
 }

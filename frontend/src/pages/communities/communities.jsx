@@ -36,9 +36,9 @@ export default function Community() {
             setLoading(true);
             try {
                 const token = localStorage.getItem("access");
-                const res = await fetch("http://localhost:8000/api/communities/?filter=${filter}", {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
+                const res = await fetch(`http://localhost:8000/api/communities/?filter=${filter}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
                     },
                 });
                 const data = await res.json();
@@ -84,6 +84,12 @@ export default function Community() {
                             onClick={() => setFilter("recommended")}
                         >
                             Recommended
+                        </button>
+                        <button
+                            className={`${styles.filterBtn} ${filter === "joined" ? styles.active : ""}`}
+                            onClick={() => setFilter("joined")}
+                        >
+                            Joined
                         </button>
 
 
