@@ -5,6 +5,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import PostCard from '../../components/posts/postCard';
 import UserDetails from '../../components/userDetails/userDetails';
 import CommentModal from '../../components/comments/commentsModal';
+import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
 import FriendsSuggestion from '../../components/recentlycontacted/recentlyContacted';
 import {
     User,
@@ -16,6 +17,7 @@ import {
     HelpCircle,
     MessageSquare
 } from "lucide-react";
+
 
 export default function ProfilePage() {
     const [theme, setTheme] = useState("dark");
@@ -107,7 +109,7 @@ export default function ProfilePage() {
             });
 
             if (res.ok) {
-                setFriendStatus("sent"); 
+                setFriendStatus("sent");
             }
         } catch (e) {
             console.error(e);
@@ -162,7 +164,7 @@ export default function ProfilePage() {
         loadProfileUser();
     }, [userId]);
 
-  
+
 
     const handleMessage = () => {
         navigate(`/messages/${userId}`);
@@ -192,29 +194,11 @@ export default function ProfilePage() {
             </div>
 
             <div className={`${styles.page} ${styles.content}`}>
-                <nav className={styles.sideBarNav}>
-                    {mainItems.map(({ label, path, Icon }) => (
-                        <button
-                            key={path}
-                            onClick={() => navigate(path)}
-                            className={`${styles.sideBarButton} ${isActive(path) ? styles.active : ""}`}
-                        >
-                            <Icon size={22} /> {label}
-                        </button>
-                    ))}
-                    <div className={styles.divider} />
-                    {footerItems.map(({ label, path, Icon }) => (
-                        <button
-                            key={path}
-                            onClick={() => navigate(path)}
-                            className={`${styles.sideBarButton} ${isActive(path) ? styles.active : ""}`}
-                        >
-                            <Icon size={22} /> {label}
-                        </button>
-                    ))}
-                    <span className={styles.copyright}>© 2026 Project Campus.</span>
-                </nav>
 
+                <SideBarNav
+                    variant="profile"
+                    currentUser={currentUser}
+                />
                 <div className={styles.profileContent}>
                     {userLoading && <div className={styles.notice}>Loading profile...</div>}
 
