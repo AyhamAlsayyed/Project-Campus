@@ -2,6 +2,7 @@ import styles from "./posts.module.css";
 
 import { useState } from "react";
 import { Share2, MoreHorizontal, Bookmark, Ban, Flag } from "lucide-react";
+import { Link } from "react-router-dom";
 import Like from '../../Assets/icons/like.png';
 import LikeActive from '../../Assets/icons/like-active.png'
 export default function PostCard({ post, openComments }) {
@@ -94,11 +95,13 @@ export default function PostCard({ post, openComments }) {
 
       <div className={styles.topRow}>
         <div className={styles.user}>
-          <img
-            className={styles.avatar}
-            src={post.author_avatar || "/default-avatar.png"}
-            alt=""
-          />
+          <Link to={`/profile/${post.author_id}`}>
+            <img
+              className={styles.avatar}
+              src={post.author_avatar || "/default-avatar.png"}
+              alt=""
+            />
+          </Link>
 
           <div className={styles.userMeta}>
             <div className={styles.nameLine}>

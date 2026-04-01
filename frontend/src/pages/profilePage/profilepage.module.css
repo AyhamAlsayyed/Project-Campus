@@ -188,15 +188,83 @@ body {
 /* Profile header row */
 .profileHeaderRow {
   display: flex;
-  gap: 22px;
+  padding: 0 32px 24px 32px;
+   margin-top: -20px;
+  align-items: flex-start;
+  gap: 24px;
+}
+.profileMeta {
+  flex: 1;
+  margin-top: 5px;
+}
+.profileActions {
+  display: flex;
+  gap: 12px;
+  margin-left: auto; /* This is the magic that pushes them to the right */
+  margin-top: 65px;
+}
+.addFriendBtn {
+  background: #7c3aed; /* Modern Purple */
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
 
-  padding: 18px 26px 8px 26px;
-  margin-top: -40px;
-  /* pulls avatar into cover */
+.messageBtn {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.addFriendBtn:hover, .messageBtn:hover {
+  transform: translateY(-2px);
+  background: rgba(124, 58, 237, 0.9);
 }
 
 .avatarWrap {
   flex: 0 0 auto;
+}
+.pendingBtn {
+  background: #444;
+  color: #ccc;
+  border-radius: 20px;
+  padding: 8px 14px;
+}
+
+.acceptBtn {
+  background: #4CAF50;
+  color: white;
+  border-radius: 20px;
+  padding: 8px 14px;
+}
+
+.declineBtn {
+  background: #f44336;
+  color: white;
+  border-radius: 20px;
+  padding: 8px 14px;
+}
+
+.friendsBtn {
+  background: #2a2a2a;
+  color: white;
+  border-radius: 20px;
+  padding: 8px 14px;
 }
 
 .avatarCircle {

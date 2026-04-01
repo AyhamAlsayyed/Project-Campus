@@ -1,0 +1,85 @@
+.container {
+  width: 100%;
+  height: auto; /* Ensures container grows with content */
+}
+
+.recentlyContactedWrap {
+  position: relative;
+  width: 100%;
+  margin-top: 45px;
+}
+
+.pill {
+  position: absolute;
+  top: -45px;
+  left: 10px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  border-radius: 18px 18px 0 0;
+  font-weight: 800;
+  height: 25px;
+  width: fit-content; /* Changed from 20% to fit-content for better label handling */
+  min-width: 80px;
+  letter-spacing: 0.6px;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.92);
+  background-color: #424243;
+  border: 1px solid #424243;
+}
+
+.recentlyContactedWrapper {
+  position: relative;
+  border-radius: 26px;
+  padding: 18px;
+  background: #333333;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+  z-index: 2;
+  height: auto; /* Critical for auto-expansion */
+}
+
+.contactList {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+}
+
+.contactCard {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  height: auto; /* Allows card to grow if there are 5 hobbies vs 1 */
+}
+
+.contactCard:last-child {
+  border-bottom: none;
+}
+
+.detailsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* Space between multiple <p> tags (e.g., two different degrees) */
+}
+
+.detailsSection h4 {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detailsSection p {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: flex-start; /* Better alignment for long text that wraps */
+  gap: 10px;
+  line-height: 1.4;
+}

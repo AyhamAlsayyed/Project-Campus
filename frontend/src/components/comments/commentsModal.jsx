@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import styles from "./commentsModal.module.css";
 import Like from '../../Assets/icons/like.png';
 import { X } from "lucide-react";
+import { Link } from "react-router-dom";
 import LikeActive from '../../Assets/icons/like-active.png';
 export default function CommentModal({ post, onClose, currentUser }) {
     const [comments, setComments] = useState(post.comments || []);
@@ -190,7 +191,9 @@ export default function CommentModal({ post, onClose, currentUser }) {
                 <div className={styles.content}>
                     {/* POST HEADER */}
                     <div className={styles.postHeader}>
+                     <Link to={`/profile/${post.author_id}`}>
                         <img src={post.author_avatar || "/default-avatar.png"} className={styles.avatar} alt="" />
+                     </Link>
                         <div className={styles.authorInfo}>
                             <span className={styles.authorName}>{post.author_username}</span>
                             <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>
@@ -295,7 +298,9 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                 <div key={c.id} className={styles.commentBlock}>
                                     {/* MAIN COMMENT */}
                                     <div className={styles.commentRow}>
-                                        <img src={c.user_avatar || "/default-avatar.png"} className={styles.commentAvatar} alt="" />
+                                       <Link to={`/profile/${c.user_id}`}>
+                                            <img src={c.user_avatar || "/default-avatar.png"} className={styles.commentAvatar} alt="" />
+                                        </Link>
 
                                         <div className={styles.commentContent}>
                                             <div className={styles.commentBubble}>
@@ -333,7 +338,9 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                     {/* 🔥 REPLIES (Only renders if isExpanded is true) */}
                                     {isExpanded && replies.map((reply) => (
                                         <div key={reply.id} className={styles.replyRow}>
-                                            <img src={reply.user_avatar || "/default-avatar.png"} className={styles.replyAvatar} alt="" />
+                                            <Link to={`/profile/${reply.user_id}`}>
+                                                <img src={reply.user_avatar || "/default-avatar.png"} className={styles.replyAvatar} alt="" />
+                                            </Link>
 
                                             <div className={styles.replyContent}>
                                                 <div className={styles.replyBubble}>
