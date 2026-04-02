@@ -25,6 +25,7 @@
   cursor: pointer;
 }
 
+
 .darkModeIcon {
   height: 70px;
 }
@@ -67,6 +68,40 @@
   gap: 40px;
   justify-content: flex-end;
 }
+.bellButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1.5px solid transparent; /* Reserve space for border */
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.bellButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.bellIconContainer {
+  position: relative;
+  display: flex;
+}
+.notificationWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.redDotIndicator {
+  position: absolute;
+  top: -6px;
+  right: -7px;
+  width: 8px;
+  height: 8px;
+  background: #ff4d4d;
+  border-radius: 50%;
+  border: 1.5px solid #1a1a1a;
+}
 
 .iconButton {
   width: 44px;
@@ -78,6 +113,7 @@
   cursor: pointer;
   background: transparent;
   color: var(--text-accent);
+  position: relative; /* CRITICAL FIX: Keeps the badge attached to the button */
 }
 
 .userProfilePicture {
@@ -85,4 +121,233 @@
   height: 44px;
   border-radius: 50%;
   object-fit: cover;
+}
+.rightBadge {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+.notificationDropdown {
+  position: absolute;
+  top: calc(100% + 15px);
+  right: 0;
+  width: 420px;
+  background: rgba(35, 35, 35, 0.98);
+  backdrop-filter: blur(20px);
+  border-radius: 30px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+}
+
+.notifHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.notifTitle {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.notifHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.viewAll {
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-transform: lowercase;
+}
+
+.notificationItem {
+ position: relative;
+  display: flex;
+  gap: 15px;
+  padding: 20px 16px; 
+  transition: background 0.2s;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08); 
+  margin-bottom: 0; 
+}
+.notificationItem:last-child {
+  border-bottom: none;
+}
+
+.notificationItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+
+
+.notifAvatarWrap {
+  position: relative;
+  flex: 0 0 50px;
+  height: 50px;
+}
+
+.notifAvatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.notifIconBadge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 20px;
+  height: 20px;
+  background: #444;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  border: 2px solid #333;
+}
+
+.notifContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.notifTopRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.notifType {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #ffffff;
+}
+
+.notifTime {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.notifText {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.notifMenu {
+  color: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+}
+
+/* Update your existing unreadCount badge to match the pink theme */
+.unreadCount {
+  position: absolute;
+  top: 0px; /* Tweaked to sit perfectly on the bell edge */
+  right: 0px; 
+  background: #ff4d94; /* Target Pink color */
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid #2a2a2a; /* Dark border to separate it from the bell icon */
+  transform: translate(20%, -20%);
+}
+.unreadDot {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background: #ff4d94;
+  border-radius: 50%;
+  z-index: 2;
+}
+.notifMenuWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.notifMenuBtn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+.notifMenuBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+
+.actionMenu {
+  position: absolute;
+  top: 30px;
+  right: 25px;
+  width: 110px;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 1010;
+}
+
+.actionMenu button {
+  background: transparent;
+  border: none;
+  color: #fff;
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionMenu button:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+
+.actionMenu .deleteAction {
+  color: #ff4d94;
+}
+
+.actionMenu .deleteAction:hover {
+  background: rgba(255, 77, 148, 0.1);
 }

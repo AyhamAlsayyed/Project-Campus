@@ -40,18 +40,6 @@ export default function ProfilePage() {
 
     const isActive = (path) => pathname === path || pathname.startsWith(path + "/");
 
-    const mainItems = [
-        { label: "Profile", path: `/profile/${currentUser?.id}`, Icon: User },
-        { label: "Friends", path: "/friends", Icon: UserPlus },
-        { label: "Pages", path: "/pages", Icon: Bell },
-        { label: "Communities", path: "/communities", Icon: Users },
-    ];
-
-    const footerItems = [
-        { label: "Settings", path: "/settings", Icon: Settings },
-        { label: "Language", path: "/language", Icon: Languages },
-        { label: "Help", path: "/help", Icon: HelpCircle },
-    ];
 
     const loadCurrentUser = async () => {
         try {
@@ -196,7 +184,7 @@ export default function ProfilePage() {
             <div className={`${styles.page} ${styles.content}`}>
 
                 <SideBarNav
-                    variant="profile"
+                    variant={isOwnProfile ? "profile" : "default"}
                     currentUser={currentUser}
                 />
                 <div className={styles.profileContent}>
