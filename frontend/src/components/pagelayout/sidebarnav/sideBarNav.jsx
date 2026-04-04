@@ -69,7 +69,7 @@ const profileFooterItems = [
             }`}
         >
           {Icon && typeof Icon === "string" ? (
-           <img src={Icon} alt="" className={styles.icon} width={path == "/communities" ? 20 : 22} height={path == "/communities" ? 20 : 22} style={{ filter: "invert(1)" }} />
+           <img src={Icon} alt="" className={styles.icon} width={path == "/communities" ? 22 : 22} height={path == "/communities" ? 20 : 22} style={{ filter: "invert(1)" }} />
           ) : Icon ? (
             <Icon size={22} />
           ) : null}

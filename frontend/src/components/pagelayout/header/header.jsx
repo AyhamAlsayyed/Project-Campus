@@ -10,10 +10,59 @@ import BellActive from '../../../Assets/icons/notifications-active.png';
 
 export default function Header({ theme, toggleTheme, user }) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const notifRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showChats, setShowChats] = useState(false);
+  const chatRef = useRef(null);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [chats, setChats] = useState([]);
+  
+  const filteredChats = chats.filter((chat) =>
+    chat.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const token = localStorage.getItem("accessToken");
+      try {
+        const response = await fetch("http://localhost:8000/api/notifications", {
+          headers: { 
+            "Authorization": `Bearer ${token}`, 
+            "Content-Type": "application/json" 
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setNotifications(data);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user) fetchNotifications();
+  }, [user]);
+
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotifications(false);
+        setOpenMenuId(null);
+      }
+      if (chatRef.current && !chatRef.current.contains(event.target)) {
+        setShowChats(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+
+  const unreadChatsCount = chats.reduce((sum, chat) => sum + chat.unread, 0);
   const handleMarkAsRead = async (id) => {
     try {
 
@@ -146,9 +195,67 @@ export default function Header({ theme, toggleTheme, user }) {
       <div className={styles.headerRight}>
         <ThemeToggler theme={theme} toggleTheme={toggleTheme} />
 
-        <button className={styles.iconButton} type="button">
-          <img src={MessageSquare} width={27} height={27} alt="Messages" style={{ filter: "invert(1)" }} />
-        </button>
+        <div className={styles.chatWrapper} ref={chatRef}>
+          {/* Active class added, red dot added */}
+          <button
+            className={`${styles.iconButton} ${showChats ? styles.activeIconBtn : ""}`}
+            type="button"
+            onClick={() => setShowChats((prev) => !prev)}
+          >
+            <img src={MessageSquare} width={27} height={27} alt="Messages" style={{ filter: "invert(1)" }} />
+            {unreadChatsCount > 0 && <span className={styles.redDotIndicator} style={{ top: '2px', right: '4px' }} />}
+          </button>
+
+          {showChats && (
+            <div className={styles.chatDropdown}>
+              <div className={styles.notifHeader}>
+                <h3 className={styles.notifTitle}>Chats</h3>
+                <div className={styles.notifHeaderActions}>
+                  <Check size={18} />
+                  <span className={styles.viewAll}>view all</span>
+                </div>
+              </div>
+
+              {/* Fixed Search Bar */}
+              <div className={styles.chatSearchContainer}>
+                <Search size={18} className={styles.chatSearchIcon} />
+                <input
+                  className={styles.chatSearchInput}
+                  placeholder="Searching for someone?"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              <div className={styles.chatListWrapper}>
+                {filteredChats.length > 0 ? (
+                  filteredChats.map((chat) => (
+                    <div key={chat.id} className={styles.chatItem}>
+                      <div className={styles.chatAvatarWrap}>
+                        <img src={chat.avatar} alt="" className={styles.chatAvatar} />
+                        <span className={`${styles.statusDot} ${styles[chat.dotStyle === 'online' ? 'dotOnline' : chat.dotStyle === 'dnd' ? 'dotDnd' : 'dotOffline']}`} />
+                      </div>
+
+                      <div className={styles.chatGrid}>
+                        <span className={styles.chatStatus}>{chat.status}</span>
+                        <span className={styles.chatPreview}>{chat.message}</span>
+                        <span className={styles.chatName}>{chat.name}</span>
+                        <div className={styles.chatTimeContainer}>
+                          {chat.unread > 0 && <span className={styles.chatUnread}>{chat.unread}</span>}
+                          <span className={styles.chatTime}>{chat.time}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className={styles.emptyState} style={{ padding: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
+                    No users found
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className={styles.notificationWrapper} ref={notifRef}>
           <button
@@ -165,11 +272,11 @@ export default function Header({ theme, toggleTheme, user }) {
                 alt="Notifications"
                 style={{ filter: "invert(1)" }}
               />
-              {/* RED DOT INDICATOR */}
+
               {unreadCount > 0 && <span className={styles.redDotIndicator} />}
             </div>
 
-            {/* COUNT POSITIONED TO THE RIGHT */}
+
             {displayCount > 0 && (
               <span className={styles.rightBadge}>{displayCount}</span>
             )}
@@ -187,7 +294,7 @@ export default function Header({ theme, toggleTheme, user }) {
 
               <div className={styles.notifList}>
                 {notifications.length === 0 ? (
-          
+
                   <div className={styles.emptyState}>No new notifications</div>
                 ) : (
                   notifications.map((n) => (
@@ -195,7 +302,7 @@ export default function Header({ theme, toggleTheme, user }) {
                       {!n.is_read && <span className={styles.unreadDot} />}
 
                       <div className={styles.notifAvatarWrap}>
-                     
+
                         <img src={n.avatar || "/default-avatar.png"} alt="" className={styles.notifAvatar} />
                         <div className={styles.notifIconBadge}>{n.iconType}</div>
                       </div>
@@ -208,7 +315,7 @@ export default function Header({ theme, toggleTheme, user }) {
                         <p className={styles.notifText}>{n.text}</p>
                       </div>
 
-                  
+
                       <div className={styles.notifMenuWrapper}>
                         <button
                           className={styles.notifMenuBtn}
@@ -220,7 +327,7 @@ export default function Header({ theme, toggleTheme, user }) {
                           <MoreHorizontal size={18} />
                         </button>
 
-                      
+
                         {openMenuId === n.id && (
                           <div className={styles.actionMenu}>
                             <button onClick={() => handleMarkAsRead(n.id)}>
