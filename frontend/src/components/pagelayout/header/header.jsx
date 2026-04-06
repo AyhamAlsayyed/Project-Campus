@@ -212,7 +212,9 @@ export default function Header({ theme, toggleTheme, user }) {
                 <h3 className={styles.notifTitle}>Chats</h3>
                 <div className={styles.notifHeaderActions}>
                   <Check size={18} />
-                  <span className={styles.viewAll}>view all</span>
+                  <span onClick={() => navigate("/chats")} className={styles.viewAll}>
+                    view all
+                  </span>
                 </div>
               </div>
 

@@ -7,6 +7,7 @@ import Homepage from './pages/homepage/Homepage';
 import Communities from './pages/communities/communities';
 import ProtectedRoute from "./components/auth/protectedRoute";
 import CommunityPage from './pages/communityPage/communityPage'
+import ChatsPage from './pages/chatsPage/chatsPage';
 
 
 
@@ -48,6 +49,14 @@ function App() {
           element={
             <ProtectedRoute>
               <CommunityPage/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chats"
+          element={
+            <ProtectedRoute>
+              <ChatsPage />
             </ProtectedRoute>
           }
         />
