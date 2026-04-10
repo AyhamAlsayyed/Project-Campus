@@ -1,8 +1,11 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from ...models import Friendship
 
 
 def get_user_academic_info(user):
@@ -93,8 +96,25 @@ def user_profile_view(request, user_id):
     if current_user == user:
         friend_status = "self"
     else:
-        if current_user.following.filter(following=user).exists():
+        friendship = Friendship.objects.filter(
+            Q(user1=current_user, user2=user) | Q(user1=user, user2=current_user)
+        ).first()
+
+        if not friendship:
+            friend_status = "none"
+        elif friendship.status == Friendship.Status.PENDING:
+            if friendship.user1 == current_user:
+                friend_status = "sent"
+            else:
+                friend_status = "received"
+        elif friendship.status == Friendship.Status.ACCEPTED:
             friend_status = "friends"
+        elif friendship.status == Friendship.Status.BLOCKED:
+            friend_status = "blocked"
+        else:
+            friend_status = "none"
+
+    friends_count = Friendship.objects.filter(Q(user1=user) | Q(user2=user), status=Friendship.Status.ACCEPTED).count()
 
     return Response(
         {
@@ -109,6 +129,7 @@ def user_profile_view(request, user_id):
             "major": user_info.get("major"),
             "role": user_info.get("role"),
             "friend_status": friend_status,
+            "friends_count": friends_count,
         },
         status=status.HTTP_200_OK,
     )
