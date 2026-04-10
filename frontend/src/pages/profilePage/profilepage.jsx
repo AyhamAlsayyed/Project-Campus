@@ -159,7 +159,19 @@ export default function ProfilePage() {
     const toggleTheme = () => setTheme((p) => (p === "light" ? "dark" : "light"));
     const openComments = (post) => setSelectedPost(post);
     const closeComments = () => setSelectedPost(null);
-    const photoPosts = posts.filter(post => post.image || post.image_url || post.media);
+    const photoPosts = posts.filter(post => {
+    // 1. Get the URL from wherever it lives in your data
+    const fileUrl = post.image || post.image_url || (Array.isArray(post.media) && post.media[0]?.url);
+
+    // 2. If there is no file at all, skip it
+    if (!fileUrl || typeof fileUrl !== 'string') return false;
+
+    // 3. Check if the URL ends with a common image extension
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif'];
+    const isImage = imageExtensions.some(ext => fileUrl.toLowerCase().endsWith(ext));
+
+    return isImage;
+});
 
     const isOwnProfile = currentUser?.id === Number(userId);
     const username = user?.username || "Username";
@@ -174,7 +186,7 @@ export default function ProfilePage() {
     return (
         <div className={styles.darkContainer}>
             <div className={`${styles.header} ${styles.page}`}>
-                <Header theme={theme} toggleTheme={toggleTheme} user={currentUser}  />
+                <Header theme={theme} toggleTheme={toggleTheme} user={currentUser} />
             </div>
 
             <div className={`${styles.page} ${styles.content}`}>
@@ -287,8 +299,12 @@ export default function ProfilePage() {
                                 {photoPosts.length > 0 ? photoPosts.map((post, idx) => (
                                     <img
                                         key={post.id}
-                                        className={`${styles.photoItem} ${idx === 0 ? styles.photoLarge : ''}`}
-                                        src={post.image || post.image_url || post.media}
+                                        className={styles.photoItem}
+                                        src={
+                                            post.image ||
+                                            post.image_url ||
+                                            (Array.isArray(post.media) && post.media[0]?.url)
+                                        }
                                         alt="Post"
                                         onClick={() => openComments(post)}
                                     />

@@ -359,9 +359,20 @@ export default function Header({ theme, toggleTheme, user }) {
             </div>
           )}
         </div>
-
-        <button className={styles.iconButton} type="button" onClick={handleAvatarClick}>
-          <img src={avatarSrc} alt="Profile" className={styles.userProfilePicture} />
+        <button
+          className={styles.iconButton}
+          type="button"
+          onClick={handleAvatarClick}
+        >
+          {location.pathname.startsWith(`/profile/${user?.id}`) ? (
+            <Home size={24} />
+          ) : (
+            <img
+              src={avatarSrc}
+              alt="Profile"
+              className={styles.userProfilePicture}
+            />
+          )}
         </button>
       </div>
     </div>
