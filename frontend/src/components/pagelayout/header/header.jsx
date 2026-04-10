@@ -355,7 +355,7 @@ export default function Header({ theme, toggleTheme, user }) {
           )}
         </div>
 
-        <button className={styles.iconButton} type="button" onClick={() => navigate("/profile")}>
+        <button className={styles.iconButton} type="button" onClick={() => navigate(`/profile/${user?.id}`)}>
           <img src={avatarSrc} alt="Profile" className={styles.userProfilePicture} />
         </button>
       </div>
