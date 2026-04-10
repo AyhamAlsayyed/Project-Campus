@@ -29,6 +29,8 @@ export default function ProfilePage() {
     const [userError, setUserError] = useState("");
     const [selectedPost, setSelectedPost] = useState(null);
     const [posts, setPosts] = useState([]);
+    const [friends, setFriends] = useState([]);
+    const [friendsLoading, setFriendsLoading] = useState(false);
     const [postsLoading, setPostsLoading] = useState(true);
     const [postsError, setPostsError] = useState("");
     const [activeTab, setActiveTab] = useState("Photos");
@@ -101,6 +103,26 @@ export default function ProfilePage() {
             console.error(e);
         }
     };
+    const loadFriends = async (userId) => {
+        try {
+            setFriendsLoading(true);
+
+            const res = await fetch(`http://localhost:8000/api/users/${userId}/friends/`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("access")}`,
+                },
+            });
+
+            const data = await res.json();
+            console.log("FRIENDS:", data);
+
+            setFriends(data);
+        } catch (err) {
+            console.error("Failed to load friends:", err);
+        } finally {
+            setFriendsLoading(false);
+        }
+    };
     const handleAccept = async () => {
         const res = await fetch(`/api/friends/accept/`, {
             method: "POST",
@@ -148,6 +170,7 @@ export default function ProfilePage() {
     useEffect(() => {
         loadCurrentUser();
         loadProfileUser();
+        loadFriends(userId);
     }, [userId]);
 
 
@@ -160,18 +183,11 @@ export default function ProfilePage() {
     const openComments = (post) => setSelectedPost(post);
     const closeComments = () => setSelectedPost(null);
     const photoPosts = posts.filter(post => {
-    // 1. Get the URL from wherever it lives in your data
-    const fileUrl = post.image || post.image_url || (Array.isArray(post.media) && post.media[0]?.url);
-
-    // 2. If there is no file at all, skip it
-    if (!fileUrl || typeof fileUrl !== 'string') return false;
-
-    // 3. Check if the URL ends with a common image extension
-    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif'];
-    const isImage = imageExtensions.some(ext => fileUrl.toLowerCase().endsWith(ext));
-
-    return isImage;
-});
+        const fileUrl = post.image || post.image_url || (Array.isArray(post.media) && post.media[0]?.url);
+        if (!fileUrl || typeof fileUrl !== 'string') return false;
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif'];
+        return imageExtensions.some(ext => fileUrl.toLowerCase().endsWith(ext));
+    });
 
     const isOwnProfile = currentUser?.id === Number(userId);
     const username = user?.username || "Username";
@@ -179,7 +195,7 @@ export default function ProfilePage() {
     const fullName = user?.full_name || user?.fullName || "Full name";
     const university = user?.university || "University";
     const major = user?.major || "Major";
-    const bio = user?.bio || "No bio yet.";
+    const bio = user?.bio;
     const avatarUrl = user?.avatar_url || user?.avatar || "";
     const coverUrl = user?.cover_url || user?.cover || "";
 
@@ -299,20 +315,42 @@ export default function ProfilePage() {
                                 {photoPosts.length > 0 ? photoPosts.map((post, idx) => (
                                     <img
                                         key={post.id}
-                                        className={styles.photoItem}
-                                        src={
-                                            post.image ||
-                                            post.image_url ||
-                                            (Array.isArray(post.media) && post.media[0]?.url)
-                                        }
-                                        alt="Post"
+    
+                                        className={`${styles.photoItem} ${idx === 0 ? styles.photoLarge : ''}`}
+                                        src={post.image || post.image_url || post.media?.[0]?.url}
+                                        alt="Latest user content"
                                         onClick={() => openComments(post)}
                                     />
                                 )) : <div className={styles.notice}>No photos found.</div>}
                             </div>
                         )}
 
-                        {activeTab === 'Friends' && <div className={styles.notice}>Friends list goes here...</div>}
+                        {activeTab === 'Friends' && <div className={styles.notice}>{friendsLoading ? (
+                            <p>Loading friends...</p>
+                        ) : friends.length === 0 ? (
+                            <p>No friends yet.</p>
+                        ) : (
+                            <div className={styles.friendsGrid}>
+                                {friends.map((f) => (
+                                    <div
+                                        key={f.id}
+                                        className={styles.friendCard}
+                                        onClick={() => navigate(`/profile/${f.id}`)}
+                                    >
+                                        <img
+                                            src={
+                                                f.avatar?.startsWith("http")
+                                                    ? f.avatar
+                                                    : `http://localhost:8000${f.avatar}`
+                                            }
+                                            alt={f.username}
+                                            className={styles.friendAvatar}
+                                        />
+                                        <span>{f.username}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}</div>}
                     </div>
                 </div>
 

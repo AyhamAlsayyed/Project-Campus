@@ -116,6 +116,7 @@ body {
 .content {
   display: flex;
   margin: 20px 0 0 0;
+  
   gap: var(--col-gap);
   margin-top: 20px;
   align-items: flex-start;
@@ -460,21 +461,36 @@ body {
 }
 .photosGrid {
     display: grid;
+    background-color:#2a2a2a;
+    margin: 0 auto;
+    border-radius: 25px ;
+    
+    
     grid-template-columns: repeat(4, 1fr); 
-    gap: 10px; 
+    gap: 12px;
     padding: 20px;
-    width: 100%;
+    width: 85%;
     box-sizing: border-box;
+    /* This ensures rows are created as needed */
+    grid-auto-flow: dense; 
 }
 
 .photoItem {
     width: 100%;
     aspect-ratio: 1 / 1; 
     object-fit: cover;
-    border-radius: 8px; /* Slightly smaller radius for smaller images */
+    border-radius: 12px;
     cursor: pointer;
     transition: transform 0.2s ease;
 }
+
+.photoLarge {
+    /* Takes up 2 columns and 2 rows on the left */
+    grid-column: span 2; 
+    grid-row: span 2;
+    border-radius: 18px;
+}
+
 .photoItem:hover {
     transform: scale(1.02);
     filter: brightness(1.1);

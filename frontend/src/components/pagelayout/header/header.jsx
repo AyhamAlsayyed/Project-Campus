@@ -364,7 +364,7 @@ export default function Header({ theme, toggleTheme, user }) {
           type="button"
           onClick={handleAvatarClick}
         >
-          {location.pathname.startsWith(`/profile/${user?.id}`) ? (
+          {location.pathname === `/profile/${user?.id}` ? (
             <Home size={24} />
           ) : (
             <img
