@@ -2,15 +2,48 @@ import styles from './chatspage.module.css'
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import { useState, useEffect, useRef } from 'react';
-import { Search, MoreHorizontal, Pin, BellOff, Mail, MinusCircle, Trash2, Ban, AlertCircle } from 'lucide-react';
+import {
+    Search, MoreHorizontal, Pin, BellOff, Mail, MinusCircle,
+    Trash2, Ban, AlertCircle, ChevronLeft, Info, CheckSquare,
+    Paperclip, Send, FileText
+} from 'lucide-react';
 
-
+const DUMMY_CHATS = [
+    {
+        id: 1,
+        name: "Graduation Project",
+        avatar: "https://ui-avatars.com/api/?name=GP&background=111&color=fff",
+        members: "You, Dr. Samer, OvalTree, Light, Ahmad, Ali & 11 more!",
+        is_pinned: true,
+        unread_count: 2,
+        preview: "Send it already",
+        time: "9:52 am",
+        messages: [
+            { id: 101, sender: "Dr. Samer Sweileh", senderId: "other", text: "Your the report is done ... \nSend it already", time: "9:52 am", avatar: "https://ui-avatars.com/api/?name=Dr+Samer", type: "text" },
+            { id: 102, sender: "You", senderId: "me", text: "Project Campus.pdf", subtext: "57 pages - pdf - 2 MB\nProject Campus: A Unified Academic Social Media Platform™.", time: "just now", type: "file" },
+            { id: 103, sender: "You", senderId: "me", text: "Wow Ayham", time: "just now", type: "text" }
+        ]
+    },
+    {
+        id: 2,
+        name: "Web Design 2",
+        avatar: "https://ui-avatars.com/api/?name=WD&background=0D8ABC&color=fff",
+        members: "You, T. Ahmad Qasim, & 20 more",
+        is_pinned: false,
+        unread_count: 0,
+        preview: "T. Ahmad: *sent an attachment*",
+        time: "2 minutes ago",
+        messages: [
+            { id: 201, sender: "T. Ahmad Qasim", senderId: "other", text: "Please check the attached syllabus.", time: "2 minutes ago", avatar: "https://ui-avatars.com/api/?name=TA", type: "text" }
+        ]
+    }
+];
 export default function ChatsPage() {
     const [theme, setTheme] = useState("dark");
     const [user, setUser] = useState(null);
     const [userLoading, setUserLoading] = useState(true);
     const [userError, setUserError] = useState(null);
-    const [chats, setChats] = useState([]);
+    const [chats, setChats] = useState(DUMMY_CHATS);
     const [loadingChats, setLoadingChats] = useState(true);
     const [filter, setFilter] = useState("all")
     const [searchQuery, setSearchQuery] = useState("");
@@ -18,6 +51,10 @@ export default function ChatsPage() {
     const [requestsCount, setRequestsCount] = useState(0);
     const menuRef = useRef(null);
     const [groups, setGroups] = useState([]);
+    const [selectedChat, setSelectedChat] = useState(null);
+    const [activeChatMenuOpen, setActiveChatMenuOpen] = useState(false);
+    const activeChatMenuRef = useRef(null);
+
 
 
     const API = "http://localhost:8000"
@@ -29,7 +66,7 @@ export default function ChatsPage() {
         if (filter === "unread") return chat.unread_count > 0;
         if (filter === "pinned") return chat.is_pinned;
         if (filter === "groups") return chat.is_group;
-        return true; // "all"
+        return true;
     });
     const sortedChats = [...filteredChats].sort((a, b) => {
         if (a.is_pinned && !b.is_pinned) return -1;
@@ -184,154 +221,151 @@ export default function ChatsPage() {
             <div className={`${styles.content} ${styles.page}`}>
                 <SideBarNav />
                 <div className={styles.mainContent}>
-                    <h1 className={styles.title}>
-                        <span className={styles.highlight}>Chats</span> section
+                    {!selectedChat ? (
+                        <>
+                            <h1 className={styles.title}>
+                                <span className={styles.highlight}>Chats</span> section
+                            </h1>
 
-                    </h1>
-                    <div className={styles.filterContainer}>
-                        <div className={styles.filters}>
-                            <button
-                                className={`${styles.filterBtn} ${filter === "all" ? styles.active : ""}`}
-                                onClick={() => setFilter("all")}
-                            >
-                                All
-                            </button>
-
-                            <button
-                                className={`${styles.filterBtn} ${filter === "unread" ? styles.active : ""}`}
-                                onClick={() => setFilter("unread")}
-                            >
-                                Unread
-                            </button>
-
-                            <button
-                                className={`${styles.filterBtn} ${filter === "pinned" ? styles.active : ""}`}
-                                onClick={() => setFilter("pinned")}
-                            >
-                                Pinned
-                            </button>
-
-                            <button
-                                className={`${styles.filterBtn} ${filter === "groups" ? styles.active : ""}`}
-                                onClick={() => setFilter("groups")}
-                            >
-                                Groups
-                            </button>
-                        </div>
-
-                        {/* New Requests Link */}
-                        <div className={styles.requestsLink}>
-                            <span>Requests</span> ({requestsCount})
-                        </div>
-                    </div>
-
-                    <div className={styles.chatList}>
-                        <div className={styles.innerContainer}>
-                            <div className={styles.searchContainer}>
-                                <Search size={18} className={styles.searchIcon} />
-                                <input
-                                    type="text"
-                                    className={styles.searchInput}
-                                    placeholder="Searching for someone?"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
+                            <div className={styles.filterContainer}>
+                                <div className={styles.filters}>
+                                    <button className={`${styles.filterBtn} ${filter === "all" ? styles.active : ""}`} onClick={() => setFilter("all")}>All</button>
+                                    <button className={`${styles.filterBtn} ${filter === "unread" ? styles.active : ""}`} onClick={() => setFilter("unread")}>Unread</button>
+                                    <button className={`${styles.filterBtn} ${filter === "pinned" ? styles.active : ""}`} onClick={() => setFilter("pinned")}>Pinned</button>
+                                    <button className={`${styles.filterBtn} ${filter === "groups" ? styles.active : ""}`} onClick={() => setFilter("groups")}>Groups</button>
+                                </div>
+                                <div className={styles.requestsLink}>
+                                    <span>Requests</span> ({requestsCount})
+                                </div>
                             </div>
-                            <div className={styles.chatItemsContainer}>
-                                {sortedChats.map((chat, index) => (
-                                    <div key={chat.id} className={styles.chatRow}>
 
-
-                                        <div className={styles.chatItem}>
-
-                                            {/* Left Side: Avatar & Identity */}
-                                            <div className={styles.chatItemLeft}>
-                                                <div className={styles.avatarWrapper}>
-                                                    <img src={chat.avatar} alt={chat.name} className={styles.chatAvatar} />
-                                                    <span className={`${styles.statusDot} ${styles[chat.dotStyle]}`}></span>
-                                                </div>
-                                                <div className={styles.chatIdentity}>
-                                                    <span className={styles.chatStatusText}>{chat.status}</span>
-                                                    <div className={styles.chatNameWrapper}>
-                                                        <span className={styles.chatName}>{chat.name}</span>
-                                                        {chat.isVerified && <span className={styles.verifiedBadge}>✔</span>}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Right Side: Message & Actions */}
-                                            <div className={styles.chatItemRight}>
-                                                <div className={styles.chatDetails}>
-                                                    <span className={styles.chatPreview}>{chat.preview}</span>
-                                                    <span className={styles.chatTime}>{chat.time}</span>
-                                                </div>
-
-                                                <div className={styles.chatActions}>
-                                                    {chat.isPinned && <Pin size={16} className={styles.actionIcon} />}
-
-                                                    {/* 3-Dot Menu Button */}
-                                                    <div className={styles.menuWrapper} ref={openMenuId === chat.id ? menuRef : null}>
-                                                        <button
-                                                            className={styles.moreButton}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setOpenMenuId(openMenuId === chat.id ? null : chat.id);
-                                                            }}
-                                                        >
-                                                            <MoreHorizontal size={20} />
-                                                        </button>
-
-                                                        {/* Dropdown Menu */}
-                                                        {openMenuId === chat.id && (
-                                                            <div className={styles.dropdownMenu}>
-                                                                <button className={styles.menuItem} onClick={() => togglePin(chat.id)}>
-                                                                    <Pin size={14} /> Pin chat
-                                                                </button>
-                                                                <button className={styles.menuItem} onClick={() => toggleMute(chat.id)}>
-                                                                    <BellOff size={14} /> Mute notifications
-                                                                </button>
-                                                                <button className={styles.menuItem} onClick={() => markUnread(chat.id)}>
-                                                                    <Mail size={14} /> Mark as unread
-                                                                </button>
-                                                                <button className={styles.menuItem} onClick={() => clearChat(chat.id)}>
-                                                                    <MinusCircle size={14} /> Clear chat
-                                                                </button>
-                                                                <button className={styles.menuItem} onClick={() => deleteChat(chat.id)}>
-                                                                    <Trash2 size={14} /> Delete chat
-                                                                </button>
-                                                                <div className={styles.menuDivider}></div>
-                                                                <button className={`${styles.menuItem} ${styles.destructive}`} onClick={() => blockUser(chat.id)}>
-                                                                    <Ban size={14} /> Block user
-                                                                </button>
-                                                                <button className={`${styles.menuItem} ${styles.destructive}`} onClick={() => reportUser(chat.id)}>
-                                                                    <AlertCircle size={14} /> Report user
-                                                                </button>
+                            <div className={styles.chatList}>
+                                <div className={styles.innerContainer}>
+                                    <div className={styles.searchContainer}>
+                                        <Search size={18} className={styles.searchIcon} />
+                                        <input
+                                            type="text"
+                                            className={styles.searchInput}
+                                            placeholder="Searching for someone?"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className={styles.chatItemsContainer}>
+                                        {sortedChats.map((chat, index) => (
+                                            <div key={chat.id} className={styles.chatRow}>
+                                                {/* ADDED onClick TO OPEN CHAT */}
+                                                <div className={styles.chatItem} onClick={() => setSelectedChat(chat)} style={{ cursor: 'pointer' }}>
+                                                    <div className={styles.chatItemLeft}>
+                                                        <div className={styles.avatarWrapper}>
+                                                            <img src={chat.avatar} alt={chat.name} className={styles.chatAvatar} />
+                                                        </div>
+                                                        <div className={styles.chatIdentity}>
+                                                            <div className={styles.chatNameWrapper}>
+                                                                <span className={styles.chatName}>{chat.name}</span>
                                                             </div>
-                                                        )}
-
+                                                        </div>
+                                                    </div>
+                                                    <div className={styles.chatItemRight}>
+                                                        <div className={styles.chatDetails}>
+                                                            <span className={styles.chatPreview}>{chat.preview}</span>
+                                                            <span className={styles.chatTime}>{chat.time}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
+                                                {index !== sortedChats.length - 1 && <div className={styles.chatDivider}></div>}
                                             </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
 
+                        <div className={`${styles.chatList} ${styles.activeChatOuter}`}>
+                            <div className={styles.innerChatContainer}>
 
+                                <div className={styles.activeChatHeader}>
+                                    <div className={styles.headerLeftWrapper}>
+                                        <button className={styles.iconBtn} onClick={() => setSelectedChat(null)}>
+                                            <ChevronLeft size={24} />
+                                        </button>
+                                        <img
+                                            src={selectedChat.avatar}
+                                            alt={selectedChat.name}
+                                            className={styles.activeChatAvatar}
+                                        />
+                                        <div className={styles.headerTitleInfo}>
+                                            <span className={styles.professorName}>Dr. Samer Sweileh</span>
+                                            <h2 className={styles.groupName}>{selectedChat.name}</h2>
+                                            <p className={styles.memberSubtitle}>{selectedChat.members}</p>
                                         </div>
-                                        {index !== sortedChats.length - 1 && (
-                                            <div className={styles.chatDivider}></div>
-                                        )}
                                     </div>
 
+                                    <div className={styles.headerRightWrapper}>
+                                        <button className={styles.iconBtn}><Search size={30}  /></button>
+                                        <div className={styles.menuWrapper} ref={activeChatMenuRef}>
+                                            <button className={styles.iconBtn} onClick={() => setActiveChatMenuOpen(!activeChatMenuOpen)}>
+                                                <MoreHorizontal size={30} />
+                                            </button>
+                                            {activeChatMenuOpen && (
+                                                <div className={styles.dropdownMenu}>
+                                                    <button className={styles.menuItem}><Info size={14} /> Group Info</button>
+                                                    <button className={styles.menuItem}><BellOff size={14} /> Mute notifications</button>
+                                                    <button className={styles.menuItem}><CheckSquare size={14} /> Select messages</button>
+                                                    <div className={styles.menuDivider}></div>
+                                                    <button className={`${styles.menuItem} ${styles.destructive}`}><AlertCircle size={14} /> Report group</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
 
 
+                                <div className={styles.activeChatInnerContainer}>
 
-                                ))}
+                                    <div className={styles.chatArea}>
+                                        <div className={styles.messagesScrollArea}>
+                                            <div className={styles.dateSeparator}><span>Today</span></div>
+                                            {selectedChat.messages?.map((msg) => (
+                                                <div key={msg.id} className={`${styles.messageWrapper} ${msg.senderId === 'me' ? styles.messageMineWrapper : styles.messageOtherWrapper}`}>
+                                                    {msg.senderId === 'other' && (
+                                                        <img src={msg.avatar} alt="Sender" className={styles.messageAvatar} />
+                                                    )}
+                                                    <div className={styles.messageContentBlock}>
+                                                        <div className={`${styles.messageMeta} ${msg.senderId === 'me' ? styles.metaRight : styles.metaLeft}`}>
+                                                            <span className={styles.msgSenderName}>{msg.senderId === 'me' ? 'You' : msg.sender}</span>
+                                                            <span className={styles.msgTime}>{msg.time}</span>
+                                                        </div>
+                                                        <div className={`${styles.messageBubble} ${msg.senderId === 'me' ? styles.bubbleMine : styles.bubbleOther}`}>
+                                                            {msg.type === 'file' ? (
+                                                                <div className={styles.fileAttachment}>
+                                                                    <div className={styles.fileIcon}><FileText size={24} /></div>
+                                                                    <div className={styles.fileDetails}>
+                                                                        <strong>{msg.text}</strong>
+                                                                        <p>{msg.subtext}</p>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <span style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
 
+
+                                        <div className={styles.messageInputArea}>
+                                            <button className={styles.iconBtn}><Paperclip size={20} /></button>
+                                            <input type="text" placeholder="Type a message..." className={styles.messageInput} />
+                                            <button className={styles.sendBtn}><Send size={18} /></button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-
-
                         </div>
-
-                    </div>
-
+                    )}
                 </div>
                 <div className={styles.rightSection}>
                     <div className={styles.pill}>ACADEMIC GROUP CHATS</div>
@@ -343,12 +377,12 @@ export default function ChatsPage() {
                                         <div className={styles.academicAvatarPlaceholder}>{chat.icon}</div>
                                     </div>
                                     <div className={styles.academicChatInfo}>
-                                        {/* Top row: Teacher Name on Left, Message Preview on Right */}
+
                                         <div className={styles.academicTopRow}>
                                             <span className={styles.academicTeacherName}>{chat.teacher}</span>
                                             <span className={styles.academicMessagePreview}>{chat.msg}</span>
                                         </div>
-                                        {/* Middle row: Group Title on Left, Timestamp on Right */}
+
                                         <div className={styles.academicBottomRow}>
                                             <div className={styles.academicGroupName}>{chat.title}</div>
                                             <span className={styles.academicTimestamp}>{chat.time}</span>

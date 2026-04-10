@@ -31,9 +31,7 @@ export default function ProfilePage() {
     const [posts, setPosts] = useState([]);
     const [postsLoading, setPostsLoading] = useState(true);
     const [postsError, setPostsError] = useState("");
-
     const [activeTab, setActiveTab] = useState("Photos");
-
     const { pathname } = useLocation();
     const { userId } = useParams();
     const navigate = useNavigate();

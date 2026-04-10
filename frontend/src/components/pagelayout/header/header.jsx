@@ -133,7 +133,7 @@ export default function Header({ theme, toggleTheme, user }) {
     if (location.pathname === "/profile") {
       navigate("/home");
     } else {
-      navigate("/profile");
+      navigate(`/profile/${user.id}`);
     }
   };
 

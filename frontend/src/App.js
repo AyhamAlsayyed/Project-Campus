@@ -18,7 +18,6 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
         <Route
           path="/home"
           element={
@@ -29,13 +28,14 @@ function App() {
         />
 
         <Route
-          path="/profile/:userId" 
+          path="/profile/:userId"
           element={
             <ProtectedRoute>
               <ProfilePage />
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/communities"
           element={
@@ -44,14 +44,16 @@ function App() {
             </ProtectedRoute>
           }
         />
-         <Route
+
+        <Route
           path="/communities/:id"
           element={
             <ProtectedRoute>
-              <CommunityPage/>
+              <CommunityPage />
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/chats"
           element={
@@ -60,6 +62,9 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
 
