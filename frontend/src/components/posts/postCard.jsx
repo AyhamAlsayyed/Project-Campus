@@ -95,7 +95,7 @@ export default function PostCard({ post, openComments }) {
 
       <div className={styles.topRow}>
         <div className={styles.user}>
-          <Link to={`/profile/${post.author_id}`}>
+          <Link to={post.author_id ? `/profile/${post.author_id}` : "#"}>
             <img
               className={styles.avatar}
               src={post.author_avatar || "/default-avatar.png"}
@@ -119,6 +119,7 @@ export default function PostCard({ post, openComments }) {
             </span>
           </div>
         </div>
+        
 
 
         <div className={styles.menuContainer}>

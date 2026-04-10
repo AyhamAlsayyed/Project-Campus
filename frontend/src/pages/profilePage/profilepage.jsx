@@ -159,8 +159,6 @@ export default function ProfilePage() {
     const toggleTheme = () => setTheme((p) => (p === "light" ? "dark" : "light"));
     const openComments = (post) => setSelectedPost(post);
     const closeComments = () => setSelectedPost(null);
-
-    // Filter posts that have images
     const photoPosts = posts.filter(post => post.image || post.image_url || post.media);
 
     const isOwnProfile = currentUser?.id === Number(userId);
@@ -176,7 +174,7 @@ export default function ProfilePage() {
     return (
         <div className={styles.darkContainer}>
             <div className={`${styles.header} ${styles.page}`}>
-                <Header theme={theme} toggleTheme={toggleTheme} />
+                <Header theme={theme} toggleTheme={toggleTheme} user={currentUser}  />
             </div>
 
             <div className={`${styles.page} ${styles.content}`}>

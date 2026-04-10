@@ -214,6 +214,7 @@ def feed(request, community_id=None):  # <-- important change
                 "post_type": p.post_type,
                 "created_at": p.created_at.isoformat(),
                 "author_username": author_username,
+                
                 "author_avatar": author_avatar,
                 "tag": author_tag,
                 "media": media_items,

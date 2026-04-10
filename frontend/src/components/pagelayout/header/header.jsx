@@ -18,7 +18,7 @@ export default function Header({ theme, toggleTheme, user }) {
   const chatRef = useRef(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [chats, setChats] = useState([]);
-  
+
   const filteredChats = chats.filter((chat) =>
     chat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -27,9 +27,9 @@ export default function Header({ theme, toggleTheme, user }) {
       const token = localStorage.getItem("accessToken");
       try {
         const response = await fetch("http://localhost:8000/api/notifications", {
-          headers: { 
-            "Authorization": `Bearer ${token}`, 
-            "Content-Type": "application/json" 
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
           }
         });
         if (response.ok) {
@@ -130,7 +130,12 @@ export default function Header({ theme, toggleTheme, user }) {
   const location = useLocation();
 
   const handleAvatarClick = () => {
-    if (location.pathname === "/profile") {
+    if (!user?.id) {
+      console.warn("User not loaded yet");
+      return;
+    }
+
+    if (location.pathname.startsWith(`/profile/${user.id}`)) {
       navigate("/home");
     } else {
       navigate(`/profile/${user.id}`);
@@ -355,7 +360,7 @@ export default function Header({ theme, toggleTheme, user }) {
           )}
         </div>
 
-        <button className={styles.iconButton} type="button" onClick={() => navigate(`/profile/${user?.id}`)}>
+        <button className={styles.iconButton} type="button" onClick={handleAvatarClick}>
           <img src={avatarSrc} alt="Profile" className={styles.userProfilePicture} />
         </button>
       </div>
