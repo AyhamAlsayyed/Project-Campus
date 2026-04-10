@@ -45,11 +45,14 @@ def file_url(request, f):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def feed(request):
+def feed(request, community_id=None):  # <-- important change
     limit = int(request.query_params.get("limit") or 20)
     limit = max(1, min(limit, 50))
 
+    community_id = community_id or request.GET.get("community_id")
     user_id = request.GET.get("user")
+    filter_type = request.GET.get("filter", "recommended")
+
     qs = Post.objects.all()
 
     qs = qs.annotate(
@@ -61,11 +64,46 @@ def feed(request):
     if user_id:
         qs = qs.filter(author_user_id=user_id).order_by("-created_at")
 
-    if not user_id:
-        user = request.user if request.user.is_authenticated else None
+    elif community_id:
+        qs = qs.filter(community_id=community_id)
+
+        if filter_type == "latest":
+            qs = qs.order_by("-created_at")
+
+        else:  # recommended
+            qs = (
+                qs.annotate(
+                    p_engagement=ExpressionWrapper(
+                        (F("reactions_count") * Value(2)) + F("comments_count"),
+                        output_field=IntegerField(),
+                    )
+                )
+                .annotate(
+                    p_engagement_capped=Case(
+                        When(p_engagement__gte=20, then=Value(20)),
+                        default=F("p_engagement"),
+                        output_field=IntegerField(),
+                    ),
+                    p_fresh=Case(
+                        When(created_at__gte=Now() - timedelta(hours=6), then=Value(20)),
+                        When(created_at__gte=Now() - timedelta(hours=24), then=Value(10)),
+                        When(created_at__gte=Now() - timedelta(days=3), then=Value(5)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    ),
+                )
+                .annotate(score=F("p_engagement_capped") + F("p_fresh"))
+                .order_by("-score", "-created_at")
+            )
+
+        qs = qs.select_related("author_user", "author_page", "community").prefetch_related("media")
+
+    else:  # home feed
+        user = request.user
 
         community_ids = list(CommunityMember.objects.filter(user=user).values_list("community_id", flat=True))
         followed_page_ids = list(FollowPage.objects.filter(user=user).values_list("page_id", flat=True))
+
         friendships = Friendship.objects.filter(Q(user1=user) | Q(user2=user))
         accepted_ids = []
         blocked_ids = []
@@ -82,59 +120,65 @@ def feed(request):
 
         qs = qs.exclude(author_user_id__in=blocked_ids)
         qs = qs.exclude(author_user_id=user.id)
-        qs = (
-            qs.annotate(
-                p_university=Case(
-                    When(author_page_id=uni_page_id, then=Value(50)),
-                    default=Value(0),
-                    output_field=IntegerField(),
-                ),
-                p_community=Case(
-                    When(community_id__in=community_ids, then=Value(30)),
-                    default=Value(0),
-                    output_field=IntegerField(),
-                ),
-                p_following=Case(
-                    When(author_page_id__in=followed_page_ids, then=Value(20)),
-                    default=Value(0),
-                    output_field=IntegerField(),
-                ),
-                p_friendship=Case(
-                    When(author_user_id__in=accepted_ids, then=Value(30)),
-                    default=Value(0),
-                    output_field=IntegerField(),
-                ),
-                p_engagement=ExpressionWrapper(
-                    (F("reactions_count") * Value(2)) + F("comments_count"),
-                    output_field=IntegerField(),
-                ),
+
+        if filter_type == "latest":
+            qs = qs.order_by("-created_at")
+
+        else:
+            qs = (
+                qs.annotate(
+                    p_university=Case(
+                        When(author_page_id=uni_page_id, then=Value(50)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    ),
+                    p_community=Case(
+                        When(community_id__in=community_ids, then=Value(30)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    ),
+                    p_following=Case(
+                        When(author_page_id__in=followed_page_ids, then=Value(20)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    ),
+                    p_friendship=Case(
+                        When(author_user_id__in=accepted_ids, then=Value(30)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    ),
+                    p_engagement=ExpressionWrapper(
+                        (F("reactions_count") * Value(2)) + F("comments_count"),
+                        output_field=IntegerField(),
+                    ),
+                )
+                .annotate(
+                    p_engagement_capped=Case(
+                        When(p_engagement__gte=20, then=Value(20)),
+                        default=F("p_engagement"),
+                        output_field=IntegerField(),
+                    ),
+                    p_fresh=Case(
+                        When(created_at__gte=Now() - timedelta(hours=6), then=Value(20)),
+                        When(created_at__gte=Now() - timedelta(hours=24), then=Value(10)),
+                        When(created_at__gte=Now() - timedelta(days=3), then=Value(5)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    ),
+                )
+                .annotate(
+                    score=F("p_university")
+                    + F("p_community")
+                    + F("p_following")
+                    + F("p_friendship")
+                    + F("p_engagement_capped")
+                    + F("p_fresh")
+                )
+                .order_by("-score", "-created_at")
             )
-            .annotate(
-                p_engagement_capped=Case(
-                    When(p_engagement__gte=20, then=Value(20)),
-                    default=F("p_engagement"),
-                    output_field=IntegerField(),
-                ),
-                p_fresh=Case(
-                    When(created_at__gte=Now() - timedelta(hours=6), then=Value(20)),
-                    When(created_at__gte=Now() - timedelta(hours=24), then=Value(10)),
-                    When(created_at__gte=Now() - timedelta(days=3), then=Value(5)),
-                    default=Value(0),
-                    output_field=IntegerField(),
-                ),
-            )
-            .annotate(
-                score=F("p_university")
-                + F("p_community")
-                + F("p_following")
-                + F("p_friendship")
-                + F("p_engagement_capped")
-                + F("p_fresh")
-            )
-            .order_by("-score", "-created_at")
-            .select_related("author_user", "author_page", "community")
-            .prefetch_related("media")
-        )
+
+        qs = qs.select_related("author_user", "author_page", "community").prefetch_related("media")
+
     qs = qs[:limit]
 
     data = []
@@ -147,12 +191,12 @@ def feed(request):
             author_username = p.author_user.username
             profile = getattr(p.author_user, "profile", None)
             if profile and getattr(profile, "profile_image", None):
-                author_avatar = file_url(request, getattr(profile, "profile_image", None))
+                author_avatar = file_url(request, profile.profile_image)
 
         if p.author_page_id:
             author_username = p.author_page.page_name
             author_tag = p.author_page.page_type
-            author_avatar = file_url(request, getattr(p.author_page, "profile_image", None))
+            author_avatar = file_url(request, p.author_page.profile_image)
 
         media_items = []
         for m in p.media.all().order_by("order_index"):
