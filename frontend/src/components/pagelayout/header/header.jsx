@@ -5,7 +5,7 @@ import {  Search, Home } from "lucide-react";
 import { useNavigate ,useLocation } from "react-router-dom";
 import MessageSquare from "../../../Assets/icons/messages.png"
 import Bell from '../../../Assets/icons/notifications.png'
-export default function Header({ theme, toggleTheme, user, onTitleClick }) {
+export default function Header({ theme, toggleTheme, user }) {
   const avatarSrc = user?.avatar
     ? `http://localhost:8000${user.avatar}`
     : "/default-avatar.png";
@@ -27,7 +27,7 @@ export default function Header({ theme, toggleTheme, user, onTitleClick }) {
     <div className={styles.headerInner}>
       <div className={styles.headerLeft}>
         <img src={darkModeIcon} alt="Dark Mode Icon" className={styles.darkModeIcon} />
-        <button className={styles.title} onClick={onTitleClick} type="button">
+        <button className={styles.title}  type="button">
           CAMPUS
         </button>
       </div>

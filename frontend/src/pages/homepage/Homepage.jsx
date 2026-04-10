@@ -164,7 +164,7 @@ export default function Homepage() {
 
             
             <div className={`${styles.header} ${styles.page}`}>
-                <Header theme={theme} toggleTheme={toggleTheme} user={user} onTitleClick={loadPosts} />
+                <Header theme={theme} toggleTheme={toggleTheme} user={user} />
 
             </div>
 

@@ -4,6 +4,7 @@ import Login from './pages/authentication/login';
 import Signup from './pages/authentication/signup';
 import ProfilePage from './pages/profilePage/profilepage';
 import Homepage from './pages/homepage/Homepage';
+import Communities from './pages/communities/communities';
 import ProtectedRoute from "./components/auth/protectedRoute";
 
 
@@ -30,6 +31,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/communities"
+          element={
+            <ProtectedRoute>
+              <Communities />
             </ProtectedRoute>
           }
         />

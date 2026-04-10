@@ -1,9 +1,62 @@
 import styles from "./posts.module.css";
-import { Share2 } from "lucide-react";
-import { useState } from "react";
 
+import { useState } from "react";
+import { Share2, MoreHorizontal, Bookmark, Ban, Flag } from "lucide-react";
 export default function PostCard({ post }) {
   const [current, setCurrent] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(post.likes_count || 0);
+  const [showMenu, setShowMenu] = useState(false);
+  const handleLike = async () => {
+    const token = localStorage.getItem("access");
+    if (!token) return;
+
+
+    const originalLiked = isLiked;
+    setIsLiked(!isLiked);
+    setLikesCount(prev => (isLiked ? prev - 1 : prev + 1));
+
+    try {
+      const res = await fetch(`http://localhost:8000/api/posts/${post.id}/like/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+     
+        setIsLiked(originalLiked);
+        setLikesCount(prev => (originalLiked ? prev + 1 : prev - 1));
+      }
+    } catch (err) {
+      
+      setIsLiked(originalLiked);
+    }
+  };
+  const handleMenuAction = async (actionType) => {
+    const token = localStorage.getItem("access");
+    setShowMenu(false); 
+
+    try {
+      const res = await fetch(`http://localhost:8000/api/posts/${post.id}/${actionType}/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        alert(`Post ${actionType}ed successfully!`);
+
+      }
+    } catch (err) {
+      console.error(`Failed to ${actionType} post`);
+    }
+  };
+  const toggleMenu = () => {
+    setShowMenu(prev => !prev);
+  }
+
   const validMedia = post.media?.filter(
     (item) => item?.url && item?.type
   ) || [];
@@ -43,9 +96,23 @@ export default function PostCard({ post }) {
           </div>
         </div>
 
-        <button className={styles.menuBtn} aria-label="menu">
-          •••
-        </button>
+
+        <div className={styles.menuContainer}>
+          <button className={styles.menuBtn} onClick={toggleMenu} aria-label="menu">
+            <MoreHorizontal size={20} />
+          </button>
+
+          {/* This only shows when showMenu is true */}
+          {showMenu && (
+            <div className={styles.dropdownMenu}>
+              <button className={styles.menuItem}><Bookmark size={16} onClick={() => handleMenuAction('save')} /> Save</button>
+              <div className={styles.menuDivider} />
+              <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('block')}><Ban size={16} /> Block</button>
+              <div className={styles.menuDivider} />
+              <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('report')}><Flag size={16} /> Report</button>
+            </div>
+          )}
+        </div>
       </div>
 
 
@@ -115,12 +182,13 @@ export default function PostCard({ post }) {
 
       <div className={styles.actions}>
         <div className={styles.leftActions}>
-
-          <button className={styles.iconBtn} type="button">
-            <span className={styles.heart}>♥</span>
-            <span className={styles.count}>
-              {post.likes_count ?? 0}
-            </span>
+          <button
+            className={`${styles.iconBtn} ${isLiked ? styles.liked : ""}`}
+            onClick={handleLike}
+            type="button"
+          >
+            <span className={styles.heart}>{isLiked ? "♥" : "♡"}</span>
+            <span className={styles.count}>{likesCount}</span>
           </button>
 
           {post.post_type === "advertisement" && (
