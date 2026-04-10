@@ -183,17 +183,20 @@ def feed(request, community_id=None):  # <-- important change
 
     data = []
     for p in qs:
+        author_id = None
         author_avatar = None
         author_username = None
         author_tag = None
 
         if p.author_user_id:
+            author_id = p.author_user_id
             author_username = p.author_user.username
             profile = getattr(p.author_user, "profile", None)
             if profile and getattr(profile, "profile_image", None):
                 author_avatar = file_url(request, profile.profile_image)
 
         if p.author_page_id:
+            author_id = p.author_page_id
             author_username = p.author_page.page_name
             author_tag = p.author_page.page_type
             author_avatar = file_url(request, p.author_page.profile_image)
@@ -213,8 +216,8 @@ def feed(request, community_id=None):  # <-- important change
                 "content": p.content_text,
                 "post_type": p.post_type,
                 "created_at": p.created_at.isoformat(),
+                "author_id": author_id,
                 "author_username": author_username,
-                
                 "author_avatar": author_avatar,
                 "tag": author_tag,
                 "media": media_items,
