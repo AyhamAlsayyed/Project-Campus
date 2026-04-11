@@ -124,9 +124,10 @@ export default function ProfilePage() {
         }
     };
     const handleAccept = async () => {
-        const res = await fetch(`/api/friends/accept/`, {
+        const res = await fetch(`http://localhost:8000/api/friends/accept/`, {
             method: "POST",
             headers: {
+                "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({ user_id: userId }),
@@ -137,7 +138,7 @@ export default function ProfilePage() {
         }
     };
     const handleDecline = async () => {
-    const res = await fetch(`/api/friends/decline/`, {
+    const res = await fetch(`http://localhost:8000/api/friends/decline/`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -329,7 +330,7 @@ export default function ProfilePage() {
                                 {photoPosts.length > 0 ? photoPosts.map((post, idx) => (
                                     <img
                                         key={post.id}
-    
+
                                         className={`${styles.photoItem} ${idx === 0 ? styles.photoLarge : ''}`}
                                         src={post.image || post.image_url || post.media?.[0]?.url}
                                         alt="Latest user content"

@@ -26,23 +26,28 @@ def send_friend_request(request):
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=404)
 
-    existing = Friendship.objects.filter(Q(user1=from_user, user2=to_user) | Q(user1=to_user, user2=from_user)).first()
+    friendship = Friendship.objects.filter(
+        Q(user1=from_user, user2=to_user) | Q(user1=to_user, user2=from_user)
+    ).first()
 
-    if not existing:
+    if not friendship:
         Friendship.objects.create(user1=from_user, user2=to_user, status=Friendship.Status.PENDING)
         return Response({"message": "Request sent"}, status=201)
 
-    if existing.status == Friendship.Status.PENDING:
+    if friendship.status == Friendship.Status.PENDING:
         return Response({"message": "Request already sent"}, status=400)
 
-    if existing.status == Friendship.Status.REJECTED:
-        existing.status = Friendship.Status.PENDING
-        existing.save()
+    if friendship.status == Friendship.Status.REJECTED:
+        friendship.status = Friendship.Status.PENDING
+        friendship.user1 = from_user
+        friendship.user2 = to_user
+        friendship.save()
+        return Response({"message": "Request re-sent"}, status=200)
 
-    if existing.status == Friendship.Status.ACCEPTED:
+    if friendship.status == Friendship.Status.ACCEPTED:
         return Response({"message": "Request already accepted"}, status=400)
 
-    if existing.status == Friendship.Status.BLOCKED:
+    if friendship.status == Friendship.Status.BLOCKED:
         return Response({"message": "You are blocked"}, status=400)
 
     return Response({"message": "WTF"}, status=400)
@@ -52,20 +57,27 @@ def send_friend_request(request):
 @permission_classes([IsAuthenticated])
 def accept_friend_request(request):
     current_user = request.user
-    user_id = request.data.get("user_id")
+    from_user_id = request.data.get("user_id")
 
-    if not user_id:
+    if not from_user_id:
         return Response({"error": "user_id required"}, status=400)
 
     try:
-        friendship = Friendship.objects.get(user1_id=user_id, user2=current_user, status=Friendship.Status.PENDING)
-    except Friendship.DoesNotExist:
-        return Response({"error": "Request not found"}, status=404)
+        from_user = User.objects.get(id=from_user_id)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
+
+    friendship = Friendship.objects.filter(
+        user1=from_user, user2=current_user, status=Friendship.Status.PENDING
+    ).first()
+
+    if not friendship:
+        return Response({"error": "No pending request"}, status=400)
 
     friendship.status = Friendship.Status.ACCEPTED
     friendship.save()
 
-    return Response({"message": "Friend request accepted"})
+    return Response({"message": "Friend request accepted"}, status=200)
 
 
 @api_view(["GET"])
