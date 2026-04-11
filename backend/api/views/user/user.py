@@ -81,17 +81,16 @@ def user_profile_view(request, user_id):
     profile = getattr(user, "profile", None)
 
     avatar = None
-    if profile and getattr(profile, "profile_image", None):
+    if profile and profile.profile_image:
         avatar = request.build_absolute_uri(profile.profile_image.url)
 
     cover = None
-    if profile and getattr(profile, "banner_image", None):
+    if profile and profile.banner_image:
         cover = request.build_absolute_uri(profile.banner_image.url)
 
     user_info = get_user_academic_info(user)
 
     current_user = request.user
-    friend_status = "none"
 
     if current_user == user:
         friend_status = "self"
@@ -102,15 +101,19 @@ def user_profile_view(request, user_id):
 
         if not friendship:
             friend_status = "none"
+
         elif friendship.status == Friendship.Status.PENDING:
             if friendship.user1 == current_user:
                 friend_status = "sent"
             else:
                 friend_status = "received"
+
         elif friendship.status == Friendship.Status.ACCEPTED:
             friend_status = "friends"
+
         elif friendship.status == Friendship.Status.BLOCKED:
             friend_status = "blocked"
+
         else:
             friend_status = "none"
 
@@ -130,6 +133,10 @@ def user_profile_view(request, user_id):
             "role": user_info.get("role"),
             "friend_status": friend_status,
             "friends_count": friends_count,
+            "phone": "0598645517",
+            "email": "wewe@wewe.wewe",
+            "degree": "Pro CS",
+            "hobbies": "weweing",
         },
         status=status.HTTP_200_OK,
     )

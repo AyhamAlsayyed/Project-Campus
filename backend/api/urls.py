@@ -14,6 +14,11 @@ from .views.communities.communitie import (
 from .views.posts.like import toggle_like
 from .views.posts.post_create import create_post
 from .views.posts.posts import feed
+from .views.user.friends import (
+    accept_friend_request,
+    send_friend_request,
+    user_friends_list,
+)
 from .views.user.user import me, user_profile_view
 
 urlpatterns = [
@@ -33,4 +38,7 @@ urlpatterns = [
     path("communities/<int:community_id>/", community_detail),
     path("communities/<int:community_id>/posts/", feed),
     path("posts/<int:post_id>/comments/", comment_list),
+    path("friends/request/", send_friend_request),
+    path("friends/accept/", accept_friend_request),
+    path("users/<int:user_id>/friends/", user_friends_list),
 ]
