@@ -78,9 +78,24 @@ export default function PostCard({ post, openComments }) {
     setShowMenu(prev => !prev);
   }
 
-  const validMedia = post.media?.filter(
-    (item) => item?.url && item?.type
-  ) || [];
+  const validMedia = post.media?.map((item) => {
+    const url = item.url;
+
+    let type = item.type;
+
+    // 🔥 fallback if backend doesn't send type
+    if (!type && url) {
+      if (url.match(/\.(mp4|webm|ogg)$/i)) {
+        type = "video";
+      } else if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+        type = "image";
+      } else {
+        type = "file";
+      }
+    }
+
+    return { ...item, type };
+  }) || [];
   const files = validMedia.filter(m => m.type === "file");
   const nextSlide = () => {
     setCurrent((prev) => (prev + 1) % validMedia.length);
@@ -119,7 +134,7 @@ export default function PostCard({ post, openComments }) {
             </span>
           </div>
         </div>
-        
+
 
 
         <div className={styles.menuContainer}>

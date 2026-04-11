@@ -3,7 +3,7 @@ import styles from './userDetails.module.css';
 export default function UserDetails({ user }) {
     if (!user) return null;
 
-    // Helper to render multiple items or a single string
+   
     const renderItems = (data, icon) => {
         if (!data) return <p>{icon} N/A</p>;
         const items = Array.isArray(data) ? data : [data];

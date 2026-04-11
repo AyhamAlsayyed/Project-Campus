@@ -309,24 +309,49 @@ export default function Homepage() {
                                 />
                                 {images.length > 0 && (
                                     <div className={styles.previewContainer}>
-                                        {images.map((img, i) => (
-                                            <div key={i} className={styles.previewWrapper}>
-                                                <img
-                                                    src={URL.createObjectURL(img)}
-                                                    alt=""
-                                                    className={styles.previewImage}
-                                                />
+                                        {images.map((file, i) => {
+                                            const url = URL.createObjectURL(file);
 
-                                                <button
-                                                    className={styles.removeImage}
-                                                    onClick={() =>
-                                                        setImages(prev => prev.filter((_, index) => index !== i))
-                                                    }
-                                                >
-                                                    <X size={14} />
-                                                </button>
-                                            </div>
-                                        ))}
+                                            if (file.type.startsWith("video/")) {
+                                                return (
+                                                    <div key={i} className={styles.previewWrapper}>
+                                                        <video
+                                                            src={url}
+                                                            className={styles.previewImage}
+                                                            controls
+                                                        />
+
+                                                        <button
+                                                            className={styles.removeImage}
+                                                            onClick={() =>
+                                                                setImages(prev => prev.filter((_, index) => index !== i))
+                                                            }
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                );
+                                            }
+
+                                            return (
+                                                <div key={i} className={styles.previewWrapper}>
+                                                    <img
+                                                        src={url}
+                                                        alt=""
+                                                        className={styles.previewImage}
+                                                    />
+
+                                                    <button
+                                                        className={styles.removeImage}
+                                                        onClick={() =>
+                                                            setImages(prev => prev.filter((_, index) => index !== i))
+                                                        }
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                                 {files.length > 0 && (
@@ -435,7 +460,7 @@ export default function Homepage() {
                 <CommentModal
                     post={selectedPost}
                     onClose={closeComments}
-                     currentUser={user}
+                    currentUser={user}
                 />
             )}
 

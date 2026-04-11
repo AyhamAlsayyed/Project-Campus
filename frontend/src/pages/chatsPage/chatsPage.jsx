@@ -8,53 +8,41 @@ import {
     Paperclip, Send, FileText
 } from 'lucide-react';
 
-const DUMMY_CHATS = [
-    {
-        id: 1,
-        name: "Graduation Project",
-        avatar: "https://ui-avatars.com/api/?name=GP&background=111&color=fff",
-        members: "You, Dr. Samer, OvalTree, Light, Ahmad, Ali & 11 more!",
-        is_pinned: true,
-        unread_count: 2,
-        preview: "Send it already",
-        time: "9:52 am",
-        messages: [
-            { id: 101, sender: "Dr. Samer Sweileh", senderId: "other", text: "Your the report is done ... \nSend it already", time: "9:52 am", avatar: "https://ui-avatars.com/api/?name=Dr+Samer", type: "text" },
-            { id: 102, sender: "You", senderId: "me", text: "Project Campus.pdf", subtext: "57 pages - pdf - 2 MB\nProject Campus: A Unified Academic Social Media Platform™.", time: "just now", type: "file" },
-            { id: 103, sender: "You", senderId: "me", text: "Wow Ayham", time: "just now", type: "text" }
-        ]
-    },
-    {
-        id: 2,
-        name: "Web Design 2",
-        avatar: "https://ui-avatars.com/api/?name=WD&background=0D8ABC&color=fff",
-        members: "You, T. Ahmad Qasim, & 20 more",
-        is_pinned: false,
-        unread_count: 0,
-        preview: "T. Ahmad: *sent an attachment*",
-        time: "2 minutes ago",
-        messages: [
-            { id: 201, sender: "T. Ahmad Qasim", senderId: "other", text: "Please check the attached syllabus.", time: "2 minutes ago", avatar: "https://ui-avatars.com/api/?name=TA", type: "text" }
-        ]
-    }
-];
-export default function ChatsPage() {
+
+    export default function ChatsPage() {
     const [theme, setTheme] = useState("dark");
     const [user, setUser] = useState(null);
     const [userLoading, setUserLoading] = useState(true);
     const [userError, setUserError] = useState(null);
-    const [chats, setChats] = useState(DUMMY_CHATS);
+    const [chats, setChats] = useState([]);
     const [loadingChats, setLoadingChats] = useState(true);
     const [filter, setFilter] = useState("all")
     const [searchQuery, setSearchQuery] = useState("");
     const [openMenuId, setOpenMenuId] = useState(null);
     const [requestsCount, setRequestsCount] = useState(0);
+    const [messages, setMessages] = useState([]);
     const menuRef = useRef(null);
     const [groups, setGroups] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
     const [activeChatMenuOpen, setActiveChatMenuOpen] = useState(false);
     const activeChatMenuRef = useRef(null);
-
+    const messagesEndRef = useRef(null);
+    const messagesScrollRef = useRef(null);
+    const scrollToBottom = () => {
+        setTimeout(() => {
+            if (messagesScrollRef.current) {
+                messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
+            }
+        }, 50);
+    };
+    useEffect(() => {
+        scrollToBottom();
+    }, [selectedChat?.id]);
+    useEffect(() => {
+        if (selectedChat) {
+            scrollToBottom();
+        }
+    }); // ✅ no dependency array = runs after every render
 
 
     const API = "http://localhost:8000"
@@ -254,8 +242,19 @@ export default function ChatsPage() {
                                     <div className={styles.chatItemsContainer}>
                                         {sortedChats.map((chat, index) => (
                                             <div key={chat.id} className={styles.chatRow}>
-                                                {/* ADDED onClick TO OPEN CHAT */}
-                                                <div className={styles.chatItem} onClick={() => setSelectedChat(chat)} style={{ cursor: 'pointer' }}>
+
+                                                <div className={styles.chatItem} onClick={async () => {
+                                                    setSelectedChat(chat);
+
+                                                    const res = await fetch(`http://localhost:8000/api/chats/${chat.id}/messages/`, {
+                                                        headers: {
+                                                            Authorization: `Bearer ${token}`,
+                                                        },
+                                                    });
+
+                                                    const data = await res.json();
+                                                    setMessages(data);
+                                                }} style={{ cursor: 'pointer' }}>
                                                     <div className={styles.chatItemLeft}>
                                                         <div className={styles.avatarWrapper}>
                                                             <img src={chat.avatar} alt={chat.name} className={styles.chatAvatar} />
@@ -303,7 +302,7 @@ export default function ChatsPage() {
                                     </div>
 
                                     <div className={styles.headerRightWrapper}>
-                                        <button className={styles.iconBtn}><Search size={30}  /></button>
+                                        <button className={styles.iconBtn}><Search size={30} /></button>
                                         <div className={styles.menuWrapper} ref={activeChatMenuRef}>
                                             <button className={styles.iconBtn} onClick={() => setActiveChatMenuOpen(!activeChatMenuOpen)}>
                                                 <MoreHorizontal size={30} />
@@ -325,9 +324,9 @@ export default function ChatsPage() {
                                 <div className={styles.activeChatInnerContainer}>
 
                                     <div className={styles.chatArea}>
-                                        <div className={styles.messagesScrollArea}>
+                                        <div className={styles.messagesScrollArea} ref={messagesScrollRef}>
                                             <div className={styles.dateSeparator}><span>Today</span></div>
-                                            {selectedChat.messages?.map((msg) => (
+                                            {messages.map((msg) => (
                                                 <div key={msg.id} className={`${styles.messageWrapper} ${msg.senderId === 'me' ? styles.messageMineWrapper : styles.messageOtherWrapper}`}>
                                                     {msg.senderId === 'other' && (
                                                         <img src={msg.avatar} alt="Sender" className={styles.messageAvatar} />
@@ -353,6 +352,8 @@ export default function ChatsPage() {
                                                     </div>
                                                 </div>
                                             ))}
+                                            <div ref={messagesEndRef} />
+
                                         </div>
 
 

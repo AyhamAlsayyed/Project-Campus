@@ -136,6 +136,20 @@ export default function ProfilePage() {
             setFriendStatus("friends");
         }
     };
+    const handleDecline = async () => {
+    const res = await fetch(`/api/friends/decline/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ user_id: userId }),
+    });
+
+    if (res.ok) {
+        setFriendStatus("none");
+    }
+};
 
     const loadPosts = async (id) => {
         try {
@@ -273,7 +287,7 @@ export default function ProfilePage() {
                                             <button className={styles.acceptBtn} onClick={handleAccept}>
                                                 ✅ Accept
                                             </button>
-                                            <button className={styles.declineBtn}>
+                                            <button className={styles.declineBtn} onClick={handleDecline}>
                                                 ❌ Decline
                                             </button>
                                         </>

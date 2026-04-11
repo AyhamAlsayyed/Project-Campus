@@ -1,11 +1,12 @@
 .darkContainer {
-    min-height: 100vh;
+    height: 100vh;
     box-sizing: border-box;
     font-family: "Aktiv Grotesk", sans-serif;
     display: flex;
     flex-direction: column;
     position: relative;
-    overflow: visible;
+  
+    
 
 }
 
@@ -31,7 +32,8 @@
     margin: 20px auto 0 auto;
     gap: var(--col-gap);
     margin-top: 20px;
-    align-items: flex-start;
+    align-items: stretch;
+   
 }
 
 .mainContent {
@@ -40,6 +42,7 @@
     align-items: flex-start;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .title {
@@ -194,11 +197,12 @@
 
 .chatArea {
     width: 90%;
-    /* Adjust percentage to control the side gaps */
     max-width: 900px;
-    height: 100%;
+    flex: 1;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    min-height: 0; 
 }
 
 .messageAvatar {
@@ -226,7 +230,18 @@
 .messagesScrollArea {
     flex: 1;
     overflow-y: auto;
+    height: 100%;
+    min-height: 0;
+    scrollbar-width: thin; 
+    scrollbar-color: rgba(255,255,255,0.2) transparent;
     padding: 20px 0;
+}
+.messagesScrollArea::-webkit-scrollbar {
+    width: 6px;
+}
+.messagesScrollArea::-webkit-scrollbar-thumb {
+    background-color: #555;
+    border-radius: 10px;
 }
 
 .statusDot {
@@ -404,9 +419,15 @@
     background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
     width: 100%;
     padding-top: 6px;
+
     flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    height: 100%; /* 🔥 CHANGE THIS */
+    /* REMOVE height: auto */
+
     border-radius: 30px;
-    height: auto;
     z-index: 1;
     min-width: 900px;
     position: relative;
@@ -586,27 +607,33 @@
 
 .activeChatOuter {
     margin-top: 4%;
+    height: calc(100vh - 160px);
+    overflow: hidden;
+    display: flex;          /* ADD */
+    flex-direction: column; /* ADD */
 }
+
 .innerChatContainer {
     background-color: rgba(61, 60, 60);
     border-radius: 30px;
-    min-height: 650px;
     height: 100%;
     padding-top: 30px;
-    gap: 40px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     width: 100%;
     top: 10px;
     z-index: 10;
+    overflow: hidden;
 }
 .activeChatInnerContainer {
-
     background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
     border-radius: 24px;
     flex: 1;
     display: flex;
+    min-height: 0; 
+    height: 50vh; 
+    max-height: 55vh;
     overflow: hidden;
     justify-content: center;
     margin: 0 auto 0 auto;
@@ -732,9 +759,11 @@
 
 /* Message Positioning */
 .messageWrapper {
-    display: flex;
+   display: flex;
     gap: 12px;
     width: 100%;
+    padding: 0 24px; 
+    box-sizing: border-box;
 }
 
 .messageMineWrapper {
