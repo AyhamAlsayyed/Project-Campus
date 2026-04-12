@@ -16,27 +16,19 @@ def get_notifications(request):
     return Response(serializer.data)
 
 
-@api_view(["PATCH"])
+@api_view(["PATCH", "DELETE"])
 @permission_classes([IsAuthenticated])
-def mark_notification(request, pk):
+def notification_delete_mark(request, notification_id):
     try:
-        notif = Notification.objects.get(notification_id=pk, user=request.user)
+        notif = Notification.objects.get(notification_id=notification_id, user=request.user)
     except Notification.DoesNotExist:
         return Response(status=404)
 
-    notif.is_read = request.data.get("is_read", True)
-    notif.save()
+    if request.method == "PATCH":
+        notif.is_read = request.data.get("is_read", True)
+        notif.save()
+        return Response({"success": True})
 
-    return Response({"success": True})
-
-
-@api_view(["DELETE"])
-@permission_classes([IsAuthenticated])
-def delete_notification(request, pk):
-    try:
-        notif = Notification.objects.get(notification_id=pk, user=request.user)
-    except Notification.DoesNotExist:
-        return Response(status=404)
-
-    notif.delete()
-    return Response(status=204)
+    if request.method == "DELETE":
+        notif.delete()
+        return Response(status=204)

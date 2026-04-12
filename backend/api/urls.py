@@ -11,11 +11,12 @@ from .views.communities.communitie import (
     join_community,
     request_join_community,
 )
-from .views.notification.notification import (
-    delete_notification,
-    get_notifications,
-    mark_notification,
+from .views.conversation.conversation import (
+    get_conversations,
+    get_messages,
+    send_message,
 )
+from .views.notification.notification import get_notifications, notification_delete_mark
 from .views.posts.like import toggle_like
 from .views.posts.post_create import create_post
 from .views.posts.posts import feed
@@ -49,6 +50,8 @@ urlpatterns = [
     path("friends/decline/", decline_friend_request),
     path("users/<int:user_id>/friends/", user_friends_list),
     path("notifications/", get_notifications),
-    path("notifications/<int:notification_id>/", mark_notification),
-    path("notifications/<int:notification_id>/", delete_notification),
+    path("notifications/<int:notification_id>/", notification_delete_mark),
+    path("chats/", get_conversations),
+    path("chats/<int:conversation_id>/messages/", get_messages),
+    path("chats/<int:conversation_id>/send/", send_message),
 ]
