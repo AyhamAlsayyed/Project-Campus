@@ -161,11 +161,11 @@ export default function Header({ theme, toggleTheme, user }) {
   };
   const handleDelete = async (id) => {
     try {
-      const token = localStorage.getItem("access"); // Or however you store your JWT
+      const token = localStorage.getItem("access"); 
       const response = await fetch(`http://localhost:8000/api/notifications/${id}/`, {
         method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${token}`, // <--- Add this
+          "Authorization": `Bearer ${token}`, 
           "Content-Type": "application/json"
         },
       });
