@@ -1,7 +1,10 @@
 import styles from "./header.module.css";
 import ThemeToggler from "../../pagelayout/themeToggle";
 import darkModeIcon from "../../../Assets/Pictures/LogoDarkMode.png";
-import { Search, Home, Check, MoreHorizontal } from "lucide-react";
+import {
+  Search, Home, Check, MoreHorizontal,
+  Volume2, Calendar, UserPlus, Heart // <-- Added icons for the badges
+} from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import MessageSquare from "../../../Assets/icons/messages.png";
@@ -18,7 +21,28 @@ export default function Header({ theme, toggleTheme, user }) {
   const chatRef = useRef(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [chats, setChats] = useState([]);
+  const timeAgo = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
 
+    if (diffInSeconds < 60) return `Just now`;
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes} min. ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hr. ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} d. ago`;
+  };
+  const getNotificationIcon = (type) => {
+    const t = (type || "").toLowerCase();
+    if (t.includes("announcement")) return <Volume2 size={12} color="currentColor" />;
+    if (t.includes("event")) return <Calendar size={12} color="currentColor" />;
+    if (t.includes("friend") || t.includes("request")) return <UserPlus size={12} color="currentColor" />;
+    if (t.includes("react") || t.includes("post")) return <Heart size={12} color="currentColor" />;
+    return <Volume2 size={12} color="currentColor" />; // fallback
+  };
   const filteredChats = chats.filter((chat) =>
     chat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -37,7 +61,25 @@ export default function Header({ theme, toggleTheme, user }) {
 
         if (response.ok) {
           const data = await response.json();
-          setNotifications(data);
+
+          const formattedNotifications = data.map(item => {
+            let rawAvatarUrl = item.actor_avatar || item.avatar;
+            if (rawAvatarUrl && !rawAvatarUrl.startsWith("http")) {
+              rawAvatarUrl = `http://localhost:8000${rawAvatarUrl}`;
+            }
+
+            return {
+              id: item.notification_id || item.id,
+              is_read: item.is_read,
+              avatar: rawAvatarUrl || "/default-avatar.png",
+              type: item.type || item.title || "Notification",
+              text: item.message || item.text || item.content,
+              time: timeAgo(item.created_at),
+              rawType: item.type
+            };
+          });
+
+          setNotifications(formattedNotifications);
         } else {
           console.error("Failed to fetch notifications");
         }
@@ -294,7 +336,7 @@ export default function Header({ theme, toggleTheme, user }) {
                       <div className={styles.notifAvatarWrap}>
 
                         <img src={n.avatar || "/default-avatar.png"} alt="" className={styles.notifAvatar} />
-                        <div className={styles.notifIconBadge}>{n.iconType}</div>
+                        <div className={styles.notifIconBadge}>{getNotificationIcon(n.type)}</div>
                       </div>
 
                       <div className={styles.notifContent}>

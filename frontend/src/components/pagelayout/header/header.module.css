@@ -107,8 +107,8 @@
 }
 .redDotIndicator {
   position: absolute;
-  top: 2px;     /* Adjusted to sit on the icon corner */
-  right: 4px; 
+  top: -5px;     /* Adjusted to sit on the icon corner */
+  right: -10px; 
   width: 8px;
   height: 8px;
   background: #ff4d4d;
@@ -277,7 +277,7 @@
 .unreadDot {
   position: absolute;
   left: 6px;
-  top: 50%;
+  top: 28%;
   transform: translateY(-50%);
   width: 6px;
   height: 6px;

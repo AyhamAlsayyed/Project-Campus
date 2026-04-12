@@ -3,13 +3,14 @@ import styles from './FriendsTab.module.css';
 import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function FriendsTab({ friends = [] }) {
+export default function FriendsTab({ friends = { mutual: [], all: [] } }) {
     const navigate = useNavigate();
     const handleFriendClick = (userId) => {
         navigate(`/profile/${userId}`);
     };
 
-    const mutuals = friends.slice(0, 4);
+    const mutuals = friends.mutual?.slice(0, 4) || [];
+    const allFriends = friends.all || [];
 
     return (
         <div className={styles.tabWrapper}>
@@ -61,7 +62,7 @@ export default function FriendsTab({ friends = [] }) {
                     </div>
 
                     <div className={styles.friendsGrid}>
-                        {friends.map((friend) => (
+                        {allFriends.map((friend) => (
                             <div key={friend.id} className={styles.friendItem} onClick={() => handleFriendClick(friend.id)}>
                                 <div className={styles.avatarBox}>
                                     <img
