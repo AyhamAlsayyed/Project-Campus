@@ -125,6 +125,7 @@ body {
 .profileContent {
   display: flex;
   flex-direction: column;
+  align-items: center;
   background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
   flex: 1;
   border-radius: 30px;
@@ -266,6 +267,62 @@ body {
   color: white;
   border-radius: 20px;
   padding: 8px 14px;
+}
+/* --- Friends Tab Styling --- */
+
+.friendsGrid {
+    display: grid;
+    /* This automatically creates as many columns as will fit, making it responsive */
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+    gap: 20px;
+    padding: 30px;
+    width: 85%;
+    margin: 0 auto;
+    background-color: #2a2a2a; /* Matches your Photos tab background */
+    border-radius: 25px;
+    box-sizing: border-box;
+}
+
+.friendCard {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.friendCard:hover {
+    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.08);
+    /* Subtle purple border glow on hover to match your theme */
+    border-color: rgba(124, 58, 237, 0.5); 
+}
+
+.friendAvatar {
+    width: 85px;
+    height: 85px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: rgba(0, 0, 0, 0.3); /* Dark fallback for transparent images */
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    padding: 3px; /* Creates a nice ring effect around the avatar */
+}
+
+.friendName {
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin: 0;
+    text-align: center;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .avatarCircle {
@@ -529,7 +586,11 @@ body {
     inset 0 0 40px rgba(255, 255, 255, 0.03);
 }
 
-
+.friendsTabContent {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
 .postsSection {
   width: calc(100% - 36px);
   margin: 14px auto 0 auto;

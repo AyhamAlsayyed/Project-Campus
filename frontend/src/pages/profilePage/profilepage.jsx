@@ -6,6 +6,7 @@ import PostCard from '../../components/posts/postCard';
 import UserDetails from '../../components/userDetails/userDetails';
 import CommentModal from '../../components/comments/commentsModal';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
+import FriendsTab from '../../components/FriendsTab/FriendsTab';
 import FriendsSuggestion from '../../components/recentlycontacted/recentlyContacted';
 import {
     User,
@@ -33,7 +34,7 @@ export default function ProfilePage() {
     const [friendsLoading, setFriendsLoading] = useState(false);
     const [postsLoading, setPostsLoading] = useState(true);
     const [postsError, setPostsError] = useState("");
-    const [activeTab, setActiveTab] = useState("Photos");
+    const [activeTab, setActiveTab] = useState("Posts");
     const { pathname } = useLocation();
     const { userId } = useParams();
     const navigate = useNavigate();
@@ -138,19 +139,19 @@ export default function ProfilePage() {
         }
     };
     const handleDecline = async () => {
-    const res = await fetch(`http://localhost:8000/api/friends/decline/`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ user_id: userId }),
-    });
+        const res = await fetch(`http://localhost:8000/api/friends/decline/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ user_id: userId }),
+        });
 
-    if (res.ok) {
-        setFriendStatus("none");
-    }
-};
+        if (res.ok) {
+            setFriendStatus("none");
+        }
+    };
 
     const loadPosts = async (id) => {
         try {
@@ -340,32 +341,12 @@ export default function ProfilePage() {
                             </div>
                         )}
 
-                        {activeTab === 'Friends' && <div className={styles.notice}>{friendsLoading ? (
-                            <p>Loading friends...</p>
-                        ) : friends.length === 0 ? (
-                            <p>No friends yet.</p>
-                        ) : (
-                            <div className={styles.friendsGrid}>
-                                {friends.map((f) => (
-                                    <div
-                                        key={f.id}
-                                        className={styles.friendCard}
-                                        onClick={() => navigate(`/profile/${f.id}`)}
-                                    >
-                                        <img
-                                            src={
-                                                f.avatar?.startsWith("http")
-                                                    ? f.avatar
-                                                    : `http://localhost:8000${f.avatar}`
-                                            }
-                                            alt={f.username}
-                                            className={styles.friendAvatar}
-                                        />
-                                        <span>{f.username}</span>
-                                    </div>
-                                ))}
+                        {activeTab === 'Friends' && (
+                            <div className={styles.friendsTabContent}>
+                                <FriendsTab friends={friends} />
                             </div>
-                        )}</div>}
+
+                        )}
                     </div>
                 </div>
 
