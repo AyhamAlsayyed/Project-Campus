@@ -111,31 +111,49 @@ def decline_friend_request(request):
 @permission_classes([IsAuthenticated])
 def user_friends_list(request, user_id):
     try:
-        user = User.objects.get(id=user_id)
+        target_user = User.objects.get(id=user_id)
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=404)
 
-    friendships = Friendship.objects.filter(
-        Q(user1=user) | Q(user2=user), status=Friendship.Status.ACCEPTED
-    ).select_related("user1", "user2")
+    current_user = request.user
 
-    friends = []
+    # all friends of target user
+    target_friendships = Friendship.objects.filter(
+        Q(user1=target_user) | Q(user2=target_user), status=Friendship.Status.ACCEPTED
+    ).select_related("user1__profile", "user2__profile")
 
-    for f in friendships:
-        friend = f.user2 if f.user1 == user else f.user1
+    # all friends of current user
+    current_friendships = Friendship.objects.filter(
+        Q(user1=current_user) | Q(user2=current_user), status=Friendship.Status.ACCEPTED
+    )
+
+    current_friends_ids = set()
+    for f in current_friendships:
+        friend = f.user2 if f.user1 == current_user else f.user1
+        current_friends_ids.add(friend.id)
+
+    all_friends = []
+    mutual_friends = []
+
+    for f in target_friendships:
+        friend = f.user2 if f.user1 == target_user else f.user1
         profile = getattr(friend, "profile", None)
 
-        avatar = None
+        avatar_url = None
         if profile and profile.profile_image:
-            avatar = request.build_absolute_uri(profile.profile_image.url)
+            avatar_url = request.build_absolute_uri(profile.profile_image.url)
 
-        friends.append(
-            {
-                "id": friend.id,
-                "username": friend.username,
-                "full_name": getattr(profile, "full_name", ""),
-                "avatar": avatar,
-            }
-        )
+        friend_data = {
+            "id": friend.id,
+            "username": friend.username,
+            "full_name": getattr(profile, "full_name", ""),
+            "avatar_url": avatar_url,
+            "status": profile.status if profile else "offline",
+        }
 
-    return Response(friends, status=200)
+        all_friends.append(friend_data)
+
+        if friend.id in current_friends_ids and friend.id != current_user.id:
+            mutual_friends.append(friend_data)
+
+    return Response({"mutual": mutual_friends, "all": all_friends}, status=200)
