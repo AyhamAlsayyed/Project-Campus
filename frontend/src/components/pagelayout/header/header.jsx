@@ -24,20 +24,25 @@ export default function Header({ theme, toggleTheme, user }) {
   );
   useEffect(() => {
     const fetchNotifications = async () => {
-      const token = localStorage.getItem("accessToken");
       try {
+        const token = localStorage.getItem("access");
+
         const response = await fetch("http://localhost:8000/api/notifications", {
+          method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         });
+
         if (response.ok) {
           const data = await response.json();
           setNotifications(data);
+        } else {
+          console.error("Failed to fetch notifications");
         }
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Error fetching notifications:", error);
       } finally {
         setIsLoading(false);
       }
@@ -45,6 +50,8 @@ export default function Header({ theme, toggleTheme, user }) {
 
     if (user) fetchNotifications();
   }, [user]);
+
+
 
 
   useEffect(() => {
@@ -66,9 +73,14 @@ export default function Header({ theme, toggleTheme, user }) {
   const handleMarkAsRead = async (id) => {
     try {
 
+      const token = localStorage.getItem("access");
+
       const response = await fetch(`http://localhost:8000/api/notifications/${id}/`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ is_read: true }),
       });
 
@@ -84,7 +96,7 @@ export default function Header({ theme, toggleTheme, user }) {
   };
   const handleDelete = async (id) => {
     try {
-      const token = localStorage.getItem("accessToken"); // Or however you store your JWT
+      const token = localStorage.getItem("access"); // Or however you store your JWT
       const response = await fetch(`http://localhost:8000/api/notifications/${id}/`, {
         method: "DELETE",
         headers: {
@@ -142,36 +154,7 @@ export default function Header({ theme, toggleTheme, user }) {
     }
   };
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
 
-        const response = await fetch("http://localhost:8000/api/notifications", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setNotifications(data);
-        } else {
-          console.error("Failed to fetch notifications");
-        }
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-
-    if (user) {
-      fetchNotifications();
-    }
-  }, [user]);
 
 
 
