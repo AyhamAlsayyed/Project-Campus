@@ -35,6 +35,11 @@ export default function ProfilePage() {
     const [postsLoading, setPostsLoading] = useState(true);
     const [postsError, setPostsError] = useState("");
     const [activeTab, setActiveTab] = useState("Posts");
+    const [activityPosts, setActivityPosts] = useState([]);
+    const [activitiesLoading, setActivitiesLoading] = useState(false);
+
+    const [savedPosts, setSavedPosts] = useState([]);
+    const [savedLoading, setSavedLoading] = useState(false);
     const { pathname } = useLocation();
     const { userId } = useParams();
     const navigate = useNavigate();
@@ -102,6 +107,43 @@ export default function ProfilePage() {
             }
         } catch (e) {
             console.error(e);
+        }
+    };
+    const loadActivities = async () => {
+        try {
+            setActivitiesLoading(true);
+            
+            const res = await fetch(`http://localhost:8000/api/posts/activity/`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setActivityPosts(Array.isArray(data) ? data : []);
+            }
+        } catch (e) {
+            console.error("Failed to load activities", e);
+        } finally {
+            setActivitiesLoading(false);
+        }
+    };
+
+    const loadSavedPosts = async () => {
+        try {
+            setSavedLoading(true);
+            // Assuming your backend has an endpoint for saved posts
+            const res = await fetch(`http://localhost:8000/api/posts/saved/`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setSavedPosts(Array.isArray(data) ? data : []);
+            }
+        } catch (e) {
+            console.error("Failed to load saved posts", e);
+        } finally {
+            setSavedLoading(false);
         }
     };
     const loadFriends = async (userId) => {
@@ -187,6 +229,10 @@ export default function ProfilePage() {
         loadCurrentUser();
         loadProfileUser();
         loadFriends(userId);
+        if (currentUser?.id === Number(userId) || !userId) {
+            loadActivities();
+            loadSavedPosts();
+        }
     }, [userId]);
 
 
@@ -206,6 +252,9 @@ export default function ProfilePage() {
     });
 
     const isOwnProfile = currentUser?.id === Number(userId);
+    const profileTabs = isOwnProfile
+        ? ['Posts', 'Activities', 'Saved']
+        : ['Posts', 'Photos', 'Friends'];
     const username = user?.username || "Username";
     const role = user?.role || "Role";
     const fullName = user?.full_name || user?.fullName || "Full name";
@@ -308,7 +357,7 @@ export default function ProfilePage() {
                         <div className={styles.hr} />
 
                         <div className={styles.tabs}>
-                            {['Posts', 'Photos', 'Friends'].map(tab => (
+                            {profileTabs.map(tab => (
                                 <button
                                     key={tab}
                                     className={`${styles.tabBtn} ${activeTab === tab ? styles.tabActive : ''}`}
@@ -346,6 +395,34 @@ export default function ProfilePage() {
                                 <FriendsTab friends={friends} />
                             </div>
 
+                        )}
+                        {activeTab === 'Activities' && (
+                            <div className={styles.postsSection}>
+                                {activitiesLoading ? (
+                                    <div className={styles.notice}>Loading activities...</div>
+                                ) : activityPosts.length > 0 ? (
+                                    activityPosts.map(post => (
+                                        <PostCard key={post.id} post={post} openComments={openComments} />
+                                    ))
+                                ) : (
+                                    <div className={styles.notice}>No recent activity to show.</div>
+                                )}
+                            </div>
+                        )}
+
+                   
+                        {activeTab === 'Saved' && (
+                            <div className={styles.postsSection}>
+                                {savedLoading ? (
+                                    <div className={styles.notice}>Loading saved posts...</div>
+                                ) : savedPosts.length > 0 ? (
+                                    savedPosts.map(post => (
+                                        <PostCard key={post.id} post={post} openComments={openComments} />
+                                    ))
+                                ) : (
+                                    <div className={styles.notice}>You haven't saved any posts yet.</div>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>
