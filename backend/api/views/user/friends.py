@@ -146,9 +146,7 @@ def user_friends_list(request, user_id):
         friend_data = {
             "id": friend.id,
             "username": friend.username,
-            "full_name": getattr(profile, "full_name", ""),
             "avatar_url": avatar_url,
-            "status": profile.status if profile else "offline",
         }
 
         all_friends.append(friend_data)
