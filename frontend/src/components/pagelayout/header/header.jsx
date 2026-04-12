@@ -47,50 +47,59 @@ export default function Header({ theme, toggleTheme, user }) {
     chat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
   useEffect(() => {
-    const fetchNotifications = async () => {
+    const fetchHeaderData = async () => {
       try {
         const token = localStorage.getItem("access");
+        const headers = {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        };
 
-        const response = await fetch("http://localhost:8000/api/notifications", {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+       
+        const notifRes = await fetch("http://localhost:8000/api/notifications", { headers });
+        if (notifRes.ok) {
+          const notifData = await notifRes.json();
+          const formattedNotifs = notifData.map(item => ({
+            id: item.notification_id || item.id,
+            is_read: item.is_read,
+            // Fixing the avatar path here too!
+            avatar: (item.actor_avatar || item.avatar)?.startsWith("http")
+              ? (item.actor_avatar || item.avatar)
+              : `http://localhost:8000${item.actor_avatar || item.avatar}` || "/default-avatar.png",
+            type: item.type || "Notification",
+            text: item.message || item.content,
+            time: timeAgo(item.created_at),
+          }));
+          setNotifications(formattedNotifs);
+        }
 
-        if (response.ok) {
-          const data = await response.json();
-
-          const formattedNotifications = data.map(item => {
-            let rawAvatarUrl = item.actor_avatar || item.avatar;
-            if (rawAvatarUrl && !rawAvatarUrl.startsWith("http")) {
-              rawAvatarUrl = `http://localhost:8000${rawAvatarUrl}`;
-            }
-
-            return {
-              id: item.notification_id || item.id,
-              is_read: item.is_read,
-              avatar: rawAvatarUrl || "/default-avatar.png",
-              type: item.type || item.title || "Notification",
-              text: item.message || item.text || item.content,
-              time: timeAgo(item.created_at),
-              rawType: item.type
-            };
-          });
-
-          setNotifications(formattedNotifications);
-        } else {
-          console.error("Failed to fetch notifications");
+      
+        
+        const chatRes = await fetch("http://localhost:8000/api/chats/", { headers });
+        if (chatRes.ok) {
+          const chatData = await chatRes.json();
+          const formattedChats = chatData.map(chat => ({
+            id: chat.id,
+            name: chat.user_name || "Unknown User",
+            avatar: chat.avatar?.startsWith("http")
+              ? chat.avatar
+              : `http://localhost:8000${chat.avatar}` || "/default-avatar.png",
+            message: chat.last_message || "No messages yet",
+            status: chat.is_online ? "online" : "offline",
+            dotStyle: chat.is_online ? "online" : "offline",
+            unread: chat.unread_count || 0,
+            time: timeAgo(chat.last_message_time)
+          }));
+          setChats(formattedChats);
         }
       } catch (error) {
-        console.error("Error fetching notifications:", error);
+        console.error("Error fetching header data:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (user) fetchNotifications();
+    if (user) fetchHeaderData();
   }, [user]);
 
 
