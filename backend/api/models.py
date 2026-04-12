@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
+from rest_framework import serializers
 
 """
 DJANGO_USER_FIELDS = {
@@ -272,33 +273,6 @@ class Friendship(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["user1", "user2"], name="uniq_friendship_pair"),
         ]
-
-
-class Notification(models.Model):
-    notification_id = models.BigAutoField(primary_key=True, db_column="notification_id")
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications", db_column="user_id"
-    )
-
-    class Type(models.TextChoices):
-        EVENTS = "events", "Events"
-        COMMENTS = "comments", "Comments"
-        ACCEPTED_FRIEND_REQUEST = "accepted_friend_request", "Accepted friend request"
-        MESSAGES = "messages", "Messages"
-        ANNOUNCEMENTS = "announcements", "Announcements"
-
-    type = models.CharField(
-        max_length=30,
-        choices=Type.choices,
-    )
-    content = models.TextField()
-
-    is_read = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = "notification"
 
 
 class Community(models.Model):
@@ -966,3 +940,89 @@ class Report(models.Model):
 
     class Meta:
         db_table = "report"
+
+
+class Notification(models.Model):
+    notification_id = models.BigAutoField(primary_key=True, db_column="notification_id")
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications", db_column="user_id"
+    )
+
+    actor_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications_sent",
+        db_column="actor_user_id",
+    )
+
+    actor_page = models.ForeignKey(
+        Page,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications_sent",
+        db_column="actor_page_id",
+    )
+
+    class Type(models.TextChoices):
+        ACCEPTED_FRIEND_REQUEST = "accepted_friend_request", "Accepted friend request"
+        ANNOUNCEMENTS = "announcements", "Announcements"
+        LIKE = "like", "Like"
+        COMMENT = "comment", "Comment"
+        FRIEND_REQUEST = "friend_request", "Friend Request"
+        MESSAGE = "message", "Message"
+        EVENT = "event", "Event"
+        SYSTEM = "system", "System"
+
+    type = models.CharField(
+        max_length=30,
+        choices=Type.choices,
+    )
+    content = models.TextField()
+
+    # referenc to
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True, blank=True)
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, null=True, blank=True)
+
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def clean(self):
+        validate_exactly_one(self, "actor_user", "actor_page")
+
+    class Meta:
+        db_table = "notification"
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+    time = serializers.SerializerMethodField()
+    iconType = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Notification
+        fields = [
+            "notification_id",
+            "type",
+            "content",
+            "is_read",
+            "avatar",
+            "time",
+            "iconType",
+        ]
+
+    def get_avatar(self, obj):
+        if obj.actor_user and hasattr(obj.actor_user, "profile"):
+            if obj.actor_user.profile.profile_image:
+                return obj.actor_user.profile.profile_image.url
+        return "/default-avatar.png"
+
+    def get_time(self, obj):
+        return obj.created_at.strftime("%H:%M")
+
+    def get_iconType(self, obj):
+        return obj.type
