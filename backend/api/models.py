@@ -674,15 +674,6 @@ class Conversation(models.Model):
         db_column="created_by_user_id",
     )
 
-    created_by_page = models.ForeignKey(
-        Page,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="created_conversations",
-        db_column="created_by_page_id",
-    )
-
     last_message = models.ForeignKey(
         "Message",
         on_delete=models.SET_NULL,
@@ -694,16 +685,20 @@ class Conversation(models.Model):
 
     def clean(self):
         if self.is_group:
-            validate_exactly_one(self, "created_by_user", "created_by_page")
+            if not self.created_by_user:
+                raise ValidationError("Group must have a creator.")
+        else:
+            if self.created_by_user:
+                raise ValidationError("DM conversation cannot have a creator.")
 
     class Meta:
         db_table = "conversation"
         constraints = [
             models.CheckConstraint(
                 check=(
-                    (Q(created_by_user__isnull=False) & Q(created_by_page__isnull=True))
-                    | (Q(created_by_user__isnull=True) & Q(created_by_page__isnull=False))
-                    | (Q(created_by_user__isnull=True) & Q(created_by_page__isnull=True))
+                    # if its a group one creator and is owner
+                    (Q(is_group=True) & Q(created_by_user__isnull=False))
+                    | (Q(is_group=False) & Q(created_by_user__isnull=True))  # if its a DM no creator
                 ),
                 name="chk_conversation_creator",
             ),
@@ -759,6 +754,10 @@ class ConversationMember(models.Model):
     def clean(self):
         validate_exactly_one(self, "user", "page")
 
+        # enforce that a page is not a member of group.
+        if self.conversation.is_group and self.page is not None:
+            raise ValidationError("Pages cannot be members of group conversations.")
+
         qs = ConversationMember.objects.filter(conversation_id=self.conversation_id)
 
         if self.user_id is not None:
@@ -773,6 +772,8 @@ class ConversationMember(models.Model):
             raise ValidationError("Duplicate member.")
 
     def save(self, *args, **kwargs):
+        if self.conversation.is_group and self.page_id is not None:
+            raise ValidationError("Pages cannot join group conversations.")
         self.full_clean()
         super().save(*args, **kwargs)
 
