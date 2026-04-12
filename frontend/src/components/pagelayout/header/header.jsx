@@ -23,16 +23,29 @@ export default function Header({ theme, toggleTheme, user }) {
   const [chats, setChats] = useState([]);
   const timeAgo = (dateString) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
+
+    let date;
+
+    // Check if dateString is just a time (HH:MM)
+    if (typeof dateString === 'string' && dateString.length === 5 && dateString.includes(':')) {
+      const [hours, minutes] = dateString.split(':');
+      date = new Date();
+      date.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    } else {
+      date = new Date(dateString);
+    }
+
+    if (isNaN(date.getTime())) return dateString;
     const now = new Date();
     const diffInSeconds = Math.floor((now - date) / 1000);
-
-    if (diffInSeconds < 60) return `Just now`;
+    if (diffInSeconds < 0) return "Just now";
+    if (diffInSeconds < 60) return "Just now";
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     if (diffInMinutes < 60) return `${diffInMinutes} min. ago`;
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours} hr. ago`;
     const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays === 1) return "Yesterday";
     return `${diffInDays} d. ago`;
   };
   const getNotificationIcon = (type) => {
@@ -55,26 +68,27 @@ export default function Header({ theme, toggleTheme, user }) {
           "Content-Type": "application/json",
         };
 
-       
+
         const notifRes = await fetch("http://localhost:8000/api/notifications", { headers });
         if (notifRes.ok) {
           const notifData = await notifRes.json();
           const formattedNotifs = notifData.map(item => ({
             id: item.notification_id || item.id,
             is_read: item.is_read,
-            // Fixing the avatar path here too!
             avatar: (item.actor_avatar || item.avatar)?.startsWith("http")
               ? (item.actor_avatar || item.avatar)
               : `http://localhost:8000${item.actor_avatar || item.avatar}` || "/default-avatar.png",
             type: item.type || "Notification",
             text: item.message || item.content,
-            time: timeAgo(item.created_at),
+
+
+            time: timeAgo(item.time) || item.time,
           }));
           setNotifications(formattedNotifs);
         }
 
-      
-        
+
+
         const chatRes = await fetch("http://localhost:8000/api/chats/", { headers });
         if (chatRes.ok) {
           const chatData = await chatRes.json();
@@ -176,7 +190,7 @@ export default function Header({ theme, toggleTheme, user }) {
     function handleClickOutside(event) {
       if (notifRef.current && !notifRef.current.contains(event.target)) {
         setShowNotifications(false);
-        setOpenMenuId(null); // <--- Add this line
+        setOpenMenuId(null);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
