@@ -12,7 +12,11 @@ from ...models import Conversation
 def chat_list_popup(request):
     user = request.user
 
-    conversations = Conversation.objects.filter(members__user=user).prefetch_related("members__user", "messages")
+    conversations = (
+        Conversation.objects.filter(members__user=user)
+        .prefetch_related("members__user__profile", "messages")
+        .distinct()
+    )
 
     data = []
 
@@ -21,10 +25,14 @@ def chat_list_popup(request):
 
         # get the other user (1-1 chat)
         other_user = None
+        member = None
+
         for m in members:
-            if m.user and m.user != user:
+            if m.user == user:
+                member = m
+                continue
+            if m.user:
                 other_user = m.user
-                break
 
         if not other_user:
             continue
@@ -41,8 +49,10 @@ def chat_list_popup(request):
         message_text = last_message.content if last_message else ""
         message_time = localtime(last_message.sent_at).strftime("%H:%M") if last_message else ""
 
-        # unread (basic version)
-        unread_count = convo.messages.filter(~Q(sender_user=user)).count()
+        if not member or not member.last_read_at:
+            unread_count = convo.messages.exclude(sender_user=user).count()
+        else:
+            unread_count = convo.messages.filter(~Q(sender_user=user), sent_at__gt=member.last_read_at).count()
 
         data.append(
             {
