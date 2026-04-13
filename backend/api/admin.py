@@ -25,6 +25,8 @@ from .models import (
     Report,
     Student,
     UniversityDomain,
+    UserDegree,
+    UserPhone,
     UserProfile,
 )
 
@@ -53,3 +55,5 @@ admin.site.register(MessageMedia)
 admin.site.register(MessageReaction)
 admin.site.register(Report)
 admin.site.register(UniversityDomain)
+admin.site.register(UserPhone)
+admin.site.register(UserDegree)

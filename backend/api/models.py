@@ -5,7 +5,6 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
-from rest_framework import serializers
 
 """
 DJANGO_USER_FIELDS = {
@@ -65,6 +64,48 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
+class UserPhone(models.Model):
+    id = models.BigAutoField(primary_key=True)
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="phones",
+        db_column="user_id",
+    )
+
+    phone = models.CharField(max_length=30)
+    is_primary = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "user_phone"
+        constraints = [models.UniqueConstraint(fields=["user", "phone"], name="uniq_user_phone")]
+
+
+class UserDegree(models.Model):
+    id = models.BigAutoField(primary_key=True)
+
+    class DegreeType(models.TextChoices):
+        DIPLOMA = "Diploma"
+        BACHELOR = "Bachelor"
+        MASTER = "Master"
+        PHD = "PhD"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="degrees",
+        db_column="user_id",
+    )
+
+    degree_type = models.CharField(max_length=20, choices=DegreeType.choices)
+    major = models.CharField(max_length=100, blank=True)
+    institution = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        db_table = "user_degree"
 
 
 class EmailVerification(models.Model):
@@ -1076,38 +1117,3 @@ class Notification(models.Model):
 
     class Meta:
         db_table = "notification"
-
-
-class NotificationSerializer(serializers.ModelSerializer):
-    avatar = serializers.SerializerMethodField()
-    time = serializers.SerializerMethodField()
-    iconType = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Notification
-        fields = [
-            "notification_id",
-            "type",
-            "content",
-            "is_read",
-            "avatar",
-            "time",
-            "iconType",
-        ]
-
-    def get_avatar(self, obj):
-        if obj.actor_user and hasattr(obj.actor_user, "profile"):
-            if obj.actor_user.profile.profile_image:
-                return obj.actor_user.profile.profile_image.url
-
-        if obj.actor_page:
-            if obj.actor_page.profile_image:
-                return obj.actor_page.profile_image.url
-
-        return "/default-avatar.png"
-
-    def get_time(self, obj):
-        return obj.created_at.strftime("%H:%M")
-
-    def get_iconType(self, obj):
-        return obj.type

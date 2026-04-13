@@ -88,8 +88,29 @@ def user_profile_view(request, user_id):
     if profile and profile.banner_image:
         cover = request.build_absolute_uri(profile.banner_image.url)
 
-    user_info = get_user_academic_info(user)
+    # academic info
+    student = getattr(user, "student_profile", None)
+    instructor = getattr(user, "instructor_profile", None)
+    admin = getattr(user, "admin_profile", None)
 
+    if student:
+        university = student.university_page.page_name if student.university_page else None
+        major = student.major
+        role = "student"
+    elif instructor:
+        university = instructor.university_page.page_name if instructor.university_page else None
+        major = None
+        role = "instructor"
+    elif admin:
+        university = None
+        major = None
+        role = "admin"
+    else:
+        university = None
+        major = None
+        role = "unknown"
+
+    # friendship status
     current_user = request.user
 
     if current_user == user:
@@ -101,23 +122,54 @@ def user_profile_view(request, user_id):
 
         if not friendship:
             friend_status = "none"
-
         elif friendship.status == Friendship.Status.PENDING:
-            if friendship.user1 == current_user:
-                friend_status = "sent"
-            else:
-                friend_status = "received"
-
+            friend_status = "sent" if friendship.user1 == current_user else "received"
         elif friendship.status == Friendship.Status.ACCEPTED:
             friend_status = "friends"
-
         elif friendship.status == Friendship.Status.BLOCKED:
             friend_status = "blocked"
-
         else:
             friend_status = "none"
 
     friends_count = Friendship.objects.filter(Q(user1=user) | Q(user2=user), status=Friendship.Status.ACCEPTED).count()
+
+    phones_qs = getattr(user, "phones", None)
+    phones = []
+    if phones_qs:
+        phones = [
+            {
+                "id": p.id,
+                "phone": p.phone,
+                "is_primary": p.is_primary,
+            }
+            for p in phones_qs.all().order_by("-is_primary", "id")
+        ]
+
+    DEGREE_ORDER = {
+        "PhD": 1,
+        "Master": 2,
+        "Bachelor": 3,
+        "Diploma": 4,
+    }
+
+    degrees_qs = getattr(user, "degrees", None)
+    degrees = []
+
+    if degrees_qs:
+        degrees = sorted(
+            degrees_qs.all(),
+            key=lambda d: DEGREE_ORDER.get(d.degree_type, 99),
+        )
+
+        degrees = [
+            {
+                "id": d.id,
+                "degree_type": d.degree_type,
+                "major": d.major,
+                "institution": d.institution,
+            }
+            for d in degrees
+        ]
 
     return Response(
         {
@@ -128,15 +180,14 @@ def user_profile_view(request, user_id):
             "bio": getattr(profile, "bio", ""),
             "avatar": avatar,
             "cover": cover,
-            "university": user_info.get("university_page_name"),
-            "major": user_info.get("major"),
-            "role": user_info.get("role"),
+            "university": university,
+            "major": major,
+            "role": role,
             "friend_status": friend_status,
             "friends_count": friends_count,
-            "phone": "0598645517",
-            "email": "wewe@wewe.wewe",
-            "degree": "Pro CS",
-            "hobbies": "weweing",
+            "email": user.email,
+            "phone": phones,
+            "degree": degrees,
         },
         status=status.HTTP_200_OK,
     )
