@@ -94,11 +94,13 @@ export default function Header({ theme, toggleTheme, user }) {
           const chatData = await chatRes.json();
           const formattedChats = chatData.map(chat => ({
             id: chat.id,
-            name: chat.user_name || "Unknown User",
+            name: chat.name || chat.user_name || "Unknown User",
             avatar: chat.avatar?.startsWith("http")
               ? chat.avatar
               : `http://localhost:8000${chat.avatar}` || "/default-avatar.png",
-            message: chat.last_message || "No messages yet",
+
+            message: chat.preview || chat.last_message || "No messages yet",
+
             status: chat.is_online ? "online" : "offline",
             dotStyle: chat.is_online ? "online" : "offline",
             unread: chat.unread_count || 0,
@@ -161,11 +163,11 @@ export default function Header({ theme, toggleTheme, user }) {
   };
   const handleDelete = async (id) => {
     try {
-      const token = localStorage.getItem("access"); 
+      const token = localStorage.getItem("access");
       const response = await fetch(`http://localhost:8000/api/notifications/${id}/`, {
         method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${token}`, 
+          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         },
       });
@@ -285,7 +287,15 @@ export default function Header({ theme, toggleTheme, user }) {
               <div className={styles.chatListWrapper}>
                 {filteredChats.length > 0 ? (
                   filteredChats.map((chat) => (
-                    <div key={chat.id} className={styles.chatItem}>
+                    <div
+                      key={chat.id}
+                      className={styles.chatItem}
+                      onClick={() => {
+                        setShowChats(false); 
+                        navigate(`/chats/${chat.id}`); 
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <div className={styles.chatAvatarWrap}>
                         <img src={chat.avatar} alt="" className={styles.chatAvatar} />
                         <span className={`${styles.statusDot} ${styles[chat.dotStyle === 'online' ? 'dotOnline' : chat.dotStyle === 'dnd' ? 'dotDnd' : 'dotOffline']}`} />

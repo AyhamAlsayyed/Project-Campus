@@ -1,24 +1,27 @@
 import styles from './chatspage.module.css'
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
+import { useParams } from "react-router-dom";
 import { useState, useEffect, useRef } from 'react';
 import {
     Search, MoreHorizontal, Pin, BellOff, Mail, MinusCircle,
-    Trash2, Ban, AlertCircle, ChevronLeft, Info, CheckSquare,
+    Trash2, Ban, Reply, AlertCircle, ChevronLeft, Info, CheckSquare,
     Paperclip, Send, FileText
 } from 'lucide-react';
 
 
-    export default function ChatsPage() {
+export default function ChatsPage() {
     const [theme, setTheme] = useState("dark");
     const [user, setUser] = useState(null);
     const [userLoading, setUserLoading] = useState(true);
     const [userError, setUserError] = useState(null);
     const [chats, setChats] = useState([]);
+    const [inputText, setInputText] = useState("");
     const [loadingChats, setLoadingChats] = useState(true);
     const [filter, setFilter] = useState("all")
     const [searchQuery, setSearchQuery] = useState("");
     const [openMenuId, setOpenMenuId] = useState(null);
+    const [replyingTo, setReplyingTo] = useState(null);
     const [requestsCount, setRequestsCount] = useState(0);
     const [messages, setMessages] = useState([]);
     const menuRef = useRef(null);
@@ -28,6 +31,36 @@ import {
     const activeChatMenuRef = useRef(null);
     const messagesEndRef = useRef(null);
     const messagesScrollRef = useRef(null);
+    const academicGroups = chats.filter(chat => chat.is_group && chat.is_academic);
+    const { chatId } = useParams();
+    const handleSendMessage = async () => {
+        if (!inputText.trim() || !selectedChat) return;
+
+        try {
+            const response = await fetch(`${API}/api/chats/${selectedChat.id}/messages/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+
+                body: JSON.stringify({
+                    text: inputText,
+                    reply_to: replyingTo ? replyingTo.id : null
+                }),
+            });
+
+            if (response.ok) {
+                const newMessage = await response.json();
+                setMessages(prev => [...prev, newMessage]);
+                setInputText("");
+                setReplyingTo(null); // 4. CLEAR REPLY AFTER SENDING
+                scrollToBottom();
+            }
+        } catch (err) {
+            console.error("Failed to send message:", err);
+        }
+    };
     const scrollToBottom = () => {
         setTimeout(() => {
             if (messagesScrollRef.current) {
@@ -42,7 +75,21 @@ import {
         if (selectedChat) {
             scrollToBottom();
         }
-    }); // ✅ no dependency array = runs after every render
+    });
+    useEffect(() => {
+        if (chatId && chats.length > 0) {
+            const targetChat = chats.find(c => c.id.toString() === chatId);
+            if (targetChat) {
+                setSelectedChat(targetChat);
+                fetch(`${API}/api/chats/${chatId}/messages/`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+                    .then(res => res.json())
+                    .then(data => setMessages(data))
+                    .catch(err => console.error("Error fetching messages:", err));
+            }
+        }
+    }, [chatId, chats]);
 
 
     const API = "http://localhost:8000"
@@ -257,7 +304,11 @@ import {
                                                 }} style={{ cursor: 'pointer' }}>
                                                     <div className={styles.chatItemLeft}>
                                                         <div className={styles.avatarWrapper}>
-                                                            <img src={chat.avatar} alt={chat.name} className={styles.chatAvatar} />
+                                                            <img
+                                                                src={chat.avatar.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`}
+                                                                alt={chat.name}
+                                                                className={styles.chatAvatar}
+                                                            />
                                                         </div>
                                                         <div className={styles.chatIdentity}>
                                                             <div className={styles.chatNameWrapper}>
@@ -290,12 +341,17 @@ import {
                                             <ChevronLeft size={24} />
                                         </button>
                                         <img
-                                            src={selectedChat.avatar}
+
+                                            src={selectedChat.avatar?.startsWith('http') ? selectedChat.avatar : `${API}${selectedChat.avatar}`}
                                             alt={selectedChat.name}
                                             className={styles.activeChatAvatar}
                                         />
                                         <div className={styles.headerTitleInfo}>
-                                            <span className={styles.professorName}>Dr. Samer Sweileh</span>
+                                            {selectedChat.is_group && (
+                                                <span className={styles.professorName}>
+                                                    {selectedChat.conversations_owner}
+                                                </span>
+                                            )}
                                             <h2 className={styles.groupName}>{selectedChat.name}</h2>
                                             <p className={styles.memberSubtitle}>{selectedChat.members}</p>
                                         </div>
@@ -309,11 +365,19 @@ import {
                                             </button>
                                             {activeChatMenuOpen && (
                                                 <div className={styles.dropdownMenu}>
-                                                    <button className={styles.menuItem}><Info size={14} /> Group Info</button>
-                                                    <button className={styles.menuItem}><BellOff size={14} /> Mute notifications</button>
-                                                    <button className={styles.menuItem}><CheckSquare size={14} /> Select messages</button>
+                                                    <button className={styles.menuItem}>
+                                                        <Info size={14} /> {selectedChat.is_group ? 'Group Info' : 'User Info'}
+                                                    </button>
+                                                    <button className={styles.menuItem}>
+                                                        <BellOff size={14} /> Mute notifications
+                                                    </button>
+                                                    <button className={styles.menuItem}>
+                                                        <CheckSquare size={14} /> Select messages
+                                                    </button>
                                                     <div className={styles.menuDivider}></div>
-                                                    <button className={`${styles.menuItem} ${styles.destructive}`}><AlertCircle size={14} /> Report group</button>
+                                                    <button className={`${styles.menuItem} ${styles.destructive}`}>
+                                                        <AlertCircle size={14} /> {selectedChat.is_group ? 'Report group' : 'Report user'}
+                                                    </button>
                                                 </div>
                                             )}
                                         </div>
@@ -329,25 +393,49 @@ import {
                                             {messages.map((msg) => (
                                                 <div key={msg.id} className={`${styles.messageWrapper} ${msg.senderId === 'me' ? styles.messageMineWrapper : styles.messageOtherWrapper}`}>
                                                     {msg.senderId === 'other' && (
-                                                        <img src={msg.avatar} alt="Sender" className={styles.messageAvatar} />
+                                                        <img
+                                                            src={msg.avatar?.startsWith('http') ? msg.avatar : `${API}${msg.avatar}`}
+                                                            alt="Sender"
+                                                            className={styles.messageAvatar}
+                                                        />
                                                     )}
                                                     <div className={styles.messageContentBlock}>
                                                         <div className={`${styles.messageMeta} ${msg.senderId === 'me' ? styles.metaRight : styles.metaLeft}`}>
                                                             <span className={styles.msgSenderName}>{msg.senderId === 'me' ? 'You' : msg.sender}</span>
                                                             <span className={styles.msgTime}>{msg.time}</span>
                                                         </div>
-                                                        <div className={`${styles.messageBubble} ${msg.senderId === 'me' ? styles.bubbleMine : styles.bubbleOther}`}>
-                                                            {msg.type === 'file' ? (
-                                                                <div className={styles.fileAttachment}>
-                                                                    <div className={styles.fileIcon}><FileText size={24} /></div>
-                                                                    <div className={styles.fileDetails}>
-                                                                        <strong>{msg.text}</strong>
-                                                                        <p>{msg.subtext}</p>
+
+                                                        <div className={styles.messageRow}>
+                                                            <div className={`${styles.messageBubble} ${msg.senderId === 'me' ? styles.bubbleMine : styles.bubbleOther}`}>
+                                                                {/* 1. Show Reply Quote if it exists */}
+                                                                {msg.reply_to_details && (
+                                                                    <div className={styles.replyQuoteBox}>
+                                                                        <span className={styles.replySender}>{msg.reply_to_details.sender_name}</span>
+                                                                        <p className={styles.replyTextPreview}>{msg.reply_to_details.text}</p>
                                                                     </div>
-                                                                </div>
-                                                            ) : (
-                                                                <span style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</span>
-                                                            )}
+                                                                )}
+
+                                                                {/* 2. Show File OR Text (Don't render both blocks!) */}
+                                                                {msg.type === 'file' ? (
+                                                                    <div className={styles.fileAttachment}>
+                                                                        <div className={styles.fileIcon}><FileText size={24} /></div>
+                                                                        <div className={styles.fileDetails}>
+                                                                            <strong>{msg.text}</strong>
+                                                                            <p>{msg.subtext}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <span style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</span>
+                                                                )}
+                                                            </div>
+
+                                                            {/* 3. Reply Button stays next to the bubble */}
+                                                            <button
+                                                                className={styles.replyIconButton}
+                                                                onClick={() => setReplyingTo(msg)}
+                                                            >
+                                                                <Reply size={16} />
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -355,12 +443,29 @@ import {
                                             <div ref={messagesEndRef} />
 
                                         </div>
+                                        {replyingTo && (
+                                            <div className={styles.replyPreviewBar}>
+                                                <div className={styles.replyPreviewContent}>
+                                                    <span>Replying to <strong>{replyingTo.sender}</strong></span>
+                                                    <p>{replyingTo.text}</p>
+                                                </div>
+                                                <button onClick={() => setReplyingTo(null)} className={styles.cancelReply}>
+                                                    <MinusCircle size={18} />
+                                                </button>
+                                            </div>
+                                        )}
 
 
                                         <div className={styles.messageInputArea}>
                                             <button className={styles.iconBtn}><Paperclip size={20} /></button>
-                                            <input type="text" placeholder="Type a message..." className={styles.messageInput} />
-                                            <button className={styles.sendBtn}><Send size={18} /></button>
+                                            <input
+                                                type="text"
+                                                placeholder="Type a message..."
+                                                className={styles.messageInput}
+                                                value={inputText}
+                                                onChange={(e) => setInputText(e.target.value)}
+                                            />
+                                            <button className={styles.sendBtn} onClick={handleSendMessage}><Send size={18} /></button>
                                         </div>
                                     </div>
                                 </div>
@@ -372,24 +477,26 @@ import {
                     <div className={styles.pill}>ACADEMIC GROUP CHATS</div>
                     <div className={styles.rightCard}>
                         <div className={styles.rightList}>
-                            {groups.map((chat, index) => (
-                                <div key={chat.id} className={styles.academicChatItem}>
+                            {academicGroups.map((chat, index) => (
+                                <div key={chat.id} className={styles.academicChatItem} onClick={() => setSelectedChat(chat)}>
                                     <div className={styles.academicAvatarWrapper}>
-                                        <div className={styles.academicAvatarPlaceholder}>{chat.icon}</div>
+                                        <img
+                                            src={chat.avatar?.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`}
+                                            className={styles.academicAvatar}
+                                            alt=""
+                                        />
                                     </div>
                                     <div className={styles.academicChatInfo}>
-
                                         <div className={styles.academicTopRow}>
-                                            <span className={styles.academicTeacherName}>{chat.teacher}</span>
-                                            <span className={styles.academicMessagePreview}>{chat.msg}</span>
+                                            <span className={styles.academicTeacherName}>{chat.conversations_owner}</span>
+                                            <span className={styles.academicMessagePreview}>{chat.preview}</span>
                                         </div>
-
                                         <div className={styles.academicBottomRow}>
-                                            <div className={styles.academicGroupName}>{chat.title}</div>
+                                            <div className={styles.academicGroupName}>{chat.name}</div>
                                             <span className={styles.academicTimestamp}>{chat.time}</span>
                                         </div>
                                     </div>
-                                    {index !== 5 && <div className={styles.academicDivider}></div>}
+                                    {index !== academicGroups.length - 1 && <div className={styles.academicDivider}></div>}
                                 </div>
                             ))}
                         </div>
