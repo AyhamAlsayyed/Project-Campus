@@ -1,32 +1,43 @@
 import styles from "./posts.module.css";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Share2, MoreHorizontal, Bookmark, Ban, Flag } from "lucide-react";
 import { Link } from "react-router-dom";
 import Like from '../../Assets/icons/like.png';
 import LikeActive from '../../Assets/icons/like-active.png'
 export default function PostCard({ post, openComments }) {
   const [current, setCurrent] = useState(0);
-  const [isLiked, setIsLiked] = useState(post.is_liked || false);
-  const [likesCount, setLikesCount] = useState(post.likes_count || 0);
+ const [isLiked, setIsLiked] = useState(post?.is_liked || false);
+  const [likesCount, setLikesCount] = useState(post?.likes_count || 0);
   const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
   const formatTimeAgo = (dateString) => {
     const now = new Date();
     const past = new Date(dateString);
-
     const diffInSeconds = Math.floor((now - past) / 1000);
-
     const minutes = Math.floor(diffInSeconds / 60);
     const hours = Math.floor(diffInSeconds / 3600);
     const days = Math.floor(diffInSeconds / 86400);
-
     if (diffInSeconds < 60) return "just now";
     if (minutes < 60) return `${minutes} min ago`;
     if (hours < 24) return `${hours} hr ago`;
     if (days < 7) return `${days} d ago`;
 
-    return past.toLocaleDateString(); // fallback
+    return past.toLocaleDateString(); 
   };
+  useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (menuRef.current && !menuRef.current.contains(event.target)) {
+      setShowMenu(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
   const handleLike = async () => {
     const token = localStorage.getItem("access");
     if (!token) return;
@@ -78,24 +89,24 @@ export default function PostCard({ post, openComments }) {
     setShowMenu(prev => !prev);
   }
 
-  const validMedia = post.media?.map((item) => {
-  const url = item.url || "";
-  let type = item.type?.toLowerCase();
+  const validMedia = post?.media?.map((item) => {
+    const url = item.url || "";
+    let type = item.type?.toLowerCase();
 
-  if (!type && url) {
-    // Clean the URL of query params before checking extension
-    const cleanUrl = url.split(/[?#]/)[0]; 
-    if (cleanUrl.match(/\.(mp4|webm|ogg)$/i)) {
-      type = "video";
-    } else if (cleanUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-      type = "image";
-    } else {
-      type = "file";
+    if (!type && url) {
+      // Clean the URL of query params before checking extension
+      const cleanUrl = url.split(/[?#]/)[0];
+      if (cleanUrl.match(/\.(mp4|webm|ogg)$/i)) {
+        type = "video";
+      } else if (cleanUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+        type = "image";
+      } else {
+        type = "file";
+      }
     }
-  }
 
-  return { ...item, type };
-}) || [];
+    return { ...item, type };
+  }) || [];
   const files = validMedia.filter(m => m.type === "file");
   const nextSlide = () => {
     setCurrent((prev) => (prev + 1) % validMedia.length);
@@ -103,8 +114,6 @@ export default function PostCard({ post, openComments }) {
   const prevSlide = () => {
     setCurrent((prev) => (prev == 0 ? validMedia.length - 1 : prev - 1));
   }
-  console.log(post)
-
   return (
     <article className={styles.card}>
 
@@ -137,7 +146,7 @@ export default function PostCard({ post, openComments }) {
 
 
 
-        <div className={styles.menuContainer}>
+        <div className={styles.menuContainer} ref={menuRef}>
           <button className={styles.menuBtn} onClick={toggleMenu} aria-label="menu">
             <MoreHorizontal size={20} />
           </button>
@@ -185,7 +194,7 @@ export default function PostCard({ post, openComments }) {
             <video controls className={styles.mediaItem}>
               <source
                 src={validMedia[current].url}
-                type="video/mp4"  
+                type="video/mp4"
               />
               Your browser does not support the video tag.
             </video>

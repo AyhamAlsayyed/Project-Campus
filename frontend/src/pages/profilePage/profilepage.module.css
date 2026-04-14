@@ -10,7 +10,6 @@ body {
   padding: 0;
   min-height: 100vh;
   background: transparent;
-  /* ✅ important */
   background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
   background-attachment: fixed;
   background-size: cover;
@@ -44,79 +43,10 @@ body {
 
 }
 
-.sideBarNav {
-  display: flex;
-  flex: 0 0 var(--left-col);
-  flex-direction: column;
-  position: sticky;
-  top: 50px;
-  border-radius: 30px;
-  padding: 40px 28px;
-  gap: 18px;
-  background-color: rgba(61, 60, 60, 0.45);
-  height: 600px;
-  margin: 2% 0 0 0;
-}
-
-.divider {
-  height: 1px;
-  width: 88%;
-  background: rgba(255, 255, 255, 0.28);
-  margin: 10px auto;
-}
-
-.sideBarButton {
-  height: 52px;
-  text-decoration: none;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 1.1rem;
-  position: relative;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
-  padding: 0 14px;
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.sideBarButton:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.active {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.active::before {
-  content: "";
-  position: absolute;
-  left: -14px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-top: 7px solid transparent;
-  border-bottom: 7px solid transparent;
-  border-left: 10px solid #b38cff;
-}
-
-.copyright {
-  text-align: center;
-  margin-top: auto;
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 0.72rem;
-  padding-top: 20px;
-}
 
 .content {
   display: flex;
-  margin: 20px 0 0 0;
-  
+  margin: 20px auto 0 auto;
   gap: var(--col-gap);
   margin-top: 20px;
   align-items: flex-start;
@@ -608,10 +538,4 @@ body {
   top: 50px;
   display: flex;
   flex-direction: column;
-}
-
-.content {
-
-  margin-left: auto;
-  margin-right: auto;
 }

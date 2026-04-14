@@ -80,6 +80,9 @@ export default function Header({ theme, toggleTheme, user }) {
               : `http://localhost:8000${item.actor_avatar || item.avatar}` || "/default-avatar.png",
             type: item.type || "Notification",
             text: item.message || item.content,
+            actor_id: item.actor_id,
+            post_id: item.post_id,
+            event_id: item.event_id,
 
 
             time: timeAgo(item.time) || item.time,
@@ -117,6 +120,19 @@ export default function Header({ theme, toggleTheme, user }) {
 
     if (user) fetchHeaderData();
   }, [user]);
+  const handleNotificationClick = (n) => {
+    if (n.event_id) {
+      navigate(`/events/${n.event_id}`);
+    }
+    else if (n.post_id) {
+      navigate(`/posts/${n.post_id}`);
+    }
+    else if (n.actor_id) {
+      navigate(`/profile/${n.actor_id}`);
+    }
+
+    setShowNotifications(false);
+  };
 
 
 
@@ -291,8 +307,8 @@ export default function Header({ theme, toggleTheme, user }) {
                       key={chat.id}
                       className={styles.chatItem}
                       onClick={() => {
-                        setShowChats(false); 
-                        navigate(`/chats/${chat.id}`); 
+                        setShowChats(false);
+                        navigate(`/chats/${chat.id}`);
                       }}
                       style={{ cursor: 'pointer' }}
                     >
@@ -363,7 +379,7 @@ export default function Header({ theme, toggleTheme, user }) {
                   <div className={styles.emptyState}>No new notifications</div>
                 ) : (
                   notifications.map((n) => (
-                    <div key={n.id} className={`${styles.notificationItem} ${!n.is_read ? styles.unread : ""}`}>
+                    <div key={n.id} onClick={() => handleNotificationClick(n)} className={`${styles.notificationItem} ${!n.is_read ? styles.unread : ""}`}>
                       {!n.is_read && <span className={styles.unreadDot} />}
 
                       <div className={styles.notifAvatarWrap}>

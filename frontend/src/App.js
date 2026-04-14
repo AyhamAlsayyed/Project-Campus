@@ -8,6 +8,7 @@ import Communities from './pages/communities/communities';
 import ProtectedRoute from "./components/auth/protectedRoute";
 import CommunityPage from './pages/communityPage/communityPage'
 import ChatsPage from './pages/chatsPage/chatsPage';
+import FriendsPage from './pages/FriendsPage/FriendsPage';
 
 
 
@@ -70,6 +71,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/friends"
+          element={
+            <ProtectedRoute>
+              <FriendsPage />
+            </ProtectedRoute>
+          }
+        />
+        
 
 
         <Route path="*" element={<Navigate to="/" replace />} />
