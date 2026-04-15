@@ -50,27 +50,23 @@ body {
 }
 
 .title {
-    font-size: 30px;
+    font-size: 25px;
     font-weight: 600;
     color: rgba(255, 255, 255, 0.85);
 }
-
 .highlight {
     font-size: 40px;
     background: linear-gradient(30deg, #c72cff, #8b2dff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
-
-.friendsPostsSection {
-
+.followedPagesPosts{
     display: flex;
     flex-direction: column;
     flex: 1;
     min-width: 0;
 
 }
-
 .postContainer {
     background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
     width: 100%;
@@ -175,66 +171,14 @@ body {
     color: #666;
 }
 
-
-.friendWrapper {
+.pageWrapper {
     display: flex;
     flex-direction: column;
-    align-items: center; 
+    
 }
 
-.friendItem {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 12px 20px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    user-select: none; 
-}
-
-.friendItem:hover {
-    background: rgba(255, 255, 255, 0.05);
-    padding-left: 25px; 
-}
-
-.friendItem:active {
-    background: rgba(255, 255, 255, 0.1);
-    transform: scale(0.98); 
-}
-
-.friendName {
-    color: #fff;
-    font-size: 14px;
-    font-weight: 500;
-    transition: color 0.2s ease;
-}
-
-.friendItem:hover .friendName {
-    color: var(--highlight-color, #a6279c); 
-}
-
-.divider {
-    width: 50%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    margin: 5px 0;
-}
-
-
-.statusDot {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 2px solid #1a1a1a; 
-}
-
-.online { background-color: #4ade80; }
-.offline { background-color: #4b5563; }
-.friendItem {
+/* Each page item (same as friendItem) */
+.pageItem {
     display: flex;
     align-items: center;
     gap: 15px;
@@ -245,16 +189,23 @@ body {
     position: relative;
 }
 
-.friendItem:hover {
+.pageItem:hover {
     background-color: rgba(255, 255, 255, 0.05);
 }
 
-.friendAvatarWrapper {
+.pageItem:active {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(0.98);
+}
+
+
+.pageAvatarWrapper {
     position: relative;
     flex-shrink: 0;
 }
 
-.friendAvatar {
+/* Avatar image */
+.pageAvatar {
     width: 46px;
     height: 46px;
     border-radius: 50%;
@@ -263,7 +214,8 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.friendInfo {
+/* Info section */
+.pageInfo {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -271,7 +223,8 @@ body {
     min-width: 0;
 }
 
-.friendName {
+/* Page name */
+.pageName {
     color: #fff;
     font-size: 14px;
     font-weight: 500;
@@ -280,8 +233,163 @@ body {
     text-overflow: ellipsis;
 }
 
-.friendMajor {
+/* Optional subtitle (like category instead of major) */
+.pageCategory {
     color: #888;
     font-size: 11px;
     margin-top: 2px;
+}
+
+
+.divider {
+    width: 50%;
+    height: 1px;
+    margin: 0 auto 0 auto;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
+    
+}
+/* --- RECOMMENDED PAGES SECTION --- */
+
+/* Main dark container */
+.recommendedContainer {
+    background-color: #2b2b2d; /* Adjust to match your exact dark grey */
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 20px;
+    width: 100%;
+    box-sizing: border-box;
+    /* Optional: add a subtle border if your design uses one */
+    border: 1px solid rgba(255, 255, 255, 0.05); 
+}
+
+/* Header inside the box */
+.recommendedHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.recommendedIcon {
+    color: #b400ff; /* The purple from your screenshot */
+    font-size: 1.5rem;
+}
+
+.recommendedHeader h2 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Slider Track and Window */
+.recommendedSliderWindow {
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 20px; /* Space between the slide and the bottom controls */
+}
+
+.recommendedTrack {
+    display: flex;
+    transition: transform 0.4s ease-in-out;
+}
+
+
+.recommendedItem {
+    min-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.recommendedAvatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+    border: 2px solid #b400ff; /* Optional purple border like your screenshot */
+}
+
+.recommendedName {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+}
+
+.recommendedCategory {
+    color: #aaaaaa;
+    font-size: 0.85rem;
+    margin-bottom: 15px;
+}
+
+.recommendedFollowBtn {
+    background-color: #a64aff; 
+    color: #ffffff;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 24px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.recommendedFollowBtn:hover {
+    background-color: #8c36e6;
+}
+
+
+.recommendedControls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px; 
+}
+
+.recommendedArrow {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+}
+
+.recommendedArrow:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.recommendedDotsWrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.recommendedDot {
+    width: 8px;
+    height: 8px;
+    background-color: #555555;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.3s ease;
+}
+
+.recommendedActiveDot {
+    background-color: #a64aff; 
+    width: 16px; 
+    border-radius: 4px;
 }

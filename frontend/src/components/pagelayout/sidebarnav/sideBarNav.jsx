@@ -23,7 +23,14 @@ export default function SidebarNav({ variant = "default", currentUser }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  const isActive = (path) => pathname === path || pathname.startsWith(path + "/");
+ const isActive = (path) => {
+
+    if (path.startsWith('/profile/') && !path.endsWith('/friends') && !path.endsWith('/pages')) {
+        return pathname === path;
+    }
+    
+    return pathname === path || pathname.startsWith(path + "/");
+};
 
   const defaultMainItems = [
     { label: "Home page", path: "/home", icon: Home },
@@ -39,8 +46,8 @@ export default function SidebarNav({ variant = "default", currentUser }) {
   ];
  const profileMainItems = [
   { label: "Profile", path: `/profile/${currentUser?.id}`, icon: User },
-  { label: "Friends", path: "/friends", icon: UserPlus },
-  { label: "Pages", path: "/pages", icon: Bell },
+  { label: "Friends", path: `/profile/${currentUser?.id}/friends`, icon: UserPlus }, 
+  { label: "Pages", path: `/profile/${currentUser?.id}/pages`, icon: Bell },      
   { label: "Communities", path: "/communities", icon: Users },
 ];
 
@@ -49,6 +56,7 @@ const profileFooterItems = [
   { label: "Language", path: "/language", icon: Languages },
   { label: "Help", path: "/help", icon: HelpCircle },
 ];
+
   const mainItems =
     variant === "profile" ? profileMainItems : defaultMainItems;
 

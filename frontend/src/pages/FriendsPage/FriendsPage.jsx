@@ -145,7 +145,6 @@ export default function FriendsPage() {
                                             </div>
                                         </div>
 
-                                        {/* 2. The 50% Divider (Doesn't show after the last friend) */}
                                         {index !== filteredFriends.length - 1 && (
                                             <div className={styles.divider}></div>
                                         )}

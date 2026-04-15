@@ -9,6 +9,7 @@ import ProtectedRoute from "./components/auth/protectedRoute";
 import CommunityPage from './pages/communityPage/communityPage'
 import ChatsPage from './pages/chatsPage/chatsPage';
 import FriendsPage from './pages/FriendsPage/FriendsPage';
+import FollowedPages from './pages/followedPages/followedPages';
 
 
 
@@ -73,16 +74,22 @@ function App() {
         />
 
         <Route
-          path="/friends"
+          path="/profile/:userId/friends"
           element={
             <ProtectedRoute>
               <FriendsPage />
             </ProtectedRoute>
           }
         />
-        
-
-
+        <Route
+          path="/profile/:userId/pages"
+          element={
+            <ProtectedRoute>
+              <FollowedPages />
+            </ProtectedRoute>
+          }
+        />
+    
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

@@ -236,6 +236,8 @@ export default function Header({ theme, toggleTheme, user }) {
       navigate(`/profile/${user.id}`);
     }
   };
+  const isInProfileSection =
+  location.pathname.startsWith(`/profile/${user?.id}`);
 
 
 
@@ -438,7 +440,7 @@ export default function Header({ theme, toggleTheme, user }) {
           type="button"
           onClick={handleAvatarClick}
         >
-          {location.pathname === `/profile/${user?.id}` ? (
+          {isInProfileSection ? (
             <Home size={24} />
           ) : (
             <img
