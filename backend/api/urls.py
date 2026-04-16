@@ -26,6 +26,7 @@ from .views.user.friends import (
     send_friend_request,
     user_friends_list,
 )
+from .views.user.recently_contacted import recently_contacted
 from .views.user.user import me, user_profile_view
 
 urlpatterns = [
@@ -51,6 +52,7 @@ urlpatterns = [
     path("friends/accept/", accept_friend_request),
     path("friends/decline/", decline_friend_request),
     path("users/<int:user_id>/friends/", user_friends_list),
+    path("friends/recently_contacted/", recently_contacted),
     path("notifications/", get_notifications),
     path("notifications/<int:notification_id>/", notification_delete_mark),
     path("chats/", get_conversations),

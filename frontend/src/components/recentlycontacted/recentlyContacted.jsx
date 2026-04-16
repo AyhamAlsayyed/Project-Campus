@@ -19,7 +19,7 @@ export default function FriendsSuggestion() {
             return;
         }
         try {
-            const res = await fetch("http://localhost:8000/api/friends/recently-contacted/", {
+            const res = await fetch("http://localhost:8000/api/friends/recently_contacted/", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 }

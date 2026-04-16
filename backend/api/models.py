@@ -902,6 +902,9 @@ class Message(models.Model):
                 name="chk_message_sender",
             ),
         ]
+        indexes = [
+            models.Index(fields=["conversation", "-sent_at"]),
+        ]
 
 
 class MessageMedia(models.Model):
