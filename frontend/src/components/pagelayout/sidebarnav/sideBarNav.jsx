@@ -48,7 +48,7 @@ export default function SidebarNav({ variant = "default", currentUser }) {
   { label: "Profile", path: `/profile/${currentUser?.id}`, icon: User },
   { label: "Friends", path: `/profile/${currentUser?.id}/friends`, icon: UserPlus }, 
   { label: "Pages", path: `/profile/${currentUser?.id}/pages`, icon: Bell },      
-  { label: "Communities", path: "/communities", icon: Users },
+  { label: "Communities", path: `/profile/${currentUser?.id}/communities`, icon: Users },
 ];
 
 const profileFooterItems = [

@@ -15,6 +15,7 @@ export default function FollowedPages() {
     const [pages, setPages] = useState([]);
     const [recommendedPages, setRecommendedPages] = useState([]);
     const [currentSlide, setCurrentSlide] = useState(0);
+    
     const toggleTheme = () => {
         setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
     }

@@ -10,8 +10,7 @@ import CommunityPage from './pages/communityPage/communityPage'
 import ChatsPage from './pages/chatsPage/chatsPage';
 import FriendsPage from './pages/FriendsPage/FriendsPage';
 import FollowedPages from './pages/followedPages/followedPages';
-
-
+import FollowedCommunities from './pages/followedCommunities/followedCommunities';
 
 function App() {
   return (
@@ -89,7 +88,15 @@ function App() {
             </ProtectedRoute>
           }
         />
-    
+        <Route
+          path="/profile/:userId/communities"
+          element={
+            <ProtectedRoute>
+              <FollowedCommunities />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
