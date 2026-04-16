@@ -17,7 +17,7 @@ from .views.conversation.conversation import (
     send_message,
 )
 from .views.notification.notification import get_notifications, notification_delete_mark
-from .views.posts.like import toggle_like
+from .views.posts.post_action import block_post, report_post, toggle_like
 from .views.posts.post_create import create_post
 from .views.posts.posts import feed
 from .views.user.friends import (
@@ -39,6 +39,8 @@ urlpatterns = [
     path("posts/", feed, name="user_posts"),
     path("posts/create/", create_post, name="create_post"),
     path("posts/<int:post_id>/like/", toggle_like),
+    path("posts/<int:post_id>/report/", report_post),
+    path("posts/<int:post_id>/block/", block_post),
     path("communities/", communities),
     path("communities/<int:community_id>/join/", join_community),
     path("communities/<int:community_id>/request/", request_join_community),
