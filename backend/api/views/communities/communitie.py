@@ -16,7 +16,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Community, CommunityMember
+from ...models import Community, CommunityMember, Friendship
 
 
 def file_url(request, f):
@@ -41,10 +41,30 @@ def communities(request):
         community_id=OuterRef("community_id"),
     )
 
+    friends_id = (
+        Friendship.objects.filter(
+            Q(user1=user) | Q(user2=user),
+            status=Friendship.Status.ACCEPTED,
+        )
+        .annotate(
+            friend_id=Case(
+                When(user1=user, then=F("user2_id")),
+                When(user2=user, then=F("user1_id")),
+                output_field=IntegerField(),
+            )
+        )
+        .values_list("friend_id", flat=True)
+    )
+
     qs = Community.objects.all().annotate(
         is_joined=Exists(membership_qs.filter(status="approved")),
         request_sent=Exists(membership_qs.filter(status="pending")),
         members_count=Count("memberships", distinct=True),
+        friends_count=Count(
+            "memberships",
+            filter=Q(memberships__user__id__in=friends_id),
+            distinct=True,
+        ),
     )
 
     # filterING LOGIC
@@ -63,6 +83,8 @@ def communities(request):
                 distinct=True,
             )
         ).order_by("-recent_members", "-members_count")
+    elif filter == "friends":
+        qs = qs.filter(frined_count__gt=0).order_by("-friend_count", "-members_count")
 
     else:  # default
         community_ids = CommunityMember.objects.filter(user=user).values("community_id")
@@ -98,6 +120,7 @@ def communities(request):
                 "is_joined": c.is_joined,
                 "request_sent": c.request_sent,
                 "members_count": c.members_count,
+                "friends_count": c.friends_count,
             }
         )
 
