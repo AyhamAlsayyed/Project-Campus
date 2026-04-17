@@ -7,7 +7,8 @@ import Like from '../../Assets/icons/like.png';
 import LikeActive from '../../Assets/icons/like-active.png'
 export default function PostCard({ post, openComments }) {
   const [current, setCurrent] = useState(0);
- const [isLiked, setIsLiked] = useState(post?.is_liked || false);
+  const [isLiked, setIsLiked] = useState(post?.is_liked || post?.has_liked || false);
+  const [isSaved, setIsSaved] = useState(post?.is_saved || false);
   const [likesCount, setLikesCount] = useState(post?.likes_count || 0);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
@@ -23,21 +24,21 @@ export default function PostCard({ post, openComments }) {
     if (hours < 24) return `${hours} hr ago`;
     if (days < 7) return `${days} d ago`;
 
-    return past.toLocaleDateString(); 
+    return past.toLocaleDateString();
   };
   useEffect(() => {
-  const handleClickOutside = (event) => {
-    if (menuRef.current && !menuRef.current.contains(event.target)) {
-      setShowMenu(false);
-    }
-  };
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
 
-  document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
 
-  return () => {
-    document.removeEventListener("mousedown", handleClickOutside);
-  };
-}, []);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   const handleLike = async () => {
     const token = localStorage.getItem("access");
     if (!token) return;
@@ -115,7 +116,7 @@ export default function PostCard({ post, openComments }) {
           <Link to={post.author_id ? `/profile/${post.author_id}` : "#"}>
             <img
               className={styles.avatar}
-              src={post.author_avatar || "/default-avatar.png"}
+              src={post.author?.avatar || "/default-avatar.png"}
               alt=""
             />
           </Link>
@@ -123,7 +124,7 @@ export default function PostCard({ post, openComments }) {
           <div className={styles.userMeta}>
             <div className={styles.nameLine}>
               <span className={styles.name}>
-                {post.author_username || "User"}
+                {post.author?.username || "User"}
               </span>
 
               {post.tag && (
