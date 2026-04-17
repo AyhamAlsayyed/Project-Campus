@@ -106,6 +106,7 @@ export default function Header({ theme, toggleTheme, user }) {
 
             status: chat.is_online ? "online" : "offline",
             dotStyle: chat.is_online ? "online" : "offline",
+            isGroup: chat.is_group || false,
             unread: chat.unread_count || 0,
             time: timeAgo(chat.last_message_time)
           }));
@@ -237,7 +238,7 @@ export default function Header({ theme, toggleTheme, user }) {
     }
   };
   const isInProfileSection =
-  location.pathname.startsWith(`/profile/${user?.id}`);
+    location.pathname.startsWith(`/profile/${user?.id}`);
 
 
 
@@ -316,11 +317,24 @@ export default function Header({ theme, toggleTheme, user }) {
                     >
                       <div className={styles.chatAvatarWrap}>
                         <img src={chat.avatar} alt="" className={styles.chatAvatar} />
-                        <span className={`${styles.statusDot} ${styles[chat.dotStyle === 'online' ? 'dotOnline' : chat.dotStyle === 'dnd' ? 'dotDnd' : 'dotOffline']}`} />
+                        {!chat.isGroup && (
+                          <span
+                            className={`${styles.statusDot} ${styles[
+                              chat.dotStyle === 'online'
+                                ? 'dotOnline'
+                                : chat.dotStyle === 'dnd'
+                                  ? 'dotDnd'
+                                  : 'dotOffline'
+                            ]
+                              }`}
+                          />
+                        )}
                       </div>
 
                       <div className={styles.chatGrid}>
-                        <span className={styles.chatStatus}>{chat.status}</span>
+                        {!chat.isGroup && (
+                          <span className={styles.chatStatus}>{chat.status}</span>
+                        )}
                         <span className={styles.chatPreview}>{chat.message}</span>
                         <span className={styles.chatName}>{chat.name}</span>
                         <div className={styles.chatTimeContainer}>

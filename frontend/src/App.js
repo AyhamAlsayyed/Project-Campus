@@ -10,7 +10,7 @@ import CommunityPage from './pages/communityPage/communityPage'
 import ChatsPage from './pages/chatsPage/chatsPage';
 import FriendsPage from './pages/FriendsPage/FriendsPage';
 import FollowedPages from './pages/followedPages/followedPages';
-import FollowedCommunities from './pages/followedCommunities/followedCommunities';
+import JoinedCommunities from './pages/joinedCommunities/joinedCommunities';
 
 function App() {
   return (
@@ -92,7 +92,7 @@ function App() {
           path="/profile/:userId/communities"
           element={
             <ProtectedRoute>
-              <FollowedCommunities />
+              <JoinedCommunities />
             </ProtectedRoute>
           }
         />

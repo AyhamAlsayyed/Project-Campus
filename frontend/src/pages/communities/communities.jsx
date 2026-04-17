@@ -12,6 +12,34 @@ export default function Community() {
     const [user, setUser] = useState(null)
     const [communities, setCommunities] = useState([]);
     const [filter, setFilter] = useState("recommended");
+    const [friendsCommunities, setFriendsCommunities] = useState([]);
+    useEffect(() => {
+    const fetchFriendsRelated = async () => {
+        try {
+            const token = localStorage.getItem("access");
+            const res = await fetch(`http://localhost:8000/api/communities/?filter=friends_related`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const data = await res.json();
+            const formatted = data.map(c => ({
+                ...c,
+                isJoined: c.is_joined,
+                isVerified: c.is_verified,
+                isPrivate: c.is_private,
+                requestSent: c.request_sent
+            }));
+
+            setFriendsCommunities(formatted);
+        } catch (err) {
+            console.error("Error fetching friends related communities:", err);
+        }
+    };
+
+    fetchFriendsRelated();
+}, []);
+
     const loadUser = async () => {
         const token = localStorage.getItem("access");
 
@@ -137,11 +165,11 @@ export default function Community() {
 
 
                         <div className={styles.rightList}>
-                            {communities.map((community, index) => (
+                            {friendsCommunities.map((community, index) => (
                                 <CommunityCard
                                     key={index}
                                     community={community}
-                                    setCommunities={setCommunities}
+                                    setCommunities={setFriendsCommunities}
                                     variant="small"
                                 />
                             ))}

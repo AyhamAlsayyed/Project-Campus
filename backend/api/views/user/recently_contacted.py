@@ -36,8 +36,8 @@ def recently_contacted(request):
 
         # GROUP
         if conv.is_group:
-            name = f"Group ({len(members)})"
-            avatar = request.build_absolute_uri(conv.image)
+            name = conv.name if conv.name else f"Group ({len(members)})"
+            avatar = request.build_absolute_uri(conv.image.url)
             status = None
 
         # DM
@@ -65,6 +65,7 @@ def recently_contacted(request):
                 "status": status,
                 "message": conv.last_message_content or "",
                 "time": conv.last_message_time,
+                "is_group": conv.is_group
             }
         )
 

@@ -51,6 +51,10 @@
   padding: 12px 16px;
   margin-bottom: 22px;
 }
+.contactWrapper {
+  display: flex;
+  flex-direction: column;
+}
 
 .searchIcon {
   flex: 0 0 auto;
@@ -78,13 +82,24 @@
 .contactCard {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-  padding: 18px 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  align-items: center;
+
+  padding: 12px 10px;
+  border-radius: 18px;
+
+  transition: background-color 0.2s ease, transform 0.15s ease;
+  cursor: pointer;
+
+  border-bottom: none; 
 }
 
-.contactCard:last-child {
-  border-bottom: none;
+.contactCard:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.contactCard:active {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: scale(0.98);
 }
 
 .contactLeft {
@@ -183,4 +198,15 @@
 
 .contactMessageIcon {
   color: rgba(255, 255, 255, 0.7);
+}
+.divider {
+  width: 50%;
+  height: 1px;
+  margin: 6px auto;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
 }

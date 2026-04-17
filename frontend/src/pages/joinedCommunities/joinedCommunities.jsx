@@ -1,4 +1,4 @@
-import styles from './followedCommunties.module.css'
+import styles from './joinedCommunties.module.css'
 import { useEffect, useState } from 'react'
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
@@ -35,7 +35,7 @@ export default function FollowedCommunities() {
 
                 const [userRes, joinedRes, recommendedRes] = await Promise.all([
                     fetch("http://localhost:8000/api/auth/me/", { headers }),
-                    fetch("http://localhost:8000/api/communities/followed/", { headers }),
+                    fetch("http://localhost:8000/api/communities/?filter=joined", { headers }),
                     fetch("http://localhost:8000/api/communities/recommended/", { headers }) // <-- you create this endpoint later
                 ]);
 
@@ -44,23 +44,26 @@ export default function FollowedCommunities() {
                 const userData = await userRes.json();
                 setCurrentUser(userData);
 
-       
+
                 if (joinedRes.ok) {
                     const joinedData = await joinedRes.json();
 
                     const formattedJoined = joinedData.map(c => ({
                         ...c,
                         avatar: c.avatar
-                            ? (c.avatar.startsWith("http")
-                                ? c.avatar
-                                : `http://localhost:8000${c.avatar}`)
-                            : "/default-avatar.png"
+                            ? (c.avatar.startsWith("http") ? c.avatar : `http://localhost:8000${c.avatar}`)
+                            : "/default-avatar.png",
+
+                        bgImage: c.image
+                            ? (c.image.startsWith("http") ? c.image : `http://localhost:8000${c.image}`)
+                            : 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80'
+
                     }));
 
                     setCommunities(formattedJoined);
                 }
 
-           
+
                 if (recommendedRes.ok) {
                     const recData = await recommendedRes.json();
 
@@ -86,7 +89,7 @@ export default function FollowedCommunities() {
 
         fetchData();
     }, []);
-    
+
     useEffect(() => {
         const fetchUser = async () => {
             try {
@@ -139,7 +142,7 @@ export default function FollowedCommunities() {
                                             key={community.id}
                                             className={styles.communityCard}
                                             style={{
-                                                backgroundImage: `linear-gradient(to right, rgba(25, 25, 25, 0.95) 10%, rgba(25, 25, 25, 0.7) 40%, rgba(25, 25, 25, 0.2) 100%), url(${community.bgImage || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800'})`
+                                                backgroundImage: `linear-gradient(to right, rgba(25, 25, 25, 0.95) 10%, rgba(25, 25, 25, 0.7) 40%, rgba(25, 25, 25, 0.2) 100%),  url(${community.bgImage})`
                                             }}
                                         >
                                             <div className={styles.communityContent}>

@@ -75,16 +75,10 @@ export default function PostCard({ post, openComments }) {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (res.ok) {
-        alert(`Post ${actionType}ed successfully!`);
-
-      }
     } catch (err) {
       console.error(`Failed to ${actionType} post`);
     }
   };
-  console.log(post)
   const toggleMenu = () => {
     setShowMenu(prev => !prev);
   }
@@ -94,7 +88,6 @@ export default function PostCard({ post, openComments }) {
     let type = item.type?.toLowerCase();
 
     if (!type && url) {
-      // Clean the URL of query params before checking extension
       const cleanUrl = url.split(/[?#]/)[0];
       if (cleanUrl.match(/\.(mp4|webm|ogg)$/i)) {
         type = "video";
@@ -150,8 +143,6 @@ export default function PostCard({ post, openComments }) {
           <button className={styles.menuBtn} onClick={toggleMenu} aria-label="menu">
             <MoreHorizontal size={20} />
           </button>
-
-          {/* This only shows when showMenu is true */}
           {showMenu && (
             <div className={styles.dropdownMenu}>
               <button className={styles.menuItem}><Bookmark size={16} onClick={() => handleMenuAction('save')} /> Save</button>

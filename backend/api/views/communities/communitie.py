@@ -83,8 +83,8 @@ def communities(request):
                 distinct=True,
             )
         ).order_by("-recent_members", "-members_count")
-    elif filter == "friends":
-        qs = qs.filter(frined_count__gt=0).order_by("-friend_count", "-members_count")
+    elif filter == "friends_related":
+        qs = qs.filter(friends_count__gt=0).order_by("-friends_count", "-members_count")
 
     else:  # default
         community_ids = CommunityMember.objects.filter(user=user).values("community_id")
