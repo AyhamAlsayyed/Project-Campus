@@ -17,7 +17,15 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import CommunityMember, FollowPage, Friendship, Post, PostReaction
+from ...models import (
+    Comment,
+    CommunityMember,
+    FollowPage,
+    Friendship,
+    Post,
+    PostReaction,
+    SavedPost,
+)
 
 
 def _get_user_university_page_id(user):
@@ -59,6 +67,7 @@ def feed(request, community_id=None):  # <-- important change
         reactions_count=Count("reactions", filter=Q(reactions__user__isnull=False), distinct=True),
         comments_count=Count("comments", distinct=True),
         is_liked=Exists(PostReaction.objects.filter(post_id=OuterRef("post_id"), user=request.user)),
+        is_saved=Exists(SavedPost.objects.filter(user=request.user, post_id=OuterRef("post_id"))),
     )
 
     if user_id:
@@ -224,7 +233,84 @@ def feed(request, community_id=None):  # <-- important change
                 "likes_count": p.reactions_count,
                 "comments_count": p.comments_count,
                 "is_liked": p.is_liked,
+                "is_saved": p.is_saved,
             }
         )
 
     return Response(data, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_saved_posts(request):
+    user = request.user
+
+    saved = SavedPost.objects.filter(user=user).select_related("post__author_user__profile").order_by("-saved_at")
+
+    result = []
+
+    for s in saved:
+        post = s.post
+        author = post.author_user
+        profile = getattr(author, "profile", None)
+
+        result.append(
+            {
+                "id": post.post_id,
+                "content": post.content_text,
+                "created_at": post.created_at,
+                "author": {
+                    "id": author.id if author else None,
+                    "username": author.username if author else None,
+                    "avatar": (
+                        request.build_absolute_uri(profile.profile_image.url)
+                        if profile and profile.profile_image
+                        else None
+                    ),
+                },
+            }
+        )
+
+    return Response(result)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_activity_posts(request):
+    user = request.user
+
+    liked_post_ids = PostReaction.objects.filter(user=user).values_list("post_id", flat=True)
+
+    commented_post_ids = Comment.objects.filter(author_user=user).values_list("post_id", flat=True)
+
+    posts = (
+        Post.objects.filter(Q(post_id__in=liked_post_ids) | Q(post_id__in=commented_post_ids))
+        .select_related("author_user__profile")
+        .order_by("-created_at")
+        .distinct()
+    )
+
+    result = []
+
+    for post in posts:
+        author = post.author_user
+        profile = getattr(author, "profile", None)
+
+        result.append(
+            {
+                "id": post.post_id,
+                "content": post.content_text,
+                "created_at": post.created_at,
+                "author": {
+                    "id": author.id if author else None,
+                    "username": author.username if author else None,
+                    "avatar": (
+                        request.build_absolute_uri(profile.profile_image.url)
+                        if profile and profile.profile_image
+                        else None
+                    ),
+                },
+            }
+        )
+
+    return Response(result)

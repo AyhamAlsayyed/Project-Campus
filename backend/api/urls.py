@@ -17,9 +17,9 @@ from .views.conversation.conversation import (
     send_message,
 )
 from .views.notification.notification import get_notifications, notification_delete_mark
-from .views.posts.post_action import block_post, report_post, toggle_like
+from .views.posts.post_action import block_post, report_post, save_post, toggle_like
 from .views.posts.post_create import create_post
-from .views.posts.posts import feed
+from .views.posts.posts import feed, get_activity_posts, get_saved_posts
 from .views.user.friends import (
     accept_friend_request,
     decline_friend_request,
@@ -38,10 +38,13 @@ urlpatterns = [
     path("users/<int:user_id>/", user_profile_view),
     path("posts/feed/", feed, name="posts_feed"),
     path("posts/", feed, name="user_posts"),
+    path("posts/saved/", get_saved_posts, name="posts_saved"),
+    path("posts/activity/", get_activity_posts, name="posts_activity"),
     path("posts/create/", create_post, name="create_post"),
     path("posts/<int:post_id>/like/", toggle_like),
     path("posts/<int:post_id>/report/", report_post),
     path("posts/<int:post_id>/block/", block_post),
+    path("posts/<int:post_id>/save/", save_post),
     path("communities/", communities),
     path("communities/<int:community_id>/join/", join_community),
     path("communities/<int:community_id>/request/", request_join_community),

@@ -484,6 +484,35 @@ class Post(models.Model):
         ]
 
 
+class SavedPost(models.Model):
+    id = models.BigAutoField(primary_key=True)
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="saved_posts",
+        db_column="user_id",
+    )
+
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name="saved_by",
+        db_column="post_id",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "saved_post"
+        ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["user", "post"], name="uniq_user_saved_post")]
+        indexes = [
+            models.Index(fields=["user", "-created_at"]),
+            models.Index(fields=["post"]),
+        ]
+
+
 class PostMedia(models.Model):
     media_id = models.BigAutoField(primary_key=True, db_column="media_id")
 

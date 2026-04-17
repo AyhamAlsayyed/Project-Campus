@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Notification, Post, PostMedia
+from .models import Notification, Post, PostMedia, SavedPost
 
 
 class PostMediaSerializer(serializers.ModelSerializer):
@@ -11,6 +11,11 @@ class PostMediaSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     media = PostMediaSerializer(many=True, read_only=True)
+    is_saved = serializers.SerializerMethodField()
+
+    def get_is_saved(self, obj):
+        user = self.context.get["request"].user
+        return SavedPost.objects.filter(user=user, post=obj).exists()
 
     class Meta:
         model = Post

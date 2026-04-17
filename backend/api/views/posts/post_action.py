@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Friendship, Post, PostReaction, Report
+from ...models import Friendship, Post, PostReaction, Report, SavedPost
 
 
 @api_view(["POST"])
@@ -79,3 +79,23 @@ def block_post(request, post_id):
         Friendship.objects.create(user1=current_user, user2=target_user, status=Friendship.Status.BLOCKED)
 
     return Response({"message": "User blocked successfully"}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def save_post(request, post_id):
+    user = request.user
+
+    try:
+        post = Post.objects.get(pk=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=404)
+
+    saved = SavedPost.objects.filter(user=user, post=post).first()
+
+    if saved:
+        saved.delete()
+        return Response({"saved": False, "message": "Post unsaved"}, status=200)
+    else:
+        SavedPost.objects.create(user=user, post=post)
+        return Response({"saved": True, "message": "Post saved"}, status=201)
