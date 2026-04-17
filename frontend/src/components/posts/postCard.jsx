@@ -113,7 +113,7 @@ export default function PostCard({ post, openComments }) {
 
       <div className={styles.topRow}>
         <div className={styles.user}>
-          <Link to={post.author_id ? `/profile/${post.author_id}` : "#"}>
+          <Link to={(post.author?.id || post.author_id) ? `/profile/${post.author?.id || post.author_id}` : "#"}>
             <img
               className={styles.avatar}
               src={post.author?.avatar || "/default-avatar.png"}
