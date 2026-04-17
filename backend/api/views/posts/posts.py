@@ -234,14 +234,19 @@ def feed(request, community_id=None):
 def get_saved_posts(request):
     user = request.user
 
-    saved = (
-        SavedPost.objects.filter(user=user)
-        .select_related("post__author_user__profile", "post__author_page")
-        .prefetch_related("post__media")
-        .order_by("-created_at")
-    )
+    saved = SavedPost.objects.filter(user=user).order_by("-created_at")
 
-    return Response([serialize_post(request, s.post) for s in saved])
+    post_map = {
+        p.post_id: p
+        for p in Post.objects.filter(post_id__in=[s.post_id for s in saved])
+        .annotate(**base_annotations(user))
+        .select_related("author_user__profile", "author_page")
+        .prefetch_related("media")
+    }
+
+    ordered_posts = [post_map[s.post_id] for s in saved if s.post_id in post_map]
+
+    return Response([serialize_post(request, p) for p in ordered_posts])
 
 
 @api_view(["GET"])
@@ -254,7 +259,7 @@ def get_activity_posts(request):
 
     posts = (
         Post.objects.filter(Q(post_id__in=liked_ids) | Q(post_id__in=commented_ids))
-        .annotate(**base_annotations(user))  # ✅ FIXED BUG
+        .annotate(**base_annotations(user))
         .select_related("author_user__profile", "author_page")
         .prefetch_related("media")
         .order_by("-created_at")
