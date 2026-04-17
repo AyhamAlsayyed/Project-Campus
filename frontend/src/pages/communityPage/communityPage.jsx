@@ -4,7 +4,7 @@ import WeeklyNews from '../../components/weeklynews/weeklynews';
 import { useState, useEffect } from 'react'
 import { useParams } from "react-router-dom";
 import { X } from "lucide-react";
-
+import CommentModal from '../../components/comments/commentsModal';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
 import PostCard from '../../components/posts/postCard'
 export default function CommunityPage() {
@@ -17,7 +17,17 @@ export default function CommunityPage() {
     const [content, setContent] = useState("");
     const [images, setImages] = useState([]);
     const [files, setFiles] = useState([]);
+    const token = localStorage.getItem("access");
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedPost, setSelectedPostId] = useState(null);
+    const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+
+
+
+    const openComments = (postId) => {
+        setSelectedPostId(postId);
+        setIsCommentModalOpen(true);
+    };
     const toggleTheme = () => { setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light')); }
     const resetPostState = () => {
         setContent("");
@@ -40,6 +50,7 @@ export default function CommunityPage() {
         const data = await res.json();
         setCommunity(data);
     };
+
     const loadUser = async () => {
         const token = localStorage.getItem("access");
 
@@ -131,6 +142,7 @@ export default function CommunityPage() {
         loadUser();
         fetchPosts();
         fetchCommunity();
+
     }, [id, filter]);
     const handleMediaUpload = (e) => {
         const selectedFiles = Array.from(e.target.files);
@@ -181,7 +193,7 @@ export default function CommunityPage() {
                     <div className={styles.communityPostsContainer}>
                         <div className={styles.innerContainer}>
                             {posts.map((post) => (
-                                <PostCard key={post.id} post={post} />
+                                <PostCard key={post.id} post={post} openComments={openComments} />
                             ))}
 
                         </div>
@@ -392,11 +404,19 @@ export default function CommunityPage() {
                                     </div>
                                 )}
 
-                                {/* POST BUTTON */}
+
+
                                 <button className={styles.postButton} onClick={handleCreatePost} disabled={!content && !images.length && !files && !isPollOpen}>Post</button>
 
                             </div>
                         </div>
+                    )}
+                    {isCommentModalOpen && (
+                        <CommentModal
+                            post={selectedPost}
+                            onClose={() => setIsCommentModalOpen(false)}
+                            currentUser={user}
+                        />
                     )}
                     <WeeklyNews communityId={id} />
 
@@ -408,5 +428,6 @@ export default function CommunityPage() {
             </div>
 
         </div>
+
     )
 }
