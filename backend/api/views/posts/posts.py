@@ -43,97 +43,146 @@ def _get_user_university_page_id(user):
 def file_url(request, f):
     if not f:
         return None
-    if isinstance(f, str):
-        return request.build_absolute_uri(f) if f.startswith("/") else f
     try:
         return request.build_absolute_uri(f.url)
     except Exception:
         return None
 
 
+def get_author_data(request, post):
+    if post.author_user:
+        profile = getattr(post.author_user, "profile", None)
+        return {
+            "id": post.author_user_id,
+            "type": "user",
+            "username": post.author_user.username,
+            "avatar": file_url(request, getattr(profile, "profile_image", None)),
+        }
+
+    if post.author_page:
+        return {
+            "id": post.author_page_id,
+            "type": "page",
+            "username": post.author_page.page_name,
+            "avatar": file_url(request, getattr(post.author_page, "profile_image", None)),
+            "tag": post.author_page.page_type,
+        }
+
+    return None
+
+
+def serialize_post(request, p):
+    author = get_author_data(request, p)
+
+    media_items = [
+        {
+            "type": (m.media_type or "").lower(),
+            "url": file_url(request, m.media_file) or file_url(request, m.media_url),
+        }
+        for m in p.media.all().order_by("order_index")
+    ]
+
+    return {
+        "id": p.post_id,
+        "content": p.content_text,
+        "post_type": p.post_type,
+        "created_at": p.created_at.isoformat(),
+        "author": author,
+        "media": media_items,
+        "likes_count": p.reactions_count,
+        "comments_count": p.comments_count,
+        "is_liked": p.is_liked,
+        "is_saved": p.is_saved,
+    }
+
+
+def base_annotations(user):
+    return {
+        "reactions_count": Count("reactions", filter=Q(reactions__user__isnull=False), distinct=True),
+        "comments_count": Count("comments", distinct=True),
+        "is_liked": Exists(PostReaction.objects.filter(post_id=OuterRef("post_id"), user=user)),
+        "is_saved": Exists(SavedPost.objects.filter(post_id=OuterRef("post_id"), user=user)),
+    }
+
+
+def engagement_annotations():
+    return {
+        "p_engagement": ExpressionWrapper(
+            (F("reactions_count") * Value(2)) + F("comments_count"),
+            output_field=IntegerField(),
+        ),
+        "p_engagement_capped": Case(
+            When(p_engagement__gte=20, then=Value(20)),
+            default=F("p_engagement"),
+            output_field=IntegerField(),
+        ),
+        "p_fresh": Case(
+            When(created_at__gte=Now() - timedelta(hours=6), then=Value(20)),
+            When(created_at__gte=Now() - timedelta(hours=24), then=Value(10)),
+            When(created_at__gte=Now() - timedelta(days=3), then=Value(5)),
+            default=Value(0),
+            output_field=IntegerField(),
+        ),
+    }
+
+
+def get_friendship_sets(user):
+    friendships = Friendship.objects.filter(Q(user1=user) | Q(user2=user)).values("user1_id", "user2_id", "status")
+
+    accepted = set()
+    blocked = set()
+
+    for f in friendships:
+        other_id = f["user2_id"] if f["user1_id"] == user.id else f["user1_id"]
+
+        if f["status"] == Friendship.Status.ACCEPTED:
+            accepted.add(other_id)
+        elif f["status"] == Friendship.Status.BLOCKED:
+            blocked.add(other_id)
+
+    return accepted, blocked
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def feed(request, community_id=None):  # <-- important change
-    limit = int(request.query_params.get("limit") or 20)
-    limit = max(1, min(limit, 50))
+def feed(request, community_id=None):
+    user = request.user
+    limit = min(max(int(request.query_params.get("limit", 20)), 1), 50)
 
     community_id = community_id or request.GET.get("community_id")
     user_id = request.GET.get("user")
     filter_type = request.GET.get("filter", "recommended")
 
-    qs = Post.objects.all()
+    qs = Post.objects.all().annotate(**base_annotations(user))
 
-    qs = qs.annotate(
-        reactions_count=Count("reactions", filter=Q(reactions__user__isnull=False), distinct=True),
-        comments_count=Count("comments", distinct=True),
-        is_liked=Exists(PostReaction.objects.filter(post_id=OuterRef("post_id"), user=request.user)),
-        is_saved=Exists(SavedPost.objects.filter(user=request.user, post_id=OuterRef("post_id"))),
-    )
-
+    # user profile feed
     if user_id:
         qs = qs.filter(author_user_id=user_id).order_by("-created_at")
 
+    # community feed
     elif community_id:
         qs = qs.filter(community_id=community_id)
 
-        if filter_type == "latest":
+        if filter_type != "latest":
+            qs = qs.annotate(**engagement_annotations())
+            qs = qs.annotate(score=F("p_engagement_capped") + F("p_fresh")).order_by("-score", "-created_at")
+        else:
             qs = qs.order_by("-created_at")
 
-        else:  # recommended
-            qs = (
-                qs.annotate(
-                    p_engagement=ExpressionWrapper(
-                        (F("reactions_count") * Value(2)) + F("comments_count"),
-                        output_field=IntegerField(),
-                    )
-                )
-                .annotate(
-                    p_engagement_capped=Case(
-                        When(p_engagement__gte=20, then=Value(20)),
-                        default=F("p_engagement"),
-                        output_field=IntegerField(),
-                    ),
-                    p_fresh=Case(
-                        When(created_at__gte=Now() - timedelta(hours=6), then=Value(20)),
-                        When(created_at__gte=Now() - timedelta(hours=24), then=Value(10)),
-                        When(created_at__gte=Now() - timedelta(days=3), then=Value(5)),
-                        default=Value(0),
-                        output_field=IntegerField(),
-                    ),
-                )
-                .annotate(score=F("p_engagement_capped") + F("p_fresh"))
-                .order_by("-score", "-created_at")
-            )
+    # home feeed
+    else:
+        community_ids = CommunityMember.objects.filter(user=user).values_list("community_id", flat=True)
+        followed_pages = FollowPage.objects.filter(user=user).values_list("page_id", flat=True)
 
-        qs = qs.select_related("author_user", "author_page", "community").prefetch_related("media")
-
-    else:  # home feed
-        user = request.user
-
-        community_ids = list(CommunityMember.objects.filter(user=user).values_list("community_id", flat=True))
-        followed_page_ids = list(FollowPage.objects.filter(user=user).values_list("page_id", flat=True))
-
-        friendships = Friendship.objects.filter(Q(user1=user) | Q(user2=user))
-        accepted_ids = []
-        blocked_ids = []
-
-        for f in friendships:
-            other_id = f.user2_id if f.user1_id == user.id else f.user1_id
-
-            if f.status == Friendship.Status.ACCEPTED:
-                accepted_ids.append(other_id)
-            elif f.status == Friendship.Status.BLOCKED:
-                blocked_ids.append(other_id)
+        accepted_users, blocked_users = get_friendship_sets(user)
 
         uni_page_id = _get_user_university_page_id(user)
 
-        qs = qs.exclude(author_user_id__in=blocked_ids)
-        qs = qs.exclude(author_user_id=user.id)
+        qs = qs.exclude(author_user_id__in=blocked_users).exclude(author_user_id=user.id)
 
-        if filter_type == "latest":
-            qs = qs.order_by("-created_at")
+        if filter_type != "latest":
+            qs = qs.annotate(**engagement_annotations())
 
-        else:
             qs = (
                 qs.annotate(
                     p_university=Case(
@@ -147,30 +196,12 @@ def feed(request, community_id=None):  # <-- important change
                         output_field=IntegerField(),
                     ),
                     p_following=Case(
-                        When(author_page_id__in=followed_page_ids, then=Value(20)),
+                        When(author_page_id__in=followed_pages, then=Value(20)),
                         default=Value(0),
                         output_field=IntegerField(),
                     ),
                     p_friendship=Case(
-                        When(author_user_id__in=accepted_ids, then=Value(30)),
-                        default=Value(0),
-                        output_field=IntegerField(),
-                    ),
-                    p_engagement=ExpressionWrapper(
-                        (F("reactions_count") * Value(2)) + F("comments_count"),
-                        output_field=IntegerField(),
-                    ),
-                )
-                .annotate(
-                    p_engagement_capped=Case(
-                        When(p_engagement__gte=20, then=Value(20)),
-                        default=F("p_engagement"),
-                        output_field=IntegerField(),
-                    ),
-                    p_fresh=Case(
-                        When(created_at__gte=Now() - timedelta(hours=6), then=Value(20)),
-                        When(created_at__gte=Now() - timedelta(hours=24), then=Value(10)),
-                        When(created_at__gte=Now() - timedelta(days=3), then=Value(5)),
+                        When(author_user_id__in=accepted_users, then=Value(30)),
                         default=Value(0),
                         output_field=IntegerField(),
                     ),
@@ -185,59 +216,12 @@ def feed(request, community_id=None):  # <-- important change
                 )
                 .order_by("-score", "-created_at")
             )
+        else:
+            qs = qs.order_by("-created_at")
 
-        qs = qs.select_related("author_user", "author_page", "community").prefetch_related("media")
+    qs = qs.select_related("author_user__profile", "author_page", "community").prefetch_related("media")[:limit]
 
-    qs = qs[:limit]
-
-    data = []
-    for p in qs:
-        author_id = None
-        author_avatar = None
-        author_username = None
-        author_tag = None
-
-        if p.author_user_id:
-            author_id = p.author_user_id
-            author_username = p.author_user.username
-            profile = getattr(p.author_user, "profile", None)
-            if profile and getattr(profile, "profile_image", None):
-                author_avatar = file_url(request, profile.profile_image)
-
-        if p.author_page_id:
-            author_id = p.author_page_id
-            author_username = p.author_page.page_name
-            author_tag = p.author_page.page_type
-            author_avatar = file_url(request, p.author_page.profile_image)
-
-        media_items = []
-        for m in p.media.all().order_by("order_index"):
-            media_items.append(
-                {
-                    "type": (m.media_type or "").lower(),
-                    "url": file_url(request, m.media_file) or file_url(request, m.media_url),
-                }
-            )
-
-        data.append(
-            {
-                "id": p.post_id,
-                "content": p.content_text,
-                "post_type": p.post_type,
-                "created_at": p.created_at.isoformat(),
-                "author_id": author_id,
-                "author_username": author_username,
-                "author_avatar": author_avatar,
-                "tag": author_tag,
-                "media": media_items,
-                "likes_count": p.reactions_count,
-                "comments_count": p.comments_count,
-                "is_liked": p.is_liked,
-                "is_saved": p.is_saved,
-            }
-        )
-
-    return Response(data, status=200)
+    return Response([serialize_post(request, p) for p in qs])
 
 
 @api_view(["GET"])
@@ -245,33 +229,14 @@ def feed(request, community_id=None):  # <-- important change
 def get_saved_posts(request):
     user = request.user
 
-    saved = SavedPost.objects.filter(user=user).select_related("post__author_user__profile").order_by("-created_at")
+    saved = (
+        SavedPost.objects.filter(user=user)
+        .select_related("post__author_user__profile", "post__author_page")
+        .prefetch_related("post__media")
+        .order_by("-created_at")
+    )
 
-    result = []
-
-    for s in saved:
-        post = s.post
-        author = post.author_user
-        profile = getattr(author, "profile", None)
-
-        result.append(
-            {
-                "id": post.post_id,
-                "content": post.content_text,
-                "created_at": post.created_at,
-                "author": {
-                    "id": author.id if author else None,
-                    "username": author.username if author else None,
-                    "avatar": (
-                        request.build_absolute_uri(profile.profile_image.url)
-                        if profile and profile.profile_image
-                        else None
-                    ),
-                },
-            }
-        )
-
-    return Response(result)
+    return Response([serialize_post(request, s.post) for s in saved])
 
 
 @api_view(["GET"])
@@ -279,38 +244,16 @@ def get_saved_posts(request):
 def get_activity_posts(request):
     user = request.user
 
-    liked_post_ids = PostReaction.objects.filter(user=user).values_list("post_id", flat=True)
-
-    commented_post_ids = Comment.objects.filter(author_user=user).values_list("post_id", flat=True)
+    liked_ids = PostReaction.objects.filter(user=user).values_list("post_id", flat=True)
+    commented_ids = Comment.objects.filter(author_user=user).values_list("post_id", flat=True)
 
     posts = (
-        Post.objects.filter(Q(post_id__in=liked_post_ids) | Q(post_id__in=commented_post_ids))
-        .select_related("author_user__profile")
+        Post.objects.filter(Q(post_id__in=liked_ids) | Q(post_id__in=commented_ids))
+        .annotate(**base_annotations(user))  # ✅ FIXED BUG
+        .select_related("author_user__profile", "author_page")
+        .prefetch_related("media")
         .order_by("-created_at")
         .distinct()
     )
 
-    result = []
-
-    for post in posts:
-        author = post.author_user
-        profile = getattr(author, "profile", None)
-
-        result.append(
-            {
-                "id": post.post_id,
-                "content": post.content_text,
-                "created_at": post.created_at,
-                "author": {
-                    "id": author.id if author else None,
-                    "username": author.username if author else None,
-                    "avatar": (
-                        request.build_absolute_uri(profile.profile_image.url)
-                        if profile and profile.profile_image
-                        else None
-                    ),
-                },
-            }
-        )
-
-    return Response(result)
+    return Response([serialize_post(request, p) for p in posts])
