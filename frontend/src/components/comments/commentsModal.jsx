@@ -102,7 +102,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
 
             if (res.ok) {
                 const savedComment = await res.json();
-                setComments([ ...comments, savedComment]);
+                setComments([...comments, savedComment]);
                 setNewComment("");
                 setParentComment(null);
             }
@@ -184,18 +184,22 @@ export default function CommentModal({ post, onClose, currentUser }) {
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
 
                 <div className={styles.header}>
-                    <h3>{post.author_username}'s Post</h3>
+                    <h3>{(post.author?.username || post.author_username || "User")}'s Post</h3>
                     <button className={styles.closeButton} onClick={onClose}>✕</button>
                 </div>
 
                 <div className={styles.content}>
                     {/* POST HEADER */}
                     <div className={styles.postHeader}>
-                     <Link to={`/profile/${post.author_id}`}>
-                        <img src={post.author_avatar || "/default-avatar.png"} className={styles.avatar} alt="" />
-                     </Link>
+                        <Link to={`/profile/${post.author_id}`}>
+                            <img
+                                src={post.author?.avatar || post.author_avatar || "/default-avatar.png"}
+                                className={styles.avatar}
+                                alt=""
+                            />
+                        </Link>
                         <div className={styles.authorInfo}>
-                            <span className={styles.authorName}>{post.author_username}</span>
+                            <span className={styles.authorName}>{post.author?.username || post.author_username}</span>
                             <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>
                         </div>
                     </div>
@@ -271,12 +275,12 @@ export default function CommentModal({ post, onClose, currentUser }) {
                             </span>
                             <span className={styles.count}>{likesCount}</span>
                         </button>
-                        <span>{comments.length} comments</span>
+                        <span>{post.comments_count || comments.length} comments</span>
                     </div>
 
                     {/* ACTIONS */}
                     <div className={styles.actions}>
-                        {/* CHANGED: activePink -> liked */}
+
                         <div
                             className={`${styles.actionBtn} ${isLiked ? styles.liked : ""}`}
                             onClick={handleLikePost}
@@ -298,7 +302,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                 <div key={c.id} className={styles.commentBlock}>
                                     {/* MAIN COMMENT */}
                                     <div className={styles.commentRow}>
-                                       <Link to={`/profile/${c.user_id}`}>
+                                        <Link to={`/profile/${c.user_id}`}>
                                             <img src={c.user_avatar || "/default-avatar.png"} className={styles.commentAvatar} alt="" />
                                         </Link>
 

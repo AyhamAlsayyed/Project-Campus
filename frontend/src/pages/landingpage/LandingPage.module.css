@@ -7,7 +7,7 @@
     --bottom-gradient: linear-gradient(45deg, rgba(166, 39, 156, 0.25), rgba(49, 32, 233, 0.25));
 }
 
-/*Light theme*/
+
 .lightContainer {
     --bg-main: #f2f2f2;
     --bg-secondary: #e5e5e5;
@@ -17,16 +17,17 @@
     --bottom-gradient: linear-gradient(45deg, rgba(166, 39, 156, 0.75),rgba(49, 32, 233, 0.75));
 }
 
-/*Layout of both containers (Light And dark)*/
 .darkContainer,
 .lightContainer {
     min-height: 100vh;
+    max-height: 100vh;
     padding: 32px 80px 0;
     box-sizing: border-box;
     background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
     font-family: "Aktiv Grotesk", sans-serif;
     display: flex;
     flex-direction: column;
+    
 }
 
 
