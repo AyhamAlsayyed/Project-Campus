@@ -245,7 +245,7 @@ def feed(request, community_id=None):  # <-- important change
 def get_saved_posts(request):
     user = request.user
 
-    saved = SavedPost.objects.filter(user=user).select_related("post__author_user__profile").order_by("-saved_at")
+    saved = SavedPost.objects.filter(user=user).select_related("post__author_user__profile").order_by("-created_at")
 
     result = []
 

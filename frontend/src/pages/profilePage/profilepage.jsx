@@ -109,24 +109,35 @@ export default function ProfilePage() {
             console.error(e);
         }
     };
-    const loadActivities = async () => {
-        try {
-            setActivitiesLoading(true);
+  const loadActivities = async () => {
+    try {
+        setActivitiesLoading(true);
+        const res = await fetch(`http://localhost:8000/api/posts/activity/`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.ok) {
+            const data = await res.json();
             
-            const res = await fetch(`http://localhost:8000/api/posts/activity/`, {
-                headers: { Authorization: `Bearer ${token}` },
+            const formattedActivities = (Array.isArray(data) ? data : []).map(post => {
+             
+                const hasAuthorData = post.author && post.author.username;
+                
+                return {
+                    ...post,
+                    username: hasAuthorData ? post.author.username : currentUser?.username,
+                    avatar: hasAuthorData ? post.author.avatar : currentUser?.avatar_url
+                };
             });
 
-            if (res.ok) {
-                const data = await res.json();
-                setActivityPosts(Array.isArray(data) ? data : []);
-            }
-        } catch (e) {
-            console.error("Failed to load activities", e);
-        } finally {
-            setActivitiesLoading(false);
+            setActivityPosts(formattedActivities);
         }
-    };
+    } catch (e) {
+        console.error("Failed to load activities", e);
+    } finally {
+        setActivitiesLoading(false);
+    }
+};
 
     const loadSavedPosts = async () => {
         try {
@@ -229,11 +240,16 @@ export default function ProfilePage() {
         loadCurrentUser();
         loadProfileUser();
         loadFriends(userId);
-        if (currentUser?.id === Number(userId) || !userId) {
-            loadActivities();
-            loadSavedPosts();
-        }
+       
     }, [userId]);
+    useEffect(() => {
+    const isOwn = currentUser?.id === Number(userId) || (!userId && currentUser);
+    
+    if (isOwn) {
+        loadActivities();
+        loadSavedPosts();
+    }
+}, [currentUser, userId]);
 
 
 
