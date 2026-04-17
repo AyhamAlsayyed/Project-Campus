@@ -57,6 +57,7 @@ def get_author_data(request, post):
             "type": "user",
             "username": post.author_user.username,
             "avatar": file_url(request, getattr(profile, "profile_image", None)),
+            "tag": None,
         }
 
     if post.author_page:
@@ -87,7 +88,11 @@ def serialize_post(request, p):
         "content": p.content_text,
         "post_type": p.post_type,
         "created_at": p.created_at.isoformat(),
-        "author": author,
+        "author_id": author["id"],
+        "type": author["type"],
+        "author_username": author["username"],
+        "author_avatar": author["avatar"],
+        "tag": author["tag"],
         "media": media_items,
         "likes_count": p.reactions_count,
         "comments_count": p.comments_count,
