@@ -32,18 +32,43 @@ export default function ChatsPage() {
     const messagesEndRef = useRef(null);
     const messagesScrollRef = useRef(null);
     const academicGroups = chats.filter(chat => chat.is_group && chat.is_academic);
+    const [attachmentMenuOpen, setAttachmentMenuOpen] = useState(false);
+    const [pendingFiles, setPendingFiles] = useState([]); // files queued to send
+    const attachmentMenuRef = useRef(null);
+    const imageInputRef = useRef(null);
+    const fileInputRef = useRef(null);
+    const [pollOpen, setPollOpen] = useState(false);
+    const [pollQuestion, setPollQuestion] = useState('');
+    const [pollOptions, setPollOptions] = useState(['', '']);
     const { chatId } = useParams();
+    const [navOpen, setNavOpen] = useState(false);
     const handleSendMessage = async () => {
-        if (!inputText.trim() || !selectedChat) return;
+        if (!selectedChat) return;
 
-        try {
-            const response = await fetch(`${API}/api/chats/${selectedChat.id}/messages/`, {
+        // Send any pending files first
+        for (const pf of pendingFiles) {
+            const formData = new FormData();
+            formData.append("file", pf.file);
+            formData.append("file_type", pf.type);
+
+            await fetch(`${API}/api/chats/${selectedChat.id}/send-file/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData,
+            }).then(res => res.json()).then(newMsg => {
+                setMessages(prev => [...prev, newMsg]);
+            });
+        }
+        setPendingFiles([]);
+
+       
+        if (inputText.trim()) {
+            const response = await fetch(`${API}/api/chats/${selectedChat.id}/send/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
-
                 body: JSON.stringify({
                     text: inputText,
                     reply_to: replyingTo ? replyingTo.id : null
@@ -54,12 +79,11 @@ export default function ChatsPage() {
                 const newMessage = await response.json();
                 setMessages(prev => [...prev, newMessage]);
                 setInputText("");
-                setReplyingTo(null); // 4. CLEAR REPLY AFTER SENDING
-                scrollToBottom();
+                setReplyingTo(null);
             }
-        } catch (err) {
-            console.error("Failed to send message:", err);
         }
+
+        scrollToBottom();
     };
     const scrollToBottom = () => {
         setTimeout(() => {
@@ -243,9 +267,40 @@ export default function ChatsPage() {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+    const handleFileSelect = (e, type) => {
+        const files = Array.from(e.target.files);
+        const previews = files.map(file => ({
+            file,
+            type,
+            previewUrl: type === 'image' ? URL.createObjectURL(file) : null,
+            name: file.name,
+            size: (file.size / 1024).toFixed(1) + ' KB',
+            id: Math.random().toString(36).substr(2, 9)
+        }));
+        setPendingFiles(prev => [...prev, ...previews]);
+        setAttachmentMenuOpen(false);
+        e.target.value = '';
+    };
+
+    const removePendingFile = (id) => {
+        setPendingFiles(prev => {
+            const file = prev.find(f => f.id === id);
+            if (file?.previewUrl) URL.revokeObjectURL(file.previewUrl);
+            return prev.filter(f => f.id !== id);
+        });
+    };
+
+    const addPollOption = () => {
+        if (pollOptions.length < 6) setPollOptions(prev => [...prev, '']);
+    };
+
+    const removePollOption = (index) => {
+        if (pollOptions.length > 2) setPollOptions(prev => prev.filter((_, i) => i !== index));
+    };
     useEffect(() => {
         loadUser()
     }, [])
+
 
 
     return (
@@ -389,59 +444,85 @@ export default function ChatsPage() {
 
                                     <div className={styles.chatArea}>
                                         <div className={styles.messagesScrollArea} ref={messagesScrollRef}>
-                                            <div className={styles.dateSeparator}><span>Today</span></div>
-                                            {messages.map((msg) => (
-                                                <div key={msg.id} className={`${styles.messageWrapper} ${msg.senderId === 'me' ? styles.messageMineWrapper : styles.messageOtherWrapper}`}>
-                                                    {msg.senderId === 'other' && (
-                                                        <img
-                                                            src={msg.avatar?.startsWith('http') ? msg.avatar : `${API}${msg.avatar}`}
-                                                            alt="Sender"
-                                                            className={styles.messageAvatar}
-                                                        />
-                                                    )}
-                                                    <div className={styles.messageContentBlock}>
-                                                        <div className={`${styles.messageMeta} ${msg.senderId === 'me' ? styles.metaRight : styles.metaLeft}`}>
-                                                            <span className={styles.msgSenderName}>{msg.senderId === 'me' ? 'You' : msg.sender}</span>
-                                                            <span className={styles.msgTime}>{msg.time}</span>
-                                                        </div>
+                                            {(() => {
+                                                let lastDate = null;
+                                                return messages.map((msg) => {
+                                                    const msgDate = msg.date ? new Date(msg.date) : null;
+                                                    let dateLabel = null;
+                                                    if (msgDate) {
+                                                        const today = new Date();
+                                                        const yesterday = new Date();
+                                                        yesterday.setDate(today.getDate() - 1);
 
-                                                        <div className={styles.messageRow}>
-                                                            <div className={`${styles.messageBubble} ${msg.senderId === 'me' ? styles.bubbleMine : styles.bubbleOther}`}>
-                                                                {/* 1. Show Reply Quote if it exists */}
-                                                                {msg.reply_to_details && (
-                                                                    <div className={styles.replyQuoteBox}>
-                                                                        <span className={styles.replySender}>{msg.reply_to_details.sender_name}</span>
-                                                                        <p className={styles.replyTextPreview}>{msg.reply_to_details.text}</p>
-                                                                    </div>
+                                                        const isToday = msgDate.toDateString() === today.toDateString();
+                                                        const isYesterday = msgDate.toDateString() === yesterday.toDateString();
+
+                                                        const dateStr = msgDate.toDateString();
+
+                                                        if (dateStr !== lastDate) {
+                                                            lastDate = dateStr;
+                                                            if (isToday) dateLabel = "Today";
+                                                            else if (isYesterday) dateLabel = "Yesterday";
+                                                            else dateLabel = msgDate.toLocaleDateString(undefined, {
+                                                                weekday: 'long', month: 'short', day: 'numeric'
+                                                            });
+                                                        }
+                                                    }
+
+                                                    return (
+                                                        <div key={msg.id}>
+                                                            {dateLabel && (
+                                                                <div className={styles.dateSeparator}>
+                                                                    <span>{dateLabel}</span>
+                                                                </div>
+                                                            )}
+                                                            <div className={`${styles.messageWrapper} ${msg.senderId === 'me' ? styles.messageMineWrapper : styles.messageOtherWrapper}`}>
+                                                                {msg.senderId === 'other' && (
+                                                                    <img
+                                                                        src={msg.avatar?.startsWith('http') ? msg.avatar : `${API}${msg.avatar}`}
+                                                                        alt="Sender"
+                                                                        className={styles.messageAvatar}
+                                                                    />
                                                                 )}
-
-                                                                {/* 2. Show File OR Text (Don't render both blocks!) */}
-                                                                {msg.type === 'file' ? (
-                                                                    <div className={styles.fileAttachment}>
-                                                                        <div className={styles.fileIcon}><FileText size={24} /></div>
-                                                                        <div className={styles.fileDetails}>
-                                                                            <strong>{msg.text}</strong>
-                                                                            <p>{msg.subtext}</p>
+                                                                <div className={styles.messageContentBlock}>
+                                                                    <div className={`${styles.messageMeta} ${msg.senderId === 'me' ? styles.metaRight : styles.metaLeft}`}>
+                                                                        <span className={styles.msgSenderName}>{msg.senderId === 'me' ? 'You' : msg.sender}</span>
+                                                                        <span className={styles.msgTime}>{msg.time}</span>
+                                                                    </div>
+                                                                    <div className={styles.messageRow}>
+                                                                        <div className={`${styles.messageBubble} ${msg.senderId === 'me' ? styles.bubbleMine : styles.bubbleOther}`}>
+                                                                            {msg.reply_to_details && (
+                                                                                <div className={styles.replyQuoteBox}>
+                                                                                    <span className={styles.replySender}>{msg.reply_to_details.sender_name}</span>
+                                                                                    <p className={styles.replyTextPreview}>{msg.reply_to_details.text}</p>
+                                                                                </div>
+                                                                            )}
+                                                                            {msg.type === 'file' ? (
+                                                                                <div className={styles.fileAttachment}>
+                                                                                    <div className={styles.fileIcon}><FileText size={24} /></div>
+                                                                                    <div className={styles.fileDetails}>
+                                                                                        <strong>{msg.text}</strong>
+                                                                                        <p>{msg.subtext}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <span style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</span>
+                                                                            )}
                                                                         </div>
+                                                                        <button
+                                                                            className={styles.replyIconButton}
+                                                                            onClick={() => setReplyingTo(msg)}
+                                                                        >
+                                                                            <Reply size={16} />
+                                                                        </button>
                                                                     </div>
-                                                                ) : (
-                                                                    <span style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</span>
-                                                                )}
+                                                                </div>
                                                             </div>
-
-                                                            {/* 3. Reply Button stays next to the bubble */}
-                                                            <button
-                                                                className={styles.replyIconButton}
-                                                                onClick={() => setReplyingTo(msg)}
-                                                            >
-                                                                <Reply size={16} />
-                                                            </button>
                                                         </div>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                    );
+                                                });
+                                            })()}
                                             <div ref={messagesEndRef} />
-
                                         </div>
                                         {replyingTo && (
                                             <div className={styles.replyPreviewBar}>
@@ -456,16 +537,126 @@ export default function ChatsPage() {
                                         )}
 
 
+                                        {pendingFiles.length > 0 && (
+                                            <div className={styles.pendingFilesBar}>
+                                                {pendingFiles.map(pf => (
+                                                    <div key={pf.id} className={styles.pendingFileItem}>
+                                                        {pf.type === 'image' ? (
+                                                            <img src={pf.previewUrl} alt={pf.name} className={styles.pendingImageThumb} />
+                                                        ) : (
+                                                            <div className={styles.pendingFileThumb}>
+                                                                <FileText size={20} />
+                                                            </div>
+                                                        )}
+                                                        <div className={styles.pendingFileInfo}>
+                                                            <span className={styles.pendingFileName}>{pf.name}</span>
+                                                            <span className={styles.pendingFileSize}>{pf.size}</span>
+                                                        </div>
+                                                        <button className={styles.removePendingFile} onClick={() => removePendingFile(pf.id)}>
+                                                            <MinusCircle size={14} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                     
+                                        {pollOpen && (
+                                            <div className={styles.pollCreator}>
+                                                <div className={styles.pollHeader}>
+                                                    <span>Create a Poll</span>
+                                                    <button className={styles.cancelReply} onClick={() => { setPollOpen(false); setPollQuestion(''); setPollOptions(['', '']); }}>
+                                                        <MinusCircle size={16} />
+                                                    </button>
+                                                </div>
+                                                <input
+                                                    className={styles.pollQuestionInput}
+                                                    placeholder="Ask a question..."
+                                                    value={pollQuestion}
+                                                    onChange={e => setPollQuestion(e.target.value)}
+                                                />
+                                                {pollOptions.map((opt, i) => (
+                                                    <div key={i} className={styles.pollOptionRow}>
+                                                        <input
+                                                            className={styles.pollOptionInput}
+                                                            placeholder={`Option ${i + 1}`}
+                                                            value={opt}
+                                                            onChange={e => {
+                                                                const updated = [...pollOptions];
+                                                                updated[i] = e.target.value;
+                                                                setPollOptions(updated);
+                                                            }}
+                                                        />
+                                                        {pollOptions.length > 2 && (
+                                                            <button className={styles.cancelReply} onClick={() => removePollOption(i)}>
+                                                                <MinusCircle size={14} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                                {pollOptions.length < 6 && (
+                                                    <button className={styles.addPollOption} onClick={addPollOption}>+ Add option</button>
+                                                )}
+                                                <button className={styles.sendPollBtn} onClick={() => {
+                                                    console.log('Poll:', pollQuestion, pollOptions);
+                                                    setPollOpen(false); setPollQuestion(''); setPollOptions(['', '']);
+                                                }}>
+                                                    Send Poll
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Reply preview - keep exactly as before */}
+                                        {replyingTo && (
+                                            <div className={styles.replyPreviewBar}>
+                                                <div className={styles.replyPreviewContent}>
+                                                    <span>Replying to <strong>{replyingTo.sender}</strong></span>
+                                                    <p>{replyingTo.text}</p>
+                                                </div>
+                                                <button onClick={() => setReplyingTo(null)} className={styles.cancelReply}>
+                                                    <MinusCircle size={18} />
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Input area - same CSS, only Paperclip button changes */}
                                         <div className={styles.messageInputArea}>
-                                            <button className={styles.iconBtn}><Paperclip size={20} /></button>
+                                            {/* Hidden file inputs */}
+                                            <input ref={imageInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'image')} />
+                                            <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.zip" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'file')} />
+
+                                            {/* Paperclip now opens a menu instead of doing nothing */}
+                                            <div className={styles.attachmentWrapper} ref={attachmentMenuRef}>
+                                                <button className={styles.iconBtn} onClick={() => setAttachmentMenuOpen(!attachmentMenuOpen)}>
+                                                    <Paperclip size={20} />
+                                                </button>
+                                                {attachmentMenuOpen && (
+                                                    <div className={styles.attachmentMenu}>
+                                                        <button className={styles.attachmentMenuItem} onClick={() => imageInputRef.current.click()}>
+                                                            🖼️ Image
+                                                        </button>
+                                                        <button className={styles.attachmentMenuItem} onClick={() => fileInputRef.current.click()}>
+                                                            📄 File / PDF
+                                                        </button>
+                                                        <button className={styles.attachmentMenuItem} onClick={() => { setPollOpen(true); setAttachmentMenuOpen(false); }}>
+                                                            📊 Poll
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+
+
                                             <input
                                                 type="text"
                                                 placeholder="Type a message..."
                                                 className={styles.messageInput}
                                                 value={inputText}
                                                 onChange={(e) => setInputText(e.target.value)}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') handleSendMessage(); }}
                                             />
-                                            <button className={styles.sendBtn} onClick={handleSendMessage}><Send size={18} /></button>
+                                            <button className={styles.sendBtn} onClick={handleSendMessage}>
+                                                <Send size={18} />
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
