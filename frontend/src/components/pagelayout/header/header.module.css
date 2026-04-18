@@ -68,47 +68,54 @@
   gap: 40px;
   justify-content: flex-end;
 }
-.bellButton, 
+
+.bellButton,
 .iconButton {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 44px;      
-  min-width: 50px; 
-  padding: 0 12px;  
+  height: 44px;
+  min-width: 50px;
+  padding: 0 12px;
   background: transparent;
-  border: 1.5px solid transparent; 
+  border: 1.5px solid transparent;
   border-radius: 999px;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
   color: var(--text-accent);
 }
-.bellButton:hover, 
+
+.bellButton:hover,
 .iconButton:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.2);
 }
+
 .iconButton:has(.userProfilePicture) {
-  width: 44px;  
+  width: 44px;
   height: 44px;
-  padding: 0;   
-  border-radius: 50%; 
+  padding: 0;
+  border-radius: 50%;
 }
+
 .bellIconContainer {
   position: relative;
   display: flex;
 }
+
 .notificationWrapper {
   position: relative;
   display: flex;
   align-items: center;
 }
+
 .redDotIndicator {
   position: absolute;
-  top: -5px;     /* Adjusted to sit on the icon corner */
-  right: -10px; 
+  top: -5px;
+  /* Adjusted to sit on the icon corner */
+  right: -10px;
   width: 8px;
   height: 8px;
   background: #ff4d4d;
@@ -123,6 +130,7 @@
   border-radius: 50%;
   object-fit: cover;
 }
+
 .rightBadge {
   background: rgba(255, 255, 255, 0.15);
   color: #fff;
@@ -134,6 +142,7 @@
   place-items: center;
   border-radius: 50%;
 }
+
 .notificationDropdown {
   position: absolute;
   top: calc(100% + 15px);
@@ -176,14 +185,15 @@
 }
 
 .notificationItem {
- position: relative;
+  position: relative;
   display: flex;
   gap: 15px;
-  padding: 20px 16px; 
+  padding: 20px 16px;
   transition: background 0.2s;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08); 
-  margin-bottom: 0; 
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0;
 }
+
 .notificationItem:last-child {
   border-bottom: none;
 }
@@ -260,8 +270,8 @@
 
 .unreadCount {
   position: absolute;
-  top: 0px; 
-  right: 0px; 
+  top: 0px;
+  right: 0px;
   background: #ff4d94;
   color: white;
   font-size: 10px;
@@ -271,9 +281,10 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  border: 2px solid #2a2a2a; 
+  border: 2px solid #2a2a2a;
   transform: translate(20%, -20%);
 }
+
 .unreadDot {
   position: absolute;
   left: 6px;
@@ -285,6 +296,7 @@
   border-radius: 50%;
   z-index: 2;
 }
+
 .notifMenuWrapper {
   position: relative;
   display: flex;
@@ -357,8 +369,9 @@
   display: flex;
   align-items: center;
 }
+
 .activeIconBtn {
-  background: rgba(255, 255, 255, 0.15) !important; 
+  background: rgba(255, 255, 255, 0.15) !important;
 }
 
 
@@ -388,7 +401,7 @@
   height: 44px;
   margin: 0 auto 20px auto;
   width: 90%;
-  box-sizing: border-box; 
+  box-sizing: border-box;
   transition: border-color 0.2s ease;
 }
 
@@ -440,8 +453,8 @@
   content: "";
   position: absolute;
   bottom: 0;
-  left: 75px; 
-  right: 12px; 
+  left: 75px;
+  right: 12px;
   height: 1px;
   background: rgba(255, 255, 255, 0.08);
 }
@@ -475,23 +488,31 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  border: 3px solid #232323; 
+  border: 3px solid #232323;
   z-index: 2;
 }
 
-.dotOnline { background: #00ff88; }
-.dotOffline { background: #888888; }
-.dotDnd { background: #ff4d4d; }
+.dotOnline {
+  background: #00ff88;
+}
+
+.dotOffline {
+  background: #888888;
+}
+
+.dotDnd {
+  background: #ff4d4d;
+}
 
 
 .chatGrid {
   display: grid;
   flex: 1;
   grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto; 
+  grid-template-rows: auto auto;
   gap: 4px;
   align-items: center;
-  padding-right: 30px; 
+  padding-right: 30px;
 }
 
 
@@ -509,6 +530,11 @@
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.6);
   text-align: right;
+  overflow: hidden;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
 }
 
 
@@ -519,13 +545,14 @@
   font-weight: 700;
   color: #ffffff;
 }
+
 .chatTimeContainer {
   grid-column: 2;
   grid-row: 2;
   display: flex;
   align-items: center;
-  justify-content: flex-end; 
-  gap: 10px; 
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .chatTime {
@@ -535,8 +562,8 @@
 }
 
 .chatUnread {
-  background: rgba(255, 255, 255, 0.12); 
-  color: rgba(255, 255, 255, 0.6);      
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.6);
   font-size: 11px;
   font-weight: 700;
   width: 20px;

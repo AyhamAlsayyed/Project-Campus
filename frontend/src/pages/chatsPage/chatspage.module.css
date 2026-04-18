@@ -46,8 +46,8 @@
     flex-direction: column;
     overflow: hidden;
     min-height: 0;
-    
-    
+
+
 }
 
 .title {
@@ -211,8 +211,8 @@
 }
 
 .messageAvatar {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     margin-bottom: -20px;
     border-radius: 50%;
 
@@ -622,9 +622,9 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    flex: 1;        
+    flex: 1;
     min-height: 0;
- 
+
 }
 
 .innerChatContainer {
@@ -722,7 +722,7 @@
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    /* Makes it circular */
+  
     object-fit: cover;
     border: 1px solid #333;
     /* Optional: adds a slight border like the reference */
@@ -832,7 +832,8 @@
 }
 
 .messageBubble {
-
+    word-break: break-word;
+    overflow-wrap: anywhere;
     max-width: 70%;
     padding: 12px 16px;
     border-radius: 20px;
@@ -995,7 +996,7 @@
     padding: 10px 20px;
     background: rgba(30, 30, 30, 0.8);
     border-radius: 16px 16px 0 0;
-    border: 1px solid rgba(255,255,255,0.06);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-bottom: none;
     margin: 0 20px;
 }
@@ -1007,7 +1008,7 @@
     background: #2a2a2a;
     border-radius: 12px;
     padding: 6px 10px;
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     max-width: 200px;
     position: relative;
 }
@@ -1073,14 +1074,14 @@
     bottom: calc(100% + 10px);
     left: 0;
     background: #2a2a2a;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 14px;
     padding: 6px;
     display: flex;
     flex-direction: column;
     gap: 2px;
     width: 160px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
     z-index: 100;
 }
 
@@ -1097,13 +1098,13 @@
 }
 
 .attachmentMenuItem:hover {
-    background: rgba(255,255,255,0.06);
+    background: rgba(255, 255, 255, 0.06);
 }
 
 /* ── Poll creator ── */
 .pollCreator {
     background: #1e1e1e;
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px 16px 0 0;
     padding: 14px 20px;
     margin: 0 20px;
@@ -1125,7 +1126,7 @@
 .pollOptionInput {
     width: 100%;
     background: #2a2a2a;
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     padding: 8px 12px;
     color: #fff;
@@ -1147,7 +1148,7 @@
 
 .addPollOption {
     background: transparent;
-    border: 1px dashed rgba(255,255,255,0.15);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
     border-radius: 10px;
     color: #888;
     font-size: 0.85rem;
@@ -1178,6 +1179,7 @@
 .sendPollBtn:hover {
     opacity: 0.85;
 }
+
 .messageRow {
     display: flex;
     align-items: center;
@@ -1243,11 +1245,13 @@
 }
 
 .replyQuoteBox {
+    display: flex;
+    gap: 5px;
     border-left: none;
     background-color: rgba(255, 255, 255, 0.05);
     border-radius: 25px;
     padding: 10px 15px;
-
+    border-left: 4px solid #8b2dff;
     margin-bottom: 8px;
     font-size: 0.85rem;
     cursor: pointer;
@@ -1261,10 +1265,14 @@
     font-weight: bold;
     display: block;
     margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+   flex-shrink: 0;
+    
 }
 
 .replyTextPreview {
-    color: #bbb;
+   color: #333333;
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -1291,6 +1299,26 @@
     font-size: 0.85rem;
     margin: 0;
     color: #888;
+}
+.bubbleMine .replyQuoteBox .replyTextPreview{
+    color: white;
+
+}
+.bubbleOther .replyQuoteBox {
+    background: rgba(0, 0, 0, 0.2); /* Keep it translucent dark */
+    
+}
+.bubbleOther .replyQuoteBox .replyTextPreview{
+    color: black;
+}
+.bubbleOther .replySender {
+    color: #a777e3; /* Lighter purple for dark background */
+}
+.replySender::after {
+    content: " :";
+}
+.bubbleOther .replyTextPreview {
+    color: #e0e0e0; /* Light text for dark background */
 }
 
 .cancelReply {

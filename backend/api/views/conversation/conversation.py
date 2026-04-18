@@ -145,6 +145,11 @@ def get_messages(request, conversation_id):
                 "sender": sender_name,
                 "senderId": sender_id,
                 "avatar": avatar,
+                "reply_to_details": {
+                "id": msg.parent_message.message_id,
+                "text": msg.parent_message.content,
+                 "sender_name": msg.parent_message.sender_user.username if msg.parent_message.sender_user else "Unknown"
+                }    if msg.parent_message else None
             }
         )
 
@@ -162,6 +167,15 @@ def get_messages(request, conversation_id):
 def send_message(request, conversation_id):
     user, page = get_actor(request)
     text = request.data.get("text")
+    reply_to_id = request.data.get("reply_to")
+    parent_message = None
+
+    if reply_to_id:
+        try:
+            parent_message = Message.objects.get(message_id=reply_to_id)
+        except Message.DoesNotExist:
+
+            parent_message = None
 
     if not text:
         return Response({"error": "Empty"}, status=400)
@@ -179,6 +193,7 @@ def send_message(request, conversation_id):
         content=text,
         sender_user=user if user else None,
         sender_page=page if page else None,
+        parent_message=parent_message 
     )
 
     return Response(
@@ -187,5 +202,10 @@ def send_message(request, conversation_id):
             "text": msg.content,
             "time": msg.sent_at.strftime("%H:%M"),
             "senderId": "me",
+            "reply_to_details": {
+                "id": parent_message.message_id,
+                "text": parent_message.content,
+                "sender_name": parent_message.sender_user.username if parent_message and parent_message.sender_user else "Unknown"
+            } if parent_message else None
         }
     )

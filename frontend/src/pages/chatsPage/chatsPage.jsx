@@ -24,7 +24,6 @@ export default function ChatsPage() {
     const [replyingTo, setReplyingTo] = useState(null);
     const [requestsCount, setRequestsCount] = useState(0);
     const [messages, setMessages] = useState([]);
-    const menuRef = useRef(null);
     const [groups, setGroups] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
     const [activeChatMenuOpen, setActiveChatMenuOpen] = useState(false);
@@ -34,18 +33,25 @@ export default function ChatsPage() {
     const academicGroups = chats.filter(chat => chat.is_group && chat.is_academic);
     const [attachmentMenuOpen, setAttachmentMenuOpen] = useState(false);
     const [pendingFiles, setPendingFiles] = useState([]); // files queued to send
-    const attachmentMenuRef = useRef(null);
-    const imageInputRef = useRef(null);
-    const fileInputRef = useRef(null);
     const [pollOpen, setPollOpen] = useState(false);
     const [pollQuestion, setPollQuestion] = useState('');
     const [pollOptions, setPollOptions] = useState(['', '']);
+    const [showAttachments, setShowAttachments] = useState(false);
+
+    const attachmentRef = useRef(null);
+    const attachmentMenuRef = useRef(null);
+    const imageInputRef = useRef(null);
+    const fileInputRef = useRef(null);
+    const menuRef = useRef(null);
+
+
     const { chatId } = useParams();
     const [navOpen, setNavOpen] = useState(false);
+
     const handleSendMessage = async () => {
         if (!selectedChat) return;
 
-        // Send any pending files first
+
         for (const pf of pendingFiles) {
             const formData = new FormData();
             formData.append("file", pf.file);
@@ -61,7 +67,7 @@ export default function ChatsPage() {
         }
         setPendingFiles([]);
 
-       
+
         if (inputText.trim()) {
             const response = await fetch(`${API}/api/chats/${selectedChat.id}/send/`, {
                 method: 'POST',
@@ -85,6 +91,44 @@ export default function ChatsPage() {
 
         scrollToBottom();
     };
+    useEffect(() => {
+        const handleOutsideClick = (event) => {
+            // 1. Existing logic for showAttachments
+            if (showAttachments &&
+                attachmentRef.current &&
+                !attachmentRef.current.contains(event.target)) {
+                setShowAttachments(false);
+            }
+
+            // 2. ADD THIS: Logic for attachmentMenuOpen
+            if (
+                attachmentMenuOpen &&
+                attachmentRef.current &&
+                !attachmentRef.current.contains(event.target)
+            ) {
+                setAttachmentMenuOpen(false);
+            }
+
+            // ... rest of your existing checks
+            if (activeChatMenuOpen &&
+                activeChatMenuRef.current &&
+                !activeChatMenuRef.current.contains(event.target)) {
+                setActiveChatMenuOpen(false);
+            }
+
+            if (openMenuId &&
+                menuRef.current &&
+                !menuRef.current.contains(event.target)) {
+                setOpenMenuId(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+        };
+        // 3. Update dependencies to include attachmentMenuOpen
+    }, [showAttachments, attachmentMenuOpen, activeChatMenuOpen, openMenuId]);
     const scrollToBottom = () => {
         setTimeout(() => {
             if (messagesScrollRef.current) {
@@ -258,15 +302,7 @@ export default function ChatsPage() {
             setUserLoading(false)
         }
     }
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setOpenMenuId(null);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+
     const handleFileSelect = (e, type) => {
         const files = Array.from(e.target.files);
         const previews = files.map(file => ({
@@ -297,6 +333,7 @@ export default function ChatsPage() {
     const removePollOption = (index) => {
         if (pollOptions.length > 2) setPollOptions(prev => prev.filter((_, i) => i !== index));
     };
+
     useEffect(() => {
         loadUser()
     }, [])
@@ -493,7 +530,12 @@ export default function ChatsPage() {
                                                                         <div className={`${styles.messageBubble} ${msg.senderId === 'me' ? styles.bubbleMine : styles.bubbleOther}`}>
                                                                             {msg.reply_to_details && (
                                                                                 <div className={styles.replyQuoteBox}>
-                                                                                    <span className={styles.replySender}>{msg.reply_to_details.sender_name}</span>
+                                                                                    {/* CHANGED HERE: Check if the reply sender is the current user */}
+                                                                                    <span className={styles.replySender}>
+                                                                                        {(msg.reply_to_details.senderId === 'me' || msg.reply_to_details.sender_name === user?.username)
+                                                                                            ? 'You '
+                                                                                            : msg.reply_to_details.sender_name}
+                                                                                    </span>
                                                                                     <p className={styles.replyTextPreview}>{msg.reply_to_details.text}</p>
                                                                                 </div>
                                                                             )}
@@ -524,17 +566,6 @@ export default function ChatsPage() {
                                             })()}
                                             <div ref={messagesEndRef} />
                                         </div>
-                                        {replyingTo && (
-                                            <div className={styles.replyPreviewBar}>
-                                                <div className={styles.replyPreviewContent}>
-                                                    <span>Replying to <strong>{replyingTo.sender}</strong></span>
-                                                    <p>{replyingTo.text}</p>
-                                                </div>
-                                                <button onClick={() => setReplyingTo(null)} className={styles.cancelReply}>
-                                                    <MinusCircle size={18} />
-                                                </button>
-                                            </div>
-                                        )}
 
 
                                         {pendingFiles.length > 0 && (
@@ -560,7 +591,7 @@ export default function ChatsPage() {
                                             </div>
                                         )}
 
-                                     
+
                                         {pollOpen && (
                                             <div className={styles.pollCreator}>
                                                 <div className={styles.pollHeader}>
@@ -619,19 +650,18 @@ export default function ChatsPage() {
                                             </div>
                                         )}
 
-                                        {/* Input area - same CSS, only Paperclip button changes */}
+
                                         <div className={styles.messageInputArea}>
-                                            {/* Hidden file inputs */}
+
                                             <input ref={imageInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'image')} />
                                             <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.zip" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'file')} />
 
-                                            {/* Paperclip now opens a menu instead of doing nothing */}
-                                            <div className={styles.attachmentWrapper} ref={attachmentMenuRef}>
+                                            <div className={styles.attachmentWrapper} ref={attachmentRef}>
                                                 <button className={styles.iconBtn} onClick={() => setAttachmentMenuOpen(!attachmentMenuOpen)}>
                                                     <Paperclip size={20} />
                                                 </button>
                                                 {attachmentMenuOpen && (
-                                                    <div className={styles.attachmentMenu}>
+                                                    <div className={styles.attachmentMenu} ref={attachmentMenuRef}>
                                                         <button className={styles.attachmentMenuItem} onClick={() => imageInputRef.current.click()}>
                                                             🖼️ Image
                                                         </button>
