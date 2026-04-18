@@ -43,6 +43,7 @@ export default function ChatsPage() {
     const imageInputRef = useRef(null);
     const fileInputRef = useRef(null);
     const menuRef = useRef(null);
+    const messageRefs = useRef({});
 
 
     const { chatId } = useParams();
@@ -333,6 +334,21 @@ export default function ChatsPage() {
     const removePollOption = (index) => {
         if (pollOptions.length > 2) setPollOptions(prev => prev.filter((_, i) => i !== index));
     };
+    const scrollToMessage = (id) => {
+    const el = messageRefs.current[id];
+    if (el && messagesScrollRef.current) {
+        el.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+
+        // Optional: highlight effect
+        el.classList.add(styles.highlightMessage);
+        setTimeout(() => {
+            el.classList.remove(styles.highlightMessage);
+        }, 1500);
+    }
+};
 
     useEffect(() => {
         loadUser()
@@ -507,7 +523,7 @@ export default function ChatsPage() {
                                                     }
 
                                                     return (
-                                                        <div key={msg.id}>
+                                                        <div key={msg.id}ref={(el) => (messageRefs.current[msg.id] = el)}>
                                                             {dateLabel && (
                                                                 <div className={styles.dateSeparator}>
                                                                     <span>{dateLabel}</span>
@@ -529,8 +545,8 @@ export default function ChatsPage() {
                                                                     <div className={styles.messageRow}>
                                                                         <div className={`${styles.messageBubble} ${msg.senderId === 'me' ? styles.bubbleMine : styles.bubbleOther}`}>
                                                                             {msg.reply_to_details && (
-                                                                                <div className={styles.replyQuoteBox}>
-                                                                                    {/* CHANGED HERE: Check if the reply sender is the current user */}
+                                                                                <div className={styles.replyQuoteBox} onClick={() => scrollToMessage(msg.reply_to_details.id)}>
+                                                                                  
                                                                                     <span className={styles.replySender}>
                                                                                         {(msg.reply_to_details.senderId === 'me' || msg.reply_to_details.sender_name === user?.username)
                                                                                             ? 'You '
