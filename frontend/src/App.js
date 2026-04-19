@@ -11,6 +11,7 @@ import ChatsPage from './pages/chatsPage/chatsPage';
 import FriendsPage from './pages/FriendsPage/FriendsPage';
 import FollowedPages from './pages/followedPages/followedPages';
 import JoinedCommunities from './pages/joinedCommunities/joinedCommunities';
+import Universities from "./pages/universtities/universities";
 
 function App() {
   return (
@@ -93,6 +94,14 @@ function App() {
           element={
             <ProtectedRoute>
               <JoinedCommunities />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/Universities"
+          element={
+            <ProtectedRoute>
+              <Universities />
             </ProtectedRoute>
           }
         />

@@ -37,6 +37,9 @@ export default function ProfilePage() {
     const [activeTab, setActiveTab] = useState("Posts");
     const [activityPosts, setActivityPosts] = useState([]);
     const [activitiesLoading, setActivitiesLoading] = useState(false);
+    const [communityPicks, setCommunityPicks] = useState([]);
+    const [picksSlide, setPicksSlide] = useState(0);
+
 
     const [savedPosts, setSavedPosts] = useState([]);
     const [savedLoading, setSavedLoading] = useState(false);
@@ -56,6 +59,19 @@ export default function ProfilePage() {
             setCurrentUser(data);
         } catch (e) {
             console.error(e);
+        }
+    };
+    const loadCommunityPicks = async () => {
+        try {
+            const res = await fetch(`http://localhost:8000/api/users/${userId}/community-picks/`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setCommunityPicks(Array.isArray(data) ? data : []);
+            }
+        } catch (e) {
+            console.error("Failed to load community picks", e);
         }
     };
 
@@ -109,35 +125,35 @@ export default function ProfilePage() {
             console.error(e);
         }
     };
-  const loadActivities = async () => {
-    try {
-        setActivitiesLoading(true);
-        const res = await fetch(`http://localhost:8000/api/posts/activity/`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.ok) {
-            const data = await res.json();
-            
-            const formattedActivities = (Array.isArray(data) ? data : []).map(post => {
-             
-                const hasAuthorData = post.author && post.author.username;
-                
-                return {
-                    ...post,
-                    username: hasAuthorData ? post.author.username : currentUser?.username,
-                    avatar: hasAuthorData ? post.author.avatar : currentUser?.avatar_url
-                };
+    const loadActivities = async () => {
+        try {
+            setActivitiesLoading(true);
+            const res = await fetch(`http://localhost:8000/api/posts/activity/`, {
+                headers: { Authorization: `Bearer ${token}` },
             });
 
-            setActivityPosts(formattedActivities);
+            if (res.ok) {
+                const data = await res.json();
+
+                const formattedActivities = (Array.isArray(data) ? data : []).map(post => {
+
+                    const hasAuthorData = post.author && post.author.username;
+
+                    return {
+                        ...post,
+                        username: hasAuthorData ? post.author.username : currentUser?.username,
+                        avatar: hasAuthorData ? post.author.avatar : currentUser?.avatar_url
+                    };
+                });
+
+                setActivityPosts(formattedActivities);
+            }
+        } catch (e) {
+            console.error("Failed to load activities", e);
+        } finally {
+            setActivitiesLoading(false);
         }
-    } catch (e) {
-        console.error("Failed to load activities", e);
-    } finally {
-        setActivitiesLoading(false);
-    }
-};
+    };
 
     const loadSavedPosts = async () => {
         try {
@@ -240,16 +256,17 @@ export default function ProfilePage() {
         loadCurrentUser();
         loadProfileUser();
         loadFriends(userId);
-       
+        if (!isOwnProfile) loadCommunityPicks();
+
     }, [userId]);
     useEffect(() => {
-    const isOwn = currentUser?.id === Number(userId) || (!userId && currentUser);
-    
-    if (isOwn) {
-        loadActivities();
-        loadSavedPosts();
-    }
-}, [currentUser, userId]);
+        const isOwn = currentUser?.id === Number(userId) || (!userId && currentUser);
+
+        if (isOwn) {
+            loadActivities();
+            loadSavedPosts();
+        }
+    }, [currentUser, userId]);
 
 
 
@@ -310,24 +327,64 @@ export default function ProfilePage() {
                             </div>
 
                             <div className={styles.profileMeta}>
-                                <div className={styles.nameRow}>
-                                    <h2 className={styles.username}>{username}</h2>
-                                    <span className={styles.role}>/{role}</span>
-                                </div>
-                                <div className={styles.subRow}>
-                                    <span className={styles.fullName}>{fullName}</span>
-                                    <span className={styles.dot} />
-                                    {!isOwnProfile && (
-                                        <>
-                                            <span>{user?.friends_count || 0} friends</span>
-                                            <span className={styles.dot} />
-                                        </>
-                                    )}
-                                    <span className={styles.uni}>{university} - {major}</span>
-                                </div>
-                                <p className={styles.bio}>{bio}</p>
-                            </div>
+                                {user?.role === 'instructor' ? (
+                                    // ── INSTRUCTOR LAYOUT ──
+                                    <>
+                                        <div className={styles.nameRow}>
+                                            <h2 className={styles.username}>{username}</h2>
+                                            {user?.is_verified && (
+                                                <span className={styles.verifiedBadge}>
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b2dff" strokeWidth="2.5">
+                                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </span>
+                                            )}
+                                        </div>
 
+                                        <div className={styles.subRow}>
+                                            {user?.department && (
+                                                <span className={styles.department}>{user.department}</span>
+                                            )}
+                                            {user?.department && user?.employment_type && (
+                                                <span className={styles.dot} />
+                                            )}
+                                            {user?.employment_type && (
+                                                <span className={styles.employmentType}>{user.employment_type}</span>
+                                            )}
+                                            {!isOwnProfile && (
+                                                <>
+                                                    <span className={styles.dot} />
+                                                    <span className={styles.friendsCount}>{user?.friends_count || 0} friends</span>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        {bio && <p className={styles.bio}>{bio}</p>}
+                                    </>
+                                ) : (
+                                    // ── STUDENT LAYOUT ──
+                                    <>
+                                        <div className={styles.nameRow}>
+                                            <h2 className={styles.username}>{username}</h2>
+                                            <span className={styles.role}>/{role}</span>
+                                        </div>
+
+                                        <div className={styles.subRow}>
+                                            <span className={styles.fullName}>{fullName}</span>
+                                            {!isOwnProfile && (
+                                                <>
+                                                    <span className={styles.dot} />
+                                                    <span className={styles.friendsCount}>{user?.friends_count || 0} friends</span>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        <div className={styles.uniRow}>
+                                            <span className={styles.uni}>{university} - {major}</span>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                             {/* Positioned on the Right */}
                             {!isOwnProfile && (
                                 <div className={styles.profileActions}>
@@ -426,7 +483,7 @@ export default function ProfilePage() {
                             </div>
                         )}
 
-                   
+
                         {activeTab === 'Saved' && (
                             <div className={styles.postsSection}>
                                 {savedLoading ? (
@@ -447,7 +504,85 @@ export default function ProfilePage() {
                     {isOwnProfile ? (
                         <FriendsSuggestion />
                     ) : (
-                        <UserDetails user={user} />
+                        <>
+                            <UserDetails user={user} />
+
+                            {/* Community Picks slider */}
+                            {communityPicks.length > 0 && (
+                                <div className={styles.picksCard}>
+                                    <div className={styles.picksHeader}>
+                                        <Users size={18} className={styles.picksIcon} />
+                                        <span className={styles.picksTitle}>
+                                            {user?.username?.split(' ')[0]}'s Picks
+                                        </span>
+                                    </div>
+
+                                    {/* Slide */}
+                                    <div className={styles.picksSliderWrapper}>
+                                        <button
+                                            className={styles.picksArrow}
+                                            onClick={() => setPicksSlide(prev => Math.max(0, prev - 1))}
+                                            disabled={picksSlide === 0}
+                                        >
+                                            ‹
+                                        </button>
+
+                                        <div className={styles.picksSlide}>
+                                            {communityPicks[picksSlide] && (() => {
+                                                const pick = communityPicks[picksSlide];
+                                                return (
+                                                    <div className={styles.pickItem}>
+                                                        {pick.cover_image && (
+                                                            <img
+                                                                src={pick.cover_image}
+                                                                alt={pick.name}
+                                                                className={styles.pickCoverImage}
+                                                            />
+                                                        )}
+                                                        <div className={styles.pickInfo}>
+                                                            <div className={styles.pickNameRow}>
+                                                                <span className={styles.pickName}>{pick.name}</span>
+                                                                {pick.is_verified && (
+                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#8b2dff">
+                                                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
+                                                                )}
+                                                                <button className={styles.pickViewBtn}>View</button>
+                                                            </div>
+                                                            <p className={styles.pickDescription}>{pick.description}</p>
+                                                            {pick.description?.length > 80 && (
+                                                                <button className={styles.readMore}>read more</button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+
+                                        <button
+                                            className={styles.picksArrow}
+                                            onClick={() => setPicksSlide(prev => Math.min(communityPicks.length - 1, prev + 1))}
+                                            disabled={picksSlide === communityPicks.length - 1}
+                                        >
+                                            ›
+                                        </button>
+                                    </div>
+
+                                    {/* Dots */}
+                                    {communityPicks.length > 1 && (
+                                        <div className={styles.picksDots}>
+                                            {communityPicks.map((_, i) => (
+                                                <button
+                                                    key={i}
+                                                    className={`${styles.picksDot} ${i === picksSlide ? styles.picksDotActive : ''}`}
+                                                    onClick={() => setPicksSlide(i)}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </div>

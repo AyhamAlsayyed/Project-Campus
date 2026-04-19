@@ -1,13 +1,11 @@
 .darkContainer {
   min-height: 100vh;
   box-sizing: border-box;
-
   font-family: "Aktiv Grotesk", sans-serif;
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: visible;
-
 }
 
 .page {
@@ -65,7 +63,6 @@
   width: 25%;
   margin: 2% 0 0 0;
   gap: 70px;
-
   display: flex;
   flex-direction: column;
 }

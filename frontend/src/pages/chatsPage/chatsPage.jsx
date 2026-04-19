@@ -335,20 +335,20 @@ export default function ChatsPage() {
         if (pollOptions.length > 2) setPollOptions(prev => prev.filter((_, i) => i !== index));
     };
     const scrollToMessage = (id) => {
-    const el = messageRefs.current[id];
-    if (el && messagesScrollRef.current) {
-        el.scrollIntoView({
-            behavior: "smooth",
-            block: "center"
-        });
+        const el = messageRefs.current[id];
+        if (el && messagesScrollRef.current) {
+            el.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
 
-        // Optional: highlight effect
-        el.classList.add(styles.highlightMessage);
-        setTimeout(() => {
-            el.classList.remove(styles.highlightMessage);
-        }, 1500);
-    }
-};
+            // Optional: highlight effect
+            el.classList.add(styles.highlightMessage);
+            setTimeout(() => {
+                el.classList.remove(styles.highlightMessage);
+            }, 1500);
+        }
+    };
 
     useEffect(() => {
         loadUser()
@@ -417,8 +417,21 @@ export default function ChatsPage() {
                                                                 alt={chat.name}
                                                                 className={styles.chatAvatar}
                                                             />
+                                                            <span className={`${styles.statusDot} ${chat.is_group ? styles.groupDot :
+                                                                chat.is_blocked ? styles.blockedDot :
+                                                                    chat.status === 'online' ? styles.online :
+                                                                        chat.status === 'dnd' ? styles.dnd :
+                                                                            styles.offline
+                                                                }`} />
                                                         </div>
                                                         <div className={styles.chatIdentity}>
+                                                            <span className={styles.chatStatusText}>
+                                                                {chat.is_blocked ? 'Blocked' :
+                                                                    chat.is_group ? 'Group Chat' :
+                                                                        chat.status === 'online' ? 'Online' :
+                                                                            chat.status === 'dnd' ? 'Do Not Disturb' :
+                                                                                'Offline'}
+                                                            </span>
                                                             <div className={styles.chatNameWrapper}>
                                                                 <span className={styles.chatName}>{chat.name}</span>
                                                             </div>
@@ -428,6 +441,53 @@ export default function ChatsPage() {
                                                         <div className={styles.chatDetails}>
                                                             <span className={styles.chatPreview}>{chat.preview}</span>
                                                             <span className={styles.chatTime}>{chat.time}</span>
+                                                        </div>
+                                                        <div className={styles.chatActions}>
+                                                            {chat.is_pinned && <Pin size={14} className={styles.actionIcon} />}
+                                                            {chat.is_muted && <BellOff size={14} className={styles.actionIcon} />}
+                                                            {chat.unread_count > 0 && (
+                                                                <span className={styles.unreadBadge}>{chat.unread_count}</span>
+                                                            )}
+
+                                                            {/* Per-chat 3-dot menu */}
+                                                            <div className={styles.menuWrapper} ref={openMenuId === chat.id ? menuRef : null}>
+                                                                <button
+                                                                    className={styles.moreButton}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setOpenMenuId(openMenuId === chat.id ? null : chat.id);
+                                                                    }}
+                                                                >
+                                                                    <MoreHorizontal size={16} />
+                                                                </button>
+
+                                                                {openMenuId === chat.id && (
+                                                                    <div className={styles.dropdownMenu}>
+                                                                        <button className={styles.menuItem} onClick={() => { togglePin(chat.id); setOpenMenuId(null); }}>
+                                                                            <Pin size={14} /> {chat.is_pinned ? 'Unpin chat' : 'Pin chat'}
+                                                                        </button>
+                                                                        <button className={styles.menuItem} onClick={() => { toggleMute(chat.id); setOpenMenuId(null); }}>
+                                                                            <BellOff size={14} /> Mute notifications
+                                                                        </button>
+                                                                        <button className={styles.menuItem} onClick={() => { markUnread(chat.id); setOpenMenuId(null); }}>
+                                                                            <Mail size={14} /> Mark as unread
+                                                                        </button>
+                                                                        <button className={styles.menuItem} onClick={() => { clearChat(chat.id); setOpenMenuId(null); }}>
+                                                                            <Trash2 size={14} /> Clear chat
+                                                                        </button>
+                                                                        <button className={styles.menuItem} onClick={() => { deleteChat(chat.id); setOpenMenuId(null); }}>
+                                                                            <Trash2 size={14} /> Delete chat
+                                                                        </button>
+                                                                        <div className={styles.menuDivider} />
+                                                                        <button className={`${styles.menuItem} ${styles.destructive}`} onClick={() => { blockUser(chat.id); setOpenMenuId(null); }}>
+                                                                            <Ban size={14} /> Block user
+                                                                        </button>
+                                                                        <button className={`${styles.menuItem} ${styles.destructive}`} onClick={() => { reportUser(chat.id); setOpenMenuId(null); }}>
+                                                                            <AlertCircle size={14} /> Report user
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -523,7 +583,7 @@ export default function ChatsPage() {
                                                     }
 
                                                     return (
-                                                        <div key={msg.id}ref={(el) => (messageRefs.current[msg.id] = el)}>
+                                                        <div key={msg.id} ref={(el) => (messageRefs.current[msg.id] = el)}>
                                                             {dateLabel && (
                                                                 <div className={styles.dateSeparator}>
                                                                     <span>{dateLabel}</span>
@@ -546,7 +606,7 @@ export default function ChatsPage() {
                                                                         <div className={`${styles.messageBubble} ${msg.senderId === 'me' ? styles.bubbleMine : styles.bubbleOther}`}>
                                                                             {msg.reply_to_details && (
                                                                                 <div className={styles.replyQuoteBox} onClick={() => scrollToMessage(msg.reply_to_details.id)}>
-                                                                                  
+
                                                                                     <span className={styles.replySender}>
                                                                                         {(msg.reply_to_details.senderId === 'me' || msg.reply_to_details.sender_name === user?.username)
                                                                                             ? 'You '

@@ -1,0 +1,492 @@
+.darkContainer {
+    min-height: 100vh;
+    box-sizing: border-box;
+    font-family: "Aktiv Grotesk", sans-serif;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: visible;
+    color: #ffffff;
+    /* Forces white text globally for the container */
+}
+
+.page {
+    width: min(1800px, 90%);
+    margin: 0 auto;
+    --left-col: 300px;
+    --right-col: 380px;
+    --col-gap: 40px;
+}
+
+.header {
+    display: flex;
+    margin-top: 2%;
+    height: 110px;
+    width: 100%;
+}
+
+.content {
+    display: flex;
+    width: min(1800px, 100%);
+    margin: 20px auto 0 auto;
+    gap: var(--col-gap);
+    align-items: flex-start;
+}
+
+/* --- Middle Column --- */
+.universityInfo {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.universityHeader {
+    display: flex;
+    flex-direction: row;
+    justify-content:  space-between;
+    align-items: center;
+    
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+.univLogo {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background-color: white;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.univTextContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.univEnglish {
+    font-size: 1.8rem;
+
+    margin: 0;
+    letter-spacing: 0.5px;
+    color: #ffffff;
+}
+
+.univArabic {
+    font-size:4rem;
+   
+    margin: 0;
+    color: #ffffff;
+}
+.branch{
+    display:  flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
+    width: 100%;
+}
+.line{
+    border: #333333;
+    height: 1px;
+    flex-grow: 1;
+    background-color: #333333;
+}
+.univBranch {
+    color:#525151;
+    font-size: 1.5rem;
+
+}
+
+.verticalLine {
+    height: 60px;
+    width: 2px;
+    background-color: #ffffff;
+    margin-left: 20px;
+    opacity: 0.6;
+}
+
+/* --- Latest News --- */
+.latestNews {
+    background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
+    width: 100%;
+    padding-top: 6px;
+    flex: 1;
+    border-radius: 30px;
+    height: auto;
+    z-index: 1;
+    min-width: 900px;
+    position: relative;
+    margin: 1% 0 0 0;
+}
+
+.innerContainer {
+    background-color: rgba(61, 60, 60);
+    border-radius: 30px;
+    padding :30px 0 15px 0 ;
+    gap: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    top: 10px;
+    z-index: 10;
+}
+
+.sectionTitle {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: 1px;
+    margin: 0 0 0 2%;
+    color: #ffffff;
+}
+
+.newsImageWrapper {
+    position: relative;
+    width: 96%;
+    margin: 0 auto 0 auto;
+    height: 400px;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.newsBgImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.newsOverlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 30px;
+    box-sizing: border-box;
+}
+
+.newsTextContent {
+    max-width: 75%;
+}
+
+.newsDate {
+    color: #b0b0b0;
+    font-size: 0.85rem;
+    margin: 0 0 8px 0;
+}
+
+.newsMainTitle {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 0 0 10px 0;
+    color: #ffffff;
+}
+
+.newsDesc {
+    color: #d0d0d0;
+    font-size: 0.95rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.readMore {
+    color: #a0a0a0;
+    text-decoration: underline;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+
+.sliderControls {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    
+    transform: translateX(-50%);
+    
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.arrowBtn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.arrowBtn:hover {
+    opacity: 1;
+}
+
+.dots {
+    display: flex;
+    gap: 8px;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.activeDot {
+    background-color: #ffffff;
+    transform: scale(1.3);
+}
+
+/* --- Right Section --- */
+.rightSection {
+    flex: 0 0 var(--right-col);
+    display: flex;
+    flex-direction: column;
+    gap: 60px;
+    margin-top: 40px;
+}
+
+.rightCardWrapper {
+    position: relative;
+    width: 100%;
+}
+
+.pill {
+    position: absolute;
+    top: -35px;
+    left: 10px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 18px 18px 0 0;
+    font-weight: 800;
+    height: 25px;
+    width: 50%;
+    letter-spacing: 0.6px;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.92);
+    background-color: rgba(61, 60, 60, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+}
+
+.rightCard {
+    display: flex;
+    flex-direction: column;
+    background-color: #333;
+    border-radius: 25px;
+    padding: 20px;
+    margin-top: 2%;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+
+.searchContainer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 25px;
+    margin: 12px 12px 0 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.searchIcon {
+    color: #555;
+    flex-shrink: 0;
+}
+
+.searchBar {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 14px;
+    outline: none;
+}
+
+.searchBar::placeholder {
+    color: #555;
+}
+
+.scrollableList {
+    display: flex;
+    flex-direction: column;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 8px 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+
+.scrollableList::-webkit-scrollbar {
+    width: 4px;
+}
+
+.scrollableList::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.25);
+    border-radius: 10px;
+}
+
+.doctorItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s;
+}
+
+.doctorItem:hover {
+    background: rgba(255,255,255,0.04);
+}
+
+.doctorItem:last-child {
+    border-bottom: none;
+}
+
+.docAvatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #999;
+}
+
+.docInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.docNameRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.docInfo h4 {
+    margin: 0 0 2px 0;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+.docTag {
+    font-size: 0.72rem;
+    color: #888;
+    font-weight: 400;
+}
+
+.docInfo p {
+    margin: 0;
+    font-size: 0.73rem;
+    color: #777;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+
+.docArrow {
+    color: #555;
+    flex-shrink: 0;
+}
+
+/* Related Events Internal */
+.eventCard {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    height: 140px;
+}
+
+.eventBg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.eventOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.8) 20%, rgba(0, 0, 0, 0.3) 100%);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.eventInfo h4 {
+    margin: 0 0 5px 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.eventInfo p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #ccc;
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.viewBtn {
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    transition: background-color 0.2s;
+}
+
+.viewBtn:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.eventDots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 15px;
+}
+.eventSliderControls {
+    display: flex;
+    align-items: center;
+    justify-content: center;  /* center the whole row */
+    gap: 10px;
+    padding: 12px 0 4px 0;
+}

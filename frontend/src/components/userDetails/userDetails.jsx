@@ -1,5 +1,5 @@
 import styles from './userDetails.module.css';
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Phone, Mail, Building2, BookOpen } from "lucide-react";
 export default function UserDetails({ user }) {
     if (!user) return null;
 
@@ -11,8 +11,9 @@ export default function UserDetails({ user }) {
             <p key={index}>{icon} {item}</p>
         ));
     };
+    const isInstructor = user?.role === 'instructor';
 
-    return (
+     return (
         <div className={styles.container}>
             <div className={styles.recentlyContactedWrap}>
                 <div className={styles.pill}>
@@ -22,36 +23,96 @@ export default function UserDetails({ user }) {
                 <div className={styles.recentlyContactedWrapper}>
                     <div className={styles.contactList}>
 
+                        {/* ── Contact ── */}
                         <div className={styles.contactCard}>
                             <div className={styles.detailsSection}>
                                 <h4>Contact</h4>
-                                {user.phone?.map(p => (
-                                    <p key={p.id}>{p.phone}</p>
+                                {user.phone?.map((p, i) => (
+                                    <p key={i}>
+                                        <Phone size={16} className={styles.detailIcon} />
+                                        {p.phone || p}
+                                    </p>
                                 ))}
-                                <p>✉️ {user.email || "N/A"}</p>
+                                {user.email && (
+                                    <p>
+                                        <Mail size={16} className={styles.detailIcon} />
+                                        {user.email}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
-                        <div className={styles.contactCard}>
-                            <div className={styles.detailsSection}>
-                                <h4>University</h4>
-                                {renderItems(user.university, "🏛️")}
-                            </div>
-                        </div>
-
-                        <div className={styles.contactCard}>
-                            <div className={styles.detailsSection}>
-                                <h4>Degrees</h4>
-                                {user.degree?.map(d => (
-                                    <div key={d.id} className={styles.degreeItem}>
-                                        <GraduationCap size={20} className={styles.degreeIcon} />
-                                        <span className={styles.degreeText}>{d.major} {d.degree_type}</span>
+                        {isInstructor ? (
+                            <>
+                                {/* ── Instructor at ── */}
+                                {user.university && (
+                                    <div className={styles.contactCard}>
+                                        <div className={styles.detailsSection}>
+                                            <h4>Instructor at</h4>
+                                            <p>
+                                                <Building2 size={16} className={styles.detailIcon} />
+                                                {Array.isArray(user.university)
+                                                    ? user.university[0]
+                                                    : user.university}
+                                            </p>
+                                        </div>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
+                                )}
 
+                                {/* ── Education ── */}
+                                {user.degree && user.degree.length > 0 && (
+                                    <div className={styles.contactCard}>
+                                        <div className={styles.detailsSection}>
+                                            <h4>Education</h4>
+                                            {user.degree.map((d, i) => (
+                                                <div key={i} className={styles.degreeItem}>
+                                                    <BookOpen size={16} className={styles.detailIcon} />
+                                                    <span className={styles.degreeText}>
+                                                        {d.university || d.institution || d}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                {/* ── University ── */}
+                                {user.university && (
+                                    <div className={styles.contactCard}>
+                                        <div className={styles.detailsSection}>
+                                            <h4>University</h4>
+                                            <p>
+                                                <Building2 size={16} className={styles.detailIcon} />
+                                                {Array.isArray(user.university)
+                                                    ? user.university[0]
+                                                    : user.university}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
 
+                                {/* ── Degree ── */}
+                                {user.degree && user.degree.length > 0 && (
+                                    <div className={styles.contactCard}>
+                                        <div className={styles.detailsSection}>
+                                            <h4>Degree</h4>
+                                            {user.degree.map((d, i) => (
+                                                <div key={i} className={styles.degreeItem}>
+                                                    <GraduationCap size={16} className={styles.detailIcon} />
+                                                    <span className={styles.degreeText}>
+                                                        {d.major
+                                                            ? `${d.major} ${d.degree_type || ''}`
+                                                            : d}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
 
                     </div>
                 </div>

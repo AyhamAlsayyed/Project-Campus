@@ -166,14 +166,14 @@
 
 /* Individual Chat Row */
 .chatItem {
-    display: flex;
+   display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 15px;
-
-    cursor: pointer;
+    padding: 14px 15px;
+    cursor: default;
     transition: all 0.2s ease;
     margin: 0 5px;
+    border-radius: 15px;
 }
 
 .chatItem:hover {
@@ -196,8 +196,8 @@
 
 .avatarWrapper {
     position: relative;
-    width: 45px;
-    height: 45px;
+    width: 55px;
+    height: 55px;
 }
 
 .chatArea {
@@ -256,15 +256,24 @@
 
 .statusDot {
     position: absolute;
-    bottom: -3px;
-    right: -5px;
+    bottom: 1px;
+    right: 1px;
     width: 12px;
     height: 12px;
     border-radius: 50%;
     border: 2px solid #3d3c3c;
-    /* Match innerContainer background */
+   
 }
-
+.unreadBadge {
+    background: linear-gradient(135deg, #b400ff, #8b2dff);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 2px 7px;
+    min-width: 20px;
+    text-align: center;
+}
 .offline {
     background-color: #888;
 }
@@ -284,8 +293,9 @@
 }
 
 .chatStatusText {
-    font-size: 11px;
+   font-size: 11px;
     color: #888;
+    margin-bottom: 2px;
 }
 
 .chatNameWrapper {
@@ -295,7 +305,7 @@
 }
 
 .chatName {
-    font-size: 15px;
+    font-size: 16px;
     color: #eee;
     font-weight: 500;
 }
@@ -327,10 +337,15 @@
 }
 
 .chatPreview {
-    font-size: 13px;
+  font-size: 13px;
     color: #999;
     font-weight: 400;
     margin-top: 2px;
+    text-align: right;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .chatTime {
