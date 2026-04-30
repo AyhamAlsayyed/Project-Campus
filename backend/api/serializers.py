@@ -14,8 +14,10 @@ class PostSerializer(serializers.ModelSerializer):
     is_saved = serializers.SerializerMethodField()
 
     def get_is_saved(self, obj):
-        user = self.context.get["request"].user
-        return SavedPost.objects.filter(user=user, post=obj).exists()
+        request = self.context.get("request")
+        if request and request.user.is_authenticated():
+            return SavedPost.objects.filter(user=request.user, post=obj).exists()
+        return False
 
     class Meta:
         model = Post
@@ -28,6 +30,7 @@ class PostSerializer(serializers.ModelSerializer):
             "community",
             "created_at",
             "media",
+            "is_saved",
         ]
 
 
