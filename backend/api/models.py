@@ -1,6 +1,8 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -1097,8 +1099,17 @@ class Report(models.Model):
 class Notification(models.Model):
     notification_id = models.BigAutoField(primary_key=True, db_column="notification_id")
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications", db_column="user_id"
+    receiver_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications",
+        db_column="user_id",
+    )
+
+    receiver_page = models.ForeignKey(
+        Page, on_delete=models.CASCADE, null=True, blank=True, related_name="notifications", db_column="page_id"
     )
 
     actor_user = models.ForeignKey(
@@ -1120,15 +1131,15 @@ class Notification(models.Model):
     )
 
     class Type(models.TextChoices):
-        ACCEPTED_FRIEND_REQUEST = "Accepted friend request"
-        ANNOUNCEMENTS = "Announcements"
-        LIKE = "like"
-        COMMENT = "comment"
-        FRIEND_REQUEST = "Friend Request"
-        MESSAGE = "Message"
-        UPCOMING_EVENT = "Upcoming Event"
-        SYSTEM = "System"
-        REACTED_TO_YOUR_POST = "React to your post"
+        FRIEND_REQUEST = "friend_request", "Friend Request"
+        ACCEPTED_FRIEND_REQUEST = "accepted_friend_request", "Accepted Friend Request"
+        ANNOUNCEMENTS = "announcements", "Announcements"
+        LIKE = "like", "Like"
+        COMMENT = "comment", "Comment"
+        MESSAGE = "message", "Message"
+        UPCOMING_EVENT = "upcoming_event", "Upcoming Event"
+        SYSTEM = "system", "System"
+        REACTED_TO_YOUR_POST = "reacted_post", "Reacted to your post"
 
     type = models.CharField(
         max_length=30,
@@ -1137,15 +1148,38 @@ class Notification(models.Model):
     content = models.TextField()
 
     # referenc to
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True)
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True, blank=True)
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, null=True, blank=True)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    content_object = GenericForeignKey("content_type", "object_id")
 
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
         validate_exactly_one(self, "actor_user", "actor_page")
+        validate_exactly_one(self, "receiver_user", "receiver_page")
+
+        if bool(self.content_type) != bool(self.object_id):
+            raise ValidationError("content_type and object_id must be set together.")
 
     class Meta:
         db_table = "notification"
+
+        indexes = [
+            models.Index(
+                fields=["receiver_user"],
+                name="notif_unread_user_idx",
+                condition=Q(is_read=False, receiver_user__isnull=False),
+            ),
+            models.Index(
+                fields=["receiver_page"],
+                name="notif_unread_page_idx",
+                condition=Q(is_read=False, receiver_page__isnull=False),
+            ),
+            models.Index(fields=["content_type", "object_id"], name="notif_generic_lookup_idx"),
+            models.Index(fields=["-created_at"], name="notif_created_at_idx"),
+        ]
+
+    def __str__(self):
+        receiver = self.receiver_user if self.receiver_user else self.receiver_page
+        return f"{receiver} - {self.type}"

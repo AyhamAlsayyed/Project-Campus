@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Notification, Post, PostMedia, SavedPost
+from .models import Comment, Notification, Post, PostMedia, SavedPost
 
 
 class PostMediaSerializer(serializers.ModelSerializer):
@@ -38,6 +38,7 @@ class NotificationSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
     time = serializers.SerializerMethodField()
     iconType = serializers.SerializerMethodField()
+    link = serializers.SerializerMethodField()
 
     class Meta:
         model = Notification
@@ -49,6 +50,7 @@ class NotificationSerializer(serializers.ModelSerializer):
             "avatar",
             "time",
             "iconType",
+            "link",
         ]
 
     def get_avatar(self, obj):
@@ -67,3 +69,29 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     def get_iconType(self, obj):
         return obj.type
+
+    def get_link(self, obj):
+        if not obj.content_type or not obj.object_id:
+            return None
+
+        model_class = obj.content_type.model_class()
+
+        if model_class == Post:
+            return f"/posts/{obj.object_id}"
+
+        if model_class == Comment:
+            # find which post the comment belongs to
+            try:
+                comment = Comment.objects.select_related("post").get(pk=obj.object_id)
+                return f"/posts/{comment.post_id}"
+            except Comment.DoesNotExist:
+                return None
+
+        # friend request / user profile
+        if obj.actor_user:
+            return f"/profile/{obj.actor_user_id}"
+
+        if obj.actor_page:
+            return f"/pages/{obj.actor_page_id}"
+
+        return None

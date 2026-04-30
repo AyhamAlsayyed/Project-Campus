@@ -16,7 +16,7 @@ def get_user_academic_info(user):
         result["role"] = "student"
         result["major"] = student.major
         result["academic"] = student.academic_level
-        result["university_page_name"] = student.university_page.page_name
+        result["university_page_name"] = student.university_page.page_name if student.university_page else None
         return result
 
     instructor = getattr(user, "instructor_profile", None)
@@ -59,9 +59,9 @@ def me(request):
             "bio": getattr(profile, "bio", ""),
             "avatar": avatar,
             "cover": cover,
-            "university": user_info["university_page_name"],
-            "major": user_info["major"],
-            "role": user_info["role"],
+            "university": user_info.get("university_page_name"),
+            "major": user_info.get("major"),
+            "role": user_info.get("role"),
         },
         status=status.HTTP_200_OK,
     )
