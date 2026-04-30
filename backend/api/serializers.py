@@ -1,6 +1,14 @@
 from rest_framework import serializers
 
-from .models import Comment, Notification, Post, PostMedia, SavedPost
+from .models import (
+    Comment,
+    Community,
+    Message,
+    Notification,
+    Post,
+    PostMedia,
+    SavedPost,
+)
 
 
 class PostMediaSerializer(serializers.ModelSerializer):
@@ -93,5 +101,15 @@ class NotificationSerializer(serializers.ModelSerializer):
 
         if obj.actor_page:
             return f"/pages/{obj.actor_page_id}"
+
+        if model_class == Community:
+            return f"/communities/{obj.object_id}"
+
+        if model_class == Message:
+            try:
+                msg = Message.objects.get(pk=obj.object_id)
+                return f"/messages/{msg.conversation_id}"
+            except Message.DoesNotExist:
+                return None
 
         return None

@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import (
     Case,
     Count,
@@ -16,7 +17,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Community, CommunityMember, Friendship
+from ...models import Community, CommunityMember, Friendship, Notification
 
 
 def file_url(request, f):
@@ -28,6 +29,30 @@ def file_url(request, f):
         return request.build_absolute_uri(f.url)
     except Exception:
         return None
+
+
+def notify_community_admins(community, actor_user, notif_type, text):
+    # send notification to owner and admins
+    admins = CommunityMember.objects.filter(
+        community=community,
+        role__in=[CommunityMember.Role.OWNER, CommunityMember.Role.ADMIN],
+        status="approved",
+    ).select_related("user")
+
+    notifications = [
+        Notification(
+            receiver_user=member.user,
+            actor_user=actor_user,
+            type=notif_type,
+            content=text,
+            content_type=ContentType.objects.get_for_model(community),
+            object_id=community.community_id,
+        )
+        for member in admins
+        if member.user != actor_user  # don't notify yourself
+    ]
+
+    Notification.objects.bulk_create(notifications)
 
 
 @api_view(["GET"])
@@ -66,8 +91,6 @@ def communities(request):
             distinct=True,
         ),
     )
-
-    # filterING LOGIC
 
     if filter == "joined":
         qs = qs.filter(is_joined=True).order_by("-created_at")
@@ -132,7 +155,24 @@ def communities(request):
 def join_community(request, community_id):
     user = request.user
 
-    CommunityMember.objects.get_or_create(user=user, community_id=community_id, defaults={"status": "approved"})
+    try:
+        community = Community.objects.get(community_id=community_id)
+    except Community.DoesNotExist:
+        return Response({"error": "Community not found"}, status=404)
+
+    _, created = CommunityMember.objects.get_or_create(
+        user=user,
+        community=community,
+        defaults={"status": "approved"},
+    )
+
+    if created:
+        notify_community_admins(
+            community=community,
+            actor_user=user,
+            notif_type=Notification.Type.SYSTEM,
+            text=f"{user.username} joined {community.name}",
+        )
 
     return Response({"message": "Joined successfully"})
 
@@ -142,7 +182,24 @@ def join_community(request, community_id):
 def request_join_community(request, community_id):
     user = request.user
 
-    CommunityMember.objects.get_or_create(user=user, community_id=community_id, defaults={"status": "pending"})
+    try:
+        community = Community.objects.get(community_id=community_id)
+    except Community.DoesNotExist:
+        return Response({"error": "Community not found"}, status=404)
+
+    _, created = CommunityMember.objects.get_or_create(
+        user=user,
+        community=community,
+        defaults={"status": "pending"},
+    )
+
+    if created:
+        notify_community_admins(
+            community=community,
+            actor_user=user,
+            notif_type=Notification.Type.SYSTEM,
+            text=f"{user.username} requested to join {community.name}",
+        )
 
     return Response({"message": "Request sent"})
 
