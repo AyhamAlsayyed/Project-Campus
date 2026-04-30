@@ -101,6 +101,13 @@ def user_profile_view(request, user_id):
         university = instructor.university_page.page_name if instructor.university_page else None
         major = None
         role = "instructor"
+
+        instructor_data = {
+            "academic_title": instructor.academic_title,
+            "department": instructor.department,
+            "instructor_type": instructor.instructor_type,
+            "university_page": university,
+        }
     elif admin:
         university = None
         major = None
@@ -171,23 +178,25 @@ def user_profile_view(request, user_id):
             for d in degrees
         ]
 
-    return Response(
-        {
-            "id": user.id,
-            "username": user.username,
-            "full_name": getattr(profile, "full_name", ""),
-            "academic_email": getattr(profile, "academic_email", ""),
-            "bio": getattr(profile, "bio", ""),
-            "avatar": avatar,
-            "cover": cover,
-            "university": university,
-            "major": major,
-            "role": role,
-            "friend_status": friend_status,
-            "friends_count": friends_count,
-            "email": user.email,
-            "phone": phones,
-            "degree": degrees,
-        },
-        status=status.HTTP_200_OK,
-    )
+    response_data = {
+        "id": user.id,
+        "username": user.username,
+        "full_name": getattr(profile, "full_name", ""),
+        "academic_email": getattr(profile, "academic_email", ""),
+        "bio": getattr(profile, "bio", ""),
+        "avatar": avatar,
+        "cover": cover,
+        "university": university,
+        "major": major,
+        "role": role,
+        "friend_status": friend_status,
+        "friends_count": friends_count,
+        "email": user.email,
+        "phone": phones,
+        "degree": degrees,
+    }
+
+    if instructor:
+        response_data["instructor_info"] = instructor_data
+
+    return Response(response_data, status=status.HTTP_200_OK)
