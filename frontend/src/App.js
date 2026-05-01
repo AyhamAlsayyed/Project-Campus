@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import './App.css'
 import LandingPage from './pages/landingpage/LandingPage';
 import Login from './pages/authentication/login';
 import Signup from './pages/authentication/signup';
@@ -12,6 +13,7 @@ import FriendsPage from './pages/FriendsPage/FriendsPage';
 import FollowedPages from './pages/followedPages/followedPages';
 import JoinedCommunities from './pages/joinedCommunities/joinedCommunities';
 import Universities from "./pages/universtities/universities";
+import EventsPage  from "./pages/eventsPage/eventsPage";
 
 function App() {
   return (
@@ -102,6 +104,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Universities />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/events"
+          element={
+            <ProtectedRoute>
+              <EventsPage />
             </ProtectedRoute>
           }
         />

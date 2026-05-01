@@ -22,29 +22,46 @@ export default function Universities() {
 
         const fetchData = async () => {
             const token = localStorage.getItem("access");
+            const headers = {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+            };
 
             try {
-                const headers = {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                };
-
-                const [newsRes, eventsRes, doctorsRes] = await Promise.all([
-                    fetch("http://localhost:8000/api/university/news/", { headers }),
-                    fetch("http://localhost:8000/api/university/events/", { headers }),
-                    fetch("http://localhost:8000/api/university/doctors/", { headers })
+                // 1. Fetch everything
+                const [newsRes, eventsRes, doctorsRes, userRes] = await Promise.all([
+                    fetch(`${API}/api/university/news/`, { headers }),
+                    fetch(`${API}/api/university/events/`, { headers }),
+                    fetch(`${API}/api/university/doctors/`, { headers }),
+                    fetch(`${API}/api/auth/me/`, { headers })
                 ]);
+                if (newsRes.ok) {
+                    const newsData = await newsRes.json();
+                    setNews(newsData);
+                }
 
-                const newsData = await newsRes.json();
-                const eventsData = await eventsRes.json();
-                const doctorsData = await doctorsRes.json();
+         
+                if (eventsRes.ok) {
+                    const eventsData = await eventsRes.json();
+                    setEvents(eventsData);
+                }
 
-                setNews(newsData);
-                setEvents(eventsData);
-                setDoctors(doctorsData);
+              
+                if (doctorsRes.ok) {
+                    const doctorsData = await doctorsRes.json();
+                    setDoctors(doctorsData);
+                }
+
+            
+                if (userRes.ok) {
+                    const userData = await userRes.json();
+                    setUser(userData);
+                } else {
+                    console.warn("User profile could not be fetched. They might be logged out.");
+                }
 
             } catch (err) {
-                console.error("Error fetching university data:", err);
+                console.error("Network or parsing error:", err);
             } finally {
                 setLoading(false);
             }

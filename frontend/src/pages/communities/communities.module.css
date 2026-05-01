@@ -10,7 +10,7 @@
 
 }
 .page {
-  width: min(1800px, 90%);
+  width: min(1800px, 95%);
   margin: 0 auto;
   --left-col: 300px;
   --right-col: 380px;
@@ -62,9 +62,10 @@
   margin: 2% 0 0 0;
 }
 .innerContainer {
-  background-color: rgba(61, 60, 60);
-  border-radius: 30px;
+  background-color: #333333;
+  border-radius: 30px 30px 0 0;
   padding-top: 30px;
+  padding-bottom: 30px;
   gap: 40px;
   display: flex;
   flex-direction: column;
@@ -124,8 +125,9 @@
 .rightSection {
   position: relative;
   flex: 0 0 380px;
-  width: 25%;
-  margin: 5% 0 0 0;
+  padding-left: 60px;
+  width: 55%;
+  margin: 5% 3% 0 0;
   gap: 70px;
   display: flex;
   flex-direction: column;
@@ -133,13 +135,14 @@
 .rightCard{
   position: relative;
   z-index: 2;
+  
 
 
 }
 .pill {
    position: absolute;
   top: -45px;
-  left: 10px;
+  left: 70px;
   z-index: 1;
   display: flex;
   align-items: center;
@@ -158,11 +161,13 @@
 .rightCard {
   display: flex;
   flex-direction: column;
-
+ 
+  width: 100%;
   background: rgba(61, 60, 60, 0.45);
   border-radius: 24px;
+  
   padding: 16px;
-
+ 
   border: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(10px);
 }

@@ -1,36 +1,42 @@
 .communityItem {
   position: relative;
-  width: 90%;
-  border-radius: 24px;
+  width: 86%;
+  border-radius: 30px;
+  padding: 24px 30px;
   overflow: hidden;
   background-size: cover;
   background-position: center;
   display: flex;
   align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  min-height: 110px;
 }
 
-/* OVERLAY */
 .overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(to right,
-      rgba(0, 0, 0, 0.75),
-      rgba(0, 0, 0, 0.4),
-      rgba(0, 0, 0, 0.2));
+      rgba(25, 25, 25, 0.95) 10%,
+      /* much stronger on the left */
+      rgba(25, 25, 25, 0.7) 40%,
+      rgba(25, 25, 25, 0.2) 100%);
 }
 
-/* CONTENT */
 .content {
   position: relative;
   z-index: 2;
-
   width: 100%;
   display: flex;
-  justify-content: space-between;
   align-items: center;
 
-  padding: 16px 20px;
+}
+
+.communityName {
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 800;
+
 }
 
 .description {
@@ -67,19 +73,21 @@
 .left {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+
   flex: 1;
   min-width: 0;
+  width: 100%;
+  z-index: 2;
 }
 
 .left h3 {
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
-
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .left p {
@@ -92,27 +100,37 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* VERIFIED */
-.verified {
-  font-size: 12px;
-  color: #a855f7;
+
+.verifiedIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
-/* BUTTON */
+
+
 .actionBtn {
-  padding: 8px 24px;
-  border-radius: 12px;
-  border: none;
-  font-weight: 600;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 10px 30px;
+  border-radius: 20px;
+  color: #fff;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 80px;
   font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+  z-index: 2;
+  min-width: 80px;
+}
+
+.actionBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.02);
 }
 
 .joinBtn {
   background: #a855f7;
-  /* Solid purple matching mockup */
   color: white;
 }
 
@@ -123,16 +141,14 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.actionBtn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
-}
+
 
 .actionBtn:disabled {
   background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.3);
   cursor: not-allowed;
 }
+
 
 .view {
   background: rgba(255, 255, 255, 0.2);
@@ -146,20 +162,97 @@
   transform: scale(1.05);
 }
 
+
+
+.popupOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+}
+
+.popupContent {
+  background: #1e1e1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 32px;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  animation: popIn 0.2s ease-out;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s ease;
+}
+
+.closeBtn:hover {
+  color: white;
+}
+
+.popupTitle {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 16px 0;
+}
+
+.popupDescription {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word; 
+  overflow-wrap: break-word;
+ 
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .small {
   width: 100%;
   display: flex;
   align-items: center;
+  padding: 0;
   gap: 12px;
 }
 
-/* TIGHTEN TEXT SPACING HERE */
+
 .small .textGroup {
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 0px;
- 
+
   margin: 0;
 }
 
@@ -171,26 +264,27 @@
 }
 
 .small .descriptionText {
-    font-size: 11px;
-    margin: 0;
-    padding: 0;
-    line-height: 1.2;
-    color: rgba(255, 255, 255, 0.7);
-    display: block; 
-}
-.small .truncated {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  font-size: 11px;
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.7);
+  display: block;
 }
 
-/* Ensure the text is readable when expanded in the small sidebar */
-.small .fullText {
-    display: block;
-    overflow: visible;
+.small .truncated {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
-/* GLASSY SIDEBAR BUTTON */
+
+
+.small .fullText {
+  display: block;
+  overflow: visible;
+}
+
 .small .actionBtn {
   padding: 5px 15px;
   font-size: 11px;
@@ -203,7 +297,7 @@
   color: #fff;
 }
 
-/* If requested in sidebar */
+
 .small .requestedBtn {
   background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.3);
@@ -226,4 +320,7 @@
 .small .btn {
   padding: 6px 12px;
   font-size: 12px;
+}
+.small .joinBtn {
+  background: linear-gradient(90deg, #a855f7, #d946ef);
 }

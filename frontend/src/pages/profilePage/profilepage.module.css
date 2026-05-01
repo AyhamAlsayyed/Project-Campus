@@ -64,14 +64,12 @@ body {
   min-width: 900px;
   position: relative;
   margin: 2% 0 0 0;
-
-
   padding-top: 10px;
 }
 
 .profileCard {
   background-color: #333333;
-  border-radius: 30px;
+  border-radius: 30px 30px 0 0;
   width: 100%;
   z-index: 1;
   overflow: hidden;
@@ -263,7 +261,7 @@ body {
     object-fit: cover;
     background: rgba(0, 0, 0, 0.3); /* Dark fallback for transparent images */
     border: 3px solid rgba(255, 255, 255, 0.1);
-    padding: 3px; /* Creates a nice ring effect around the avatar */
+    padding: 3px;
 }
 
 .friendName {
@@ -524,19 +522,11 @@ body {
   width: 95%;
   margin: 20px auto 0 auto;
   height: 300px;
-
   position: relative;
   border-radius: 30px 30px 18px 18px;
   overflow: hidden;
-
   z-index: -1;
-
   background: rgba(255, 255, 255, 0.04);
-
-
-  box-shadow:
-    0 8px 25px rgba(0, 0, 0, 0.35),
-    inset 0 0 40px rgba(255, 255, 255, 0.03);
 }
 
 .friendsTabContent {
@@ -553,23 +543,22 @@ body {
 }
 
 .rightSection {
-  flex: 0 0 380px;
-  width: 25%;
-  margin: 2% 0 0 0;
+  position: relative;
+  flex: 0 0 420px;
+  width: 100%;
+  margin: 5% 5% 0 0;
   gap: 70px;
-  position: sticky;
-  top: 50px;
   display: flex;
   flex-direction: column;
 }
-/* ── Verified badge ── */
+
 .verifiedBadge {
     display: inline-flex;
     align-items: center;
     margin-left: 6px;
 }
 
-/* ── Department & employment type ── */
+
 .department {
     font-size: 0.9rem;
     color: #ccc;
@@ -581,12 +570,13 @@ body {
     color: #aaa;
 }
 
-/* ── Community Picks card ── */
+
 .picksCard {
     background: rgba(61, 60, 60, 0.45);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
-    padding: 16px;
+    padding: 20px;
+    width: 100%;
     margin-top: 20px;
     backdrop-filter: blur(10px);
 }

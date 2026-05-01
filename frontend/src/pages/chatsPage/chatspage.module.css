@@ -76,10 +76,8 @@
     border: none;
     font-size: 13px;
     cursor: pointer;
-
     background-color: #2a2a2a;
     color: #aaa;
-
     transition: all 0.2s ease;
 }
 
@@ -117,7 +115,7 @@
     -webkit-text-fill-color: transparent;
 }
 
-/* Middle Section Search Bar */
+
 
 
 .searchIcon {
@@ -178,7 +176,7 @@
 
 .chatItem:hover {
     background-color: rgba(255, 255, 255, 0.05);
-    /* Subtle highlight */
+  
     border-radius: 15px;
     border-bottom-color: transparent;
 }

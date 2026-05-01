@@ -39,12 +39,12 @@
 .searchWrap {
   border-radius: 999px;
   height: 44px;
-  width: 90%;
-  transform: translateX(6%);
+  width: 82%;
+  transform: translateX(10%);
   display: flex;
   align-items: center;
   padding: 0 16px;
-  background: rgba(255, 255, 255, 0.12);
+  background: #535353;
   color: var(--text-accent);
 }
 
@@ -410,8 +410,8 @@
 }
 
 .chatSearchIcon {
-  color: rgba(255, 255, 255, 0.4);
-  margin-right: 12px;
+  color: #CCCCCC;
+ 
 }
 
 .chatSearchInput {
@@ -424,7 +424,7 @@
 }
 
 .chatSearchInput::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: #838383;
 }
 
 

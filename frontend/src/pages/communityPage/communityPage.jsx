@@ -1,12 +1,17 @@
 import styles from './communityPage.module.css'
 import Header from '../../components/pagelayout/header/header'
 import WeeklyNews from '../../components/weeklynews/weeklynews';
-import { useState, useEffect } from 'react'
+import DesktopCreatePost from '../../components/DesktopCreatePost/desktopCreatePost'
+import MobileCreatePost from '../../components/MobileCreatePost/mobileCreatePost'
+import MobileHeader from '../../components/mobileHeader/mobileHeader';
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from "react-router-dom";
-import { X } from "lucide-react";
+import { X, Menu } from "lucide-react";
 import CommentModal from '../../components/comments/commentsModal';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
 import PostCard from '../../components/posts/postCard'
+import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
+
 export default function CommunityPage() {
     const [user, setUser] = useState(null)
     const [theme, setTheme] = useState('dark');
@@ -21,413 +26,410 @@ export default function CommunityPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPost, setSelectedPostId] = useState(null);
     const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
-
-
-
-    const openComments = (postId) => {
-        setSelectedPostId(postId);
-        setIsCommentModalOpen(true);
-    };
-    const toggleTheme = () => { setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light')); }
-    const resetPostState = () => {
-        setContent("");
-        setImages([]);
-        setFiles([]);
-        setPollOptions(["", ""]);
-        setIsPollOpen(false);
-    };
+    const [weather, setWeather] = useState(null);
     const [isPollOpen, setIsPollOpen] = useState(false);
     const [pollOptions, setPollOptions] = useState(["", ""]);
+    const [selectedCommunity, setSelectedCommunity] = useState(null);
+    const [communityDropdownOpen, setCommunityDropdownOpen] = useState(false);
+    const [joinedCommunities, setJoinedCommunities] = useState([]);
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const mobileMenuRef = useRef(null);
+
+    const API = "http://localhost:8000"
+
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener("resize", check);
+        return () => window.removeEventListener("resize", check);
+    }, []);
+
+    useEffect(() => {
+        document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
+    }, [mobileMenuOpen]);
+
+    const openComments = (postId) => { setSelectedPostId(postId); setIsCommentModalOpen(true); };
+    const toggleTheme = () => setTheme(p => p === 'light' ? 'dark' : 'light');
+
+    const resetPostState = () => {
+        setContent(""); setImages([]); setFiles([]); setPollOptions(["", ""]); setIsPollOpen(false);
+    };
+
+    const fetchWeather = async () => {
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const { latitude, longitude } = position.coords;
+            try {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+                const data = await res.json();
+                setWeather({ temp: Math.round(data.current_weather.temperature) });
+            } catch (err) { console.error("Weather fetch failed:", err); }
+        }, (error) => { console.error("Location permission denied", error); });
+    };
+
     const fetchCommunity = async () => {
-        const token = localStorage.getItem("access");
-
-        const res = await fetch(`http://localhost:8000/api/communities/${id}/`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
+        const res = await fetch(`${API}/api/communities/${id}/`, {
+            headers: { Authorization: `Bearer ${token}` },
         });
-
         const data = await res.json();
         setCommunity(data);
     };
 
     const loadUser = async () => {
-        const token = localStorage.getItem("access");
-
         if (!token) return;
-
         try {
-            const res = await fetch("http://localhost:8000/api/auth/me/", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            const res = await fetch(`${API}/api/auth/me/`, {
+                headers: { Authorization: `Bearer ${token}` },
             });
-
             const data = await res.json();
             setUser(data);
-
-        } catch (err) {
-            console.error("Failed to load user");
-        }
+        } catch (err) { console.error("Failed to load user"); }
     };
+
     const handleCreatePost = async () => {
-        const token = localStorage.getItem("access");
-
         if (!content.trim() && !images.length && !files.length && !isPollOpen) return;
-
         const formData = new FormData();
-
         formData.append("content", content);
-
-        // 🔥 ADD COMMUNITY ID HERE
-        formData.append("community_id", id); // from useParams()
-
-        images.forEach((img) => {
-            formData.append("images", img);
-        });
-
-        files.forEach((file) => {
-            formData.append("files", file);
-        });
-
+        formData.append("community_id", id);
+        images.forEach(img => formData.append("images", img));
+        files.forEach(file => formData.append("files", file));
         if (isPollOpen) {
-            pollOptions
-                .filter(opt => opt.trim())
-                .forEach((opt, index) => {
-                    formData.append(`poll_options[${index}]`, opt);
-                });
+            pollOptions.filter(opt => opt.trim()).forEach((opt, index) => {
+                formData.append(`poll_options[${index}]`, opt);
+            });
         }
-
         try {
-            const res = await fetch("http://localhost:8000/api/posts/create/", {
+            const res = await fetch(`${API}/api/posts/create/`, {
                 method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { Authorization: `Bearer ${token}` },
                 body: formData,
             });
-
-            if (!res.ok) {
-                console.error("Failed to create post");
-                return;
-            }
-
-
+            if (!res.ok) { console.error("Failed to create post"); return; }
             resetPostState();
             setIsModalOpen(false);
-
-
             fetchPosts();
-
-        } catch (err) {
-            console.error("Error:", err);
-        }
+        } catch (err) { console.error("Error:", err); }
     };
+
     const fetchPosts = async () => {
-        const token = localStorage.getItem("access");
-
-        const res = await fetch(
-            `http://localhost:8000/api/communities/${id}/posts/?filter=${filter}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-
+        const res = await fetch(`${API}/api/communities/${id}/posts/?filter=${filter}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await res.json();
         setPosts(data);
     };
+
     useEffect(() => {
-        loadUser();
-        fetchPosts();
-        fetchCommunity();
-
+        loadUser(); fetchPosts(); fetchCommunity(); fetchWeather();
     }, [id, filter]);
-    const handleMediaUpload = (e) => {
-        const selectedFiles = Array.from(e.target.files);
-        setImages(prev => [...prev, ...selectedFiles]);
-    };
 
-    const handleFileUpload = (e) => {
-        const selectedFiles = Array.from(e.target.files);
-        setFiles(prev => [...prev, ...selectedFiles]);
-    };
+    const handleMediaUpload = (e) => { setImages(prev => [...prev, ...Array.from(e.target.files)]); };
+    const handleFileUpload = (e) => { setFiles(prev => [...prev, ...Array.from(e.target.files)]); };
+
+    const avatarSrc = user?.avatar
+        ? user.avatar.startsWith("http") ? user.avatar : `${API}${user.avatar}`
+        : "/default-avatar.png";
+
+    const mobileFilters = [
+        { key: "recommended", label: "Recommended" },
+        { key: "popular", label: "Popular" },
+        { key: "trending", label: "Trending" },
+    ];
 
     return (
         <div className={styles.darkContainer}>
-            <div className={`${styles.header} ${styles.page}`}>
-                <Header theme={theme} toggleTheme={toggleTheme} user={user} />
 
-            </div>
-            <div className={`${styles.content} ${styles.page}`}>
-                <SideBarNav theme={theme} toggleTheme={toggleTheme} user={user} />
-                <div className={styles.mainContent}>
-                    <h1 className={styles.title}>
-                        <span className={styles.highlight}>{community?.name}</span> community
-                    </h1>
-                    <div className={styles.filters}>
+            {/* ── MOBILE HEADER ── */}
+            {isMobile && (
+                <MobileHeader
+                    avatarSrc={avatarSrc}
+                    user={user}
+                    setMobileMenuOpen={setMobileMenuOpen}
+                    token={token}
+                    API={API}
+                />
+            )}
+
+            {/* ── MOBILE DRAWER ── */}
+            {isMobile && mobileMenuOpen && (
+                <div style={{ position: "fixed", inset: 0, zIndex: 9998 }}>
+                    <div
+                        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+                        onClick={() => setMobileMenuOpen(false)}
+                    />
+                    <div
+                        ref={mobileMenuRef}
+                        style={{
+                            position: "absolute", left: 0, top: 0,
+                            height: "100%", width: "75vw", maxWidth: 350,
+                            background: "linear-gradient(135deg, var(--bg-main), var(--bg-secondary))",
+                            borderRight: "1px solid rgba(255,255,255,0.1)",
+                            display: "flex", flexDirection: "column", overflow: "hidden",
+                            boxShadow: "4px 0 30px rgba(0,0,0,0.6)"
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
                         <button
-                            className={`${styles.filterBtn} ${filter === "recommended" ? styles.active : ""}`}
-                            onClick={() => setFilter("recommended")}
+                            style={{
+                                position: "absolute", top: 14, right: 14, zIndex: 10,
+                                width: 32, height: 32, borderRadius: "50%",
+                                background: "rgba(255,255,255,0.1)", border: "none",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                cursor: "pointer"
+                            }}
+                            onClick={() => setMobileMenuOpen(false)}
                         >
-                            Recommended
+                            <X size={16} color="white" />
                         </button>
-
-
-
-                        <button
-                            className={`${styles.filterBtn} ${filter === "popular" ? styles.active : ""}`}
-                            onClick={() => setFilter("popular")}
-                        >
-                            Popular
-                        </button>
-
-                        <button
-                            className={`${styles.filterBtn} ${filter === "trending" ? styles.active : ""}`}
-                            onClick={() => setFilter("trending")}
-                        >
-                            Trending
-                        </button>
+                        <div style={{
+                            display: "flex", alignItems: "center", gap: 10,
+                            padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)"
+                        }}>
+                            <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
+                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1 }}>CAMPUS</span>
+                        </div>
+                        <div style={{ flex: 1, overflowY: "auto" }}>
+                            <SideBarNav onClose={() => setMobileMenuOpen(false)} />
+                        </div>
                     </div>
-                    <div className={styles.communityPostsContainer}>
-                        <div className={styles.innerContainer}>
-                            {posts.map((post) => (
+                </div>
+            )}
+
+            {/* ── DESKTOP HEADER ── */}
+            {!isMobile && (
+                <div className={`${styles.header} ${styles.page}`}>
+                    <Header theme={theme} toggleTheme={toggleTheme} user={user} />
+                </div>
+            )}
+
+            {/* ── MOBILE BODY ── */}
+            {isMobile && (
+                <div style={{ display: "flex", flexDirection: "column", width: "100%", boxSizing: "border-box" }}>
+
+                    {/* WeeklyNews at top */}
+                    <div style={{ padding: "12px 14px 0" }}>
+                        <WeeklyNews communityId={id} />
+                    </div>
+
+                    {/* MobileCreatePost */}
+                    <div style={{ padding: "10px 14px 0" }}>
+                        <MobileCreatePost
+                            avatarSrc={avatarSrc}
+                            setIsModalOpen={setIsModalOpen}
+                            handleMediaUpload={handleMediaUpload}
+                            handleFileUpload={handleFileUpload}
+                            setIsPollOpen={setIsPollOpen}
+                            isPollOpen={isPollOpen}
+                        />
+                    </div>
+
+                    {/* Community title */}
+                    <div style={{ padding: "14px 14px 0" }}>
+                        <h1 style={{ margin: 0, lineHeight: 1.2, display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                            <span style={{
+                                fontSize: "2rem", fontWeight: 800,
+                                background: "linear-gradient(30deg, #c72cff, #8b2dff)",
+                                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
+                            }}>
+                                {community?.name}
+                            </span>
+                            <span style={{
+                                fontSize: "1.1rem", fontWeight: 500,
+                                color: "rgba(255,255,255,0.5)",
+                            }}>
+                                community
+                            </span>
+                        </h1>
+                    </div>
+
+                    {/* Filters */}
+                    <div style={{ padding: "10px 14px 0" }}>
+                        <div style={{
+                            display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8,
+                            scrollbarWidth: "none", msOverflowStyle: "none"
+                        }}>
+                            {mobileFilters.map(f => (
+                                <button
+                                    key={f.key}
+                                    onClick={() => setFilter(f.key)}
+                                    style={{
+                                        flexShrink: 0, padding: "8px 16px", borderRadius: 999,
+                                        border: "none", fontSize: "0.82rem", cursor: "pointer",
+                                        fontWeight: filter === f.key ? 600 : 400,
+                                        background: filter === f.key ? "#4a4a4a" : "#2a2a2a",
+                                        color: filter === f.key ? "#fff" : "#aaa",
+                                        boxShadow: filter === f.key ? "0 0 0 1px rgba(255,255,255,0.1)" : "none",
+                                        transition: "all 0.2s ease",
+                                    }}
+                                >
+                                    {f.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Posts feed */}
+                    <div style={{
+                        width: "100%", boxSizing: "border-box",
+                        margin: "12px 0 0 0", borderRadius: "20px 20px 0 0",
+                        background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))",
+                        paddingTop: 6,
+                    }}>
+                        <div style={{
+                            background: "#333333", borderRadius: "20px 20px 0 0",
+                            padding: "20px 10px 40px", display: "flex", flexDirection: "column", gap: 16
+                        }}>
+                            {posts.length === 0 ? (
+                                <p style={{ color: "rgba(255,255,255,0.4)", padding: "0 10px" }}>No posts yet.</p>
+                            ) : posts.map(post => (
                                 <PostCard key={post.id} post={post} openComments={openComments} />
                             ))}
-
                         </div>
-
                     </div>
-
                 </div>
-                <div className={styles.rightSection}>
-                    <div className={styles.createPostSection} onClick={() => setIsModalOpen(true)}>
+            )}
 
-                        <div className={styles.topRow}>
-                            <div className={styles.leftSide}>
-                                <img
-                                    src={user?.avatar || "/default-avatar.png"}
-                                    alt=""
-                                    className={styles.userProfilePicture}
-                                />
-
-                                <input
-                                    type="text"
-                                    placeholder={`What did you learn?`}
-                                    className={styles.postInput}
-                                    onFocus={() => setIsModalOpen(true)}
-                                    readOnly
-                                />
-                            </div>
-
-                            {/* RIGHT SIDE BUTTONS */}
-                            <div className={styles.actionButtons}>
-
-                                <label className={styles.actionButtonOne}>
-                                    📷
-                                    <input hidden type="file" onChange={handleMediaUpload} />
-                                </label>
-
-                                <label className={styles.actionButtonOne}>
-                                    📁
-                                    <input hidden type="file" onChange={handleFileUpload} />
-                                </label>
-
+            {/* ── DESKTOP BODY ── */}
+            {!isMobile && (
+                <div className={`${styles.content} ${styles.page}`}>
+                    <SideBarNav theme={theme} toggleTheme={toggleTheme} user={user} />
+                    <div className={styles.mainContent}>
+                        <h1 className={styles.title}>
+                            <span className={styles.highlight}>{community?.name}</span> community
+                        </h1>
+                        <div className={styles.filters}>
+                            {mobileFilters.map(f => (
                                 <button
-                                    type="button"
-                                    className={styles.actionButtonOne}
-                                    onClick={() => setIsPollOpen(prev => !prev)}
+                                    key={f.key}
+                                    className={`${styles.filterBtn} ${filter === f.key ? styles.active : ""}`}
+                                    onClick={() => setFilter(f.key)}
                                 >
-                                    📊
+                                    {f.label}
                                 </button>
-
+                            ))}
+                        </div>
+                        <div className={styles.communityPostsContainer}>
+                            <div className={styles.innerContainer}>
+                                {posts.map(post => (
+                                    <PostCard key={post.id} post={post} openComments={openComments} />
+                                ))}
                             </div>
                         </div>
-
                     </div>
-                    {isModalOpen && (
-                        <div
-                            className={styles.modalOverlay}
-                            onClick={() => {
-                                setIsModalOpen(false);
-                                resetPostState();
-                            }}
-                        >
-                            <div
-                                className={styles.modal}
-                                onClick={(e) => e.stopPropagation()}
-                            >
 
+                    <div className={styles.rightSection}>
+                        <DesktopCreatePost
+                            user={user}
+                            avatarSrc={avatarSrc}
+                            weather={weather}
+                            setIsModalOpen={setIsModalOpen}
+                            handleMediaUpload={handleMediaUpload}
+                            handleFileUpload={handleFileUpload}
+                            setIsPollOpen={setIsPollOpen}
+                            selectedCommunity={selectedCommunity}
+                            setSelectedCommunity={setSelectedCommunity}
+                            communityDropdownOpen={communityDropdownOpen}
+                            setCommunityDropdownOpen={setCommunityDropdownOpen}
+                            joinedCommunities={joinedCommunities}
+                            API={API}
+                        />
+                        <WeeklyNews communityId={id} />
+                    </div>
+                </div>
+            )}
 
-                                <div className={styles.modalHeader}>
-                                    <h3>Create post</h3>
-                                    <button
-                                        className={styles.closeButton}
-                                        onClick={() => {
-                                            setIsModalOpen(false);
-                                            resetPostState();
-                                        }}
-                                    >
-                                        ✕
-                                    </button>
-
-                                </div>
-
-
-                                <div className={styles.leftSide}>
-                                    <img
-                                        src={user?.avatar || "/default-avatar.png"}
-                                        alt=""
-                                        className={styles.userProfilePicture}
-                                    />
-
-                                    <strong>{user?.full_name || user?.username}</strong>
-                                </div>
-
-
-                                <textarea
-                                    value={content}
-                                    onChange={(e) => setContent(e.target.value)}
-                                    placeholder={`What's on your mind, ${user?.username || "User"}?`}
-                                    className={styles.modalInput}
-                                />
-                                {images.length > 0 && (
-                                    <div className={styles.previewContainer}>
-                                        {images.map((img, i) => (
-                                            <div key={i} className={styles.previewWrapper}>
-                                                <img
-                                                    src={URL.createObjectURL(img)}
-                                                    alt=""
-                                                    className={styles.previewImage}
-                                                />
-
-                                                <button
-                                                    className={styles.removeImage}
-                                                    onClick={() =>
-                                                        setImages(prev => prev.filter((_, index) => index !== i))
-                                                    }
-                                                >
-                                                    <X size={14} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                {files.length > 0 && (
-                                    <div className={styles.filePreviewContainer}>
-                                        {files.map((f, i) => (
-                                            <div key={i} className={styles.fileItem}>
-                                                📁 {f.name}
-
-                                                <button
-                                                    className={styles.removeFile}
-                                                    onClick={() =>
-                                                        setFiles(prev => prev.filter((_, index) => index !== i))
-                                                    }
-                                                >
-                                                    <X size={14} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-
-
-
-                                <div className={styles.actionsRow}>
-
-                                    <label className={styles.actionButton}>
-                                        📷 Media
-                                        <input hidden type="file" onChange={handleMediaUpload} />
-                                    </label>
-
-                                    <label className={styles.actionButton}>
-                                        📁 File
-                                        <input hidden type="file" multiple onChange={handleFileUpload} />
-                                    </label>
-
-                                    <button
-                                        type="button"
-                                        className={styles.actionButton}
-                                        onClick={() => {
-                                            if (isPollOpen) {
-                                                setIsPollOpen(false);
-                                                setPollOptions(["", ""]);
-                                            } else {
-                                                setIsPollOpen(true);
-                                            }
-                                        }}
-                                    >
-                                        📊
-                                    </button>
-
-                                </div>
-                                {isPollOpen && (
-                                    <div className={styles.pollContainer}>
-                                        {pollOptions.map((option, i) => (
-                                            <div key={i} className={styles.pollOptionRow}>
-                                                <input
-                                                    value={option}
-                                                    onChange={(e) => {
-                                                        const updated = [...pollOptions];
-                                                        updated[i] = e.target.value;
-                                                        setPollOptions(updated);
-                                                    }}
-                                                    placeholder={`Option ${i + 1}`}
-                                                    className={styles.pollInput}
-                                                />
-
-
-                                                {pollOptions.length > 2 && (
-                                                    <button
-                                                        className={styles.removeOption}
-                                                        onClick={() => {
-                                                            const updated = pollOptions.filter((_, index) => index !== i);
-                                                            setPollOptions(updated);
-                                                        }}
-                                                    >
-                                                        ✕
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setPollOptions([...pollOptions, ""])}
-                                            className={styles.addOption}
-                                        >
-                                            + Add Option
+            {/* ── CREATE POST MODAL (shared) ── */}
+            {isModalOpen && (
+                <div className={styles.modalOverlay} onClick={() => { setIsModalOpen(false); resetPostState(); }}>
+                    <div
+                        className={styles.modal}
+                        onClick={e => e.stopPropagation()}
+                        style={isMobile ? { width: "calc(100vw - 24px)", maxWidth: 500, boxSizing: "border-box", padding: 16 } : {}}
+                    >
+                        <div className={styles.modalHeader}>
+                            <h3>Create post</h3>
+                            <button className={styles.closeButton} onClick={() => { setIsModalOpen(false); resetPostState(); }}>✕</button>
+                        </div>
+                        <div className={styles.leftSide}>
+                            <img src={avatarSrc} alt="" className={styles.userProfilePicture} />
+                            <strong>{user?.full_name || user?.username}</strong>
+                        </div>
+                        <textarea
+                            value={content}
+                            onChange={e => setContent(e.target.value)}
+                            placeholder={`What's on your mind, ${user?.username || "User"}?`}
+                            className={styles.modalInput}
+                        />
+                        {images.length > 0 && (
+                            <div className={styles.previewContainer}>
+                                {images.map((img, i) => (
+                                    <div key={i} className={styles.previewWrapper}>
+                                        <img src={URL.createObjectURL(img)} alt="" className={styles.previewImage} />
+                                        <button className={styles.removeImage} onClick={() => setImages(prev => prev.filter((_, idx) => idx !== i))}>
+                                            <X size={14} />
                                         </button>
                                     </div>
-                                )}
-
-
-
-                                <button className={styles.postButton} onClick={handleCreatePost} disabled={!content && !images.length && !files && !isPollOpen}>Post</button>
-
+                                ))}
                             </div>
+                        )}
+                        {files.length > 0 && (
+                            <div className={styles.filePreviewContainer}>
+                                {files.map((f, i) => (
+                                    <div key={i} className={styles.fileItem}>
+                                        📁 {f.name}
+                                        <button className={styles.removeFile} onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))}>
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        <div className={styles.actionsRow}>
+                            <label className={styles.actionButton}>📷 Media<input hidden type="file" onChange={handleMediaUpload} /></label>
+                            <label className={styles.actionButton}>📁 File<input hidden type="file" multiple onChange={handleFileUpload} /></label>
+                            <button type="button" className={styles.actionButton}
+                                onClick={() => { if (isPollOpen) { setIsPollOpen(false); setPollOptions(["", ""]); } else setIsPollOpen(true); }}>
+                                📊 Poll
+                            </button>
                         </div>
-                    )}
-                    {isCommentModalOpen && (
-                        <CommentModal
-                            post={selectedPost}
-                            onClose={() => setIsCommentModalOpen(false)}
-                            currentUser={user}
-                        />
-                    )}
-                    <WeeklyNews communityId={id} />
-
-
+                        {isPollOpen && (
+                            <div className={styles.pollContainer}>
+                                {pollOptions.map((option, i) => (
+                                    <div key={i} className={styles.pollOptionRow}>
+                                        <input
+                                            value={option}
+                                            onChange={e => { const u = [...pollOptions]; u[i] = e.target.value; setPollOptions(u); }}
+                                            placeholder={`Option ${i + 1}`}
+                                            className={styles.pollInput}
+                                            style={{ width: "100%", boxSizing: "border-box" }}
+                                        />
+                                        {pollOptions.length > 2 && (
+                                            <button className={styles.removeOption} onClick={() => setPollOptions(pollOptions.filter((_, idx) => idx !== i))}>✕</button>
+                                        )}
+                                    </div>
+                                ))}
+                                <button type="button" onClick={() => setPollOptions([...pollOptions, ""])} className={styles.addOption}>+ Add Option</button>
+                            </div>
+                        )}
+                        <button
+                            className={styles.postButton}
+                            onClick={handleCreatePost}
+                            disabled={!content && !images.length && !files.length && !isPollOpen}
+                        >
+                            Post
+                        </button>
+                    </div>
                 </div>
+            )}
 
-
-
-            </div>
-
+            {isCommentModalOpen && (
+                <CommentModal
+                    post={selectedPost}
+                    onClose={() => setIsCommentModalOpen(false)}
+                    currentUser={user}
+                />
+            )}
         </div>
-
-    )
+    );
 }

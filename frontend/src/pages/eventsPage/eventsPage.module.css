@@ -1,0 +1,444 @@
+.darkContainer {
+  min-height: 100vh;
+  box-sizing: border-box;
+  font-family: "Aktiv Grotesk", sans-serif;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: visible;
+}
+
+.page {
+  width: min(1800px, 90%);
+  margin: 0 auto;
+  --left-col: 300px;
+  --right-col: 380px;
+  --col-gap: 40px;
+}
+
+.header {
+  display: flex;
+  margin-top: 2%;
+  height: 110px;
+  width: 100%;
+
+}
+
+
+.content {
+  display: flex;
+   width: min(1800px, 100%);
+  margin: 20px auto 0 auto;
+  gap: var(--col-gap);
+  margin-top: 20px;
+  align-items: flex-start;
+}
+.title {
+  font-size: 42px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.highlight {
+  background: linear-gradient(30deg, #c72cff, #8b2dff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.mainContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+/* ... keep your existing CSS ... */
+
+/* ... Keep your existing .darkContainer, .page, .header, .title styles ... */
+
+.eventsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  margin-top: 40px;
+}
+
+.eventCard {
+  background: rgba(35, 35, 35, 0.9); /* Matching the dark grey card background */
+  border-radius: 40px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+/* Header within the card */
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 0 10px;
+}
+
+.orgInfo {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.orgNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.orgNameRow h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.verifyBadge {
+  background: #ffffff;
+  color: #000;
+  font-size: 10px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: bold;
+}
+
+.orgText p {
+  margin: 2px 0 0 0;
+  color: #999;
+  font-size: 0.85rem;
+}
+
+.headerActions {
+  display: flex;
+  gap: 12px;
+}
+
+.bellBtn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.followBtn, .followedBtn {
+  padding: 5px 20px;
+  border-radius: 25px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.followBtn {
+  background: #9c27b0;
+  color: white;
+}
+
+.followedBtn {
+  background: #555;
+  color: #ddd;
+}
+
+/* Image Container & Overlays */
+.bannerContainer {
+  position: relative;
+  width: 100%;
+  height: 550px; /* Increased height to show more of the library image like in your ref */
+  border-radius: 30px;
+  overflow: hidden;
+}
+
+.bannerImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bannerOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 40px;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 70%);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.bannerContent h2 {
+  color: white;
+  margin: 0;
+  font-size: 2.2rem;
+  font-weight: 800;
+}
+
+.bannerContent p {
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 500px;
+  font-size: 1rem;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+
+.readMore {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: underline;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding-bottom: 5px;
+}
+
+/* The Floating Date Box */
+.dateWidget {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  background: rgba(30, 30, 30, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 15px 25px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dateText p {
+  margin: 0;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.reminderBtn {
+  background: #7b1fa2; /* Vibrant purple from image */
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.75rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+.rightSection {
+  position: relative;
+  flex: 0 0 380px;
+  padding-left: 60px;
+  width: 55%;
+  margin: 5% 3% 0 0;
+  gap: 70px;
+  display: flex;
+  flex-direction: column;
+}
+.rightCard{
+  position: relative;
+  z-index: 2;
+  
+
+
+}
+.pill {
+   position: absolute;
+  top: -45px;
+  left: 70px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  border-radius: 18px 18px 0 0;
+  font-weight: 800  ;
+  height: 25px;
+  width: 45%;
+  letter-spacing: 0.6px;
+  font-size: 0.95rem;
+  color: rgba(255,255,255,0.92);
+  background-color: rgba(61, 60, 60, 0.95);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 0 0 10px rgba(0,0,0,0);
+}
+.rightCard {
+  display: flex;
+  flex-direction: column;
+ 
+  width: 100%;
+  background: rgba(61, 60, 60, 0.45);
+  border-radius: 24px;
+  
+  padding: 16px;
+ 
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+}
+.rightList{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+}
+.recItemWrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.recCard {
+    position: relative;
+    width: 100%;
+    height: 150px;
+    border-radius: 28px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.recBanner {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.recOverlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.85) 100%);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Recommended Header */
+.recHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.recOrgInfo {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.recAvatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.recNameRow {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.recNameRow h4 {
+    margin: 0;
+    font-size: 0.85rem;
+    color: white;
+    font-weight: 600;
+}
+
+.verifyBadgeSmall {
+    background: #fff;
+    color: #000;
+    font-size: 8px;
+    width: 12px;
+    height: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.recOrgText p {
+    margin: 0;
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.6);
+}
+
+
+.followBtnSmall {
+    background: linear-gradient(30deg, #c72cff, #8b2dff);
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 14px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.followedBtnSmall {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ccc;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 14px;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+
+.recBody {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.recBody h5 {
+    margin: 0;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.recBody p {
+    margin: 4px 0 0 0;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.8);
+    max-width: 80%;
+    line-height: 1.2;
+}
+
+.readMoreSmall {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.5);
+    text-decoration: underline;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* Separator Line */
+.separator {
+    width: 40%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 10px 0;
+}

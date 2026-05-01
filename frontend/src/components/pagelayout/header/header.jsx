@@ -3,7 +3,7 @@ import ThemeToggler from "../../pagelayout/themeToggle";
 import darkModeIcon from "../../../Assets/Pictures/LogoDarkMode.png";
 import {
   Search, Home, Check, MoreHorizontal,
-  Volume2, Calendar, UserPlus, Heart // <-- Added icons for the badges
+  Volume2, Calendar, UserPlus, Heart 
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";

@@ -7,7 +7,7 @@
 .recentlyContactedWrap {
   position: relative;
   width: 100%;
-  margin-top: 45px;
+ 
 
 }
 
@@ -34,7 +34,7 @@
 .recentlyContactedWrapper {
   position: relative;
   border-radius: 26px;
-  padding: 18px;
+  padding: 20px;
   background: #333333;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);

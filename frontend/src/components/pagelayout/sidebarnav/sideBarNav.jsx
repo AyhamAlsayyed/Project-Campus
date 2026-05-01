@@ -16,21 +16,18 @@ import {
   Settings,
   Languages,
   HelpCircle,
-  MessageSquare
 } from "lucide-react";
 
 export default function SidebarNav({ variant = "default", currentUser }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
- const isActive = (path) => {
-
+  const isActive = (path) => {
     if (path.startsWith('/profile/') && !path.endsWith('/friends') && !path.endsWith('/pages')) {
-        return pathname === path;
+      return pathname === path;
     }
-    
     return pathname === path || pathname.startsWith(path + "/");
-};
+  };
 
   const defaultMainItems = [
     { label: "Home page", path: "/home", icon: Home },
@@ -44,57 +41,34 @@ export default function SidebarNav({ variant = "default", currentUser }) {
     { label: "Privacy Policy", path: "/privacy", icon: Privacy },
     { label: "Help", path: "/help", icon: Help },
   ];
- const profileMainItems = [
-  { label: "Profile", path: `/profile/${currentUser?.id}`, icon: User },
-  { label: "Friends", path: `/profile/${currentUser?.id}/friends`, icon: UserPlus }, 
-  { label: "Pages", path: `/profile/${currentUser?.id}/pages`, icon: Bell },      
-  { label: "Communities", path: `/profile/${currentUser?.id}/communities`, icon: Users },
-];
 
-const profileFooterItems = [
-  { label: "Settings", path: "/settings", icon: Settings },
-  { label: "Language", path: "/language", icon: Languages },
-  { label: "Help", path: "/help", icon: HelpCircle },
-];
+  const profileMainItems = [
+    { label: "Profile", path: `/profile/${currentUser?.id}`, icon: User },
+    { label: "Friends", path: `/profile/${currentUser?.id}/friends`, icon: UserPlus },
+    { label: "Pages", path: `/profile/${currentUser?.id}/pages`, icon: Bell },
+    { label: "Communities", path: `/profile/${currentUser?.id}/communities`, icon: Users },
+  ];
 
-  const mainItems =
-    variant === "profile" ? profileMainItems : defaultMainItems;
+  const profileFooterItems = [
+    { label: "Settings", path: "/settings", icon: Settings },
+    { label: "Language", path: "/language", icon: Languages },
+    { label: "Help", path: "/help", icon: HelpCircle },
+  ];
 
-  const footerItems =
-    variant === "profile" ? profileFooterItems : defaultFooterItems;
-
+  const mainItems = variant === "profile" ? profileMainItems : defaultMainItems;
+  const footerItems = variant === "profile" ? profileFooterItems : defaultFooterItems;
 
   if (variant === "profile" && !currentUser) return null;
 
+  // No Tailwind hidden class — visibility is controlled by the parent (Homepage)
+  // which conditionally mounts this component via isMobile JS state
   return (
     <nav className={styles.sideBarNav}>
-
       {mainItems.map(({ label, path, icon: Icon }) => (
         <button
           key={path}
           onClick={() => navigate(path)}
-          className={`${styles.sideBarButton} ${isActive(path) ? styles.active : ""
-            }`}
-        >
-          {Icon && typeof Icon === "string" ? (
-           <img src={Icon} alt="" className={styles.icon} width={path == "/communities" ? 22 : 22} height={path == "/communities" ? 20 : 22} style={{ filter: "invert(1)" }} />
-          ) : Icon ? (
-            <Icon size={22} />
-          ) : null}
-          {label}
-        </button>
-      ))}
-
-      {/* DIVIDER */}
-      <div className={styles.divider} />
-
-      {/* FOOTER */}
-      {footerItems.map(({ label, path, icon: Icon }) => (
-        <button
-          key={path}
-          onClick={() => navigate(path)}
-          className={`${styles.sideBarButton} ${isActive(path) ? styles.active : ""
-            }`}
+          className={`${styles.sideBarButton} ${isActive(path) ? styles.active : ""}`}
         >
           {Icon && typeof Icon === "string" ? (
             <img src={Icon} alt="" className={styles.icon} width={22} height={22} style={{ filter: "invert(1)" }} />
@@ -105,7 +79,23 @@ const profileFooterItems = [
         </button>
       ))}
 
-      {/* STATIC FOOTER TEXT */}
+      <div className={styles.divider} />
+
+      {footerItems.map(({ label, path, icon: Icon }) => (
+        <button
+          key={path}
+          onClick={() => navigate(path)}
+          className={`${styles.sideBarButton} ${isActive(path) ? styles.active : ""}`}
+        >
+          {Icon && typeof Icon === "string" ? (
+            <img src={Icon} alt="" className={styles.icon} width={22} height={22} style={{ filter: "invert(1)" }} />
+          ) : Icon ? (
+            <Icon size={22} />
+          ) : null}
+          {label}
+        </button>
+      ))}
+
       <span className={styles.copyright}>
         © 2026 Project Campus.
       </span>

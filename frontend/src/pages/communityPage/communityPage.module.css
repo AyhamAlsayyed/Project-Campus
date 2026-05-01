@@ -67,7 +67,7 @@
 }
 .innerContainer{
   background-color: rgba(61, 60, 60);
-  border-radius: 30px;
+  border-radius: 30px 30px 0 0;
   padding-top: 30px;
   gap: 40px;
   display: flex;
@@ -110,11 +110,10 @@
   box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
 }
 .rightSection {
-  flex: 0 0 380px;
+  flex: 0 0 430px;
   width: 25%;
   margin: 2% 0 0 0;
   gap: 70px;
-
   display: flex;
   flex-direction: column;
 }
