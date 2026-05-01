@@ -1,0 +1,468 @@
+.darkContainer {
+    min-height: 100vh;
+    box-sizing: border-box;
+
+    font-family: "Aktiv Grotesk", sans-serif;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: visible;
+
+}
+
+.page {
+    width: min(1800px, 90%);
+    margin: 0 auto;
+    --left-col: 300px;
+    --right-col: 380px;
+    --col-gap: 40px;
+}
+
+.header {
+    display: flex;
+    margin-top: 2%;
+    height: 110px;
+    width: 100%;
+
+}
+
+.content {
+    display: flex;
+    width: min(1800px, 100%);
+    margin: 20px auto 0 auto;
+    gap: var(--col-gap);
+    align-items: flex-start;
+}
+
+.title {
+    font-size: 42px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.highlight {
+    background: linear-gradient(30deg, #c72cff, #8b2dff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.mainContent {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.communityPostsContainer {
+    background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
+    width: 100%;
+    padding-top: 6px;
+    flex: 1;
+    border-radius: 30px;
+    height: auto;
+    z-index: 1;
+    min-width: 900px;
+    position: relative;
+    margin: 2% 0 0 0;
+}
+.innerContainer{
+  background-color: rgba(61, 60, 60);
+  border-radius: 30px 30px 0 0;
+  padding-top: 30px;
+  gap: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  top: 10px;
+  z-index: 10;
+}
+.filters {
+  display: flex;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.filterBtn {
+  padding:  10px;
+  border-radius: 999px;
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+
+  background-color: #2a2a2a;
+  color: #aaa;
+
+  transition: all 0.2s ease;
+}
+
+
+.filterBtn:hover {
+  background-color: #3a3a3a;
+  color: #fff;
+}
+
+
+.active {
+  background-color: #4a4a4a;
+  color: #fff;
+  font-weight: 500;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
+}
+.rightSection {
+  flex: 0 0 430px;
+  width: 25%;
+  margin: 2% 0 0 0;
+  gap: 70px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main create post card */
+.createPostSection {
+  background-color: rgba(61, 60, 60, 0.45);
+  width: 90%;
+  height: auto;
+  border-radius: 30px;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: var(--text-accent);
+}
+.previewWrapper {
+  position: relative;
+}
+
+.removeImage,
+.removeFile {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+
+  width: 24px;
+  height: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+
+  color: white;
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.removeImage:hover,
+.removeFile:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+.filePreviewContainer {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fileItem {
+  position: relative;
+  padding: 10px;
+  background: #2a2a2a;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+/* Top row */
+.topRow {
+  display: flex;
+
+  align-items: center;
+}
+
+
+/* Avatar + greeting container */
+.leftSide {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Profile image */
+.userProfilePicture {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Greeting text */
+.greeting {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+/* Sub text */
+.question {
+  margin: 0;
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+/* Weather section */
+.actionButtons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+
+.actionsRow {
+  display: flex;
+  align-items: center;
+  gap: 12px; 
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+.actionButton {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-accent);
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: 0.2s ease;
+  font-weight: 500;
+}
+.actionButton:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+/* Media / File / Poll buttons */
+.actionButtonOne {
+  background: transparent;
+  border: none;
+  color: var(--text-accent);
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 12px;
+  transition: 0.2s ease;
+}
+
+.actionButtonOne:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Poll container */
+.pollContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+/* Poll inputs */
+.pollInput {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-accent);
+}
+
+/* Add option button */
+.addOption {
+  background: transparent;
+  border: none;
+  color: #b38cff;
+  cursor: pointer;
+  font-size: 0.8rem;
+  text-align: left;
+  padding: 4px 0;
+}
+
+/* Post text input */
+.postInput {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 16px;
+  border-radius: 20px;
+  border: none;
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-accent);
+}
+
+.postInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.weather {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal {
+  width: 500px;
+  background: #242526; 
+  border: 1px solid rgba(255, 255, 255, 0.1); 
+  border-radius: 20px;
+  padding: 24px;
+  color: var(--text-accent);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6); 
+}
+.closeButton {
+  position: absolute;
+  right: 0; 
+  top: -5px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  color: #b0b3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+.previewContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.previewImage {
+    width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.closePollButton {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #888;
+  transition: 0.2s;
+}
+
+.closePollButton:hover {
+  color: red;
+}
+
+.pollOptionRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.removeOption {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 16px;
+  transition: 0.2s;
+}
+
+.removeOption:hover {
+  color: red;
+}
+.closeButton:hover {
+  background: rgba(255,255,255,0.2);
+  transform: scale(1.05);
+}
+.modalHeader {
+  display: flex;
+  justify-content: center; /* Center the title */
+  position: relative;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Separator line */
+}
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.modalInput {
+  width: 100%;
+  height: 120px;
+  margin-top: 15px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-accent);
+  font-size: 1.1rem;
+  resize: none;
+}
+.modalInput::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.postButton {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
+  color: white;
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.postButton:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.postButton:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.3);
+  cursor: not-allowed;
+  transform: none;
+}

@@ -1,0 +1,575 @@
+.headerInner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--col-gap);
+  width: min(1800px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.headerLeft {
+  flex: 0 0 var(--left-col);
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.title {
+  font-family: "Aktiv Grotesk", sans-serif;
+  background: transparent;
+  border: none;
+  font-weight: 800;
+  font-size: 2.5rem;
+  color: var(--text-accent);
+  cursor: pointer;
+}
+
+
+.darkModeIcon {
+  height: 70px;
+}
+
+.headerCenter {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.searchWrap {
+  border-radius: 999px;
+  height: 44px;
+  width: 82%;
+  transform: translateX(10%);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: #535353;
+  color: var(--text-accent);
+}
+
+.searchInput {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 1rem;
+  color: var(--text-accent);
+}
+
+.searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.headerRight {
+  flex: 0 0 var(--right-col);
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  justify-content: flex-end;
+}
+
+.bellButton,
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  min-width: 50px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  color: var(--text-accent);
+}
+
+.bellButton:hover,
+.iconButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.iconButton:has(.userProfilePicture) {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.bellIconContainer {
+  position: relative;
+  display: flex;
+}
+
+.notificationWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.redDotIndicator {
+  position: absolute;
+  top: -5px;
+  /* Adjusted to sit on the icon corner */
+  right: -10px;
+  width: 8px;
+  height: 8px;
+  background: #ff4d4d;
+  border-radius: 50%;
+  border: 1.5px solid #1a1a1a;
+  z-index: 2;
+}
+
+.userProfilePicture {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.rightBadge {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.notificationDropdown {
+  position: absolute;
+  top: calc(100% + 15px);
+  right: 0;
+  width: 420px;
+  background: #333333;
+  backdrop-filter: blur(20px);
+  border-radius: 30px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+}
+
+.notifHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.notifTitle {
+  font-size: 1.6rem;
+  color: #CCCCCC;
+  margin: 0;
+}
+
+.notifHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.viewAll {
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-transform: lowercase;
+}
+
+.notificationItem {
+  position: relative;
+  display: flex;
+  gap: 15px;
+  padding: 20px 16px;
+  transition: background 0.2s;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0;
+}
+
+.notificationItem:last-child {
+  border-bottom: none;
+}
+
+.notificationItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+
+
+.notifAvatarWrap {
+  position: relative;
+  flex: 0 0 50px;
+  height: 50px;
+}
+
+.notifAvatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.notifIconBadge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 20px;
+  height: 20px;
+  background: #444;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  border: 2px solid #333;
+}
+
+.notifContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.notifTopRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.notifType {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #ffffff;
+}
+
+.notifTime {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.notifText {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.notifMenu {
+  color: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+}
+
+
+.unreadCount {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  background: #ff4d94;
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid #2a2a2a;
+  transform: translate(20%, -20%);
+}
+
+.unreadDot {
+  position: absolute;
+  left: 6px;
+  top: 28%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background: #ff4d94;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.notifMenuWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.notifMenuBtn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+.notifMenuBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+
+.actionMenu {
+  position: absolute;
+  top: 30px;
+  right: 25px;
+  width: 110px;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 1010;
+}
+
+.actionMenu button {
+  background: transparent;
+  border: none;
+  color: #fff;
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionMenu button:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+
+.actionMenu .deleteAction {
+  color: #ff4d94;
+}
+
+.actionMenu .deleteAction:hover {
+  background: rgba(255, 77, 148, 0.1);
+}
+
+.chatWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.activeIconBtn {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+
+.chatDropdown {
+  position: absolute;
+  top: calc(100% + 15px);
+  right: -20px;
+  width: 420px;
+  background: #333333;
+  backdrop-filter: blur(20px);
+  border-radius: 30px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+}
+
+
+
+.chatSearchContainer {
+  display: flex;
+  align-items: center;
+  background: #262626;
+  border: 1px solid #262626;
+  border-radius: 20px;
+  padding: 0 16px;
+  height: 44px;
+  margin: 0 auto 20px auto;
+  width: 90%;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.chatSearchContainer:focus-within {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.chatSearchIcon {
+  color: #CCCCCC;
+ 
+}
+
+.chatSearchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  font-size: 0.95rem;
+}
+
+.chatSearchInput::placeholder {
+  color: #838383;
+}
+
+
+.chatListWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.chatItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 16px 12px;
+  border-radius: 16px;
+  transition: background 0.2s ease;
+  cursor: pointer;
+}
+
+
+.chatItem:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+
+.chatItem::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 75px;
+  right: 12px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+
+.chatItem:last-child::after,
+.chatItem:hover::after {
+  display: none;
+}
+
+
+.chatAvatarWrap {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.chatAvatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.statusDot {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 3px solid #232323;
+  z-index: 2;
+}
+
+.dotOnline {
+  background: #00ff88;
+}
+
+.dotOffline {
+  background: #888888;
+}
+
+.dotDnd {
+  background: #ff4d4d;
+}
+
+
+.chatGrid {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 4px;
+  align-items: center;
+  padding-right: 30px;
+}
+
+
+.chatStatus {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+
+.chatPreview {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: right;
+  overflow: hidden;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+}
+
+
+.chatName {
+  grid-column: 1;
+  grid-row: 2;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.chatTimeContainer {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.chatTime {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+}
+
+.chatUnread {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  font-weight: 700;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}

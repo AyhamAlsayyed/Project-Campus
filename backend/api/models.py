@@ -1,6 +1,8 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -57,6 +59,8 @@ class UserProfile(models.Model):
         SUSPENDED = "suspended", "Suspended"
 
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.ONLINE)
+    primary_phone = models.CharField(max_length=11, blank=True, null=True)
+    secondary_phone = models.CharField(max_length=11, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -64,6 +68,30 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
+class UserDegree(models.Model):
+    id = models.BigAutoField(primary_key=True)
+
+    class DegreeType(models.TextChoices):
+        DIPLOMA = "Diploma"
+        BACHELOR = "Bachelor"
+        MASTER = "Master"
+        PHD = "PhD"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="degrees",
+        db_column="user_id",
+    )
+
+    degree_type = models.CharField(max_length=20, choices=DegreeType.choices)
+    major = models.CharField(max_length=100, blank=True)
+    institution = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        db_table = "user_degree"
 
 
 class EmailVerification(models.Model):
@@ -116,7 +144,8 @@ class Page(models.Model):
     )
 
     description = models.TextField(blank=True, null=True)
-
+    profile_image = models.ImageField(upload_to="profiles/", blank=True, null=True)
+    banner_image = models.ImageField(upload_to="banners/", blank=True, null=True)
     verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -273,33 +302,6 @@ class Friendship(models.Model):
         ]
 
 
-class Notification(models.Model):
-    notification_id = models.BigAutoField(primary_key=True, db_column="notification_id")
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications", db_column="user_id"
-    )
-
-    class Type(models.TextChoices):
-        EVENTS = "events", "Events"
-        COMMENTS = "comments", "Comments"
-        ACCEPTED_FRIEND_REQUEST = "accepted_friend_request", "Accepted friend request"
-        MESSAGES = "messages", "Messages"
-        ANNOUNCEMENTS = "announcements", "Announcements"
-
-    type = models.CharField(
-        max_length=30,
-        choices=Type.choices,
-    )
-    content = models.TextField()
-
-    is_read = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = "notification"
-
-
 class Community(models.Model):
     community_id = models.BigAutoField(primary_key=True, db_column="community_id")
 
@@ -316,6 +318,8 @@ class Community(models.Model):
         default=Privacy.PUBLIC,
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    banner_image = models.ImageField(upload_to="banners/", blank=True, null=True)
+    verified = models.BooleanField(default=False)
 
     class Meta:
         db_table = "community"
@@ -344,6 +348,17 @@ class CommunityMember(models.Model):
         choices=Role.choices,
         default=Role.MEMBER,
     )
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -455,6 +470,35 @@ class Post(models.Model):
         ]
 
 
+class SavedPost(models.Model):
+    id = models.BigAutoField(primary_key=True)
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="saved_posts",
+        db_column="user_id",
+    )
+
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name="saved_by",
+        db_column="post_id",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "saved_post"
+        ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["user", "post"], name="uniq_user_saved_post")]
+        indexes = [
+            models.Index(fields=["user", "-created_at"]),
+            models.Index(fields=["post"]),
+        ]
+
+
 class PostMedia(models.Model):
     media_id = models.BigAutoField(primary_key=True, db_column="media_id")
 
@@ -507,7 +551,7 @@ class Comment(models.Model):
         related_name="comments_as_page",
         db_column="author_page_id",
     )
-    # if its the top comment it will save "null"
+    # if it's the top comment it will save "null"
     parent_comment = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,
@@ -671,19 +715,62 @@ class FollowPage(models.Model):
 class Conversation(models.Model):
     conversation_id = models.BigAutoField(primary_key=True, db_column="conversation_id")
 
+    name = models.CharField("conversation name", max_length=100, blank=True, null=True)
+    image = models.ImageField("conversation image", upload_to="conversation_images", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_group = models.BooleanField(default=False)
+    is_private = models.BooleanField(default=False)
+
+    created_by_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_conversations",
+        db_column="created_by_user_id",
+    )
+
+    last_message = models.ForeignKey(
+        "Message",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+        db_column="last_message_id",
+    )
+
+    def clean(self):
+        if self.is_group:
+            if not self.created_by_user:
+                raise ValidationError("Group must have a creator.")
+        else:
+            if self.created_by_user:
+                raise ValidationError("DM conversation cannot have a creator.")
 
     class Meta:
         db_table = "conversation"
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    # if its a group one creator and is owner
+                    (Q(is_group=True) & Q(created_by_user__isnull=False))
+                    | (Q(is_group=False) & Q(created_by_user__isnull=True))  # if its a DM no creator
+                ),
+                name="chk_conversation_creator",
+            ),
+        ]
 
 
 class ConversationMember(models.Model):
     id = models.BigAutoField(primary_key=True)
 
     conversation = models.ForeignKey(
-        Conversation, on_delete=models.CASCADE, related_name="members", db_column="conversation_id"
+        Conversation,
+        on_delete=models.CASCADE,
+        related_name="members",
+        db_column="conversation_id",
     )
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -694,7 +781,12 @@ class ConversationMember(models.Model):
     )
 
     page = models.ForeignKey(
-        Page, on_delete=models.SET_NULL, null=True, blank=True, related_name="conversations", db_column="page_id"
+        Page,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="conversations",
+        db_column="page_id",
     )
 
     class Role(models.TextChoices):
@@ -708,10 +800,22 @@ class ConversationMember(models.Model):
         default=Role.MEMBER,
     )
 
+    is_pinned = models.BooleanField(default=False)
+    is_muted = models.BooleanField(default=False)
+
+    last_read_at = models.DateTimeField(null=True, blank=True)
+
+    joined_at = models.DateTimeField(auto_now_add=True)
+
     def clean(self):
         validate_exactly_one(self, "user", "page")
 
+        # enforce that a page is not a member of group.
+        if self.conversation.is_group and self.page is not None:
+            raise ValidationError("Pages cannot be members of group conversations.")
+
         qs = ConversationMember.objects.filter(conversation_id=self.conversation_id)
+
         if self.user_id is not None:
             qs = qs.filter(user_id=self.user_id)
         else:
@@ -721,9 +825,11 @@ class ConversationMember(models.Model):
             qs = qs.exclude(pk=self.pk)
 
         if qs.exists():
-            raise ValidationError("Duplicate member: this actor is already in this conversation.")
+            raise ValidationError("Duplicate member.")
 
     def save(self, *args, **kwargs):
+        if self.conversation.is_group and self.page_id is not None:
+            raise ValidationError("Pages cannot join group conversations.")
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -732,7 +838,7 @@ class ConversationMember(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
-                name="chk_conversation_member_author",
+                name="chk_conversation_member_actor",
             ),
             models.UniqueConstraint(
                 fields=["conversation", "user"],
@@ -751,11 +857,14 @@ class Message(models.Model):
     message_id = models.BigAutoField(primary_key=True, db_column="message_id")
 
     conversation = models.ForeignKey(
-        Conversation, on_delete=models.CASCADE, related_name="messages", db_column="conversation_id"
+        Conversation,
+        on_delete=models.CASCADE,
+        related_name="messages",
+        db_column="conversation_id",
     )
 
     content = models.TextField(blank=True, null=True)
-    # this is the author of the massage if he is a "user" (person and not a page)
+
     sender_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -764,7 +873,7 @@ class Message(models.Model):
         related_name="sent_messages",
         db_column="sender_user_id",
     )
-    # and this is the author of the massage if he is a "page"
+
     sender_page = models.ForeignKey(
         Page,
         on_delete=models.SET_NULL,
@@ -772,6 +881,15 @@ class Message(models.Model):
         blank=True,
         related_name="sent_messages",
         db_column="sender_page_id",
+    )
+
+    parent_message = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="replies",
+        db_column="parent_message_id",
     )
 
     sent_at = models.DateTimeField(auto_now_add=True)
@@ -783,8 +901,13 @@ class Message(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
+        if self.conversation.last_message_id != self.message_id:
+            self.conversation.last_message = self
+            self.conversation.save(update_fields=["last_message"])
+
     class Meta:
         db_table = "message"
+        ordering = ["sent_at"]
         constraints = [
             models.CheckConstraint(
                 check=(
@@ -793,6 +916,9 @@ class Message(models.Model):
                 ),
                 name="chk_message_sender",
             ),
+        ]
+        indexes = [
+            models.Index(fields=["conversation", "-sent_at"]),
         ]
 
 
@@ -952,3 +1078,93 @@ class Report(models.Model):
 
     class Meta:
         db_table = "report"
+
+
+class Notification(models.Model):
+    notification_id = models.BigAutoField(primary_key=True, db_column="notification_id")
+
+    receiver_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications",
+        db_column="user_id",
+    )
+
+    receiver_page = models.ForeignKey(
+        Page, on_delete=models.CASCADE, null=True, blank=True, related_name="notifications", db_column="page_id"
+    )
+
+    actor_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications_sent",
+        db_column="actor_user_id",
+    )
+
+    actor_page = models.ForeignKey(
+        Page,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications_sent",
+        db_column="actor_page_id",
+    )
+
+    class Type(models.TextChoices):
+        FRIEND_REQUEST = "friend_request", "Friend Request"
+        ACCEPTED_FRIEND_REQUEST = "accepted_friend_request", "Accepted Friend Request"
+        ANNOUNCEMENTS = "announcements", "Announcements"
+        LIKE = "like", "Like"
+        COMMENT = "comment", "Comment"
+        MESSAGE = "message", "Message"
+        UPCOMING_EVENT = "upcoming_event", "Upcoming Event"
+        SYSTEM = "system", "System"
+        REACTED_TO_YOUR_POST = "reacted_post", "Reacted to your post"
+        POST_CREATED = "post_created", "New Post Created"
+
+    type = models.CharField(
+        max_length=30,
+        choices=Type.choices,
+    )
+    content = models.TextField()
+
+    # referenc to
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    content_object = GenericForeignKey("content_type", "object_id")
+
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def clean(self):
+        validate_exactly_one(self, "actor_user", "actor_page")
+        validate_exactly_one(self, "receiver_user", "receiver_page")
+
+        if bool(self.content_type) != bool(self.object_id):
+            raise ValidationError("content_type and object_id must be set together.")
+
+    class Meta:
+        db_table = "notification"
+
+        indexes = [
+            models.Index(
+                fields=["receiver_user"],
+                name="notif_unread_user_idx",
+                condition=Q(is_read=False, receiver_user__isnull=False),
+            ),
+            models.Index(
+                fields=["receiver_page"],
+                name="notif_unread_page_idx",
+                condition=Q(is_read=False, receiver_page__isnull=False),
+            ),
+            models.Index(fields=["content_type", "object_id"], name="notif_generic_lookup_idx"),
+            models.Index(fields=["-created_at"], name="notif_created_at_idx"),
+        ]
+
+    def __str__(self):
+        receiver = self.receiver_user if self.receiver_user else self.receiver_page
+        return f"{receiver} - {self.type}"

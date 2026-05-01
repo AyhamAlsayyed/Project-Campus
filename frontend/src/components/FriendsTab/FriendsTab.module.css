@@ -1,0 +1,131 @@
+.tabWrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 20px;
+}
+
+.friendsCard {
+    background-color: #252527;
+    width: 100%;
+    max-width: 900px; /* Increased width as requested */
+    border-radius: 28px;
+    padding: 30px;
+}
+
+.searchBar {
+    background-color: #1a1a1c;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    margin-bottom: 35px;
+}
+
+.searchIcon {
+    color: #555;
+    margin-right: 12px;
+}
+
+.searchInput {
+    background: transparent;
+    border: none;
+    color: #eee;
+    outline: none;
+    width: 100%;
+    font-size: 15px;
+}
+
+/* Header with stretching line */
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Space between title, line, and button */
+    margin-bottom: 20px;
+}
+
+.sectionTitle {
+    color: white;
+    font-size: 25px;
+ 
+    margin: 0;
+    white-space: nowrap;
+}
+
+.headerLine {
+    flex: 1; /* This makes the line fill the middle space */
+    height: 1px;
+    background-color: #333;
+}
+
+.viewAllBtn {
+    background-color: #38383a;
+    color: #999;
+    border: none;
+    padding: 5px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.viewAllBtn:hover {
+    background-color: #444;
+    color: #fff;
+}
+
+.mainDivider {
+    height: 1px;
+    
+    margin: 20px 0;
+    width: 100%;
+}
+
+/* Grid Layout */
+.friendsGrid {
+    display: grid;
+   
+    grid-template-columns: repeat(4, 1fr); 
+    justify-items: center; 
+    gap: 20px;
+}
+
+.friendItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 25px; 
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    width: 150px; 
+    border: 1.5px solid transparent;
+}
+.friendItem:hover {
+  
+    background-color: rgba(255, 255, 255, 0.05); /* Very subtle fill */
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15); /* The highlight line */
+    transform: translateY(-4px);
+}
+.avatarBox {
+    width: 70%;
+    aspect-ratio: 1/1;
+    border-radius: 18px; /* Slightly larger radius for the bigger card */
+    overflow: hidden;
+    background-color: #1a1a1c;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.friendImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.friendName {
+    color: #eee;
+    font-size: 13px;
+    text-align: center;
+    width: 100%;
+    font-weight: 500;
+}

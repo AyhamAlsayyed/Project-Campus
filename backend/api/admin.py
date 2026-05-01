@@ -23,8 +23,10 @@ from .models import (
     PostMedia,
     PostReaction,
     Report,
+    SavedPost,
     Student,
     UniversityDomain,
+    UserDegree,
     UserProfile,
 )
 
@@ -41,6 +43,7 @@ admin.site.register(CommunityMember)
 admin.site.register(Event)
 admin.site.register(EventReminder)
 admin.site.register(Post)
+admin.site.register(SavedPost)
 admin.site.register(PostMedia)
 admin.site.register(Comment)
 admin.site.register(PostReaction)
@@ -53,3 +56,4 @@ admin.site.register(MessageMedia)
 admin.site.register(MessageReaction)
 admin.site.register(Report)
 admin.site.register(UniversityDomain)
+admin.site.register(UserDegree)

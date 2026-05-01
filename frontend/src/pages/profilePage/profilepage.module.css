@@ -1,0 +1,734 @@
+html {
+  height: auto;
+  min-height: auto;
+  display: flow-root;
+
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: transparent;
+  background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+.darkContainer {
+  min-height: 100%;
+  box-sizing: border-box;
+
+  font-family: "Aktiv Grotesk", sans-serif;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: visible;
+
+}
+
+.page {
+  width: min(1800px, 95%);
+  margin: 0 auto;
+  --left-col: 300px;
+  --right-col: 380px;
+  --col-gap: 40px;
+}
+
+.header {
+  display: flex;
+  margin-top: 2%;
+  height: 110px;
+  width: 100%;
+
+}
+
+
+.content {
+  display: flex;
+  margin: 20px auto 0 auto;
+  gap: var(--col-gap);
+  margin-top: 20px;
+  align-items: flex-start;
+}
+
+.profileContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
+  flex: 1;
+  border-radius: 30px;
+  min-height: 100vh;
+  z-index: 1;
+  min-width: 900px;
+  position: relative;
+  margin: 2% 0 0 0;
+  padding-top: 10px;
+}
+
+.profileCard {
+  background-color: #333333;
+  border-radius: 30px 30px 0 0;
+  width: 100%;
+  z-index: 1;
+  overflow: hidden;
+  flex: 1;
+  height: auto;
+}
+
+.notice {
+  color: rgba(255, 255, 255, 0.7);
+  padding: 10px 0;
+}
+
+.noticeError {
+  color: #ffb3b3;
+  padding: 10px 0;
+}
+
+
+.coverPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.coverImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.95) contrast(1.05);
+}
+
+.editCoverBtn {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  border: none;
+  cursor: pointer;
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+}
+
+/* Profile header row */
+.profileHeaderRow {
+  display: flex;
+  padding: 0 32px 24px 32px;
+   margin-top: -20px;
+  align-items: flex-start;
+  gap: 24px;
+}
+.profileMeta {
+  flex: 1;
+  margin-top: 5px;
+}
+.profileActions {
+  display: flex;
+  gap: 12px;
+  margin-left: auto; /* This is the magic that pushes them to the right */
+  margin-top: 65px;
+}
+.addFriendBtn {
+  background: #7c3aed; /* Modern Purple */
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+.friendsCount {
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.uniRow {
+    margin-top: 4px;
+}
+
+.uni {
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+.department {
+    font-size: 0.9rem;
+    color: #ccc;
+    font-weight: 500;
+}
+
+.employmentType {
+    font-size: 0.9rem;
+    color: #aaa;
+}
+.messageBtn {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.addFriendBtn:hover, .messageBtn:hover {
+  transform: translateY(-2px);
+  background: rgba(124, 58, 237, 0.9);
+}
+
+.avatarWrap {
+  flex: 0 0 auto;
+}
+.pendingBtn {
+  background: #444;
+  color: #ccc;
+  border-radius: 20px;
+  padding: 8px 14px;
+}
+
+.acceptBtn {
+  background: #4CAF50;
+  color: white;
+  border-radius: 20px;
+  padding: 8px 14px;
+}
+
+.declineBtn {
+  background: #f44336;
+  color: white;
+  border-radius: 20px;
+  padding: 8px 14px;
+}
+
+.friendsBtn {
+  background: #2a2a2a;
+  color: white;
+  border-radius: 20px;
+  padding: 8px 14px;
+}
+/* --- Friends Tab Styling --- */
+
+.friendsGrid {
+    display: grid;
+    /* This automatically creates as many columns as will fit, making it responsive */
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+    gap: 20px;
+    padding: 30px;
+    width: 85%;
+    margin: 0 auto;
+    background-color: #2a2a2a; /* Matches your Photos tab background */
+    border-radius: 25px;
+    box-sizing: border-box;
+}
+
+.friendCard {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.friendCard:hover {
+    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.08);
+    /* Subtle purple border glow on hover to match your theme */
+    border-color: rgba(124, 58, 237, 0.5); 
+}
+
+.friendAvatar {
+    width: 85px;
+    height: 85px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: rgba(0, 0, 0, 0.3); /* Dark fallback for transparent images */
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    padding: 3px;
+}
+
+.friendName {
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin: 0;
+    text-align: center;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.avatarCircle {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 6px solid rgba(61, 60, 60, 0.9);
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileMeta {
+  min-width: 0;
+  padding-top: 44px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.nameRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.username {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.role {
+  font-size: 0.95rem;
+  opacity: 0.7;
+}
+
+.subRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  opacity: 0.75;
+  font-size: 0.95rem;
+}
+
+.fullName {
+  font-size: 1.3rem;
+}
+
+.fullName,
+.uni {
+  white-space: nowrap;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.bio {
+  margin: 10px 0 0 0;
+  max-width: 820px;
+  font-size: 0.9rem;
+  opacity: 0.65;
+  line-height: 1.35rem;
+}
+
+/* Divider */
+.hr {
+  height: 1px;
+  width: 92%;
+  margin: 18px auto 10px auto;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  padding: 10px 14px;
+  gap: 10px;
+}
+
+.tabBtn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 14px;
+}
+
+.tabActive {
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Post card example */
+.postCard {
+  width: calc(100% - 36px);
+  margin: 14px auto 0 auto;
+  border-radius: 22px;
+  background: rgba(0, 0, 0, 0.18);
+  padding: 14px;
+}
+
+.postTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.postLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.postAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.postInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.postNameLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.postName {
+  font-weight: 800;
+}
+
+.postTime {
+  opacity: 0.6;
+  font-size: 0.85rem;
+}
+
+.pinned {
+  opacity: 0.75;
+  font-size: 0.85rem;
+}
+
+.tag {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(179, 140, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.moreBtn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1.2rem;
+}
+
+.postText {
+  margin: 12px 2px 12px 2px;
+  color: rgba(255, 255, 255, 0.85);
+  opacity: 0.9;
+  line-height: 1.35rem;
+}
+.photosGrid {
+    display: grid;
+    background-color:#2a2a2a;
+    margin: 0 auto;
+    border-radius: 25px ;
+    
+    
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 12px;
+    padding: 20px;
+    width: 85%;
+    box-sizing: border-box;
+    /* This ensures rows are created as needed */
+    grid-auto-flow: dense; 
+}
+
+.photoItem {
+    width: 100%;
+    aspect-ratio: 1 / 1; 
+    object-fit: cover;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.photoLarge {
+    /* Takes up 2 columns and 2 rows on the left */
+    grid-column: span 2; 
+    grid-row: span 2;
+    border-radius: 18px;
+}
+
+.photoItem:hover {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+}
+
+
+.postMedia {
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.postImage {
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+  display: block;
+}
+
+.coverWrap {
+  width: 95%;
+  margin: 20px auto 0 auto;
+  height: 300px;
+  position: relative;
+  border-radius: 30px 30px 18px 18px;
+  overflow: hidden;
+  z-index: -1;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.friendsTabContent {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.postsSection {
+  width: calc(100% - 36px);
+  margin: 14px auto 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rightSection {
+  position: relative;
+  flex: 0 0 420px;
+  width: 100%;
+  margin: 5% 5% 0 0;
+  gap: 70px;
+  display: flex;
+  flex-direction: column;
+}
+
+.verifiedBadge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 6px;
+}
+
+
+.department {
+    font-size: 0.9rem;
+    color: #ccc;
+    font-weight: 500;
+}
+
+.employmentType {
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+
+.picksCard {
+    background: rgba(61, 60, 60, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 20px;
+    width: 100%;
+    margin-top: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.picksHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.picksIcon {
+    color: #8b2dff;
+}
+
+.picksTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+/* Slider wrapper with arrows on sides */
+.picksSliderWrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.picksArrow {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.picksArrow:hover:not(:disabled) {
+    background: rgba(139, 45, 255, 0.3);
+}
+
+.picksArrow:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.picksSlide {
+    flex: 1;
+    min-width: 0;
+}
+
+.pickItem {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pickCoverImage {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    display: block;
+}
+
+.pickInfo {
+    padding: 10px 12px;
+}
+
+.pickNameRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.pickName {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    flex: 1;
+}
+
+.pickViewBtn {
+    background: rgba(139, 45, 255, 0.15);
+    border: 1px solid rgba(139, 45, 255, 0.4);
+    border-radius: 8px;
+    color: #c084fc;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.pickViewBtn:hover {
+    background: rgba(139, 45, 255, 0.3);
+}
+
+.pickDescription {
+    font-size: 0.8rem;
+    color: #aaa;
+    line-height: 1.4;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.readMore {
+    background: none;
+    border: none;
+    color: #8b2dff;
+    font-size: 0.78rem;
+    cursor: pointer;
+    padding: 2px 0;
+    margin-top: 2px;
+}
+
+.readMore:hover {
+    text-decoration: underline;
+}
+
+/* Dots — BELOW the card */
+.picksDots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.picksDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    padding: 0;
+}
+
+.picksDotActive {
+    background: #8b2dff;
+    transform: scale(1.3);
+}

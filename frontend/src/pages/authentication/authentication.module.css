@@ -22,16 +22,16 @@
 
 .header {
     display: flex;
-    width: 50%;
-    margin-inline-start: 4rem;
+    width: 100%;
+    padding: 2rem 4rem;
     gap: 35px;
-    height: 200px;
-    flex-direction: row;
+    box-sizing: border-box;
     align-items: center;
+    z-index: 10;
 }
 
 .darkModeImage {
-    height: 100px;
+    height: clamp(60px, 10vh, 100px);
 }
 
 .homeButton {
@@ -51,6 +51,7 @@
     z-index: 2;
     flex: 1;
     justify-content: flex-end;
+
 }
 
 :root[dir="rtl"] .content {
@@ -155,6 +156,7 @@ button {
 .sideTabs {
     position: absolute;
     top: 100px;
+    z-index: 5;
     left: -35px;
     display: flex;
     flex-direction: column;
@@ -187,6 +189,7 @@ button {
     font-size: 1rem;
     cursor: pointer;
 }
+
 .activeTab {
     background-color: white;
     color: var(--text-main);
@@ -232,6 +235,7 @@ button {
     margin: 0 40px;
 
 }
+
 .error {
     margin: 0 40px;
     color: red;
@@ -250,11 +254,6 @@ button {
     transform: translateX(20px);
 }
 
-
-
-
-
-
 .footer {
     position: absolute;
     bottom: 0;
@@ -264,3 +263,80 @@ button {
     z-index: 0;
     background: var(--bottom-gradient);
 }
+
+.contentWrapper {
+    display: flex;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    flex: 1;
+    padding: 0 40px;
+}
+
+/* LEFT SIDE (The Slider) */
+.absoluteSlider {
+    position: absolute;
+    top: 18%;
+    /* Adjust based on where you want it vertically */
+    left: 5%;
+    width: 45%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.sliderImageHalf {
+    width: 100%;
+    height: auto;
+    margin-top: -50px;
+    /* Slight bleed into the top title */
+}
+
+.sliderImage {
+    height: clamp(600px, 80vh, 750px);
+    width: auto;
+    object-fit: contain;
+}
+
+.sliderDescription {
+    font-size: clamp(1.5rem, 2rem, 3rem);
+    color: #e6e6e6;
+    /* var(--subtitle-text) from landing page */
+    font-style: italic;
+    max-width: 80%;
+    line-height: 1.4;
+    margin-bottom: 30px;
+}
+
+
+.fade {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.fadeSlide {
+    animation: slideFade 0.6s ease;
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideFade {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
