@@ -40,6 +40,44 @@ def get_comment_author_data(request, c):
     return None
 
 
+def handle_comment_notification(comment, parent_comment, actor_user, actor_page):
+    post = comment.post
+
+    # if parent_comment then its a replay to a comment if not it a comment on a post
+    if parent_comment:
+        receiver_user = parent_comment.author_user
+        receiver_page = parent_comment.author_page
+    else:
+        receiver_user = post.author_user
+        receiver_page = post.author_page
+
+    # dont send if the user commented on his own post or comment
+    if actor_user and receiver_user and actor_user == receiver_user:
+        return
+
+    if actor_page and receiver_page and actor_page == receiver_page:
+        return
+
+    actor_name = actor_user.username if actor_user else actor_page.page_name
+
+    if parent_comment:
+        text = f"{actor_name} replied to your comment"
+    else:
+        text = f"{actor_name} commented on your post"
+
+    # ---- CREATE ----
+    Notification.objects.create(
+        receiver_user=receiver_user,
+        receiver_page=receiver_page,
+        actor_user=actor_user,
+        actor_page=actor_page,
+        type=Notification.Type.COMMENT,
+        content=text,
+        content_type=ContentType.objects.get_for_model(comment),
+        object_id=comment.comment_id,
+    )
+
+
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def comment_list(request, post_id):
@@ -146,42 +184,4 @@ def create_comment(request, post_id):
             "replying_to": replying_to,
         },
         status=201,
-    )
-
-
-def handle_comment_notification(comment, parent_comment, actor_user, actor_page):
-    post = comment.post
-
-    # if parent_comment then its a replay to a comment if not it a comment on a post
-    if parent_comment:
-        receiver_user = parent_comment.author_user
-        receiver_page = parent_comment.author_page
-    else:
-        receiver_user = post.author_user
-        receiver_page = post.author_page
-
-    # dont send if the user commented on his own post or comment
-    if actor_user and receiver_user and actor_user == receiver_user:
-        return
-
-    if actor_page and receiver_page and actor_page == receiver_page:
-        return
-
-    actor_name = actor_user.username if actor_user else actor_page.page_name
-
-    if parent_comment:
-        text = f"{actor_name} replied to your comment"
-    else:
-        text = f"{actor_name} commented on your post"
-
-    # ---- CREATE ----
-    Notification.objects.create(
-        receiver_user=receiver_user,
-        receiver_page=receiver_page,
-        actor_user=actor_user,
-        actor_page=actor_page,
-        type=Notification.Type.COMMENT,
-        content=text,
-        content_type=ContentType.objects.get_for_model(comment),
-        object_id=comment.comment_id,
     )

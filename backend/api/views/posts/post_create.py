@@ -1,9 +1,10 @@
+from django.contrib.contenttypes.models import ContentType
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Community, Post, PostMedia
+from ...models import Community, CommunityMember, Notification, Post, PostMedia
 from ...serializers import PostSerializer
 
 
@@ -27,12 +28,35 @@ def create_post(request):
     i = 0
     for img in images:
         PostMedia.objects.create(post=post, media_type=PostMedia.MediaType.IMAGE, media_file=img, order_index=i)
-        i = i + 1
+        i += 1
 
     z = 0
     for file in files:
         PostMedia.objects.create(post=post, media_type=PostMedia.MediaType.FILE, media_file=file, order_index=z)
-        z = z + 1
+        z += 1
+
+    # ---- notification ----
+    if community:
+        # notify all community members except the post author
+        members = (
+            CommunityMember.objects.filter(community=community, status="approved")
+            .exclude(user=user)
+            .select_related("user")
+        )
+
+        notifications = [
+            Notification(
+                receiver_user=member.user,
+                actor_user=user,
+                type=Notification.Type.ANNOUNCEMENTS,
+                content=f"{user.username} posted in {community.name}",
+                content_type=ContentType.objects.get_for_model(post),
+                object_id=post.post_id,
+            )
+            for member in members
+        ]
+
+        Notification.objects.bulk_create(notifications)
 
     serializer = PostSerializer(post)
     return Response(serializer.data, status=status.HTTP_201_CREATED)

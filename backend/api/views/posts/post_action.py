@@ -1,9 +1,10 @@
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Friendship, Post, PostReaction, Report, SavedPost
+from ...models import Friendship, Notification, Post, PostReaction, Report, SavedPost
 
 
 @api_view(["POST"])
@@ -24,6 +25,22 @@ def toggle_like(request, post_id):
     else:
         PostReaction.objects.create(post=post, user=user)
         liked = True
+
+        receiver_user = post.author_user
+        receiver_page = post.author_page
+
+        should_notify = not (receiver_user and receiver_user == user)
+
+        if should_notify:
+            Notification.objects.create(
+                receiver_user=receiver_user,
+                receiver_page=receiver_page,
+                actor_user=user,
+                type=Notification.Type.LIKE,
+                content=f"{user.username} liked your post",
+                content_type=ContentType.objects.get_for_model(post),
+                object_id=post.post_id,
+            )
 
     likes_count = PostReaction.objects.filter(post=post, user__isnull=False).count()
 

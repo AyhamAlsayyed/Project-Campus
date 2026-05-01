@@ -95,6 +95,11 @@ class NotificationSerializer(serializers.ModelSerializer):
             except Comment.DoesNotExist:
                 return None
 
+        if model_class == Message:
+            # Takes user to the conversation
+            msg = Message.objects.get(pk=obj.object_id)
+            return f"/messages/{msg.conversation_id}"
+
         # friend request / user profile
         if obj.actor_user:
             return f"/profile/{obj.actor_user_id}"
