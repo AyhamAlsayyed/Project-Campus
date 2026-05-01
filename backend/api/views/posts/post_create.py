@@ -1,10 +1,19 @@
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Community, CommunityMember, Notification, Post, PostMedia
+from ...models import (
+    Community,
+    CommunityMember,
+    Friendship,
+    Notification,
+    Post,
+    PostMedia,
+)
 from ...serializers import PostSerializer
 
 
@@ -58,5 +67,32 @@ def create_post(request):
 
         Notification.objects.bulk_create(notifications)
 
+    else:  # notify all friends if the post is not in a community
+        friendships = Friendship.objects.filter(
+            Q(user1=user) | Q(user2=user),
+            status=Friendship.Status.ACCEPTED,
+        )
+
+        friend_ids = []
+        for friendship in friendships:
+            friend_id = friendship.user2_id if friendship.user1_id == user.id else friendship.user1_id
+            friend_ids.append(friend_id)
+
+        User = get_user_model()
+        friends = User.objects.filter(id__in=friend_ids)
+
+        notifications = [
+            Notification(
+                receiver_user=friend,
+                actor_user=user,
+                type=Notification.Type.ANNOUNCEMENTS,
+                content=f"{user.username} posted in {community.name}",
+                content_type=ContentType.objects.get_for_model(post),
+                object_id=post.post_id,
+            )
+            for friend in friends
+        ]
+
+        Notification.objects.bulk_create(notifications)
     serializer = PostSerializer(post)
     return Response(serializer.data, status=status.HTTP_201_CREATED)

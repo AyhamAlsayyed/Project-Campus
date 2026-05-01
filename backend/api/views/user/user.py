@@ -140,18 +140,6 @@ def user_profile_view(request, user_id):
 
     friends_count = Friendship.objects.filter(Q(user1=user) | Q(user2=user), status=Friendship.Status.ACCEPTED).count()
 
-    phones_qs = getattr(user, "phones", None)
-    phones = []
-    if phones_qs:
-        phones = [
-            {
-                "id": p.id,
-                "phone": p.phone,
-                "is_primary": p.is_primary,
-            }
-            for p in phones_qs.all().order_by("-is_primary", "id")
-        ]
-
     DEGREE_ORDER = {
         "PhD": 1,
         "Master": 2,
@@ -192,7 +180,8 @@ def user_profile_view(request, user_id):
         "friend_status": friend_status,
         "friends_count": friends_count,
         "email": user.email,
-        "phone": phones,
+        "primary_phone": getattr(profile, "primary_phone", ""),
+        "secondary_phone": getattr(profile, "secondary_phone", ""),
         "degree": degrees,
     }
 

@@ -59,6 +59,8 @@ class UserProfile(models.Model):
         SUSPENDED = "suspended", "Suspended"
 
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.ONLINE)
+    primary_phone = models.CharField(max_length=11, blank=True, null=True)
+    secondary_phone = models.CharField(max_length=11, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -66,24 +68,6 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
-
-
-class UserPhone(models.Model):
-    id = models.BigAutoField(primary_key=True)
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="phones",
-        db_column="user_id",
-    )
-
-    phone = models.CharField(max_length=30)
-    is_primary = models.BooleanField(default=False)
-
-    class Meta:
-        db_table = "user_phone"
-        constraints = [models.UniqueConstraint(fields=["user", "phone"], name="uniq_user_phone")]
 
 
 class UserDegree(models.Model):
@@ -1140,6 +1124,7 @@ class Notification(models.Model):
         UPCOMING_EVENT = "upcoming_event", "Upcoming Event"
         SYSTEM = "system", "System"
         REACTED_TO_YOUR_POST = "reacted_post", "Reacted to your post"
+        POST_CREATED = "post_created", "New Post Created"
 
     type = models.CharField(
         max_length=30,
