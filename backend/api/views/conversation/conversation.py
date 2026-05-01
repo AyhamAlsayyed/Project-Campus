@@ -1,18 +1,14 @@
+from django.contrib.contenttypes.models import ContentType
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import ConversationMember, Message
+from ...models import Conversation, ConversationMember, Message, Notification
 
 
 def get_actor(request):
-    """
-    Returns (user, page)
-    Only one will be not None
-    """
-
     user = request.user
-    page_id = request.headers.get("X-Page-Id")  # or from request.data
+    page_id = request.headers.get("X-Page-Id")
 
     if page_id:
         from ...models import Page
@@ -24,6 +20,45 @@ def get_actor(request):
             return None, None
 
     return user, None
+
+
+def notify_other_members(conversation, sent_message, actor_user, actor_page):
+    """Notify all other members in the conversation that a new message was sent."""
+    actor_name = actor_user.username if actor_user else actor_page.page_name
+
+    # get all members except the sender
+    other_members = (
+        ConversationMember.objects.filter(conversation=conversation)
+        .select_related("user", "page")
+        .exclude(user=actor_user if actor_user else None)
+    )
+
+    if actor_page:
+        other_members = other_members.exclude(page=actor_page)
+
+    notifications = []
+    for member in other_members:
+        if not member.user and not member.page:
+            continue
+
+        # skip if muted
+        if member.is_muted:
+            continue
+
+        notifications.append(
+            Notification(
+                receiver_user=member.user if member.user else None,
+                receiver_page=member.page if member.page else None,
+                actor_user=actor_user,
+                actor_page=actor_page,
+                type=Notification.Type.MESSAGE,
+                content=f"{actor_name} sent a message",
+                content_type=ContentType.objects.get_for_model(sent_message),
+                object_id=sent_message.message_id,
+            )
+        )
+
+    Notification.objects.bulk_create(notifications)
 
 
 @api_view(["GET"])
@@ -51,10 +86,8 @@ def get_conversations(request):
             name = conv.name or "Group"
             avatar = conv.image.url if conv.image else ""
             conversation_owner = conv.created_by_user.username
-
         else:
             other = conv.members.exclude(id=member.id).first()
-
             name = "Unknown"
             avatar = ""
 
@@ -63,7 +96,6 @@ def get_conversations(request):
                     name = other.user.username
                     if hasattr(other.user, "profile") and other.user.profile.profile_image:
                         avatar = other.user.profile.profile_image.url
-
                 elif other.page:
                     name = other.page.page_name
                     if other.page.profile_image:
@@ -120,19 +152,15 @@ def get_messages(request, conversation_id):
 
         if msg.sender_user:
             sender_name = msg.sender_user.username
-
             if user and msg.sender_user == user:
                 sender_id = "me"
-
             if hasattr(msg.sender_user, "profile") and msg.sender_user.profile.profile_image:
                 avatar = msg.sender_user.profile.profile_image.url
 
         elif msg.sender_page:
             sender_name = msg.sender_page.page_name
-
             if page and msg.sender_page == page:
                 sender_id = "me"
-
             if msg.sender_page.profile_image:
                 avatar = msg.sender_page.profile_image.url
 
@@ -145,15 +173,20 @@ def get_messages(request, conversation_id):
                 "sender": sender_name,
                 "senderId": sender_id,
                 "avatar": avatar,
-                "reply_to_details": {
-                "id": msg.parent_message.message_id,
-                "text": msg.parent_message.content,
-                 "sender_name": msg.parent_message.sender_user.username if msg.parent_message.sender_user else "Unknown"
-                }    if msg.parent_message else None
+                "reply_to_details": (
+                    {
+                        "id": msg.parent_message.message_id,
+                        "text": msg.parent_message.content,
+                        "sender_name": (
+                            msg.parent_message.sender_user.username if msg.parent_message.sender_user else "Unknown"
+                        ),
+                    }
+                    if msg.parent_message
+                    else None
+                ),
             }
         )
 
-    # mark read
     from django.utils import timezone
 
     member.last_read_at = timezone.now()
@@ -174,7 +207,6 @@ def send_message(request, conversation_id):
         try:
             parent_message = Message.objects.get(message_id=reply_to_id)
         except Message.DoesNotExist:
-
             parent_message = None
 
     if not text:
@@ -193,7 +225,16 @@ def send_message(request, conversation_id):
         content=text,
         sender_user=user if user else None,
         sender_page=page if page else None,
-        parent_message=parent_message 
+        parent_message=parent_message,
+    )
+
+    # ---- notification ----
+    conversation = Conversation.objects.get(conversation_id=conversation_id)
+    notify_other_members(
+        conversation=conversation,
+        sent_message=msg,
+        actor_user=user,
+        actor_page=page,
     )
 
     return Response(
@@ -202,10 +243,14 @@ def send_message(request, conversation_id):
             "text": msg.content,
             "time": msg.sent_at.strftime("%H:%M"),
             "senderId": "me",
-            "reply_to_details": {
-                "id": parent_message.message_id,
-                "text": parent_message.content,
-                "sender_name": parent_message.sender_user.username if parent_message and parent_message.sender_user else "Unknown"
-            } if parent_message else None
+            "reply_to_details": (
+                {
+                    "id": parent_message.message_id,
+                    "text": parent_message.content,
+                    "sender_name": parent_message.sender_user.username if parent_message.sender_user else "Unknown",
+                }
+                if parent_message
+                else None
+            ),
         }
     )

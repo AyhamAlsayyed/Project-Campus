@@ -16,7 +16,7 @@ def get_user_academic_info(user):
         result["role"] = "student"
         result["major"] = student.major
         result["academic"] = student.academic_level
-        result["university_page_name"] = student.university_page.page_name
+        result["university_page_name"] = student.university_page.page_name if student.university_page else None
         return result
 
     instructor = getattr(user, "instructor_profile", None)
@@ -59,9 +59,9 @@ def me(request):
             "bio": getattr(profile, "bio", ""),
             "avatar": avatar,
             "cover": cover,
-            "university": user_info["university_page_name"],
-            "major": user_info["major"],
-            "role": user_info["role"],
+            "university": user_info.get("university_page_name"),
+            "major": user_info.get("major"),
+            "role": user_info.get("role"),
         },
         status=status.HTTP_200_OK,
     )
@@ -101,6 +101,13 @@ def user_profile_view(request, user_id):
         university = instructor.university_page.page_name if instructor.university_page else None
         major = None
         role = "instructor"
+
+        instructor_data = {
+            "academic_title": instructor.academic_title,
+            "department": instructor.department,
+            "instructor_type": instructor.instructor_type,
+            "university_page": university,
+        }
     elif admin:
         university = None
         major = None
@@ -133,18 +140,6 @@ def user_profile_view(request, user_id):
 
     friends_count = Friendship.objects.filter(Q(user1=user) | Q(user2=user), status=Friendship.Status.ACCEPTED).count()
 
-    phones_qs = getattr(user, "phones", None)
-    phones = []
-    if phones_qs:
-        phones = [
-            {
-                "id": p.id,
-                "phone": p.phone,
-                "is_primary": p.is_primary,
-            }
-            for p in phones_qs.all().order_by("-is_primary", "id")
-        ]
-
     DEGREE_ORDER = {
         "PhD": 1,
         "Master": 2,
@@ -171,23 +166,26 @@ def user_profile_view(request, user_id):
             for d in degrees
         ]
 
-    return Response(
-        {
-            "id": user.id,
-            "username": user.username,
-            "full_name": getattr(profile, "full_name", ""),
-            "academic_email": getattr(profile, "academic_email", ""),
-            "bio": getattr(profile, "bio", ""),
-            "avatar": avatar,
-            "cover": cover,
-            "university": university,
-            "major": major,
-            "role": role,
-            "friend_status": friend_status,
-            "friends_count": friends_count,
-            "email": user.email,
-            "phone": phones,
-            "degree": degrees,
-        },
-        status=status.HTTP_200_OK,
-    )
+    response_data = {
+        "id": user.id,
+        "username": user.username,
+        "full_name": getattr(profile, "full_name", ""),
+        "academic_email": getattr(profile, "academic_email", ""),
+        "bio": getattr(profile, "bio", ""),
+        "avatar": avatar,
+        "cover": cover,
+        "university": university,
+        "major": major,
+        "role": role,
+        "friend_status": friend_status,
+        "friends_count": friends_count,
+        "email": user.email,
+        "primary_phone": getattr(profile, "primary_phone", ""),
+        "secondary_phone": getattr(profile, "secondary_phone", ""),
+        "degree": degrees,
+    }
+
+    if instructor:
+        response_data["instructor_info"] = instructor_data
+
+    return Response(response_data, status=status.HTTP_200_OK)

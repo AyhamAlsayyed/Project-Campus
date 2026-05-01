@@ -4,7 +4,7 @@ from .views.auth.login import login
 from .views.auth.signup.send_code import send_code
 from .views.auth.signup.signup import signup
 from .views.auth.signup.verify_code import verify_code
-from .views.comment.comments import comment_list
+from .views.comment.comments import comment_list, create_comment
 from .views.communities.communitie import (
     communities,
     community_detail,
@@ -51,6 +51,7 @@ urlpatterns = [
     path("communities/<int:community_id>/", community_detail),
     path("communities/<int:community_id>/posts/", feed),
     path("posts/<int:post_id>/comments/", comment_list),
+    path("posts/<int:post_id>/comments/create/", create_comment),
     path("friends/request/", send_friend_request),
     path("friends/accept/", accept_friend_request),
     path("friends/decline/", decline_friend_request),

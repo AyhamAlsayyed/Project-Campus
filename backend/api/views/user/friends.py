@@ -1,12 +1,31 @@
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Friendship
+from ...models import Friendship, Notification
 
 User = get_user_model()
+
+
+def notify_friend_request(friendship, from_user, to_user, notification_type):
+    if notification_type == Notification.Type.FRIEND_REQUEST:
+        content = (f"{from_user.username} sent you a friend request",)
+    elif notification_type == Notification.Type.ACCEPTED_FRIEND_REQUEST:
+        content = (f"{from_user.username} accepted your friend request",)
+    else:
+        content = (f"{from_user.username} interacted with your friend request",)
+
+    Notification(
+        receiver_user=to_user,
+        actor_user=from_user,
+        type=notification_type,
+        content=content,
+        content_type=ContentType.objects.get_for_model(friendship),
+        object_id=friendship.friendship_id,
+    )
 
 
 @api_view(["POST"])
@@ -32,6 +51,7 @@ def send_friend_request(request):
 
     if not friendship:
         Friendship.objects.create(user1=from_user, user2=to_user, status=Friendship.Status.PENDING)
+        notify_friend_request(friendship, from_user, to_user, Notification.Type.FRIEND_REQUEST)
         return Response({"message": "Request sent"}, status=201)
 
     if friendship.status == Friendship.Status.PENDING:
@@ -42,6 +62,9 @@ def send_friend_request(request):
         friendship.user1 = from_user
         friendship.user2 = to_user
         friendship.save()
+
+        notify_friend_request(friendship, from_user, to_user, Notification.Type.FRIEND_REQUEST)
+
         return Response({"message": "Request re-sent"}, status=200)
 
     if friendship.status == Friendship.Status.ACCEPTED:
@@ -76,6 +99,8 @@ def accept_friend_request(request):
 
     friendship.status = Friendship.Status.ACCEPTED
     friendship.save()
+
+    notify_friend_request(friendship, current_user, from_user, Notification.Type.FRIEND_REQUEST)
 
     return Response({"message": "Friend request accepted"}, status=200)
 

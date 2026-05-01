@@ -80,14 +80,12 @@ export default function CommentModal({ post, onClose, currentUser }) {
         }
     };
 
-
-
     const addComment = async () => {
         if (!newComment.trim()) return;
         const token = localStorage.getItem("access");
 
         try {
-            const res = await fetch(`http://localhost:8000/api/posts/${post.id}/comments/`, {
+            const res = await fetch(`http://localhost:8000/api/posts/${post.id}/comments/create/`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -105,16 +103,19 @@ export default function CommentModal({ post, onClose, currentUser }) {
                 setComments([...comments, savedComment]);
                 setNewComment("");
                 setParentComment(null);
+            } else {
+                const err = await res.json();
+                console.error("Server error:", err);
             }
 
         } catch (err) {
             console.error("Error saving comment:", err);
         }
     };
+
     const handleLikePost = async () => {
         const token = localStorage.getItem("access");
         if (!token || !post?.id) return;
-
 
         const originalLiked = isLiked;
         const originalCount = likesCount;
@@ -132,12 +133,12 @@ export default function CommentModal({ post, onClose, currentUser }) {
             });
             if (!res.ok) throw new Error("Failed to like");
         } catch (err) {
-
             setIsLiked(originalLiked);
             setLikesCount(originalCount);
             console.error("Like failed:", err);
         }
     };
+
     const formatTimeAgo = (dateString) => {
         const now = new Date();
         const past = new Date(dateString);
@@ -153,8 +154,9 @@ export default function CommentModal({ post, onClose, currentUser }) {
         if (hours < 24) return `${hours} hr ago`;
         if (days < 7) return `${days} d ago`;
 
-        return past.toLocaleDateString(); // fallback
+        return past.toLocaleDateString();
     };
+
     const nextSlide = (e) => {
         e.stopPropagation();
         setCurrentSlide((prev) => (prev + 1) % visualMedia.length);
@@ -189,7 +191,6 @@ export default function CommentModal({ post, onClose, currentUser }) {
                 </div>
 
                 <div className={styles.content}>
-                    {/* POST HEADER */}
                     <div className={styles.postHeader}>
                         <Link to={`/profile/${post.author_id}`}>
                             <img
@@ -204,10 +205,8 @@ export default function CommentModal({ post, onClose, currentUser }) {
                         </div>
                     </div>
 
-                    {/* POST TEXT - Fixed: Ensuring this displays */}
                     {post.content && <p className={styles.postText}>{post.content}</p>}
 
-                    {/* MEDIA CAROUSEL SECTION */}
                     {visualMedia.length > 0 && (
                         <div className={styles.media}>
                             {visualMedia.length > 1 && (
@@ -241,6 +240,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
                             )}
                         </div>
                     )}
+
                     {files.length > 0 && (
                         <div className={styles.filesContainer}>
                             {files.map((file, i) => (
@@ -257,7 +257,6 @@ export default function CommentModal({ post, onClose, currentUser }) {
                         </div>
                     )}
 
-                    {/* STATS */}
                     <div className={styles.stats}>
                         <button
                             className={`${styles.iconBtn} ${isLiked ? styles.liked : ""}`}
@@ -278,9 +277,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
                         <span>{post.comments_count || comments.length} comments</span>
                     </div>
 
-                    {/* ACTIONS */}
                     <div className={styles.actions}>
-
                         <div
                             className={`${styles.actionBtn} ${isLiked ? styles.liked : ""}`}
                             onClick={handleLikePost}
@@ -288,11 +285,9 @@ export default function CommentModal({ post, onClose, currentUser }) {
                             <img src={isLiked ? LikeActive : Like} width={20} alt="" />
                             <span>Like</span>
                         </div>
-
                         <div className={styles.actionBtn}>↗ Share</div>
                     </div>
 
-                    {/* COMMENTS LIST */}
                     <div className={styles.commentsSection}>
                         {parentComments.map((c) => {
                             const replies = getReplies(c.id);
@@ -300,7 +295,6 @@ export default function CommentModal({ post, onClose, currentUser }) {
 
                             return (
                                 <div key={c.id} className={styles.commentBlock}>
-                                    {/* MAIN COMMENT */}
                                     <div className={styles.commentRow}>
                                         <Link to={`/profile/${c.user_id}`}>
                                             <img src={c.user_avatar || "/default-avatar.png"} className={styles.commentAvatar} alt="" />
@@ -328,7 +322,6 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                         </div>
                                     </div>
 
-                                    {/* 🔥 INSTAGRAM-STYLE TOGGLE BUTTON */}
                                     {replies.length > 0 && (
                                         <div
                                             className={styles.viewRepliesToggle}
@@ -339,7 +332,6 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                         </div>
                                     )}
 
-                                    {/* 🔥 REPLIES (Only renders if isExpanded is true) */}
                                     {isExpanded && replies.map((reply) => (
                                         <div key={reply.id} className={styles.replyRow}>
                                             <Link to={`/profile/${reply.user_id}`}>
@@ -380,12 +372,12 @@ export default function CommentModal({ post, onClose, currentUser }) {
                         })}
                     </div>
                 </div>
+
                 {parentComment && (
                     <div className={styles.replyBar}>
                         <span>
                             Replying to <b>{parentComment.user}</b>
                         </span>
-
                         <button
                             className={styles.closeReplyBtn}
                             onClick={() => setParentComment(null)}
@@ -395,10 +387,8 @@ export default function CommentModal({ post, onClose, currentUser }) {
                     </div>
                 )}
 
-
                 <div className={styles.inputContainer}>
                     <div className={styles.inputRow}>
-
                         <div className={styles.inputWrapper}>
                             <input
                                 value={newComment}
@@ -416,5 +406,4 @@ export default function CommentModal({ post, onClose, currentUser }) {
             </div>
         </div>
     );
-
 }

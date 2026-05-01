@@ -27,7 +27,7 @@ def get_university_row_from_email(email: str):
     if not domain:
         return None
 
-    return UniversityDomain.objects.select_related("page").filter(domain=domain, is_active=True).first()
+    return UniversityDomain.objects.filter(domain=domain, is_active=True).first()
 
 
 def resolve_role_from_domain(domain: str) -> str:

@@ -29,6 +29,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+db_name = os.environ.get("db_name")
+db_user = os.environ.get("db_user")
+db_password = os.environ.get("db_password")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -116,8 +119,12 @@ WSGI_APPLICATION = "backend.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": db_name,
+        "USER": db_user,
+        "PASSWORD": db_password,
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
 
