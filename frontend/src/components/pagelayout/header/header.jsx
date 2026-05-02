@@ -3,7 +3,7 @@ import ThemeToggler from "../../pagelayout/themeToggle";
 import darkModeIcon from "../../../Assets/Pictures/LogoDarkMode.png";
 import {
   Search, Home, Check, MoreHorizontal,
-  Volume2, Calendar, UserPlus, Heart 
+  Volume2, Calendar, UserPlus, Heart
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -21,12 +21,13 @@ export default function Header({ theme, toggleTheme, user }) {
   const chatRef = useRef(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [chats, setChats] = useState([]);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const timeAgo = (dateString) => {
     if (!dateString) return "";
-
     let date;
-
-    // Check if dateString is just a time (HH:MM)
     if (typeof dateString === 'string' && dateString.length === 5 && dateString.includes(':')) {
       const [hours, minutes] = dateString.split(':');
       date = new Date();
@@ -34,7 +35,6 @@ export default function Header({ theme, toggleTheme, user }) {
     } else {
       date = new Date(dateString);
     }
-
     if (isNaN(date.getTime())) return dateString;
     const now = new Date();
     const diffInSeconds = Math.floor((now - date) / 1000);
@@ -48,17 +48,20 @@ export default function Header({ theme, toggleTheme, user }) {
     if (diffInDays === 1) return "Yesterday";
     return `${diffInDays} d. ago`;
   };
+
   const getNotificationIcon = (type) => {
     const t = (type || "").toLowerCase();
     if (t.includes("announcement")) return <Volume2 size={12} color="currentColor" />;
     if (t.includes("event")) return <Calendar size={12} color="currentColor" />;
     if (t.includes("friend") || t.includes("request")) return <UserPlus size={12} color="currentColor" />;
     if (t.includes("react") || t.includes("post")) return <Heart size={12} color="currentColor" />;
-    return <Volume2 size={12} color="currentColor" />; // fallback
+    return <Volume2 size={12} color="currentColor" />;
   };
+
   const filteredChats = chats.filter((chat) =>
     chat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
   useEffect(() => {
     const fetchHeaderData = async () => {
       try {
@@ -67,7 +70,6 @@ export default function Header({ theme, toggleTheme, user }) {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
         };
-
 
         const notifRes = await fetch("http://localhost:8000/api/notifications", { headers });
         if (notifRes.ok) {
@@ -80,17 +82,15 @@ export default function Header({ theme, toggleTheme, user }) {
               : `http://localhost:8000${item.actor_avatar || item.avatar}` || "/default-avatar.png",
             type: item.type || "Notification",
             text: item.message || item.content,
+            // ── use the link field the backend sends directly ──
+            link: item.link || null,
             actor_id: item.actor_id,
             post_id: item.post_id,
             event_id: item.event_id,
-
-
             time: timeAgo(item.time) || item.time,
           }));
           setNotifications(formattedNotifs);
         }
-
-
 
         const chatRes = await fetch("http://localhost:8000/api/chats/", { headers });
         if (chatRes.ok) {
@@ -101,9 +101,7 @@ export default function Header({ theme, toggleTheme, user }) {
             avatar: chat.avatar?.startsWith("http")
               ? chat.avatar
               : `http://localhost:8000${chat.avatar}` || "/default-avatar.png",
-
             message: chat.preview || chat.last_message || "No messages yet",
-
             status: chat.is_online ? "online" : "offline",
             dotStyle: chat.is_online ? "online" : "offline",
             isGroup: chat.is_group || false,
@@ -121,22 +119,20 @@ export default function Header({ theme, toggleTheme, user }) {
 
     if (user) fetchHeaderData();
   }, [user]);
+
+  // ── Navigate using backend-provided link, fall back to actor/post/event ──
   const handleNotificationClick = (n) => {
-    if (n.event_id) {
+    if (n.link) {
+      navigate(n.link);
+    } else if (n.event_id) {
       navigate(`/events/${n.event_id}`);
-    }
-    else if (n.post_id) {
+    } else if (n.post_id) {
       navigate(`/posts/${n.post_id}`);
-    }
-    else if (n.actor_id) {
+    } else if (n.actor_id) {
       navigate(`/profile/${n.actor_id}`);
     }
-
     setShowNotifications(false);
   };
-
-
-
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -152,13 +148,11 @@ export default function Header({ theme, toggleTheme, user }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-
   const unreadChatsCount = chats.reduce((sum, chat) => sum + chat.unread, 0);
+
   const handleMarkAsRead = async (id) => {
     try {
-
       const token = localStorage.getItem("access");
-
       const response = await fetch(`http://localhost:8000/api/notifications/${id}/`, {
         method: "PATCH",
         headers: {
@@ -167,17 +161,15 @@ export default function Header({ theme, toggleTheme, user }) {
         },
         body: JSON.stringify({ is_read: true }),
       });
-
       if (response.ok) {
-        setNotifications(prev =>
-          prev.map(n => n.id === id ? { ...n, is_read: true } : n)
-        );
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
         setOpenMenuId(null);
       }
     } catch (error) {
       console.error("Error marking as read:", error);
     }
   };
+
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem("access");
@@ -188,7 +180,6 @@ export default function Header({ theme, toggleTheme, user }) {
           "Content-Type": "application/json"
         },
       });
-
       if (response.ok) {
         setNotifications(prev => prev.filter(n => n.id !== id));
         setOpenMenuId(null);
@@ -199,22 +190,9 @@ export default function Header({ theme, toggleTheme, user }) {
   };
 
   const handleManage = (id) => {
-    console.log("Navigating to settings for notification:", id);
     navigate("/settings/notifications");
     setOpenMenuId(null);
   };
-
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (notifRef.current && !notifRef.current.contains(event.target)) {
-        setShowNotifications(false);
-        setOpenMenuId(null);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const avatarSrc = user?.avatar
     ? user.avatar.startsWith("http")
@@ -222,55 +200,38 @@ export default function Header({ theme, toggleTheme, user }) {
       : `http://localhost:8000${user.avatar}`
     : "/default-avatar.png";
 
-  const navigate = useNavigate();
-  const location = useLocation();
-
   const handleAvatarClick = () => {
-    if (!user?.id) {
-      console.warn("User not loaded yet");
-      return;
-    }
-
+    if (!user?.id) { console.warn("User not loaded yet"); return; }
     if (location.pathname.startsWith(`/profile/${user.id}`)) {
       navigate("/home");
     } else {
       navigate(`/profile/${user.id}`);
     }
   };
-  const isInProfileSection =
-    location.pathname.startsWith(`/profile/${user?.id}`);
 
-
-
-
-
+  const isInProfileSection = location.pathname.startsWith(`/profile/${user?.id}`);
   const unreadCount = notifications.filter(n => !n.is_read).length;
   const displayCount = notifications.length;
+
   return (
     <div className={styles.headerInner}>
       <div className={styles.headerLeft}>
         <img src={darkModeIcon} alt="Dark Mode Icon" className={styles.darkModeIcon} />
-        <button className={styles.title} type="button">
-          CAMPUS
-        </button>
+        <button className={styles.title} type="button">CAMPUS</button>
       </div>
 
       <div className={styles.headerCenter}>
         <div className={styles.searchWrap}>
           <Search className={styles.searchIcon} size={24} />
-          <input
-            className={styles.searchInput}
-            type="text"
-            placeholder="What are you looking for?"
-          />
+          <input className={styles.searchInput} type="text" placeholder="What are you looking for?" />
         </div>
       </div>
 
       <div className={styles.headerRight}>
         <ThemeToggler theme={theme} toggleTheme={toggleTheme} />
 
+        {/* ── CHATS ── */}
         <div className={styles.chatWrapper} ref={chatRef}>
-          {/* Active class added, red dot added */}
           <button
             className={`${styles.iconButton} ${showChats ? styles.activeIconBtn : ""}`}
             type="button"
@@ -286,13 +247,12 @@ export default function Header({ theme, toggleTheme, user }) {
                 <h3 className={styles.notifTitle}>Chats</h3>
                 <div className={styles.notifHeaderActions}>
                   <Check size={18} />
-                  <span onClick={() => navigate("/chats")} className={styles.viewAll}>
+                  <span onClick={() => { navigate("/chats"); setShowChats(false); }} className={styles.viewAll}>
                     view all
                   </span>
                 </div>
               </div>
 
-              {/* Fixed Search Bar */}
               <div className={styles.chatSearchContainer}>
                 <Search size={18} className={styles.chatSearchIcon} />
                 <input
@@ -309,6 +269,7 @@ export default function Header({ theme, toggleTheme, user }) {
                     <div
                       key={chat.id}
                       className={styles.chatItem}
+                      // ── clicking a chat navigates to that chat ──
                       onClick={() => {
                         setShowChats(false);
                         navigate(`/chats/${chat.id}`);
@@ -318,23 +279,14 @@ export default function Header({ theme, toggleTheme, user }) {
                       <div className={styles.chatAvatarWrap}>
                         <img src={chat.avatar} alt="" className={styles.chatAvatar} />
                         {!chat.isGroup && (
-                          <span
-                            className={`${styles.statusDot} ${styles[
-                              chat.dotStyle === 'online'
-                                ? 'dotOnline'
-                                : chat.dotStyle === 'dnd'
-                                  ? 'dotDnd'
-                                  : 'dotOffline'
-                            ]
-                              }`}
-                          />
+                          <span className={`${styles.statusDot} ${styles[
+                            chat.dotStyle === 'online' ? 'dotOnline' :
+                            chat.dotStyle === 'dnd' ? 'dotDnd' : 'dotOffline'
+                          ]}`} />
                         )}
                       </div>
-
                       <div className={styles.chatGrid}>
-                        {!chat.isGroup && (
-                          <span className={styles.chatStatus}>{chat.status}</span>
-                        )}
+                        {!chat.isGroup && <span className={styles.chatStatus}>{chat.status}</span>}
                         <span className={styles.chatPreview}>{chat.message}</span>
                         <span className={styles.chatName}>{chat.name}</span>
                         <div className={styles.chatTimeContainer}>
@@ -354,6 +306,7 @@ export default function Header({ theme, toggleTheme, user }) {
           )}
         </div>
 
+        {/* ── NOTIFICATIONS ── */}
         <div className={styles.notificationWrapper} ref={notifRef}>
           <button
             className={styles.bellButton}
@@ -361,22 +314,14 @@ export default function Header({ theme, toggleTheme, user }) {
             onClick={() => setShowNotifications(!showNotifications)}
           >
             <div className={styles.bellIconContainer}>
-
               <img
                 src={unreadCount > 0 ? BellActive : Bell}
-                width={27}
-                height={29}
-                alt="Notifications"
+                width={27} height={29} alt="Notifications"
                 style={{ filter: "invert(1)" }}
               />
-
               {unreadCount > 0 && <span className={styles.redDotIndicator} />}
             </div>
-
-
-            {displayCount > 0 && (
-              <span className={styles.rightBadge}>{displayCount}</span>
-            )}
+            {displayCount > 0 && <span className={styles.rightBadge}>{displayCount}</span>}
           </button>
 
           {showNotifications && (
@@ -391,19 +336,20 @@ export default function Header({ theme, toggleTheme, user }) {
 
               <div className={styles.notifList}>
                 {notifications.length === 0 ? (
-
                   <div className={styles.emptyState}>No new notifications</div>
                 ) : (
                   notifications.map((n) => (
-                    <div key={n.id} onClick={() => handleNotificationClick(n)} className={`${styles.notificationItem} ${!n.is_read ? styles.unread : ""}`}>
+                    <div
+                      key={n.id}
+                      // ── uses link field from backend ──
+                      onClick={() => handleNotificationClick(n)}
+                      className={`${styles.notificationItem} ${!n.is_read ? styles.unread : ""}`}
+                    >
                       {!n.is_read && <span className={styles.unreadDot} />}
-
                       <div className={styles.notifAvatarWrap}>
-
                         <img src={n.avatar || "/default-avatar.png"} alt="" className={styles.notifAvatar} />
                         <div className={styles.notifIconBadge}>{getNotificationIcon(n.type)}</div>
                       </div>
-
                       <div className={styles.notifContent}>
                         <div className={styles.notifTopRow}>
                           <span className={styles.notifType}>{n.type}</span>
@@ -411,8 +357,6 @@ export default function Header({ theme, toggleTheme, user }) {
                         </div>
                         <p className={styles.notifText}>{n.text}</p>
                       </div>
-
-
                       <div className={styles.notifMenuWrapper}>
                         <button
                           className={styles.notifMenuBtn}
@@ -423,20 +367,13 @@ export default function Header({ theme, toggleTheme, user }) {
                         >
                           <MoreHorizontal size={18} />
                         </button>
-
-
                         {openMenuId === n.id && (
                           <div className={styles.actionMenu}>
                             <button onClick={() => handleMarkAsRead(n.id)}>
                               <Check size={14} /> Read
                             </button>
-                            <button onClick={() => handleManage(n.id)}>
-                              Manage
-                            </button>
-                            <button
-                              className={styles.deleteAction}
-                              onClick={() => handleDelete(n.id)}
-                            >
+                            <button onClick={() => handleManage(n.id)}>Manage</button>
+                            <button className={styles.deleteAction} onClick={() => handleDelete(n.id)}>
                               Delete
                             </button>
                           </div>
@@ -449,19 +386,13 @@ export default function Header({ theme, toggleTheme, user }) {
             </div>
           )}
         </div>
-        <button
-          className={styles.iconButton}
-          type="button"
-          onClick={handleAvatarClick}
-        >
+
+        {/* ── AVATAR / HOME ── */}
+        <button className={styles.iconButton} type="button" onClick={handleAvatarClick}>
           {isInProfileSection ? (
             <Home size={24} />
           ) : (
-            <img
-              src={avatarSrc}
-              alt="Profile"
-              className={styles.userProfilePicture}
-            />
+            <img src={avatarSrc} alt="Profile" className={styles.userProfilePicture} />
           )}
         </button>
       </div>

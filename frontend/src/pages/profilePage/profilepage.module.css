@@ -102,74 +102,105 @@ body {
   filter: saturate(0.95) contrast(1.05);
 }
 
-.editCoverBtn {
-  position: absolute;
-  right: 18px;
-  bottom: 16px;
+
+.editProfileBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.78rem;
   border: none;
-  cursor: pointer;
-  border-radius: 14px;
-  padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.35);
-  color: rgba(255, 255, 255, 0.9);
   font-weight: 600;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+  align-self: center;
+  margin-left: 4px;
+}
+
+
+
+
+.editPencil {
+  font-size: 0.85rem;
+  line-height: 1;
+
+  opacity: 0.85;
 }
 
 /* Profile header row */
 .profileHeaderRow {
   display: flex;
   padding: 0 32px 24px 32px;
-   margin-top: -20px;
+  margin-top: -20px;
   align-items: flex-start;
   gap: 24px;
 }
+
 .profileMeta {
   flex: 1;
   margin-top: 5px;
 }
+
 .profileActions {
   display: flex;
   gap: 12px;
-  margin-left: auto; /* This is the magic that pushes them to the right */
+  margin-left: auto;
+  /* This is the magic that pushes them to the right */
   margin-top: 65px;
 }
+
 .addFriendBtn {
-  background: #7c3aed; /* Modern Purple */
-  color: white;
+  background: linear-gradient(30deg, #5E23A4, #9C269D);
   border: none;
-  border-radius: 12px;
-  padding: 10px 20px;
-  font-weight: 600;
+  border-radius: 20px;
+  padding: 8px 15px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
+  transition: opacity 0.2s;
 }
+
+.addFriendBtn:hover {
+  opacity: 0.9;
+}
+
+@screen sm {
+  .addFriendBtn {
+    padding: 8px 20px;
+  }
+}
+
 .friendsCount {
-    font-size: 0.9rem;
-    color: #ccc;
+  font-size: 0.9rem;
+  color: #ccc;
 }
 
 .uniRow {
-    margin-top: 4px;
+  margin-top: 4px;
 }
 
 .uni {
-    font-size: 0.9rem;
-    color: #aaa;
+  font-size: 0.9rem;
+  color: #aaa;
 }
 
 .department {
-    font-size: 0.9rem;
-    color: #ccc;
-    font-weight: 500;
+  font-size: 0.9rem;
+  color: #ccc;
+  font-weight: 500;
 }
 
 .employmentType {
-    font-size: 0.9rem;
-    color: #aaa;
+  font-size: 0.9rem;
+  color: #aaa;
 }
+
 .messageBtn {
   background: rgba(255, 255, 255, 0.08);
   color: white;
@@ -184,7 +215,8 @@ body {
   transition: all 0.2s;
 }
 
-.addFriendBtn:hover, .messageBtn:hover {
+.addFriendBtn:hover,
+.messageBtn:hover {
   transform: translateY(-2px);
   background: rgba(124, 58, 237, 0.9);
 }
@@ -192,6 +224,7 @@ body {
 .avatarWrap {
   flex: 0 0 auto;
 }
+
 .pendingBtn {
   background: #444;
   color: #ccc;
@@ -219,61 +252,64 @@ body {
   border-radius: 20px;
   padding: 8px 14px;
 }
+
 /* --- Friends Tab Styling --- */
 
 .friendsGrid {
-    display: grid;
-    /* This automatically creates as many columns as will fit, making it responsive */
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
-    gap: 20px;
-    padding: 30px;
-    width: 85%;
-    margin: 0 auto;
-    background-color: #2a2a2a; /* Matches your Photos tab background */
-    border-radius: 25px;
-    box-sizing: border-box;
+  display: grid;
+  /* This automatically creates as many columns as will fit, making it responsive */
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+  padding: 30px;
+  width: 85%;
+  margin: 0 auto;
+  background-color: #2a2a2a;
+  /* Matches your Photos tab background */
+  border-radius: 25px;
+  box-sizing: border-box;
 }
 
 .friendCard {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.03);
-    border-radius: 20px;
-    padding: 24px 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    cursor: pointer;
-    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 20px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
 .friendCard:hover {
-    transform: translateY(-4px);
-    background: rgba(255, 255, 255, 0.08);
-    /* Subtle purple border glow on hover to match your theme */
-    border-color: rgba(124, 58, 237, 0.5); 
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.08);
+  /* Subtle purple border glow on hover to match your theme */
+  border-color: rgba(124, 58, 237, 0.5);
 }
 
 .friendAvatar {
-    width: 85px;
-    height: 85px;
-    border-radius: 50%;
-    object-fit: cover;
-    background: rgba(0, 0, 0, 0.3); /* Dark fallback for transparent images */
-    border: 3px solid rgba(255, 255, 255, 0.1);
-    padding: 3px;
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.3);
+  /* Dark fallback for transparent images */
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  padding: 3px;
 }
 
 .friendName {
-    color: rgba(255, 255, 255, 0.95);
-    font-weight: 700;
-    font-size: 1.05rem;
-    margin: 0;
-    text-align: center;
-    width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0;
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .avatarCircle {
@@ -304,7 +340,15 @@ body {
 .nameRow {
   display: flex;
   align-items: baseline;
+
+  justify-content: space-between;
   gap: 8px;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .username {
@@ -467,41 +511,42 @@ body {
   opacity: 0.9;
   line-height: 1.35rem;
 }
+
 .photosGrid {
-    display: grid;
-    background-color:#2a2a2a;
-    margin: 0 auto;
-    border-radius: 25px ;
-    
-    
-    grid-template-columns: repeat(4, 1fr); 
-    gap: 12px;
-    padding: 20px;
-    width: 85%;
-    box-sizing: border-box;
-    /* This ensures rows are created as needed */
-    grid-auto-flow: dense; 
+  display: grid;
+  background-color: #2a2a2a;
+  margin: 0 auto;
+  border-radius: 25px;
+
+
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 20px;
+  width: 85%;
+  box-sizing: border-box;
+  /* This ensures rows are created as needed */
+  grid-auto-flow: dense;
 }
 
 .photoItem {
-    width: 100%;
-    aspect-ratio: 1 / 1; 
-    object-fit: cover;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: transform 0.2s ease;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
 .photoLarge {
-    /* Takes up 2 columns and 2 rows on the left */
-    grid-column: span 2; 
-    grid-row: span 2;
-    border-radius: 18px;
+  /* Takes up 2 columns and 2 rows on the left */
+  grid-column: span 2;
+  grid-row: span 2;
+  border-radius: 18px;
 }
 
 .photoItem:hover {
-    transform: scale(1.02);
-    filter: brightness(1.1);
+  transform: scale(1.02);
+  filter: brightness(1.1);
 }
 
 
@@ -534,6 +579,7 @@ body {
   display: flex;
   justify-content: center;
 }
+
 .postsSection {
   width: calc(100% - 36px);
   margin: 14px auto 0 auto;
@@ -553,182 +599,916 @@ body {
 }
 
 .verifiedBadge {
-    display: inline-flex;
-    align-items: center;
-    margin-left: 6px;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
 }
 
 
 .department {
-    font-size: 0.9rem;
-    color: #ccc;
-    font-weight: 500;
+  font-size: 0.9rem;
+  color: #ccc;
+  font-weight: 500;
 }
 
 .employmentType {
-    font-size: 0.9rem;
-    color: #aaa;
+  font-size: 0.9rem;
+  color: #aaa;
 }
 
 
 .picksCard {
-    background: rgba(61, 60, 60, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    padding: 20px;
-    width: 100%;
-    margin-top: 20px;
-    backdrop-filter: blur(10px);
+  background: rgba(61, 60, 60, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 20px;
+  width: 100%;
+  margin-top: 20px;
+  backdrop-filter: blur(10px);
 }
 
 .picksHeader {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
 .picksIcon {
-    color: #8b2dff;
+  color: #8b2dff;
 }
 
 .picksTitle {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
 }
 
 /* Slider wrapper with arrows on sides */
 .picksSliderWrapper {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .picksArrow {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    color: #fff;
-    width: 28px;
-    height: 28px;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.2s;
-    flex-shrink: 0;
-    line-height: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .picksArrow:hover:not(:disabled) {
-    background: rgba(139, 45, 255, 0.3);
+  background: rgba(139, 45, 255, 0.3);
 }
 
 .picksArrow:disabled {
-    opacity: 0.3;
-    cursor: default;
+  opacity: 0.3;
+  cursor: default;
 }
 
 .picksSlide {
-    flex: 1;
-    min-width: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .pickItem {
-    background: rgba(255, 255, 255, 0.04);
-    border-radius: 14px;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .pickCoverImage {
-    width: 100%;
-    height: 100px;
-    object-fit: cover;
-    display: block;
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  display: block;
 }
 
 .pickInfo {
-    padding: 10px 12px;
+  padding: 10px 12px;
 }
 
 .pickNameRow {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
 }
 
 .pickName {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #fff;
-    flex: 1;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  flex: 1;
 }
 
 .pickViewBtn {
-    background: rgba(139, 45, 255, 0.15);
-    border: 1px solid rgba(139, 45, 255, 0.4);
-    border-radius: 8px;
-    color: #c084fc;
-    font-size: 0.75rem;
-    padding: 3px 10px;
-    cursor: pointer;
-    transition: background 0.2s;
-    white-space: nowrap;
+  background: rgba(139, 45, 255, 0.15);
+  border: 1px solid rgba(139, 45, 255, 0.4);
+  border-radius: 8px;
+  color: #c084fc;
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
 }
 
 .pickViewBtn:hover {
-    background: rgba(139, 45, 255, 0.3);
+  background: rgba(139, 45, 255, 0.3);
 }
 
 .pickDescription {
-    font-size: 0.8rem;
-    color: #aaa;
-    line-height: 1.4;
-    margin: 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  font-size: 0.8rem;
+  color: #aaa;
+  line-height: 1.4;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .readMore {
-    background: none;
-    border: none;
-    color: #8b2dff;
-    font-size: 0.78rem;
-    cursor: pointer;
-    padding: 2px 0;
-    margin-top: 2px;
+  background: none;
+  border: none;
+  color: #8b2dff;
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 2px 0;
+  margin-top: 2px;
 }
 
 .readMore:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 /* Dots — BELOW the card */
 .picksDots {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
 }
 
 .picksDot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.2s;
-    padding: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  padding: 0;
 }
 
 .picksDotActive {
-    background: #8b2dff;
-    transform: scale(1.3);
+  background: #8b2dff;
+  transform: scale(1.3);
+}
+
+/* ══════════════════════════════════════
+   EDIT PROFILE CARD
+══════════════════════════════════════ */
+
+.editCard {
+ background-color: #333333;
+  border-radius: 30px 30px 0 0;
+  width: 100%;
+  z-index: 1;
+  overflow: visible;
+  flex: 1;
+  height: auto;
+}
+
+.editHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28px 28px 20px 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 28px;
+}
+
+.flexAlign {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.backBtn {
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.backBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.whiteHeaderText {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.editActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cancelLink {
+  color: #e91e63;
+  background: none;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.cancelLink:hover {
+  opacity: 0.75;
+}
+
+.savePill {
+  background: transparent;
+  color: white;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  padding: 8px 28px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.savePill:hover {
+  background: #9b51e0;
+  border-color: #9b51e0;
+}
+
+/* ── Media Area ── */
+
+.editMediaArea {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+  margin-bottom: 28px;
+  padding: 0 28px;
+}
+
+.editAvatarSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.editAvatarCircle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: 5px solid #1c1c1c;
+  background: #2a2a2a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.editAvatarCircle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarActionHighlightRow {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.mediaTextBtn {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.mediaTextBtn:hover {
+  color: white;
+}
+
+.deleteText {
+  color: #e91e63 !important;
+}
+
+.deleteText:hover {
+  color: #ff4d8a !important;
+}
+
+.editCoverSection {
+  flex: 1;
+  min-height: 180px;
+  background: #2a2a2a;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+}
+
+.editCoverSection img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.centeredCameraBtn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.65);
+  color: white;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.centeredCameraBtn:hover {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.coverActionsDropdown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-30%, 24px);
+  background: #252525;
+  border-radius: 12px;
+  border: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.coverActionsDropdown button {
+  background: none;
+  border: none;
+  color: white;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #333;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.coverActionsDropdown button:last-child {
+  border-bottom: none;
+}
+
+.coverActionsDropdown button:hover {
+  background: #333;
+}
+
+/* ── Edit Form ── */
+
+.editForm {
+
+}
+
+.inputsAndBioWrapper {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 8px;
+}
+
+.stackedInputsLeft {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inputPairRow {
+  display: flex;
+  gap: 12px;
+}
+
+.inputPairRow input {
+  flex: 1;
+  background: transparent;
+  border: 1px solid #3a3a3a;
+  border-radius: 24px;
+  padding: 14px 18px;
+  color: white;
+  outline: none;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.inputPairRow input:focus {
+  border-color: rgba(139, 45, 255, 0.5);
+}
+
+.inputPairRow input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.invalidInput {
+  border-color: #ff4b4b !important;
+}
+
+.inputErrorBelow {
+  color: #ff4b4b;
+  font-size: 0.72rem;
+  margin: 4px 0 0 4px;
+  line-height: 1.4;
+}
+
+.bioPanelRightContainer {
+  flex: 1;
+  background: #252525;
+  border-radius: 16px;
+  border: 1px solid #2a2a2a;
+  padding: 14px 16px;
+  display: flex;
+}
+
+.designBioTextareaFixed {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: white;
+  width: 100%;
+  outline: none;
+  resize: none;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  font-family: inherit;
+}
+
+.designBioTextareaFixed::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Divider ── */
+
+.detailsTopDivider {
+  border-top: 1px solid #2a2a2a;
+  margin: 28px 0 24px;
+}
+
+/* ── Details Header ── */
+
+.detailsTitleHeaderFlex {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.detailsTitleMain {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  color: white;
+  flex-shrink: 0;
+  width: 140px;
+}
+
+.detailsSubtextHeader {
+  color: #666;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  flex: 1;
+  margin: 6px 0 0;
+}
+
+/* ── Inset Fields Panel ── */
+
+.insetFieldsPanel {
+  background: #262626;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 8px 24px 24px;
+  
+}
+
+.sectionLabelDivider {
+  color: #999;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 24px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  letter-spacing: 0.3px;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: #2a2a2a;
+}
+
+.detailFieldItem {
+  display: flex;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  gap: 12px;
+}
+
+.detailFieldItem:last-child {
+  border-bottom: none;
+}
+
+.detailFieldItem > span:first-child {
+  flex: 1;
+  color: #777;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fieldValueText {
+  flex: 2;
+  font-size: 0.875rem;
+  color: #ddd;
+}
+
+.fieldEditIcon {
+  color: #555;
+  cursor: pointer;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.fieldEditIcon:hover {
+  color: white;
+}
+
+.birthdayInputsGroup {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #252525;
+  border-radius: 12px;
+  padding: 8px 14px;
+  width: fit-content;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+}
+
+.bInput {
+  background: transparent !important;
+  border: none !important;
+  width: 32px !important;
+  padding: 0 !important;
+  text-align: center;
+  color: white !important;
+  font-size: 0.9rem;
+  outline: none;
+  font-family: inherit;
+}
+
+/* ══════════════════════════════════════
+   PHONE / EMAIL POPUP MODALS
+══════════════════════════════════════ */
+
+.editSubOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.subModal {
+  position: relative;
+  background: #1e1e1e;
+  border-radius: 20px;
+  padding: 28px;
+  width: 380px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.subModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.subModalTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.subModalActions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.subModalDiscard {
+  background: none;
+  border: none;
+  color: #e91e63;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.subModalSave {
+  background: none;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 999px;
+  padding: 6px 22px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.subModalSave:hover {
+  background: #9b51e0;
+  border-color: #9b51e0;
+}
+
+.subModalDivider {
+  height: 1px;
+  background: #2a2a2a;
+  margin-bottom: 20px;
+}
+
+.subModalLabel {
+  color: #777;
+  font-size: 0.82rem;
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.subModalInputRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.subModalInput {
+  flex: 1;
+  background: #252525;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 11px 14px;
+  color: white;
+  outline: none;
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.subModalInput:focus {
+  border-color: rgba(139, 45, 255, 0.5);
+}
+
+.subModalInput::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.subModalActionBtn {
+  background: rgba(139, 45, 255, 0.15);
+  border: 1px solid rgba(139, 45, 255, 0.4);
+  color: #c084fc;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.subModalActionBtn:hover {
+  background: rgba(139, 45, 255, 0.3);
+}
+
+/* ══════════════════════════════════════
+   VERIFY CODE POPUP
+══════════════════════════════════════ */
+
+.verifyModal {
+  position: relative;
+  background: #1e1e1e;
+  border-radius: 20px;
+  padding: 32px;
+  width: 420px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.verifyTitle {
+  margin: 0 0 8px;
+  color: white;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.verifySubtext {
+  margin: 0 0 28px;
+  color: #777;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.codeInputs {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.codeInput {
+  width: 52px;
+  height: 56px;
+  background: transparent;
+  border: 2px solid rgba(139, 45, 255, 0.45);
+  border-radius: 12px;
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.codeInput:focus {
+  border-color: #9b51e0;
+}
+
+.verifyActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.resendBtn {
+  background: none;
+  border: none;
+  color: #777;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.resendBtn:hover {
+  color: white;
+}
+
+.savePurple {
+  background: linear-gradient(30deg, #5E23A4, #9C269D);
+  border: none;
+  color: white;
+  border-radius: 999px;
+  padding: 10px 36px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: opacity 0.2s;
+}
+
+.savePurple:hover {
+  opacity: 0.88;
+}
+
+/* ══════════════════════════════════════
+   EDIT COVER BUTTON (on profile card)
+══════════════════════════════════════ */
+
+.editCoverBtn {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  border: none;
+  cursor: pointer;
+  border-radius: 14px;
+  padding: 8px 14px;
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  font-size: 0.82rem;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s;
+}
+
+.editCoverBtn:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+
+
+@media (max-width: 1200px) {
+  .inputsAndBioWrapper {
+    flex-direction: column;
+  }
+
+  .bioPanelRightContainer {
+    height: 100px;
+  }
+
+  .detailsTitleHeaderFlex {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .detailsTitleMain {
+    width: auto;
+    font-size: 1.5rem;
+  }
+}
+.avatarEditGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    padding: 10px 14px;
+    border-radius: 16px;
+    border: 1px solid transparent;
+    transition: background 0.2s, border-color 0.2s;
+    cursor: pointer;
+}
+
+.avatarEditGroup:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.avatarEditGroup:hover .editAvatarCircle {
+    border-color: rgba(255, 255, 255, 0.4);
 }
