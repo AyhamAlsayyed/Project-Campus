@@ -50,6 +50,7 @@ class UserProfile(models.Model):
     profile_image = models.ImageField(upload_to="profiles/", blank=True, null=True)
     banner_image = models.ImageField(upload_to="banners/", blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
+    birth_date = models.DateField(blank=True, null=True)
 
     class Status(models.TextChoices):
         ONLINE = "online", "Online"

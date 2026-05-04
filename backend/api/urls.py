@@ -33,7 +33,7 @@ from .views.user.friends import (
     user_friends_list,
 )
 from .views.user.recently_contacted import recently_contacted
-from .views.user.user import me, user_profile_view
+from .views.user.user import me, update_profile, user_profile_view
 
 urlpatterns = [
     path("auth/send_code/", send_code),
@@ -42,6 +42,7 @@ urlpatterns = [
     path("auth/login/", login),
     path("auth/me/", me),
     path("users/<int:user_id>/", user_profile_view),
+    path("auth/profile/update/", update_profile),
     path("posts/feed/", feed, name="posts_feed"),
     path("posts/", feed, name="user_posts"),
     path("posts/saved/", get_saved_posts, name="posts_saved"),

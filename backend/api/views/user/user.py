@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from rest_framework import status
@@ -56,9 +58,12 @@ def me(request):
             "username": user.username,
             "full_name": getattr(profile, "full_name", ""),
             "academic_email": getattr(profile, "academic_email", ""),
+            "email": user.email,
             "bio": getattr(profile, "bio", ""),
             "avatar": avatar,
             "cover": cover,
+            "primary_phone": getattr(profile, "primary_phone", ""),
+            "secondary_phone": getattr(profile, "secondary_phone", ""),
             "university": user_info.get("university_page_name"),
             "major": user_info.get("major"),
             "role": user_info.get("role"),
@@ -189,3 +194,53 @@ def user_profile_view(request, user_id):
         response_data["instructor_info"] = instructor_data
 
     return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+def update_profile(request):
+    user = request.user
+    profile = getattr(user, "profile", None)
+
+    username = request.data["username"] if "username" in request.data else None
+    if username != user.username:
+        username = request.data["username"]
+        if not re.fullmatch(r"[a-z]+", username):
+            return Response(
+                {"message": "Username must contain only lowercase letters"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Enforce username uniqueness
+        if User.objects.filter(username__iexact=username).exists():
+            return Response({"message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
+        user.username = request.data["username"]
+
+    if profile:
+        if "full_name" in request.data:
+            profile.full_name = request.data["full_name"]
+        if "bio" in request.data:
+            profile.bio = request.data["bio"]
+        if "primary_phone" in request.data:
+            profile.primary_phone = request.data["primary_phone"]
+        if "secondary_phone" in request.data:
+            profile.secondary_phone = request.data["secondary_phone"]
+        if "personal_email" in request.data:
+            profile.secondary_email = request.data.get("personal_email", "")
+        if "birthday" in request.data:
+            profile.birthday = request.data["birthday"]
+
+        if "avatar" in request.FILES:
+            profile.profile_image = request.FILES["avatar"]
+        if "cover" in request.FILES:
+            profile.banner_image = request.FILES["cover"]
+
+        profile.save()
+
+    # Update student profile if exists
+    if hasattr(user, "student_profile") and "major" in request.data:
+        user.student_profile.major = request.data["major"]
+        user.student_profile.save()
+
+    user.save()
+
+    return Response({"message": "Profile updated successfully"})
