@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from rest_framework import status
@@ -63,36 +62,36 @@ def create_post(request):
                 object_id=post.post_id,
             )
             for member in members
+            if member.user
         ]
 
         Notification.objects.bulk_create(notifications)
-
-    else:  # notify all friends if the post is not in a community
+    else:
+        # notify all friends
         friendships = Friendship.objects.filter(
-            Q(user1=user) | Q(user2=user),
-            status=Friendship.Status.ACCEPTED,
-        )
+            Q(user1=user) | Q(user2=user), status=Friendship.Status.ACCEPTED
+        ).select_related("user1", "user2")
 
-        friend_ids = []
+        friends = []
         for friendship in friendships:
-            friend_id = friendship.user2_id if friendship.user1_id == user.id else friendship.user1_id
-            friend_ids.append(friend_id)
-
-        User = get_user_model()
-        friends = User.objects.filter(id__in=friend_ids)
+            friend = friendship.user2 if friendship.user1 == user else friendship.user1
+            if friend:
+                friends.append(friend)
 
         notifications = [
             Notification(
                 receiver_user=friend,
                 actor_user=user,
                 type=Notification.Type.ANNOUNCEMENTS,
-                content=f"{user.username} posted in {community.name}",
+                content=f"{user.username} posted something new",
                 content_type=ContentType.objects.get_for_model(post),
                 object_id=post.post_id,
             )
             for friend in friends
         ]
 
-        Notification.objects.bulk_create(notifications)
+        if notifications:
+            Notification.objects.bulk_create(notifications)
+
     serializer = PostSerializer(post)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
