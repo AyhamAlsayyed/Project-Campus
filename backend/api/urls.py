@@ -20,6 +20,12 @@ from .views.notification.notification import get_notifications, notification_del
 from .views.posts.post_action import block_post, report_post, save_post, toggle_like
 from .views.posts.post_create import create_post
 from .views.posts.posts import feed, get_activity_posts, get_saved_posts
+from .views.university.university import (
+    university_doctors,
+    university_events,
+    university_info,
+    university_news,
+)
 from .views.user.friends import (
     accept_friend_request,
     decline_friend_request,
@@ -62,4 +68,8 @@ urlpatterns = [
     path("chats/", get_conversations),
     path("chats/<int:conversation_id>/messages/", get_messages),
     path("chats/<int:conversation_id>/send/", send_message),
+    path("university/news/", university_news),
+    path("university/events/", university_events),
+    path("university/doctors/", university_doctors),
+    path("university/", university_info),
 ]
