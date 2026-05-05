@@ -4,7 +4,6 @@ from .models import (
     Comment,
     Community,
     Friendship,
-    Message,
     Notification,
     Post,
     PostMedia,
@@ -86,38 +85,36 @@ class NotificationSerializer(serializers.ModelSerializer):
         model_class = obj.content_type.model_class()
 
         if model_class == Post:
-            return f"/posts/{obj.object_id}"
+            return obj.object_id
 
         if model_class == Comment:
             # find which post the comment belongs to
             try:
                 comment = Comment.objects.select_related("post").get(pk=obj.object_id)
-                return f"/posts/{comment.post_id}"
+                return {
+                    "post_id": comment.post_id,
+                    "comment_id": comment.comment_id,
+                }
             except Comment.DoesNotExist:
                 return None
 
         if model_class == Community:
-            return f"/communities/{obj.object_id}"
-
+            return obj.object_id
+        """
         if model_class == Message:
-            # Takes user to the conversation
-            try:
-                msg = Message.objects.get(pk=obj.object_id)
-                return f"/messages/{msg.conversation_id}"
-            except Message.DoesNotExist:
-                return None
-
+            this is handled in the messaging popup
+        """
         if model_class == Friendship:
             if obj.actor_user:
-                return f"/profile/{obj.actor_user_id}"
+                return obj.actor_user_id
             else:
                 return None
 
         # friend request / user profile
         if obj.actor_user:
-            return f"/profile/{obj.actor_user_id}"
+            return obj.actor_user_id
 
         if obj.actor_page:
-            return f"/pages/{obj.actor_page_id}"
+            return obj.actor_page_id
 
         return None

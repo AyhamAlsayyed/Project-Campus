@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Conversation, ConversationMember, Message, Notification
+from ...models import ConversationMember, Message, Notification
 
 
 def get_actor(request):
@@ -227,7 +227,8 @@ def send_message(request, conversation_id):
         sender_page=page if page else None,
         parent_message=parent_message,
     )
-
+    """
+    c
     # ---- notification ----
     conversation = Conversation.objects.get(conversation_id=conversation_id)
     notify_other_members(
@@ -236,7 +237,7 @@ def send_message(request, conversation_id):
         actor_user=user,
         actor_page=page,
     )
-
+    """
     return Response(
         {
             "id": msg.message_id,
