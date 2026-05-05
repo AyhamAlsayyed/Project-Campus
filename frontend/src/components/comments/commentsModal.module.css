@@ -249,8 +249,11 @@
 
 .commentsSection {
     padding: 16px 0;
+    max-height: 340px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.15) transparent;
 }
-
 .commentRow {
     display: flex;
     gap: 8px;

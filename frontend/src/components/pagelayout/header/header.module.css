@@ -142,7 +142,19 @@
   place-items: center;
   border-radius: 50%;
 }
+.notifList {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
 
+.chatListWrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
 .notificationDropdown {
   position: absolute;
   top: calc(100% + 15px);
