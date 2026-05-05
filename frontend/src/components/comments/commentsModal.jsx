@@ -4,7 +4,11 @@ import Like from '../../Assets/icons/like.png';
 import { X } from "lucide-react";
 import { Link } from "react-router-dom";
 import LikeActive from '../../Assets/icons/like-active.png';
+import { useRef } from "react";
 export default function CommentModal({ post, onClose, currentUser }) {
+    const highlightCommentId = post.highlightCommentId || null;
+    const [highlightedId, setHighlightedId] = useState(highlightCommentId);
+    const commentRefs = useRef({});
     const [comments, setComments] = useState(post.comments || []);
     const [newComment, setNewComment] = useState("");
     const [isLiked, setIsLiked] = useState(post.is_liked || false);
@@ -17,6 +21,13 @@ export default function CommentModal({ post, onClose, currentUser }) {
     const files = post.media?.filter(item => item.type === "file") || [];
     const parentComments = comments.filter(c => !c.parent_comment);
     const replies = comments.filter(c => c.parent_comment);
+    useEffect(() => {
+        if (!highlightedId) return;
+        const el = commentRefs.current[highlightedId];
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const timer = setTimeout(() => setHighlightedId(null), 2000);
+        return () => clearTimeout(timer);
+    }, [comments, highlightedId])
     const toggleReplies = (commentId) => {
         setExpandedReplies((prev) => ({
             ...prev,
@@ -294,14 +305,14 @@ export default function CommentModal({ post, onClose, currentUser }) {
                             const isExpanded = expandedReplies[c.id];
 
                             return (
-                                <div key={c.id} className={styles.commentBlock}>
+                                <div key={c.id} className={styles.commentBlock} ref={el => commentRefs.current[c.id] = el}>
                                     <div className={styles.commentRow}>
                                         <Link to={`/profile/${c.user_id}`}>
                                             <img src={c.user_avatar || "/default-avatar.png"} className={styles.commentAvatar} alt="" />
                                         </Link>
 
                                         <div className={styles.commentContent}>
-                                            <div className={styles.commentBubble}>
+                                            <div className={`${styles.commentBubble} ${highlightedId === c.id ? styles.highlighted : ''}`}>
                                                 <div className={styles.commentAuthor}>{c.user}</div>
                                                 <p>{c.text}</p>
                                             </div>
@@ -333,13 +344,13 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                     )}
 
                                     {isExpanded && replies.map((reply) => (
-                                        <div key={reply.id} className={styles.replyRow}>
+                                        <div key={reply.id} className={styles.replyRow} ref={el => commentRefs.current[reply.id] = el}>
                                             <Link to={`/profile/${reply.user_id}`}>
                                                 <img src={reply.user_avatar || "/default-avatar.png"} className={styles.replyAvatar} alt="" />
                                             </Link>
 
                                             <div className={styles.replyContent}>
-                                                <div className={styles.replyBubble}>
+                                                 <div className={`${styles.replyBubble} ${highlightedId === reply.id ? styles.highlighted : ''}`}>
                                                     <b>{reply.user}</b>
                                                     <p>
                                                         <span className={styles.replyingTo}>

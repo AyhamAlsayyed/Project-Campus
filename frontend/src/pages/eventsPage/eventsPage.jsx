@@ -1,57 +1,72 @@
 import styles from './eventsPage.module.css';
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function EventsPage() {
+    const API = "http://localhost:8000";
     const [user, setUser] = useState(null);
     const [theme, setTheme] = useState("dark");
     const toggleTheme = () => setTheme(prev => prev === "light" ? "dark" : "light");
+    const [events, setEvents] = useState([]);
+    const [recommendedEvents, setRecommendedEvents] = useState([]);
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+        const fetchData = async () => {
+            const token = localStorage.getItem("access");
+            const headers = {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+            };
 
-    const events = [
-        {
-            id: 1,
-            orgName: "Palestine Technical University - Kadoorie",
-            // Using a specific library/student photo to match your reference image
-            avatar: "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?q=80&w=200&h=200&auto=format&fit=crop",
-            banner: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop",
-            isFollowed: true,
-            startDate: "11/12/2025",
-            endDate: "13/12/2025"
-        },
-        {
-            id: 2,
-            orgName: "TechnoPark - Palestine",
-            avatar: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?q=80&w=200&h=200&auto=format&fit=crop",
-            banner: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1200&auto=format&fit=crop",
-            isFollowed: false,
-            startDate: "07/12/2025 - 3:00 PM",
-            endDate: "07/12/2025 - 6:00 PM"
-        }
-    ];
-    const recommendedEvents = [
-        {
-            id: 1,
-            orgName: "Juhoud",
-            avatar: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=100",
-            banner: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&q=80&w=600",
-            isFollowed: false,
-        },
-        {
-            id: 2,
-            orgName: "An-Najah National University",
-            avatar: "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?auto=format&fit=crop&q=80&w=100",
-            banner: "https://images.unsplash.com/photo-1541339907198-e08759dfc3ef?auto=format&fit=crop&q=80&w=600",
-            isFollowed: false,
-        },
-        {
-            id: 3,
-            orgName: "Coffee Lab",
-            avatar: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=100",
-            banner: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=600",
-            isFollowed: false,
-        }
-    ];
+            try {
+                // Using Promise.all and the same /api/auth/me/ endpoint
+                const [eventsRes, userRes] = await Promise.all([
+                    fetch(`${API}/api/events/`, { headers }),
+                    fetch(`${API}/api/auth/me/`, { headers })
+                ]);
+
+                // Handle User Data (Same logic as Universities)
+                if (userRes.ok) {
+                    const userData = await userRes.json();
+                    setUser(userData);
+                } else {
+                    console.warn("User profile could not be fetched.");
+                }
+
+                // Handle Events Data
+                if (eventsRes.ok) {
+                    const data = await eventsRes.json();
+                    const formatted = data.map(event => ({
+                        id: event.id,
+                        orgName: event.organization_name,
+                        avatar: event.avatar
+                            ? (event.avatar.startsWith("http") ? event.avatar : `${API}${event.avatar}`)
+                            : "/default-avatar.png",
+                        banner: event.banner
+                            ? (event.banner.startsWith("http") ? event.banner : `${API}${event.banner}`)
+                            : "",
+                        isFollowed: event.is_followed,
+                        startDate: event.start_date,
+                        endDate: event.end_date,
+                        title: event.title,
+                        description: event.description
+                    }));
+                    setEvents(formatted);
+
+                    // Logic for recommended (if separate, otherwise slice from events)
+                    setRecommendedEvents(formatted.slice(0, 3));
+                }
+
+            } catch (err) {
+                console.error("Network or parsing error:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     return (
         <div className={styles.darkContainer}>

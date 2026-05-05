@@ -245,7 +245,11 @@
     filter: none ;
     opacity: 1;
 }
-
+.highlighted {
+    background: rgba(46, 137, 255, 0.3);
+    border: 1px solid rgba(46, 137, 255, 0.6);
+    transition: background 2s ease, border-color 2s ease;
+}
 
 .commentsSection {
     padding: 16px 0;

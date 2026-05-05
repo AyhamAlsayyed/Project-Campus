@@ -39,12 +39,12 @@ def university_info(request):
         {
             "id": university_page.page_id,
             "name": university_page.page_name,
-            # "name_arabic": getattr(university_page, "name_arabic", None),
+             "name_arabic": "جامعة فلسطين التقنية خضوري",#getattr(university_page, "name_arabic", None),
             "description": university_page.description,
             "logo": file_url(request, university_page.profile_image),
             "banner": file_url(request, university_page.banner_image),
             "verified": university_page.verified,
-            # "branch": "Ramallah Branch",
+             "branch": "Ramallah Branch",
             "stats": {
                 "students": students_count,
                 "instructors": instructors_count,

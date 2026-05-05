@@ -222,6 +222,7 @@ export default function ProfilePage() {
     const currentAvatarSrc = currentUser?.avatar
         ? currentUser.avatar.startsWith("http") ? currentUser.avatar : `${API}${currentUser.avatar}`
         : "/default-avatar.png";
+        
 
     return (
         <div className={styles.darkContainer}>
