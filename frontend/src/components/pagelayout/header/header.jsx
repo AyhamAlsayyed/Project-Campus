@@ -120,7 +120,7 @@ export default function Header({ theme, toggleTheme, user }) {
     if (user) fetchHeaderData();
   }, [user]);
 
-  // ── Navigate using backend-provided link, fall back to actor/post/event ──
+  
   const handleNotificationClick = (n) => {
     if (n.link) {
       navigate(n.link);
