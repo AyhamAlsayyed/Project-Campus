@@ -3,6 +3,7 @@ from rest_framework import serializers
 from .models import (
     Comment,
     Community,
+    Event,
     Friendship,
     Notification,
     Post,
@@ -160,3 +161,47 @@ class CommunitySerializer(serializers.ModelSerializer):
 
     def get_is_private(self, obj):
         return obj.privacy == "private"
+
+
+class EventSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source="event_id", read_only=True)
+
+    organization_name = serializers.CharField(source="page.page_name")
+    avatar = serializers.SerializerMethodField()
+    banner = serializers.SerializerMethodField()
+
+    is_followed = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = Event
+        fields = [
+            "id",
+            "organization_name",
+            "avatar",
+            "banner",
+            "is_followed",
+            "start_date",
+            "end_date",
+            "title",
+            "description",
+        ]
+
+    def get_avatar(self, obj):
+        request = self.context.get("request")
+
+        if obj.page and obj.page.profile_image:
+            try:
+                return request.build_absolute_uri(obj.page.profile_image.url)
+            except Exception:
+                return None
+        return None
+
+    def get_banner(self, obj):
+        request = self.context.get("request")
+
+        if obj.page and obj.page.banner_image:
+            try:
+                return request.build_absolute_uri(obj.page.banner_image.url)
+            except Exception:
+                return None
+        return None
