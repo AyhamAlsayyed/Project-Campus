@@ -77,7 +77,7 @@ User = get_user_model()
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def user_profile_view(request, user_id):
+def profile_view(request, user_id):
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:

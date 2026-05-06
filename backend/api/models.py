@@ -232,6 +232,12 @@ class Instructor(models.Model):
         db_column="university_page_id",
     )
 
+    community_picks = models.ManyToManyField(
+        "Community",
+        blank=True,
+        related_name="picked_by_instructors",
+    )
+
     class Meta:
         db_table = "instructor"
 
@@ -721,6 +727,7 @@ class Conversation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_group = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)
+    is_academic = models.BooleanField(default=False)
 
     created_by_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
