@@ -17,6 +17,13 @@ from .views.conversation.conversation import (
     send_message,
 )
 from .views.notification.notification import get_notifications, notification_delete_mark
+from .views.pages.pages import (
+    follow_page,
+    followed_pages,
+    page_detail,
+    recommended_pages,
+    unfollow_page,
+)
 from .views.posts.post_action import block_post, report_post, save_post, toggle_like
 from .views.posts.post_create import create_post
 from .views.posts.posts import feed, get_activity_posts, get_saved_posts
@@ -73,4 +80,9 @@ urlpatterns = [
     path("university/events/", university_events),
     path("university/doctors/", university_doctors),
     path("university/", university_info),
+    path("pages/followed/", followed_pages),
+    path("pages/recommended/", recommended_pages),
+    path("pages/<int:page_id>/", page_detail),
+    path("pages/<int:page_id>/follow/", follow_page),
+    path("pages/<int:page_id>/unfollow/", unfollow_page),
 ]
