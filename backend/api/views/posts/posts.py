@@ -160,7 +160,7 @@ def feed(request, community_id=None):
     if user_id:
         qs = qs.filter(author_user_id=user_id).order_by("-created_at")
 
-    # frineds feed
+    # friends feed
     elif filter_type == "friends":
         accepted_user, _ = get_friendship_sets(user)
 
@@ -168,6 +168,13 @@ def feed(request, community_id=None):
             qs = qs.none()
         else:
             qs = qs.filter(author_user__in=accepted_user).order_by("-created_at")
+
+    elif filter_type == "follow_page":
+        follow_page = FollowPage.objects.all().order_by("-created_at")
+        if not follow_page:
+            qs = qs.none()
+        else:
+            qs = qs.filter(author_page__in=follow_page).order_by("-created_at")
 
     # community feed
     elif community_id:
