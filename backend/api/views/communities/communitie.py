@@ -13,11 +13,13 @@ from django.db.models import (
     When,
 )
 from django.db.models.functions import Now
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Community, CommunityMember, Friendship, Notification
+from ...models import Community, CommunityMember, Friendship, Instructor, Notification
+from ...serializers import CommunitySerializer
 
 
 def file_url(request, f):
@@ -130,24 +132,27 @@ def communities(request):
             .order_by("-score")
         )
 
-    data = []
-    for c in qs:
-        data.append(
-            {
-                "id": c.community_id,
-                "name": c.name,
-                "description": c.description,
-                "image": file_url(request, c.banner_image),
-                "is_private": c.privacy == "private",
-                "is_verified": False,
-                "is_joined": c.is_joined,
-                "request_sent": c.request_sent,
-                "members_count": c.members_count,
-                "friends_count": c.friends_count,
-            }
-        )
+    serializer = CommunitySerializer(qs, many=True, context={"request": request})
 
-    return Response(data)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def community_detail(request, community_id):
+    try:
+        c = Community.objects.get(community_id=community_id)
+    except Community.DoesNotExist:
+        return Response({"error": "Not found"}, status=404)
+
+    return Response(
+        {
+            "id": c.community_id,
+            "name": c.name,
+            "description": c.description,
+            "is_private": c.privacy == "private",
+        }
+    )
 
 
 @api_view(["POST"])
@@ -205,18 +210,24 @@ def request_join_community(request, community_id):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def community_detail(request, community_id):
-    try:
-        c = Community.objects.get(community_id=community_id)
-    except Community.DoesNotExist:
-        return Response({"error": "Not found"}, status=404)
+def instructor_community_picks(request, instructor_id):
+    instructor = get_object_or_404(Instructor, pk=instructor_id)
+    picks = instructor.community_picks.all()
 
-    return Response(
-        {
-            "id": c.community_id,
-            "name": c.name,
-            "description": c.description,
-            "is_private": c.privacy == "private",
-        }
-    )
+    serializer = CommunitySerializer(picks, many=True, context={"request": request})
+
+    return Response(serializer.data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def toggle_pick(request, community_id):
+    instructor = request.user.instructor_profile
+    community = get_object_or_404(Community, pk=community_id)
+
+    if community in instructor.featured_communities.all():
+        instructor.featured_communities.remove(community)
+        return Response({"message": "Removed from picks"})
+    else:
+        instructor.featured_communities.add(community)
+        return Response({"message": "Added to picks"})

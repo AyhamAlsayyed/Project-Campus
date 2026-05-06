@@ -8,8 +8,10 @@ from .views.comment.comments import comment_list, create_comment
 from .views.communities.communitie import (
     communities,
     community_detail,
+    instructor_community_picks,
     join_community,
     request_join_community,
+    toggle_pick,
 )
 from .views.conversation.conversation import (
     get_conversations,
@@ -40,7 +42,7 @@ from .views.user.friends import (
     user_friends_list,
 )
 from .views.user.recently_contacted import recently_contacted
-from .views.user.user import me, update_profile, user_profile_view
+from .views.user.user import me, profile_view, update_profile
 
 urlpatterns = [
     path("auth/send_code/", send_code),
@@ -48,7 +50,7 @@ urlpatterns = [
     path("auth/signup/", signup),
     path("auth/login/", login),
     path("auth/me/", me),
-    path("users/<int:user_id>/", user_profile_view),
+    path("users/<int:user_id>/", profile_view),
     path("auth/profile/update/", update_profile),
     path("posts/feed/", feed, name="posts_feed"),
     path("posts/", feed, name="user_posts"),
@@ -63,6 +65,8 @@ urlpatterns = [
     path("communities/<int:community_id>/join/", join_community),
     path("communities/<int:community_id>/request/", request_join_community),
     path("communities/<int:community_id>/", community_detail),
+    path("users/<int:instructor_id>/community-picks/", instructor_community_picks),
+    path("<int:instructor_id>/toggle_picks/", toggle_pick),
     path("communities/<int:community_id>/posts/", feed),
     path("posts/<int:post_id>/comments/", comment_list),
     path("posts/<int:post_id>/comments/create/", create_comment),

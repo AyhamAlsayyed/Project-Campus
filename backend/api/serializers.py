@@ -118,3 +118,45 @@ class NotificationSerializer(serializers.ModelSerializer):
             return obj.actor_page_id
 
         return None
+
+
+class CommunitySerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source="community_id", read_only=True)
+
+    image = serializers.SerializerMethodField()
+    is_private = serializers.SerializerMethodField()
+    is_verified = serializers.BooleanField(source="verified")
+
+    is_joined = serializers.BooleanField(read_only=True)
+    request_sent = serializers.BooleanField(read_only=True)
+    members_count = serializers.IntegerField(read_only=True)
+    friends_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Community
+        fields = [
+            "id",
+            "name",
+            "description",
+            "image",
+            "is_private",
+            "is_verified",
+            "is_joined",
+            "request_sent",
+            "members_count",
+            "friends_count",
+        ]
+
+    def get_image(self, obj):
+        request = self.context.get("request")
+
+        if not obj.banner_image:
+            return None
+
+        try:
+            return request.build_absolute_uri(obj.banner_image.url)
+        except Exception:
+            return None
+
+    def get_is_private(self, obj):
+        return obj.privacy == "private"
