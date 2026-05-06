@@ -222,7 +222,7 @@ export default function ProfilePage() {
     const currentAvatarSrc = currentUser?.avatar
         ? currentUser.avatar.startsWith("http") ? currentUser.avatar : `${API}${currentUser.avatar}`
         : "/default-avatar.png";
-        
+
 
     return (
         <div className={styles.darkContainer}>
@@ -397,7 +397,11 @@ export default function ProfilePage() {
                                         <button
                                             key={tab}
                                             className={`${styles.tabBtn} ${activeTab === tab ? styles.tabActive : ''}`}
-                                            onClick={() => setActiveTab(tab)}
+                                            onClick={() => {
+                                                setActiveTab(tab);
+                                                if (tab === 'Saved') loadSavedPosts();
+                                                if (tab === 'Activities') loadActivities();
+                                            }}
                                         >
                                             {tab}
                                         </button>
