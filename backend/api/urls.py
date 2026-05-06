@@ -18,7 +18,7 @@ from .views.conversation.conversation import (
     get_messages,
     send_message,
 )
-from .views.event.events import events
+from .views.event.events import events, toggle_event_reminder
 from .views.notification.notification import get_notifications, notification_delete_mark
 from .views.pages.pages import (
     follow_page,
@@ -91,4 +91,5 @@ urlpatterns = [
     path("pages/<int:page_id>/follow/", follow_page),
     path("pages/<int:page_id>/unfollow/", unfollow_page),
     path("events/", events),
+    path("events/<int:event_id>/reminder", toggle_event_reminder),
 ]

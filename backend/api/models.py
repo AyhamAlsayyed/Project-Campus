@@ -408,7 +408,7 @@ class EventReminder(models.Model):
     class Meta:
         db_table = "event_reminder"
         constraints = [
-            models.UniqueConstraint(fields=["event", "user", "reminder_time"], name="uniq_event_user_time"),
+            models.UniqueConstraint(fields=["event", "user"], name="uniq_event_user_time"),
         ]
 
 
