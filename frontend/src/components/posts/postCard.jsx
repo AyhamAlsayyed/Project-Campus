@@ -6,12 +6,14 @@ import Like from '../../Assets/icons/like.png';
 import LikeActive from '../../Assets/icons/like-active.png'
 
 export default function PostCard({ post, openComments }) {
+
   const [current, setCurrent] = useState(0);
   const [isLiked, setIsLiked] = useState(post?.is_liked || post?.has_liked || false);
   const [isSaved, setIsSaved] = useState(post?.is_saved || false);
   const [likesCount, setLikesCount] = useState(post?.likes_count || 0);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
+
 
   const formatTimeAgo = (dateString) => {
     const now = new Date();
@@ -49,15 +51,27 @@ export default function PostCard({ post, openComments }) {
       if (!res.ok) { setIsLiked(originalLiked); setLikesCount(prev => (originalLiked ? prev + 1 : prev - 1)); }
     } catch (err) { setIsLiked(originalLiked); }
   };
+  if (!post || !post.author) {
+    return null;
+  }
 
   const handleMenuAction = async (actionType) => {
     const token = localStorage.getItem("access");
     setShowMenu(false);
+
+    // optimistic UI update
+    if (actionType === 'save') setIsSaved(prev => !prev);
+
     try {
-      await fetch(`http://localhost:8000/api/posts/${post.id}/${actionType}/`, {
-        method: "POST", headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch(`http://localhost:8000/api/posts/${post.id}/${actionType}/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
       });
-    } catch (err) { console.error(`Failed to ${actionType} post`); }
+      if (!res.ok && actionType === 'save') setIsSaved(prev => !prev); // revert on fail
+    } catch (err) {
+      console.error(`Failed to ${actionType} post`);
+      if (actionType === 'save') setIsSaved(prev => !prev);
+    }
   };
 
   const validMedia = post?.media?.map((item) => {
@@ -98,11 +112,17 @@ export default function PostCard({ post, openComments }) {
           </button>
           {showMenu && (
             <div className={styles.dropdownMenu}>
-              <button className={styles.menuItem}><Bookmark size={16} onClick={() => handleMenuAction('save')} /> Save</button>
+              <button className={styles.menuItem} onClick={() => handleMenuAction('save')}>
+                <Bookmark size={16} /> Save
+              </button>
               <div className={styles.menuDivider} />
-              <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('block')}><Ban size={16} /> Block</button>
+              <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('block')}>
+                <Ban size={16} /> Block
+              </button>
               <div className={styles.menuDivider} />
-              <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('report')}><Flag size={16} /> Report</button>
+              <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('report')}>
+                <Flag size={16} /> Report
+              </button>
             </div>
           )}
         </div>
@@ -182,7 +202,7 @@ export default function PostCard({ post, openComments }) {
           {post.post_type !== "advertisement" && (
             <div
               className={`${styles.commentInputPill} flex-1 min-w-0`}
-              style={{ maxWidth: "200px" , margin: "0 auto 0 auto" }}
+              style={{ maxWidth: "200px", margin: "0 auto 0 auto" }}
               onClick={() => openComments(post)}
             >
               <span className={styles.placeholderText}>Add a comment ...</span>

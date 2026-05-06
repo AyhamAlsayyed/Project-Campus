@@ -15,11 +15,13 @@ import PostCard from '../../components/posts/postCard'
 import WeeklyNews from '../../components/weeklynews/weeklynews';
 import ThemeToggler from '../../components/pagelayout/themeToggle';
 import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import MobileCreatePost from '../../components/MobileCreatePost/mobileCreatePost';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 export default function Homepage() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const [pendingOpen, setPendingOpen] = useState(null);
 
     const [theme, setTheme] = useState("dark")
     const toggleTheme = () => setTheme(prev => prev === "light" ? "dark" : "light")
@@ -128,9 +130,54 @@ export default function Homepage() {
         document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [mobileMenuOpen]);
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const openPostId = params.get('openPost');
+        const highlightCommentId = params.get('highlightComment');
+        if (!openPostId) return;
+
+        setPendingOpen({ postId: Number(openPostId), commentId: highlightCommentId ? Number(highlightCommentId) : null });
+        navigate('/home', { replace: true });
+    }, [location.search]);
+    useEffect(() => {
+        if (!pendingOpen || !user) return;
+
+        const fetchPostContent = async () => {
+            try {
+                const res = await fetch(`${API}/api/posts/activity/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log("Activity data:", data);
+
+                    // feed returns a direct array
+                    const posts = Array.isArray(data) ? data : (data.results || data.posts || []);
+                    const matchedPost = posts.find(p => p.id === pendingOpen.postId) || {};
+
+                    console.log("Matched post:", matchedPost);
+
+                    setSelectedPost({
+                        ...matchedPost,
+                        id: pendingOpen.postId,
+                        highlightCommentId: pendingOpen.commentId,
+                        author_username: matchedPost.author_username || user.username,
+                        author_avatar: user.avatar?.startsWith('http') ? user.avatar : `${API}${user.avatar}`,
+                        author_id: user.id,
+                        created_at: matchedPost.created_at || null,
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+            setPendingOpen(null);
+        };
+
+        fetchPostContent();
+    }, [pendingOpen, user]);
 
     useEffect(() => {
-      
+
         loadPosts();
         loadUser();
         fetchJoined()
@@ -141,7 +188,7 @@ export default function Homepage() {
     const avatarSrc = user?.avatar
         ? user.avatar.startsWith("http") ? user.avatar : `${API}${user.avatar}`
         : "/default-avatar.png";
- 
+
     return (
         <div className={styles.darkContainer}>
 
@@ -198,7 +245,7 @@ export default function Homepage() {
                             <X size={16} color="white" />
                         </button>
 
-                       
+
                         <div style={{
                             display: "flex", alignItems: "center", gap: 10,
                             padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)"
@@ -431,7 +478,7 @@ export default function Homepage() {
             )}
 
 
-            
+
 
             {selectedPost && (
                 <CommentModal post={selectedPost} onClose={closeComments} currentUser={user} />

@@ -9,6 +9,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
     const highlightCommentId = post.highlightCommentId || null;
     const [highlightedId, setHighlightedId] = useState(highlightCommentId);
     const commentRefs = useRef({});
+    const commentsSectionRef = useRef(null);
     const [comments, setComments] = useState(post.comments || []);
     const [newComment, setNewComment] = useState("");
     const [isLiked, setIsLiked] = useState(post.is_liked || false);
@@ -22,12 +23,32 @@ export default function CommentModal({ post, onClose, currentUser }) {
     const parentComments = comments.filter(c => !c.parent_comment);
     const replies = comments.filter(c => c.parent_comment);
     useEffect(() => {
-        if (!highlightedId) return;
-        const el = commentRefs.current[highlightedId];
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        const timer = setTimeout(() => setHighlightedId(null), 2000);
-        return () => clearTimeout(timer);
-    }, [comments, highlightedId])
+        if (!highlightedId || comments.length === 0) return;
+        console.log("highlightedId:", highlightedId);
+        console.log("all comment ids:", comments.map(c => c.id));
+        console.log("ref exists?", !!commentRefs.current[highlightedId]);
+
+
+        // expand first if it's a reply
+        const reply = comments.find(c => c.id === highlightedId && c.parent_comment);
+        if (reply) {
+            setExpandedReplies(prev => ({ ...prev, [reply.parent_comment]: true }));
+        }
+
+        // scroll after re-render has happened
+        const scrollTimer = setTimeout(() => {
+            const el = commentRefs.current[highlightedId];
+            const container = commentsSectionRef.current;
+            if (el && container) {
+                const elTop = el.offsetTop - container.offsetTop;
+                container.scrollTo({ top: elTop - container.clientHeight / 2 + el.clientHeight / 2, behavior: 'smooth' });
+            }
+        }, 300);
+
+        const clearTimer = setTimeout(() => setHighlightedId(null), 2400);
+
+        return () => { clearTimeout(scrollTimer); clearTimeout(clearTimer); };
+    }, [comments, highlightedId]);
     const toggleReplies = (commentId) => {
         setExpandedReplies((prev) => ({
             ...prev,
@@ -299,7 +320,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
                         <div className={styles.actionBtn}>↗ Share</div>
                     </div>
 
-                    <div className={styles.commentsSection}>
+                    <div className={styles.commentsSection} ref={commentsSectionRef}>
                         {parentComments.map((c) => {
                             const replies = getReplies(c.id);
                             const isExpanded = expandedReplies[c.id];
@@ -350,7 +371,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                             </Link>
 
                                             <div className={styles.replyContent}>
-                                                 <div className={`${styles.replyBubble} ${highlightedId === reply.id ? styles.highlighted : ''}`}>
+                                                <div className={`${styles.replyBubble} ${highlightedId === reply.id ? styles.highlighted : ''}`}>
                                                     <b>{reply.user}</b>
                                                     <p>
                                                         <span className={styles.replyingTo}>

@@ -51,24 +51,40 @@ export default function FriendsPage() {
                     fetch(`http://localhost:8000/api/users/${userData.id}/friends/`, {
                         headers: { Authorization: `Bearer ${token}` },
                     }),
-                    fetch("http://localhost:8000/api/posts/feed/", {
+                    fetch(`http://localhost:8000/api/posts/feed/?filter=friends`, {
                         headers: { Authorization: `Bearer ${token}` },
                     })
                 ]);
-
                 if (friendsRes.ok && postsRes.ok) {
-                    const friendsData = await friendsRes.json();
-                    const postsData = await postsRes.json();
-                    const formattedFriends = friendsData.map(f => ({
-                        ...f,
-                        avatar: f.avatar?.startsWith("http") ? f.avatar : `http://localhost:8000${f.avatar}`
-                    }));
-                    setFriends(formattedFriends);
-                    const friendIds = friendsData.map(f => f.id);
-                    const friendsPosts = postsData.filter(post =>
-                        post && friendIds.includes(post.author_id)
-                    );
-                    setPosts(friendsPosts);
+                    if (friendsRes.ok && postsRes.ok) {
+                        const friendsData = await friendsRes.json();
+                        const postsData = await postsRes.json();
+
+                        // 1. Access the 'all' array from your response object
+                        // 2. The objects are already "flattened" friend profiles, not "friendship" bridge objects
+                        const formattedFriends = (friendsData.all || []).map(f => {
+                            return {
+                                id: f.id,
+                                username: f.username,
+                                // Your API uses 'avatar_url', not 'avatar'
+                                avatar: f.avatar_url
+                                    ? (f.avatar_url.startsWith("http")
+                                        ? f.avatar_url
+                                        : `http://localhost:8000${f.avatar_url}`)
+                                    : "/default-avatar.png",
+                                major: f.major || "No Major Set",
+                                is_online: f.is_online || false
+                            };
+                        });
+
+                        // 3. Handle posts (in case your backend wraps them in 'results' or 'posts')
+                        const actualPosts = Array.isArray(postsData)
+                            ? postsData
+                            : (postsData.results || postsData.posts || []);
+
+                        setFriends(formattedFriends);
+                        setPosts(actualPosts);
+                    }
                 }
 
             } catch (error) {

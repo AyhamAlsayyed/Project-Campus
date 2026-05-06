@@ -71,24 +71,29 @@ export default function Header({ theme, toggleTheme, user }) {
           "Content-Type": "application/json",
         };
 
+
         const notifRes = await fetch("http://localhost:8000/api/notifications", { headers });
         if (notifRes.ok) {
           const notifData = await notifRes.json();
-          const formattedNotifs = notifData.map(item => ({
-            id: item.notification_id || item.id,
-            is_read: item.is_read,
-            avatar: (item.actor_avatar || item.avatar)?.startsWith("http")
-              ? (item.actor_avatar || item.avatar)
-              : `http://localhost:8000${item.actor_avatar || item.avatar}` || "/default-avatar.png",
-            type: item.type || "Notification",
-            text: item.message || item.content,
-            // ── use the link field the backend sends directly ──
-            link: item.link || null,
-            actor_id: item.actor_id,
-            post_id: item.post_id,
-            event_id: item.event_id,
-            time: timeAgo(item.time) || item.time,
-          }));
+
+          const formattedNotifs = notifData.map(item => {
+            const notifLink = item.link || {};
+            return {
+              id: item.notification_id || item.id,
+              is_read: item.is_read,
+              avatar: (item.actor_avatar || item.avatar)?.startsWith("http")
+                ? (item.actor_avatar || item.avatar)
+                : `http://localhost:8000${item.actor_avatar || item.avatar}` || "/default-avatar.png",
+              type: item.type || "Notification",
+              text: item.message || item.content,
+              link: notifLink,
+              post_id: item.post_id || notifLink.post_id || null,
+              comment_id: item.comment_id || notifLink.comment_id || null,
+              actor_id: item.actor_id,
+              event_id: item.event_id,
+              time: timeAgo(item.time) || item.time,
+            };
+          });
           setNotifications(formattedNotifs);
         }
 
@@ -120,20 +125,28 @@ export default function Header({ theme, toggleTheme, user }) {
     if (user) fetchHeaderData();
   }, [user]);
 
-  
+
   const handleNotificationClick = (n) => {
-    if (n.link) {
-      navigate(n.link);
-    } else if (n.event_id) {
+    console.log("Notification clicked:", n);
+
+    const post_id = n.post_id || n.link?.post_id;
+    const comment_id = n.comment_id || n.link?.comment_id;
+
+    if (comment_id && post_id) {
+      navigate(`/home?openPost=${post_id}&highlightComment=${comment_id}`);
+      setShowNotifications(false);
+      return;
+    }
+
+    if (n.event_id) {
       navigate(`/events/${n.event_id}`);
-    } else if (n.post_id) {
-      navigate(`/posts/${n.post_id}`);
+    } else if (post_id) {
+      navigate(`/posts/${post_id}`);
     } else if (n.actor_id) {
       navigate(`/profile/${n.actor_id}`);
     }
     setShowNotifications(false);
   };
-
   useEffect(() => {
     function handleClickOutside(event) {
       if (notifRef.current && !notifRef.current.contains(event.target)) {
@@ -281,7 +294,7 @@ export default function Header({ theme, toggleTheme, user }) {
                         {!chat.isGroup && (
                           <span className={`${styles.statusDot} ${styles[
                             chat.dotStyle === 'online' ? 'dotOnline' :
-                            chat.dotStyle === 'dnd' ? 'dotDnd' : 'dotOffline'
+                              chat.dotStyle === 'dnd' ? 'dotDnd' : 'dotOffline'
                           ]}`} />
                         )}
                       </div>
