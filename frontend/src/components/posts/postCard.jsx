@@ -4,16 +4,23 @@ import { Share2, MoreHorizontal, Bookmark, Ban, Flag } from "lucide-react";
 import { Link } from "react-router-dom";
 import Like from '../../Assets/icons/like.png';
 import LikeActive from '../../Assets/icons/like-active.png'
+import Share from '../../Assets/icons/share.png';
 
 export default function PostCard({ post, openComments }) {
-
   const [current, setCurrent] = useState(0);
   const [isLiked, setIsLiked] = useState(post?.is_liked || post?.has_liked || false);
   const [isSaved, setIsSaved] = useState(post?.is_saved || false);
   const [likesCount, setLikesCount] = useState(post?.likes_count || 0);
   const [showMenu, setShowMenu] = useState(false);
+  
+  // Share Menu States
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [shareTargets, setShareTargets] = useState([]); // Dynamic active chats array
+  const [isLoadingChats, setIsLoadingChats] = useState(false); // Loading targets from API
+  const [isSharing, setIsSharing] = useState(false); // Active post delivery payload state
+  
+  const shareMenuRef = useRef(null);
   const menuRef = useRef(null);
-
 
   const formatTimeAgo = (dateString) => {
     const now = new Date();
@@ -29,13 +36,49 @@ export default function PostCard({ post, openComments }) {
     return past.toLocaleDateString();
   };
 
+  // Close menus on clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) setShowMenu(false);
+      if (shareMenuRef.current && !shareMenuRef.current.contains(event.target)) setShowShareMenu(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Fetch actual chats dynamically when the share dropdown is opened
+  useEffect(() => {
+    if (!showShareMenu) return;
+
+    const fetchActiveChats = async () => {
+      const token = localStorage.getItem("access");
+      if (!token) return;
+
+      setIsLoadingChats(true);
+      try {
+        // Replace this URL endpoint with your exact backend endpoint for fetching recent chat/room threads
+        const res = await fetch("http://localhost:8000/api/chats/", {
+          method: "GET",
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setShareTargets(data); // Expects an array of: { id, name, avatar, isGroup }
+        } else {
+          console.error("Failed to retrieve chat target threads.");
+        }
+      } catch (err) {
+        console.error("Error fetching chats:", err);
+      } finally {
+        setIsLoadingChats(false);
+      }
+    };
+
+    fetchActiveChats();
+  }, [showShareMenu]);
 
   const handleLike = async () => {
     const token = localStorage.getItem("access");
@@ -51,6 +94,7 @@ export default function PostCard({ post, openComments }) {
       if (!res.ok) { setIsLiked(originalLiked); setLikesCount(prev => (originalLiked ? prev + 1 : prev - 1)); }
     } catch (err) { setIsLiked(originalLiked); }
   };
+
   if (!post || !post.author) {
     return null;
   }
@@ -59,7 +103,6 @@ export default function PostCard({ post, openComments }) {
     const token = localStorage.getItem("access");
     setShowMenu(false);
 
-    // optimistic UI update
     if (actionType === 'save') setIsSaved(prev => !prev);
 
     try {
@@ -67,7 +110,7 @@ export default function PostCard({ post, openComments }) {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok && actionType === 'save') setIsSaved(prev => !prev); // revert on fail
+      if (!res.ok && actionType === 'save') setIsSaved(prev => !prev);
     } catch (err) {
       console.error(`Failed to ${actionType} post`);
       if (actionType === 'save') setIsSaved(prev => !prev);
@@ -89,6 +132,37 @@ export default function PostCard({ post, openComments }) {
   const files = validMedia.filter(m => m.type === "file");
   const nextSlide = () => setCurrent((prev) => (prev + 1) % validMedia.length);
   const prevSlide = () => setCurrent((prev) => (prev === 0 ? validMedia.length - 1 : prev - 1));
+
+  const handleShareToTarget = async (targetId) => {
+    const token = localStorage.getItem("access");
+    if (!token) return;
+
+    setIsSharing(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/messages/send/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          recipient_id: targetId,
+          post_id: post.id,
+          content: `Shared a post`,
+        }),
+      });
+
+      if (res.ok) {
+        setShowShareMenu(false);
+      } else {
+        console.error("Failed to distribute share context payload");
+      }
+    } catch (err) {
+      console.error("Error during share processing step:", err);
+    } finally {
+      setIsSharing(false);
+    }
+  };
 
   return (
     <article className={styles.card}>
@@ -186,7 +260,9 @@ export default function PostCard({ post, openComments }) {
                 : <img src={Like} alt="like" className={styles.like} width={22} height={22} />
               }
             </span>
-            <span className={styles.count}>{likesCount}</span>
+            {likesCount > 0 &&
+              <span className={styles.count}>{likesCount}</span>
+            }
           </button>
 
           {post.post_type === "advertisement" && (
@@ -211,11 +287,48 @@ export default function PostCard({ post, openComments }) {
           )}
         </div>
 
-        <button className={`${styles.shareBtn} flex-shrink-0`} type="button">
-          <Share2 size={14} />
-          <span className="hidden xs:inline ml-1">Share</span>
-          <span className="sm:hidden ml-1">Share</span>
-        </button>
+        {/* ── Dynamic Share Popover UI Overlay ── */}
+        <div className={styles.shareContainer} ref={shareMenuRef} style={{ position: 'relative' }}>
+          <button
+            className={`${styles.shareBtn} flex items-center gap-1.5 flex-shrink-0`}
+            type="button"
+            onClick={() => setShowShareMenu(!showShareMenu)}
+          >
+            <img src={Share} alt="share" width={18} height={18} className={styles.shareIcon} />
+            <span className={styles.shareText}>Share</span>
+          </button>
+
+          {showShareMenu && (
+            <div className={styles.shareDropdown}>
+              <div className={styles.shareHeader}>Share to</div>
+              <div className={styles.shareList}>
+                {isLoadingChats ? (
+                  <div className={styles.shareLoading}>Loading conversations...</div>
+                ) : shareTargets.length === 0 ? (
+                  <div className={styles.shareEmpty}>No recent chats found</div>
+                ) : (
+                  shareTargets.map((target) => (
+                    <button
+                      key={target.id}
+                      className={styles.shareItem}
+                      disabled={isSharing}
+                      onClick={() => handleShareToTarget(target.id)}
+                    >
+                      <div className={styles.targetAvatar}>
+                        {target.isGroup || target.is_group ? "👥" : (
+                          <img src={target.avatar || "/default-avatar.png"} alt="" />
+                        )}
+                      </div>
+                      <span className={styles.targetName}>
+                        {isSharing ? "Sharing..." : target.name || target.username}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </article>
   );

@@ -102,8 +102,8 @@ export default function Homepage() {
         }, (error) => { console.error("Location permission denied", error); });
     };
 
-    const handleMediaUpload = (e) => { setImages(prev => [...prev, ...Array.from(e.target.files)]); };
-    const handleFileUpload = (e) => { setFiles(prev => [...prev, ...Array.from(e.target.files)]); };
+    const handleMediaUpload = (e) => { setImages(prev => [...prev, ...Array.from(e.target.files)]); setIsModalOpen(true);};
+    const handleFileUpload = (e) => { setFiles(prev => [...prev, ...Array.from(e.target.files)]); setIsModalOpen(true);};
 
     const handleCreatePost = async () => {
         if (!content.trim() && !images.length && !files && !isPollOpen) return;

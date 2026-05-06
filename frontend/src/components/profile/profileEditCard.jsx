@@ -5,13 +5,27 @@ import {
     Volume2, Calendar, Heart, ChevronLeft,
     Upload, Trash2, Mail, Phone, Edit2, Camera
 } from "lucide-react";
-const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const DAYS_SHORT = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+import { useState } from "react";
+const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DAYS_SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
 const firstDay = (y, m) => new Date(y, m, 1).getDay();
 
 // Update the function signature to accept setIsEditing:
 export default function ProfileEditCard({ styles, edit, setIsEditing }) {
+    const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, target: null });
+    const handleConfirmDelete = () => {
+        if (deleteConfirm.target === 'avatar') {
+            setAvatarFile(null);
+            setAvatarPreview(null);
+        } else if (deleteConfirm.target === 'cover') {
+            setCoverFile(null);
+            setCoverPreview(null);
+            setShowCoverDropdown(false);
+        }
+        // Close the modal after deleting
+        setDeleteConfirm({ isOpen: false, target: null });
+    };
 
     const {
         formData, setFormData, usernameError,
@@ -65,7 +79,10 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                         <div style={{ display: "flex", gap: 16 }} onClick={e => e.stopPropagation()}>
                             <button
                                 className={`${styles.mediaTextBtn} ${styles.deleteText}`}
-                                onClick={() => { setAvatarFile(null); setAvatarPreview(null); }}
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Prevents triggering the parent upload click
+                                    setDeleteConfirm({ isOpen: true, target: 'avatar' });
+                                }}
                             >
                                 <Trash2 size={14} /> Delete
                             </button>
@@ -105,9 +122,10 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                                 <button onClick={() => coverInputRef.current?.click()}>
                                     <Upload size={14} /> Upload
                                 </button>
-                                <button className={styles.deleteText} onClick={() => {
-                                    setCoverFile(null); setCoverPreview(null); setShowCoverDropdown(false);
-                                }}>
+                                <button
+                                    className={styles.deleteText}
+                                    onClick={() => setDeleteConfirm({ isOpen: true, target: 'cover' })}
+                                >
                                     <Trash2 size={14} /> Delete
                                 </button>
                             </div>
@@ -544,6 +562,30 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                                 }}
                             >
                                 {otpLoading ? '…' : 'Check'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {deleteConfirm.isOpen && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.confirmModal}>
+                        <h3 style={{ margin: "0 0 10px 0", color: "white", fontSize: "18px" }}>Remove Image</h3>
+                        <p style={{ margin: "0 0 20px 0", color: "#aaa", fontSize: "14px", lineHeight: "1.4" }}>
+                            Are you sure you want to remove your {deleteConfirm.target === 'avatar' ? 'profile picture' : 'banner'}? This cannot be undone.
+                        </p>
+                        <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                            <button
+                                className={styles.modalCancelBtn}
+                                onClick={() => setDeleteConfirm({ isOpen: false, target: null })}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className={styles.modalConfirmBtn}
+                                onClick={handleConfirmDelete}
+                            >
+                                Yes, remove it
                             </button>
                         </div>
                     </div>

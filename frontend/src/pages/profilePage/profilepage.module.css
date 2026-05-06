@@ -606,7 +606,8 @@ body {
 }
 
 .rightSection {
-  position: relative;
+  position: sticky;
+  top: 120px;
   flex: 0 0 420px;
   width: 100%;
   margin: 5% 5% 0 0;
@@ -1527,4 +1528,65 @@ body {
 
 .avatarEditGroup:hover .editAvatarCircle {
   border-color: rgba(255, 255, 255, 0.4);
+}
+/* Modal Overlay to darken the background and center the box */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999; /* Ensures it sits on top of absolutely everything */
+}
+
+/* The actual pop-up box */
+.confirmModal {
+    background: #262626;
+    border: 1px solid #444;
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    animation: popIn 0.2s ease-out forwards;
+}
+
+/* Button Styles */
+.modalCancelBtn {
+    background: transparent;
+    color: white;
+    border: 1px solid #444;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.modalCancelBtn:hover {
+    background: #333;
+}
+
+.modalConfirmBtn {
+    background: #ff4b4b; /* A standard destructive red */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.modalConfirmBtn:hover {
+    background: #e03e3e;
+}
+
+/* A tiny bit of animation so it doesn't just awkwardly snap onto the screen */
+@keyframes popIn {
+    0% { transform: scale(0.95); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }

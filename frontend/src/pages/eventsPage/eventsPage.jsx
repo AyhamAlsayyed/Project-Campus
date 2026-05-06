@@ -2,7 +2,7 @@ import styles from './eventsPage.module.css';
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import { useState, useEffect } from 'react';
-
+import { createPortal } from 'react-dom';
 export default function EventsPage() {
     const API = "http://localhost:8000";
     const [user, setUser] = useState(null);
@@ -11,6 +11,26 @@ export default function EventsPage() {
     const [events, setEvents] = useState([]);
     const [recommendedEvents, setRecommendedEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [reminders, setReminders] = useState({});
+    const [popupEvent, setPopupEvent] = useState(null);
+    const handleReminder = async (eventId) => {
+        const token = localStorage.getItem("access");
+        const isSet = reminders[eventId];
+        setReminders(prev => ({ ...prev, [eventId]: !isSet }));
+
+        try {
+            const res = await fetch(`${API}/api/events/${eventId}/remind/`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                // Revert on fail
+                setReminders(prev => ({ ...prev, [eventId]: isSet }));
+            }
+        } catch {
+            setReminders(prev => ({ ...prev, [eventId]: isSet }));
+        }
+    };
     useEffect(() => {
         const fetchData = async () => {
             const token = localStorage.getItem("access");
@@ -53,6 +73,9 @@ export default function EventsPage() {
                         description: event.description
                     }));
                     setEvents(formatted);
+                    const initialReminders = {};
+                    formatted.forEach(e => { initialReminders[e.id] = e.is_reminded || false; });
+                    setReminders(initialReminders);
 
                     // Logic for recommended (if separate, otherwise slice from events)
                     setRecommendedEvents(formatted.slice(0, 3));
@@ -67,6 +90,39 @@ export default function EventsPage() {
 
         fetchData();
     }, []);
+    const handleFollow = async (eventId) => {
+        const token = localStorage.getItem("access");
+        const event = events.find(e => e.id === eventId);
+        const wasFollowed = event.isFollowed;
+
+        // Optimistic update
+        setEvents(prev => prev.map(e =>
+            e.id === eventId ? { ...e, isFollowed: !e.isFollowed } : e
+        ));
+        setRecommendedEvents(prev => prev.map(e =>
+            e.id === eventId ? { ...e, isFollowed: !e.isFollowed } : e
+        ));
+
+        try {
+            const res = await fetch(`${API}/api/events/${eventId}/follow/`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                // Revert on fail
+                setEvents(prev => prev.map(e =>
+                    e.id === eventId ? { ...e, isFollowed: wasFollowed } : e
+                ));
+                setRecommendedEvents(prev => prev.map(e =>
+                    e.id === eventId ? { ...e, isFollowed: wasFollowed } : e
+                ));
+            }
+        } catch {
+            setEvents(prev => prev.map(e =>
+                e.id === eventId ? { ...e, isFollowed: wasFollowed } : e
+            ));
+        }
+    };
 
     return (
         <div className={styles.darkContainer}>
@@ -92,41 +148,68 @@ export default function EventsPage() {
                                                 <h3>{event.orgName}</h3>
                                                 <span className={styles.verifyBadge}>✓</span>
                                             </div>
-                                            <p>consectetuer adipiscing elit, sed diam nonummy nibh!</p>
+                                            <p>{event.description}</p>
                                         </div>
                                     </div>
                                     <div className={styles.headerActions}>
-                                        <button className={styles.bellBtn}>
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                                        </button>
-                                        <button className={event.isFollowed ? styles.followedBtn : styles.followBtn}>
+                                        {/* Bell only shows when followed */}
+                                        {event.isFollowed && (
+                                            <button className={styles.bellBtn}>
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                                </svg>
+                                            </button>
+                                        )}
+                                        <button
+                                            className={event.isFollowed ? styles.followedBtn : styles.followBtn}
+                                            onClick={() => handleFollow(event.id)}
+                                        >
                                             {event.isFollowed ? 'Followed' : 'Follow'}
                                         </button>
                                     </div>
                                 </div>
 
-                                {/* BOTTOM SECTION: Large Image with Overlays */}
-                                <div className={styles.bannerContainer}>
-                                    <img src={event.banner} className={styles.bannerImg} alt="Event Background" />
-
-                                    {/* Date Widget (Top Right) */}
-                                    <div className={styles.dateWidget}>
-                                        <div className={styles.dateText}>
-                                            <p>Starts {event.startDate}</p>
-                                            <p>Ends - {event.endDate}</p>
+                                {event.banner && (
+                                    <div className={styles.bannerContainer}>
+                                        {/* No fixed height — image defines its own height */}
+                                        <img
+                                            src={event.banner}
+                                            className={styles.bannerImg}
+                                            alt="Event Banner"
+                                        />
+                                        <div className={styles.dateWidget}>
+                                            <div className={styles.dateText}>
+                                                <p>Starts {event.startDate}</p>
+                                                <p>Ends - {event.endDate}</p>
+                                            </div>
+                                            <button
+                                                className={styles.reminderBtn}
+                                                onClick={() => handleReminder(event.id)}
+                                                style={{
+                                                    background: reminders[event.id]
+                                                        ? "rgba(255,255,255,0.2)"
+                                                        : "#7b1fa2",
+                                                    transition: "background 0.2s"
+                                                }}
+                                            >
+                                                {reminders[event.id] ? "✓ Reminder set" : "Set reminder"}
+                                            </button>
                                         </div>
-                                        <button className={styles.reminderBtn}>Set reminder</button>
-                                    </div>
+                                        <div className={styles.bannerOverlay}>
+                                            <div className={styles.bannerContent}>
+                                                <h2>{event.title}</h2>
+                                                <p>
+                                                    {event.description?.length > 40
+                                                        ? <>{event.description.substring(0, 80)}... <span className={styles.readMore} onClick={(e) => { e.stopPropagation(); setPopupEvent(event); }} style={{ cursor: "pointer" }}>read more</span></>
+                                                        : event.description
+                                                    }
+                                                </p>
+                                            </div>
 
-                                    {/* Text Overlay (Bottom) */}
-                                    <div className={styles.bannerOverlay}>
-                                        <div className={styles.bannerContent}>
-                                            <h2>Lorem ipsum</h2>
-                                            <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet</p>
                                         </div>
-                                        <span className={styles.readMore}>read more</span>
                                     </div>
-                                </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -141,7 +224,6 @@ export default function EventsPage() {
                                     <div className={styles.recCard}>
                                         <img src={rec.banner} className={styles.recBanner} alt="" />
                                         <div className={styles.recOverlay}>
-                                            {/* Header: Org Info + Follow */}
                                             <div className={styles.recHeader}>
                                                 <div className={styles.recOrgInfo}>
                                                     <img src={rec.avatar} className={styles.recAvatar} alt="" />
@@ -150,25 +232,31 @@ export default function EventsPage() {
                                                             <h4>{rec.orgName}</h4>
                                                             <span className={styles.verifyBadgeSmall}>✓</span>
                                                         </div>
-                                                        <p>consectetuer adipiscing elit...</p>
+                                                        <p>{rec.description}</p>
                                                     </div>
                                                 </div>
-                                                <button className={rec.isFollowed ? styles.followedBtnSmall : styles.followBtnSmall}>
+                                                <button
+                                                    className={rec.isFollowed ? styles.followedBtnSmall : styles.followBtnSmall}
+                                                    onClick={() => handleFollow(rec.id)}
+                                                >
                                                     {rec.isFollowed ? 'Followed' : 'Follow'}
                                                 </button>
                                             </div>
 
-                                            {/* Body: Title + Read More */}
                                             <div className={styles.recBody}>
                                                 <div>
-                                                    <h5>Lorem ipsum</h5>
-                                                    <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh</p>
+                                                    <h5>{rec.title}</h5>
+                                                    <p>
+                                                        {rec.description?.length > 30
+                                                            ? <>{rec.description.substring(0, 60)}... <span className={styles.readMoreSmall} onClick={(e) => { e.stopPropagation(); setPopupEvent(rec); }} style={{ cursor: "pointer" }}>read more</span></>
+                                                            : rec.description
+                                                        }
+                                                    </p>
                                                 </div>
-                                                <span className={styles.readMoreSmall}>read more</span>
+
                                             </div>
                                         </div>
                                     </div>
-                                    {/* Only show separator if it's not the last item */}
                                     {index !== recommendedEvents.length - 1 && <div className={styles.separator} />}
                                 </div>
                             ))}
@@ -176,6 +264,39 @@ export default function EventsPage() {
                     </div>
                 </div>
             </div>
+            {popupEvent && createPortal(
+                <div
+                    style={{
+                        position: "fixed", inset: 0, zIndex: 9999,
+                        background: "rgba(0,0,0,0.6)", display: "flex",
+                        alignItems: "center", justifyContent: "center"
+                    }}
+                    onClick={() => setPopupEvent(null)}
+                >
+                    <div
+                        style={{
+                            background: "#2a2a2a", borderRadius: 20, padding: 28,
+                            maxWidth: 480, width: "90%", position: "relative",
+                            border: "1px solid rgba(255,255,255,0.08)"
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setPopupEvent(null)}
+                            style={{
+                                position: "absolute", top: 14, right: 14,
+                                background: "none", border: "none", color: "white",
+                                fontSize: "1.1rem", cursor: "pointer"
+                            }}
+                        >✕</button>
+                        <h3 style={{ color: "white", margin: "0 0 12px" }}>{popupEvent.title}</h3>
+                        <p style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.6, margin: 0 }}>
+                            {popupEvent.description}
+                        </p>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }
