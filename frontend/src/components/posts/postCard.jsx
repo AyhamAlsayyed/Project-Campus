@@ -113,7 +113,8 @@ export default function PostCard({ post, openComments }) {
           {showMenu && (
             <div className={styles.dropdownMenu}>
               <button className={styles.menuItem} onClick={() => handleMenuAction('save')}>
-                <Bookmark size={16} /> Save
+                <Bookmark size={16} fill={isSaved ? "currentColor" : "none"} />
+                {isSaved ? "Unsave" : "Save"}
               </button>
               <div className={styles.menuDivider} />
               <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('block')}>

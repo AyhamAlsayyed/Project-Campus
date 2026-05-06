@@ -81,9 +81,15 @@ export default function FriendsPage() {
                         const actualPosts = Array.isArray(postsData)
                             ? postsData
                             : (postsData.results || postsData.posts || []);
+                        const normalizedPosts = actualPosts.map(p => ({
+                            ...p,
+                            user: p.author,
+                            body: p.content,
+                        }));
+
 
                         setFriends(formattedFriends);
-                        setPosts(actualPosts);
+                        setPosts(normalizedPosts);
                     }
                 }
 
@@ -97,6 +103,7 @@ export default function FriendsPage() {
 
         fetchPageData();
     }, [token]);
+    console.log("posts in state:", posts);
 
     return (
         <div className={styles.darkContainer}>
@@ -118,7 +125,9 @@ export default function FriendsPage() {
                             {userLoading ? (
                                 <p style={{ color: '#888', textAlign: 'center', marginTop: '20px' }}>Loading posts...</p>
                             ) : posts.length > 0 ? (
-                                <Posts posts={posts} />
+                                posts.map(post => (
+                                    <Posts key={post.id} post={post} openComments={() => { }} />
+                                ))
                             ) : (
                                 <p style={{ color: '#888', textAlign: 'center', marginTop: '20px' }}>No recent posts from friends.</p>
                             )}

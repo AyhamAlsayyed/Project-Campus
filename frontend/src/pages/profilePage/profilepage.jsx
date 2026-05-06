@@ -349,23 +349,46 @@ export default function ProfilePage() {
                                                 </div>
                                                 {bio && <p className={styles.bio}>{bio}</p>}
                                             </>
-                                        ) : (
+                                        ) : isOwnProfile ? (
+                                            // OWN student profile
                                             <>
-                                                <div className={styles.nameRow}>
-                                                    <div className={styles.userInfo}>
-                                                        <h2 className={styles.username}>{username}</h2>
-                                                        <span className={styles.role}>/{role}</span>
+                                                <div className={styles.info}>
+                                                    <div className={styles.nameRow}>
+                                                        <div className={styles.userInfo}>
+                                                            <h2 className={styles.username}>{username}</h2>
+                                                            <span className={styles.role}>/{role}</span>
+                                                        </div>
+                                                        <button className={styles.editProfileBtn} onClick={() => setIsEditing(true)}>Edit ✎</button>
                                                     </div>
-
-                                                    {isOwnProfile && <button className={styles.editProfileBtn} onClick={() => setIsEditing(true)}>Edit ✎</button>}
+                                                    <div className={styles.subRow}>
+                                                        <span className={styles.fullName}>{fullName}</span>
+                                                        <div className={styles.uniInfo}>
+                                                            <span className={styles.uni}>{university} - {major}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className={styles.subRow}>
-                                                    <span className={styles.fullName}>{fullName}</span>
-                                                    {!isOwnProfile && <><span className={styles.dot} /><span className={styles.friendsCount}>{user?.friends_count || 0} friends</span></>}
+                                                {user?.bio && <p className={styles.bio}>{user.bio}</p>}
+                                            </>
+                                        ) : (
+                                            // OTHER student profile
+                                            <>
+                                                <div className={styles.info}>
+                                                    <div className={styles.nameRow}>
+                                                        <div className={styles.userInfo}>
+                                                            <h2 className={styles.username}>{username}</h2>
+                                                            <span className={styles.role}>/{role}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className={styles.subRow}style={{ gap: '8px' }}>
+                                                        <span className={styles.fullName}>{fullName}</span>
+                                                        <span className={styles.dot} />
+                                                        <span className={styles.friendsCount}>{user?.friends_count || 0} friends</span>
+                                                    </div>
+                                                    <div className={styles.uniRow}>
+                                                        <span className={styles.uni}>{university} - {major}</span>
+                                                    </div>
                                                 </div>
-                                                <div className={styles.uniRow}>
-                                                    <span className={styles.uni}>{university} - {major}</span>
-                                                </div>
+                                                {user?.bio && <p className={styles.bio}>{user.bio}</p>}
                                             </>
                                         )}
                                     </div>
@@ -382,7 +405,7 @@ export default function ProfilePage() {
                                             )}
                                             {friendStatus === "sent" && <button className={styles.pendingBtn}>⏳ Request Sent</button>}
                                             {friendStatus === "received" && (<><button className={styles.acceptBtn} onClick={handleAccept}>✅ Accept</button><button className={styles.declineBtn} onClick={handleDecline}>❌ Decline</button></>)}
-                                            {friendStatus === "friends" && <button className={styles.friendsBtn}>👥 Friends</button>}
+                                            {friendStatus === "friends" && <button className={styles.friendsBtn}> Friends</button>}
                                         </div>
                                     )}
                                 </div>
