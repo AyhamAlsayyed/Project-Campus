@@ -160,6 +160,15 @@ def feed(request, community_id=None):
     if user_id:
         qs = qs.filter(author_user_id=user_id).order_by("-created_at")
 
+    # frineds feed
+    elif filter_type == "friends":
+        accepted_user, _ = get_friendship_sets(user)
+
+        if not accepted_user:
+            qs = qs.none()
+        else:
+            qs = qs.filter(author_user__in=accepted_user).order_by("-created_at")
+
     # community feed
     elif community_id:
         qs = qs.filter(community_id=community_id)
