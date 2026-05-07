@@ -416,17 +416,35 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user }) {
                     ))}
 
                     {showAddDegree ? (
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0' }}>
-                            <input
-                                placeholder="e.g. Bachelor's"
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', flexWrap: 'wrap' }}>
+                            <select
                                 value={newDegree.title}
                                 onChange={e => setNewDegree(p => ({ ...p, title: e.target.value }))}
                                 style={inlineInput(1)}
-                            />
+                            >
+                                <option value="">Degree type</option>
+                                <option value="High School Diploma">Diploma</option>
+                                <option value="Bachelor's">Bachelor's</option>
+                                <option value="Master's">Master's</option>
+                                <option value="PhD">PhD</option>
+                               
+                            </select>
                             <input
                                 placeholder="Field e.g. Computer Science"
                                 value={newDegree.field}
-                                onChange={e => setNewDegree(p => ({ ...p, field: e.target.value }))}
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    setNewDegree(p => ({ ...p, field: val.charAt(0).toUpperCase() + val.slice(1) }));
+                                }}
+                                style={inlineInput(1.5)}
+                            />
+                            <input
+                                placeholder="Institution e.g. Harvard University"
+                                value={newDegree.institution}
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    setNewDegree(p => ({ ...p, institution: val.charAt(0).toUpperCase() + val.slice(1) }));
+                                }}
                                 style={inlineInput(1.5)}
                             />
                             <button
@@ -434,13 +452,13 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user }) {
                                 onClick={() => {
                                     if (!newDegree.title.trim()) return;
                                     setFormData(p => ({ ...p, degrees: [...(p.degrees || []), newDegree] }));
-                                    setNewDegree({ title: '', field: '' });
+                                    setNewDegree({ title: '', field: '', institution: '' });
                                     setShowAddDegree(false);
                                 }}
                             >
                                 Add
                             </button>
-                            <button style={cancelIconBtn} onClick={() => { setShowAddDegree(false); setNewDegree({ title: '', field: '' }); }}>
+                            <button style={cancelIconBtn} onClick={() => { setShowAddDegree(false); setNewDegree({ title: '', field: '', institution: '' }); }}>
                                 <X size={16} />
                             </button>
                         </div>

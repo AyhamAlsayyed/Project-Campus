@@ -706,3 +706,105 @@
     transform: translateY(0);
   }
 }
+/* The background dimming and blur */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* The actual popup box */
+.confirmModal {
+    background: #1c1c1e; /* Deep iOS-style dark mode grey */
+    width: 290px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Keeps the buttons neatly inside the rounded corners */
+    animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Text area spacing */
+.modalContent {
+    padding: 24px 20px 20px;
+    text-align: center;
+}
+
+.modalTitle {
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.01em;
+}
+
+.modalText {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* Stacked, full-width buttons */
+.modalActions {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.modalActions button {
+    background: transparent;
+    border: none;
+    padding: 16px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    font-family: inherit;
+}
+
+/* The primary destructive action */
+.deleteConfirmBtn {
+    color: #ff453a; /* A vibrant, native-feeling red */
+    font-weight: 600;
+}
+
+.deleteConfirmBtn:hover, .deleteConfirmBtn:active {
+    background: rgba(255, 69, 58, 0.1);
+}
+
+/* The secondary cancel action */
+.cancelBtn {
+    color: #ffffff;
+    font-weight: 400;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.cancelBtn:hover, .cancelBtn:active {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Smooth entry animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes popIn {
+    from { 
+        opacity: 0; 
+        transform: scale(0.92) translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+    }
+}

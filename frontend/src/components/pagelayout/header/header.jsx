@@ -289,8 +289,8 @@ export default function Header({ theme, toggleTheme, user }) {
   // ── Count total results (no posts) ──
   const totalResults = searchResults
     ? (searchResults.people?.length || 0) +
-      (searchResults.communities?.length || 0) +
-      (searchResults.pages?.length || 0)
+    (searchResults.communities?.length || 0) +
+    (searchResults.pages?.length || 0)
     : 0;
 
   // ── Shared section label style ──
@@ -340,222 +340,223 @@ export default function Header({ theme, toggleTheme, user }) {
               <X size={16} />
             </button>
           )}
-        </div>
+          {showSearchDropdown && searchQuery.trim() && (
+            <div style={{
+              position: "absolute",
+              top: "calc(100% + 8px)",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "min(850px, 100vw)",
+              background: "#333333",
+              borderRadius: 20,
+              border: "1px solid rgba(255,255,255,0.1)",
+              boxShadow: "0 20px 50px rgba(0,0,0,0.6)",
+              zIndex: 9999,
+              overflow: "hidden",
+              maxHeight: "70vh",
+              overflowY: "auto"
+            }}>
 
-        {/* ── Search dropdown ── */}
-        {showSearchDropdown && searchQuery.trim() && (
-          <div style={{
-            position: "absolute",
-            top: "9%",
-            left: "48%",
-            transform: "translateX(-50%)",
-            width: "min(850px, 100vw)",
-            background: "#333333",
-            borderRadius: 20,
-            border: "1px solid rgba(255,255,255,0.1)",
-            boxShadow: "0 20px 50px rgba(0,0,0,0.6)",
-            zIndex: 9999,
-            overflow: "hidden",
-            maxHeight: "70vh",
-            overflowY: "auto"
-          }}>
-
-            {/* See all results */}
-            <div
-              onClick={() => handleResultClick("all")}
-              style={{
-                display: "flex", alignItems: "center", gap: 12,
-                padding: "14px 18px", cursor: "pointer",
-                borderBottom: "1px solid rgba(255,255,255,0.07)",
-                background: "rgba(139,45,255,0.08)",
-                transition: "background 0.15s"
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = "rgba(139,45,255,0.18)"}
-              onMouseLeave={e => e.currentTarget.style.background = "rgba(139,45,255,0.08)"}
-            >
-              <div style={{
-                width: 36, height: 36, borderRadius: "50%",
-                background: "linear-gradient(-90deg, rgba(166,39,156,0.8), rgba(49,32,169,0.8))",
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-              }}>
-                <Search size={16} color="white" />
-              </div>
-              <div>
-                <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.9rem" }}>
-                  See all results for "<span style={{ color: "#c084fc" }}>{searchQuery}</span>"
+              {/* See all results */}
+              <div
+                onClick={() => handleResultClick("all")}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "14px 18px", cursor: "pointer",
+                  borderBottom: "1px solid rgba(255,255,255,0.07)",
+                  background: "rgba(139,45,255,0.08)",
+                  transition: "background 0.15s"
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(139,45,255,0.18)"}
+                onMouseLeave={e => e.currentTarget.style.background = "rgba(139,45,255,0.08)"}
+              >
+                <div style={{
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: "linear-gradient(-90deg, rgba(166,39,156,0.8), rgba(49,32,169,0.8))",
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                }}>
+                  <Search size={16} color="white" />
                 </div>
-                {!searchLoading && searchResults && (
-                  <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem", marginTop: 2 }}>
-                    {totalResults} result{totalResults !== 1 ? "s" : ""} found
+                <div>
+                  <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.9rem" }}>
+                    See all results for "<span style={{ color: "#c084fc" }}>{searchQuery}</span>"
                   </div>
-                )}
+                  {!searchLoading && searchResults && (
+                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem", marginTop: 2 }}>
+                      {totalResults} result{totalResults !== 1 ? "s" : ""} found
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {searchLoading ? (
-              <div style={{ padding: "20px", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "0.875rem" }}>
-                Searching…
-              </div>
-            ) : searchResults ? (
-              <>
-                {/* ── People (max 3) ── */}
-                {searchResults.people?.length > 0 && (
-                  <div>
-                    <div style={sectionLabel}>People</div>
-                    {searchResults.people.slice(0, 3).map(person => (
-                      <div
-                        key={person.id}
-                        onClick={() => handleResultClick("person", person)}
-                        style={resultRow}
-                        onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                      >
-                        <div style={{ position: "relative", flexShrink: 0 }}>
-                          <img
-                            src={person.avatar?.startsWith("http") ? person.avatar : person.avatar ? `${API}${person.avatar}` : "/default-avatar.png"}
-                            alt=""
-                            style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }}
-                          />
-                          <div style={{
-                            position: "absolute", bottom: -2, right: -2,
-                            width: 14, height: 14, borderRadius: "50%",
-                            background: "#333", display: "flex", alignItems: "center", justifyContent: "center",
-                            border: "1px solid #444"
-                          }}>
-                            <User size={8} color="rgba(255,255,255,0.6)" />
-                          </div>
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.875rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {person.full_name || person.username}
-                          </div>
-                          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>
-                            @{person.username}{person.university ? ` · ${person.university}` : ""}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* ── Communities (max 3) — locked if not member ── */}
-                {searchResults.communities?.length > 0 && (
-                  <div>
-                    <div style={sectionLabel}>Communities</div>
-                    {searchResults.communities.slice(0, 3).map(community => {
-                      const isMember = community.is_member;
-                      return (
+              {searchLoading ? (
+                <div style={{ padding: "20px", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "0.875rem" }}>
+                  Searching…
+                </div>
+              ) : searchResults ? (
+                <>
+                  {/* ── People (max 3) ── */}
+                  {searchResults.people?.length > 0 && (
+                    <div>
+                      <div style={sectionLabel}>People</div>
+                      {searchResults.people.slice(0, 3).map(person => (
                         <div
-                          key={community.id}
-                          onClick={() => handleResultClick("community", community)}
-                          style={{ ...resultRow, opacity: isMember ? 1 : 0.75 }}
+                          key={person.id}
+                          onClick={() => handleResultClick("person", person)}
+                          style={resultRow}
                           onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
                           onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                         >
-                          <div style={{ flexShrink: 0, position: "relative" }}>
-                            {community.avatar ? (
+                          <div style={{ position: "relative", flexShrink: 0 }}>
+                            <img
+                              src={person.avatar?.startsWith("http") ? person.avatar : person.avatar ? `${API}${person.avatar}` : "/default-avatar.png"}
+                              alt=""
+                              style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }}
+                            />
+                            <div style={{
+                              position: "absolute", bottom: -2, right: -2,
+                              width: 14, height: 14, borderRadius: "50%",
+                              background: "#333", display: "flex", alignItems: "center", justifyContent: "center",
+                              border: "1px solid #444"
+                            }}>
+                              <User size={8} color="rgba(255,255,255,0.6)" />
+                            </div>
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.875rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {person.full_name || person.username}
+                            </div>
+                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>
+                              @{person.username}{person.university ? ` · ${person.university}` : ""}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* ── Communities (max 3) — locked if not member ── */}
+                  {searchResults.communities?.length > 0 && (
+                    <div>
+                      <div style={sectionLabel}>Communities</div>
+                      {searchResults.communities.slice(0, 3).map(community => {
+                        const isMember = community.is_member;
+                        return (
+                          <div
+                            key={community.id}
+                            onClick={() => handleResultClick("community", community)}
+                            style={{ ...resultRow, opacity: isMember ? 1 : 0.75 }}
+                            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                          >
+                            <div style={{ flexShrink: 0, position: "relative" }}>
+                              {community.avatar ? (
+                                <img
+                                  src={community.avatar.startsWith("http") ? community.avatar : `${API}${community.avatar}`}
+                                  alt=""
+                                  style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover" }}
+                                />
+                              ) : (
+                                <div style={{
+                                  width: 36, height: 36, borderRadius: 10,
+                                  background: "rgba(139,45,255,0.2)",
+                                  display: "flex", alignItems: "center", justifyContent: "center"
+                                }}>
+                                  <Users size={18} color="#c084fc" />
+                                </div>
+                              )}
+                              {/* Lock badge for non-members */}
+                              {!isMember && (
+                                <div style={{
+                                  position: "absolute", bottom: -3, right: -3,
+                                  width: 16, height: 16, borderRadius: "50%",
+                                  background: "#1a1a1a", border: "1px solid #444",
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  fontSize: 9
+                                }}>
+                                  🔒
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.875rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                {community.name}
+                              </div>
+                              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>
+                                {community.members_count ? `${community.members_count} members` : "Community"}
+                                {!isMember && (
+                                  <span style={{
+                                    marginLeft: 6, fontSize: 10, fontWeight: 600,
+                                    color: "#f59e0b",
+                                    background: "rgba(245,158,11,0.1)",
+                                    border: "1px solid rgba(245,158,11,0.25)",
+                                    borderRadius: 5, padding: "1px 5px"
+                                  }}>
+                                    Not joined
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* ── Pages (max 3) ── */}
+                  {searchResults.pages?.length > 0 && (
+                    <div>
+                      <div style={sectionLabel}>Pages</div>
+                      {searchResults.pages.slice(0, 3).map(page => (
+                        <div
+                          key={page.id}
+                          onClick={() => handleResultClick("page", page)}
+                          style={resultRow}
+                          onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        >
+                          <div style={{ flexShrink: 0 }}>
+                            {page.avatar ? (
                               <img
-                                src={community.avatar.startsWith("http") ? community.avatar : `${API}${community.avatar}`}
+                                src={page.avatar.startsWith("http") ? page.avatar : `${API}${page.avatar}`}
                                 alt=""
                                 style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover" }}
                               />
                             ) : (
                               <div style={{
                                 width: 36, height: 36, borderRadius: 10,
-                                background: "rgba(139,45,255,0.2)",
+                                background: "rgba(255,255,255,0.06)",
                                 display: "flex", alignItems: "center", justifyContent: "center"
                               }}>
-                                <Users size={18} color="#c084fc" />
-                              </div>
-                            )}
-                            {/* Lock badge for non-members */}
-                            {!isMember && (
-                              <div style={{
-                                position: "absolute", bottom: -3, right: -3,
-                                width: 16, height: 16, borderRadius: "50%",
-                                background: "#1a1a1a", border: "1px solid #444",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                fontSize: 9
-                              }}>
-                                🔒
+                                <BookOpen size={18} color="rgba(255,255,255,0.5)" />
                               </div>
                             )}
                           </div>
-                          <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ minWidth: 0 }}>
                             <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.875rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                              {community.name}
+                              {page.name}
                             </div>
-                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>
-                              {community.members_count ? `${community.members_count} members` : "Community"}
-                              {!isMember && (
-                                <span style={{
-                                  marginLeft: 6, fontSize: 10, fontWeight: 600,
-                                  color: "#f59e0b",
-                                  background: "rgba(245,158,11,0.1)",
-                                  border: "1px solid rgba(245,158,11,0.25)",
-                                  borderRadius: 5, padding: "1px 5px"
-                                }}>
-                                  Not joined
-                                </span>
-                              )}
-                            </div>
+                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>Page</div>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
 
-                {/* ── Pages (max 3) ── */}
-                {searchResults.pages?.length > 0 && (
-                  <div>
-                    <div style={sectionLabel}>Pages</div>
-                    {searchResults.pages.slice(0, 3).map(page => (
-                      <div
-                        key={page.id}
-                        onClick={() => handleResultClick("page", page)}
-                        style={resultRow}
-                        onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                      >
-                        <div style={{ flexShrink: 0 }}>
-                          {page.avatar ? (
-                            <img
-                              src={page.avatar.startsWith("http") ? page.avatar : `${API}${page.avatar}`}
-                              alt=""
-                              style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover" }}
-                            />
-                          ) : (
-                            <div style={{
-                              width: 36, height: 36, borderRadius: 10,
-                              background: "rgba(255,255,255,0.06)",
-                              display: "flex", alignItems: "center", justifyContent: "center"
-                            }}>
-                              <BookOpen size={18} color="rgba(255,255,255,0.5)" />
-                            </div>
-                          )}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.875rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {page.name}
-                          </div>
-                          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>Page</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  {/* No results */}
+                  {totalResults === 0 && !searchLoading && (
+                    <div style={{ padding: "20px 18px", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "0.875rem" }}>
+                      No results found for "<span style={{ color: "rgba(255,255,255,0.6)" }}>{searchQuery}</span>"
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </div>
+          )}
+        </div>
 
-                {/* No results */}
-                {totalResults === 0 && !searchLoading && (
-                  <div style={{ padding: "20px 18px", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "0.875rem" }}>
-                    No results found for "<span style={{ color: "rgba(255,255,255,0.6)" }}>{searchQuery}</span>"
-                  </div>
-                )}
-              </>
-            ) : null}
-          </div>
-        )}
+        {/* ── Search dropdown ── */}
+
       </div>
 
       <div className={styles.headerRight}>
