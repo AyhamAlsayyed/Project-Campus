@@ -27,6 +27,7 @@ from ...models import (
     SavedPost,
 )
 from ...serializers import PostSerializer
+from ...utils.blocked_users import apply_block_filters, get_blocked_user_sets
 
 
 def _get_user_university_page_id(user):
@@ -42,11 +43,38 @@ def _get_user_university_page_id(user):
 
 
 def base_annotations(user):
+    users_blocked_by_me, users_who_blocked_me = get_blocked_user_sets(user)
+    all_blocked_users = users_blocked_by_me | users_who_blocked_me
+
+    reactions_filter = Q(reactions__user__isnull=False)
+
+    if all_blocked_users:
+        reactions_filter &= ~Q(reactions__user_id__in=all_blocked_users)
+
     return {
-        "reactions_count": Count("reactions", filter=Q(reactions__user__isnull=False), distinct=True),
-        "comments_count": Count("comments", distinct=True),
-        "is_liked": Exists(PostReaction.objects.filter(post_id=OuterRef("post_id"), user=user)),
-        "is_saved": Exists(SavedPost.objects.filter(post_id=OuterRef("post_id"), user=user)),
+        "reactions_count": Count(
+            "reactions",
+            filter=reactions_filter,
+            distinct=True,
+        ),
+        # exclude comments from blocked users
+        "comments_count": Count(
+            "comments",
+            filter=~Q(comments__author_user_id__in=all_blocked_users) if all_blocked_users else Q(),
+            distinct=True,
+        ),
+        "is_liked": Exists(
+            PostReaction.objects.filter(
+                post_id=OuterRef("post_id"),
+                user=user,
+            )
+        ),
+        "is_saved": Exists(
+            SavedPost.objects.filter(
+                post_id=OuterRef("post_id"),
+                user=user,
+            )
+        ),
     }
 
 
@@ -75,37 +103,55 @@ def get_friendship_sets(user):
     friendships = Friendship.objects.filter(Q(user1=user) | Q(user2=user)).values("user1_id", "user2_id", "status")
 
     accepted = set()
-    blocked = set()
 
     for f in friendships:
         other_id = f["user2_id"] if f["user1_id"] == user.id else f["user1_id"]
 
         if f["status"] == Friendship.Status.ACCEPTED:
             accepted.add(other_id)
-        elif f["status"] == Friendship.Status.BLOCKED:
-            blocked.add(other_id)
 
-    return accepted, blocked
+    return accepted
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def feed(request, community_id=None):
     user = request.user
-    limit = min(max(int(request.query_params.get("limit", 20)), 1), 50)
+
+    limit = min(
+        max(int(request.query_params.get("limit", 20)), 1),
+        50,
+    )
 
     community_id = community_id or request.GET.get("community_id")
+
     user_id = request.GET.get("user")
-    filter_type = request.GET.get("filter", "recommended")
+
+    filter_type = request.GET.get(
+        "filter",
+        "recommended",
+    )
 
     qs = Post.objects.all().annotate(**base_annotations(user))
 
     # user profile feed
     if user_id:
+        qs = apply_block_filters(
+            qs,
+            user,
+            is_community_feed=False,
+        )
+
         qs = qs.filter(author_user_id=user_id).order_by("-is_pinned", "-created_at")
 
     # friends feed
     elif filter_type == "friends":
+        qs = apply_block_filters(
+            qs,
+            user,
+            is_community_feed=False,
+        )
+
         accepted_users, _ = get_friendship_sets(user)
         if not accepted_users:
             qs = Post.objects.none()
@@ -113,7 +159,17 @@ def feed(request, community_id=None):
             qs = qs.filter(author_user_id__in=accepted_users).order_by("-created_at")
 
     elif filter_type == "follow_page":
-        followed_page_ids = FollowPage.objects.filter(user=user).values_list("page_id", flat=True)
+        qs = apply_block_filters(
+            qs,
+            user,
+            is_community_feed=False,
+        )
+
+        followed_page_ids = FollowPage.objects.filter(user=user).values_list(
+            "page_id",
+            flat=True,
+        )
+
         if not followed_page_ids:
             qs = Post.objects.none()
         else:
@@ -123,8 +179,17 @@ def feed(request, community_id=None):
     elif community_id:
         qs = qs.filter(community_id=community_id)
 
-        # 1. Base Engagement (Needed for Recommended, Popular, and Trending)
-        if filter_type in ["recommended", "popular", "trending"]:
+        qs = apply_block_filters(
+            qs,
+            user,
+            is_community_feed=True,
+        )
+
+        if filter_type in [
+            "recommended",
+            "popular",
+            "trending",
+        ]:
             qs = qs.annotate(**engagement_annotations())
 
         if filter_type == "recent":
@@ -146,12 +211,27 @@ def feed(request, community_id=None):
 
     # home feeed
     else:
-        community_ids = CommunityMember.objects.filter(user=user).values_list("community_id", flat=True)
-        followed_pages = FollowPage.objects.filter(user=user).values_list("page_id", flat=True)
-        accepted_users, blocked_users = get_friendship_sets(user)
+        qs = apply_block_filters(
+            qs,
+            user,
+            is_community_feed=False,
+        )
+
+        community_ids = CommunityMember.objects.filter(user=user).values_list(
+            "community_id",
+            flat=True,
+        )
+
+        followed_pages = FollowPage.objects.filter(user=user).values_list(
+            "page_id",
+            flat=True,
+        )
+
+        accepted_users = get_friendship_sets(user)
+
         uni_page_id = _get_user_university_page_id(user)
 
-        qs = qs.exclude(author_user_id__in=blocked_users).exclude(author_user_id=user.id)
+        qs = qs.exclude(author_user_id=user.id)
 
         if filter_type != "latest":
             qs = qs.annotate(**engagement_annotations())
@@ -180,21 +260,37 @@ def feed(request, community_id=None):
                     ),
                 )
                 .annotate(
-                    score=F("p_university")
-                    + F("p_community")
-                    + F("p_following")
-                    + F("p_friendship")
-                    + F("p_engagement_capped")
-                    + F("p_fresh")
+                    score=(
+                        F("p_university")
+                        + F("p_community")
+                        + F("p_following")
+                        + F("p_friendship")
+                        + F("p_engagement_capped")
+                        + F("p_fresh")
+                    )
                 )
-                .order_by("-score", "-created_at")
+                .order_by(
+                    "-score",
+                    "-created_at",
+                )
             )
         else:
             qs = qs.order_by("-created_at")
 
-    qs = qs.select_related("author_user__profile", "author_page", "community").prefetch_related("media")[:limit]
+    qs = qs.select_related(
+        "author_user__profile",
+        "author_page",
+        "community",
+    ).prefetch_related(
+        "media"
+    )[:limit]
 
-    serializer = PostSerializer(qs, many=True, context={"request": request})
+    serializer = PostSerializer(
+        qs,
+        many=True,
+        context={"request": request},
+    )
+
     return Response(serializer.data)
 
 
@@ -205,17 +301,34 @@ def get_saved_posts(request):
 
     saved = SavedPost.objects.filter(user=user).order_by("-created_at")
 
-    post_map = {
-        p.post_id: p
-        for p in Post.objects.filter(post_id__in=[s.post_id for s in saved])
+    post_ids = [s.post_id for s in saved]
+
+    posts = (
+        Post.objects.filter(post_id__in=post_ids)
         .annotate(**base_annotations(user))
-        .select_related("author_user__profile", "author_page")
+        .select_related(
+            "author_user__profile",
+            "author_page",
+        )
         .prefetch_related("media")
-    }
+    )
+
+    posts = apply_block_filters(
+        posts,
+        user,
+        is_community_feed=False,
+    )
+
+    post_map = {p.post_id: p for p in posts}
 
     ordered_posts = [post_map[s.post_id] for s in saved if s.post_id in post_map]
 
-    serializer = PostSerializer(ordered_posts, many=True, context={"request": request})
+    serializer = PostSerializer(
+        ordered_posts,
+        many=True,
+        context={"request": request},
+    )
+
     return Response(serializer.data)
 
 
@@ -224,17 +337,40 @@ def get_saved_posts(request):
 def get_activity_posts(request):
     user = request.user
 
-    liked_ids = PostReaction.objects.filter(user=user).values_list("post_id", flat=True)
-    commented_ids = Comment.objects.filter(author_user=user).values_list("post_id", flat=True)
+    liked_ids = PostReaction.objects.filter(user=user).values_list(
+        "post_id",
+        flat=True,
+    )
+
+    commented_ids = Comment.objects.filter(author_user=user).values_list(
+        "post_id",
+        flat=True,
+    )
 
     posts = (
         Post.objects.filter(Q(post_id__in=liked_ids) | Q(post_id__in=commented_ids))
         .annotate(**base_annotations(user))
-        .select_related("author_user__profile", "author_page")
+        .select_related(
+            "author_user__profile",
+            "author_page",
+        )
         .prefetch_related("media")
         .order_by("-created_at")
         .distinct()
     )
 
-    serializer = PostSerializer(posts, many=True, context={"request": request})
+    # CHANGED:
+    # activity posts should hide blocked users fully
+    posts = apply_block_filters(
+        posts,
+        user,
+        is_community_feed=False,
+    )
+
+    serializer = PostSerializer(
+        posts,
+        many=True,
+        context={"request": request},
+    )
+
     return Response(serializer.data)

@@ -28,7 +28,7 @@ from .views.pages.pages import (
     toggle_follow_page,
 )
 from .views.posts.post_action import (
-    block_post,
+    delete_post,
     report_post,
     save_post,
     send_post,
@@ -45,6 +45,7 @@ from .views.university.university import (
 )
 from .views.user.friends import (
     accept_friend_request,
+    block_user,
     decline_friend_request,
     send_friend_request,
     user_friends_list,
@@ -67,9 +68,10 @@ urlpatterns = [
     path("posts/create/", create_post, name="create_post"),
     path("posts/<int:post_id>/like/", toggle_like),
     path("posts/<int:post_id>/report/", report_post),
-    path("posts/<int:post_id>/block/", block_post),
+    path("posts/<int:post_id>/block/", block_user),
     path("posts/<int:post_id>/save/", save_post),
     path("posts/<int:post_id>/pin/", toggle_pin_post),
+    path("posts/<int:post_id>/", delete_post),
     path("messages/send/", send_post),
     path("communities/", communities),
     path("communities/<int:community_id>/join/", join_community),

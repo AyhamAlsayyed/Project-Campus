@@ -1,18 +1,9 @@
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import (
-    Friendship,
-    Message,
-    Notification,
-    Post,
-    PostReaction,
-    Report,
-    SavedPost,
-)
+from ...models import Message, Notification, Post, PostReaction, Report, SavedPost
 
 
 def get_actor(request):
@@ -90,36 +81,6 @@ def report_post(request, post_id):
     )
 
     return Response({"message": "Post reported successfully"}, status=201)
-
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def block_post(request, post_id):
-    try:
-        post = Post.objects.get(pk=post_id)
-    except Post.DoesNotExist:
-        return Response({"error": "Post not found"}, status=404)
-
-    current_user = request.user
-    target_user = post.author_user
-
-    if not target_user:
-        return Response({"error": "Cannot block page authors yet"}, status=400)
-
-    if current_user == target_user:
-        return Response({"error": "You cannot block yourself"}, status=400)
-
-    friendship = Friendship.objects.filter(
-        Q(user1=current_user, user2=target_user) | Q(user1=target_user, user2=current_user)
-    ).first()
-
-    if friendship:
-        friendship.status = Friendship.Status.BLOCKED
-        friendship.save()
-    else:
-        Friendship.objects.create(user1=current_user, user2=target_user, status=Friendship.Status.BLOCKED)
-
-    return Response({"message": "User blocked successfully"}, status=200)
 
 
 @api_view(["POST"])
@@ -204,3 +165,14 @@ def send_post(request):
             "senderId": "me",
         }
     )
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_post(request, post_id):
+    try:
+        post = Post.objects.get(pk=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=404)
+    post.delete()
+    return Response({"message": "Post deleted"}, status=200)
