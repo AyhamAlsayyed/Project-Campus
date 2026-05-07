@@ -72,7 +72,15 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
         });
         if (res.ok) {
           const data = await res.json();
-          setShareTargets(data); // Expects an array of: { id, name, avatar, isGroup }
+          const formatted = data.map(chat => ({
+            ...chat,
+            avatar: chat.avatar
+              ? chat.avatar.startsWith("http")
+                ? chat.avatar
+                : `http://localhost:8000${chat.avatar}`
+              : "/default-avatar.png"
+          }));
+          setShareTargets(formatted);
         } else {
           console.error("Failed to retrieve chat target threads.");
         }
