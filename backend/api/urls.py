@@ -18,19 +18,20 @@ from .views.conversation.conversation import (
     get_messages,
     send_message,
 )
-from .views.event.events import events, toggle_event_reminder
+from .views.event.event_action import toggle_event_reminder
+from .views.event.events import events
 from .views.notification.notification import get_notifications, notification_delete_mark
 from .views.pages.pages import (
-    follow_page,
     followed_pages,
     page_detail,
     recommended_pages,
-    unfollow_page,
+    toggle_follow_page,
 )
 from .views.posts.post_action import (
-    block_post,
+    delete_post,
     report_post,
     save_post,
+    send_post,
     toggle_like,
     toggle_pin_post,
 )
@@ -44,6 +45,7 @@ from .views.university.university import (
 )
 from .views.user.friends import (
     accept_friend_request,
+    block_user,
     decline_friend_request,
     send_friend_request,
     user_friends_list,
@@ -66,9 +68,11 @@ urlpatterns = [
     path("posts/create/", create_post, name="create_post"),
     path("posts/<int:post_id>/like/", toggle_like),
     path("posts/<int:post_id>/report/", report_post),
-    path("posts/<int:post_id>/block/", block_post),
+    path("posts/<int:post_id>/block/", block_user),
     path("posts/<int:post_id>/save/", save_post),
     path("posts/<int:post_id>/pin/", toggle_pin_post),
+    path("posts/<int:post_id>/", delete_post),
+    path("messages/send/", send_post),
     path("communities/", communities),
     path("communities/<int:community_id>/join/", join_community),
     path("communities/<int:community_id>/request/", request_join_community),
@@ -95,8 +99,7 @@ urlpatterns = [
     path("pages/followed/", followed_pages),
     path("pages/recommended/", recommended_pages),
     path("pages/<int:page_id>/", page_detail),
-    path("pages/<int:page_id>/follow/", follow_page),
-    path("pages/<int:page_id>/unfollow/", unfollow_page),
+    path("pages/<int:page_id>/follow/", toggle_follow_page),
     path("events/", events),
-    path("events/<int:event_id>/reminder", toggle_event_reminder),
+    path("events/<int:event_id>/remind/", toggle_event_reminder),
 ]

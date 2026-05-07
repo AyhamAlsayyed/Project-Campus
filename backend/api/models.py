@@ -415,7 +415,7 @@ class EventReminder(models.Model):
 
 class Post(models.Model):
     post_id = models.BigAutoField(primary_key=True, db_column="post_id")
-
+    title = models.CharField(max_length=255, null=True, blank=True)
     content_text = models.TextField(blank=True, null=True)
 
     class PostType(models.TextChoices):
@@ -874,6 +874,7 @@ class Message(models.Model):
     )
 
     content = models.TextField(blank=True, null=True)
+    shared_post = models.ForeignKey("post", on_delete=models.SET_NULL, null=True)
 
     sender_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

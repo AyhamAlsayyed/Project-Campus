@@ -1,4 +1,5 @@
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -81,32 +82,18 @@ def recommended_pages(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def follow_page(request, page_id):
+def toggle_follow_page(request, page_id):
     user = request.user
+    page = get_object_or_404(Page, page_id=page_id)
 
-    try:
-        page = Page.objects.get(page_id=page_id)
-    except Page.DoesNotExist:
-        return Response({"error": "Page not found"}, status=404)
+    follow_qs = FollowPage.objects.filter(user=user, page=page)
 
-    if FollowPage.objects.filter(user=user, page=page).exists():
-        return Response({"message": "Already following this page"}, status=400)
+    if follow_qs.exists():
+        follow_qs.delete()
+        return Response({"status": "unfollowed", "is_followed": False}, status=200)
 
     FollowPage.objects.create(user=user, page=page)
-
-    return Response({"message": "Successfully followed page"}, status=201)
-
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def unfollow_page(request, page_id):
-    user = request.user
-    try:
-        follow = FollowPage.objects.get(user=user, page_id=page_id)
-        follow.delete()
-        return Response({"message": "Successfully unfollowed page"}, status=200)
-    except FollowPage.DoesNotExist:
-        return Response({"error": "Not following this page"}, status=404)
+    return Response({"status": "followed", "is_followed": True}, status=201)
 
 
 @api_view(["GET"])

@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Friendship, Notification
+from ...models import Friendship, Notification, Post
 
 User = get_user_model()
 
@@ -130,6 +130,36 @@ def decline_friend_request(request):
     friendship.save()
 
     return Response({"message": "Friend request rejected"}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def block_user(request, post_id):
+    try:
+        post = Post.objects.get(pk=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=404)
+
+    current_user = request.user
+    target_user = post.author_user
+
+    if not target_user:
+        return Response({"error": "Cannot block page authors yet"}, status=400)
+
+    if current_user == target_user:
+        return Response({"error": "You cannot block yourself"}, status=400)
+
+    friendship = Friendship.objects.filter(
+        Q(user1=current_user, user2=target_user) | Q(user1=target_user, user2=current_user)
+    ).first()
+
+    if friendship:
+        friendship.status = Friendship.Status.BLOCKED
+        friendship.save()
+    else:
+        Friendship.objects.create(user1=current_user, user2=target_user, status=Friendship.Status.BLOCKED)
+
+    return Response({"message": "User blocked successfully"}, status=200)
 
 
 @api_view(["GET"])

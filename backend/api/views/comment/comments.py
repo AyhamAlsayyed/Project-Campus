@@ -3,7 +3,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Comment, Notification, Page
+from ...models import Comment, Notification, Page, Post
+from ...utils.blocked_users import get_blocked_user_sets
 
 
 def get_comment_author_data(request, c):
@@ -65,7 +66,6 @@ def handle_comment_notification(comment, parent_comment, actor_user, actor_page)
     else:
         text = f"{actor_name} commented on your post"
 
-    # ---- CREATE ----
     Notification.objects.create(
         receiver_user=receiver_user,
         receiver_page=receiver_page,
@@ -78,9 +78,16 @@ def handle_comment_notification(comment, parent_comment, actor_user, actor_page)
     )
 
 
-@api_view(["GET", "POST"])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def comment_list(request, post_id):
+    user = request.user
+
+    try:
+        post = Post.objects.get(post_id=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=404)
+
     comments = (
         Comment.objects.filter(post_id=post_id)
         .select_related(
@@ -91,6 +98,14 @@ def comment_list(request, post_id):
         )
         .order_by("-created_at")
     )
+
+    # Filter out comments from blocked users (only if post is NOT in a community)
+    if not post.community_id:
+        users_blocked_by_me, users_who_blocked_me = get_blocked_user_sets(user)
+        all_blocked_users = users_blocked_by_me | users_who_blocked_me
+
+        if all_blocked_users:
+            comments = comments.exclude(author_user_id__in=all_blocked_users)
 
     data = []
     for c in comments:
@@ -153,7 +168,7 @@ def create_comment(request, post_id):
         content=text,
         parent_comment=parent_comment,
     )
-    # --------notification----------
+
     handle_comment_notification(
         comment=comment,
         parent_comment=parent_comment,
@@ -161,7 +176,6 @@ def create_comment(request, post_id):
         actor_page=author_page,
     )
 
-    # response
     author = get_comment_author_data(request, comment)
 
     replying_to = None

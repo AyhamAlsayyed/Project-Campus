@@ -93,5 +93,5 @@ def create_post(request):
         if notifications:
             Notification.objects.bulk_create(notifications)
 
-    serializer = PostSerializer(post)
+    serializer = PostSerializer(post, context={"request": request})
     return Response(serializer.data, status=status.HTTP_201_CREATED)
