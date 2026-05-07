@@ -18,14 +18,14 @@ from .views.conversation.conversation import (
     get_messages,
     send_message,
 )
-from .views.event.events import events, toggle_event_reminder
+from .views.event.event_action import toggle_event_reminder
+from .views.event.events import events
 from .views.notification.notification import get_notifications, notification_delete_mark
 from .views.pages.pages import (
-    follow_page,
     followed_pages,
     page_detail,
     recommended_pages,
-    unfollow_page,
+    toggle_follow_page,
 )
 from .views.posts.post_action import (
     block_post,
@@ -97,8 +97,7 @@ urlpatterns = [
     path("pages/followed/", followed_pages),
     path("pages/recommended/", recommended_pages),
     path("pages/<int:page_id>/", page_detail),
-    path("pages/<int:page_id>/follow/", follow_page),
-    path("pages/<int:page_id>/unfollow/", unfollow_page),
+    path("pages/<int:page_id>/follow/", toggle_follow_page),
     path("events/", events),
-    path("events/<int:event_id>/reminder", toggle_event_reminder),
+    path("events/<int:event_id>/remind/", toggle_event_reminder),
 ]

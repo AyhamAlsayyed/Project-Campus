@@ -40,6 +40,7 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = [
             "id",
+            "title",
             "content",
             "post_type",
             "author",
@@ -204,6 +205,7 @@ class EventSerializer(serializers.ModelSerializer):
     banner = serializers.SerializerMethodField()
 
     is_followed = serializers.BooleanField(read_only=True)
+    is_reminded = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
@@ -213,10 +215,12 @@ class EventSerializer(serializers.ModelSerializer):
             "avatar",
             "banner",
             "is_followed",
+            "is_reminded",
             "start_date",
             "end_date",
             "title",
             "description",
+            "image",
         ]
 
     def get_avatar(self, obj):
@@ -235,6 +239,21 @@ class EventSerializer(serializers.ModelSerializer):
         if obj.page and obj.page.banner_image:
             try:
                 return request.build_absolute_uri(obj.page.banner_image.url)
+            except Exception:
+                return None
+        return None
+
+    def get_is_reminded(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.reminders.filter(user=request.user).exists()
+        return False
+
+    def image(self, obj):
+        request = self.context.get("request")
+        if obj.image:
+            try:
+                return request.build_absolute_uri(obj.image.url)
             except Exception:
                 return None
         return None
