@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ...models import ConversationMember, Message, Notification
+from ...serializers import PostSerializer
 
 
 def get_actor(request):
@@ -139,7 +140,9 @@ def get_messages(request, conversation_id):
 
     messages = (
         Message.objects.filter(conversation_id=conversation_id)
-        .select_related("sender_user", "sender_page")
+        .select_related(
+            "sender_user", "sender_page", "shared_post", "shared_post__author_user", "shared_post__author_page"
+        )
         .order_by("sent_at")
     )
 
@@ -164,28 +167,31 @@ def get_messages(request, conversation_id):
             if msg.sender_page.profile_image:
                 avatar = msg.sender_page.profile_image.url
 
-        data.append(
-            {
-                "id": msg.message_id,
-                "text": msg.content,
-                "type": "text",
-                "time": msg.sent_at.strftime("%H:%M"),
-                "sender": sender_name,
-                "senderId": sender_id,
-                "avatar": avatar,
-                "reply_to_details": (
-                    {
-                        "id": msg.parent_message.message_id,
-                        "text": msg.parent_message.content,
-                        "sender_name": (
-                            msg.parent_message.sender_user.username if msg.parent_message.sender_user else "Unknown"
-                        ),
-                    }
-                    if msg.parent_message
-                    else None
-                ),
-            }
-        )
+        message_data = {
+            "id": msg.message_id,
+            "text": msg.content,
+            "type": "text",
+            "time": msg.sent_at.strftime("%H:%M"),
+            "sender": sender_name,
+            "senderId": sender_id,
+            "avatar": avatar,
+            "reply_to_details": (
+                {
+                    "id": msg.parent_message.message_id,
+                    "text": msg.parent_message.content,
+                    "sender_name": (
+                        msg.parent_message.sender_user.username if msg.parent_message.sender_user else "Unknown"
+                    ),
+                }
+                if msg.parent_message
+                else None
+            ),
+            "post": None,
+        }
+
+        if msg.shared_post:
+            message_data["post"] = PostSerializer(msg.shared_post, context={"request": request}).data
+        data.append(message_data)
 
     from django.utils import timezone
 

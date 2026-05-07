@@ -31,6 +31,7 @@ from .views.posts.post_action import (
     block_post,
     report_post,
     save_post,
+    send_post,
     toggle_like,
     toggle_pin_post,
 )
@@ -69,6 +70,7 @@ urlpatterns = [
     path("posts/<int:post_id>/block/", block_post),
     path("posts/<int:post_id>/save/", save_post),
     path("posts/<int:post_id>/pin/", toggle_pin_post),
+    path("messages/send/", send_post),
     path("communities/", communities),
     path("communities/<int:community_id>/join/", join_community),
     path("communities/<int:community_id>/request/", request_join_community),

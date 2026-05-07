@@ -874,6 +874,7 @@ class Message(models.Model):
     )
 
     content = models.TextField(blank=True, null=True)
+    shared_post = models.ForeignKey("post", on_delete=models.SET_NULL, null=True)
 
     sender_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

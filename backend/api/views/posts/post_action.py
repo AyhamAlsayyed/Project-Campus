@@ -4,7 +4,31 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Friendship, Notification, Post, PostReaction, Report, SavedPost
+from ...models import (
+    Friendship,
+    Message,
+    Notification,
+    Post,
+    PostReaction,
+    Report,
+    SavedPost,
+)
+
+
+def get_actor(request):
+    user = request.user
+    page_id = request.headers.get("X-Page-Id")
+
+    if page_id:
+        from ...models import Page
+
+        try:
+            page = Page.objects.get(id=page_id)
+            return None, page
+        except Page.DoesNotExist:
+            return None, None
+
+    return user, None
 
 
 @api_view(["POST"])
@@ -138,5 +162,45 @@ def toggle_pin_post(request, post_id):
     return Response(
         {
             "is_pinned": post.is_pinned,
+        }
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def send_post(request):
+    user, page = get_actor(request)
+    text = request.data.get("text", "")
+    post_id = request.data.get("post_id")
+
+    shared_post = None
+    if post_id:
+        try:
+            shared_post = Post.objects.get(post_id=post_id)
+            if not text:
+                text = "Shared a post"
+        except Post.DoesNotExist:
+            return Response({"error": "Post not found"}, status=404)
+
+    if not text and not shared_post:
+        return Response({"error": "Empty message"}, status=400)
+
+    msg = Message.objects.create(
+        conversation_id=request.data["recipient_id"],
+        content=text,
+        sender_user=user,
+        sender_page=page,
+        shared_post=shared_post,
+        parent_message=None,
+    )
+
+    return Response(
+        {
+            "id": msg.message_id,
+            "text": msg.content,
+            "type": "post" if shared_post else "text",
+            "shared_post_id": post_id,
+            "time": msg.sent_at.strftime("%H:%M"),
+            "senderId": "me",
         }
     )
