@@ -50,7 +50,7 @@ def send_friend_request(request):
     ).first()
 
     if not friendship:
-        Friendship.objects.create(user1=from_user, user2=to_user, status=Friendship.Status.PENDING)
+        friendship = Friendship.objects.create(user1=from_user, user2=to_user, status=Friendship.Status.PENDING)
         notify_friend_request(friendship, from_user, to_user, Notification.Type.FRIEND_REQUEST)
         return Response({"message": "Request sent"}, status=201)
 
@@ -163,6 +163,7 @@ def user_friends_list(request, user_id):
     for f in target_friendships:
         friend = f.user2 if f.user1 == target_user else f.user1
         profile = getattr(friend, "profile", None)
+        student_profile = getattr(friend, "student_profile", None)
 
         avatar_url = None
         if profile and profile.profile_image:
@@ -172,6 +173,7 @@ def user_friends_list(request, user_id):
             "id": friend.id,
             "username": friend.username,
             "avatar_url": avatar_url,
+            "major": student_profile.major if student_profile else None,
         }
 
         all_friends.append(friend_data)

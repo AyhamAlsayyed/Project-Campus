@@ -116,3 +116,27 @@ def save_post(request, post_id):
     else:
         SavedPost.objects.create(user=user, post=post)
         return Response({"saved": True, "message": "Post saved"}, status=201)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def toggle_pin_post(request, post_id):
+    user = request.user
+    try:
+        post = Post.objects.get(pk=post_id, author_user=user)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=404)
+
+    if post.is_pinned:
+        post.is_pinned = False
+    else:
+        Post.objects.filter(author_user=user).update(is_pinned=False)
+        post.is_pinned = True
+
+    post.save(update_fields=["is_pinned"])
+
+    return Response(
+        {
+            "is_pinned": post.is_pinned,
+        }
+    )

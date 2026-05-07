@@ -1,46 +1,87 @@
 from rest_framework import serializers
 
-from .models import (
-    Comment,
-    Community,
-    Event,
-    Friendship,
-    Notification,
-    Post,
-    PostMedia,
-    SavedPost,
-)
+from .models import Comment, Community, Event, Friendship, Notification, Post, PostMedia
 
 
 class PostMediaSerializer(serializers.ModelSerializer):
+    # Remapping media fields to match the old serialize_post function output
+    type = serializers.CharField(source="media_type")
+    url = serializers.SerializerMethodField()
+
     class Meta:
         model = PostMedia
-        fields = ["media_id", "media_type", "media_file", "media_url"]
+        fields = ["type", "url"]
+
+    def get_url(self, obj):
+        request = self.context.get("request")
+        # Prioritize file over URL, same as your old helper function
+        f = obj.media_file if obj.media_file else obj.media_url
+        if not f:
+            return None
+        try:
+            # Build absolute URI for the frontend
+            return request.build_absolute_uri(f.url) if hasattr(f, "url") else f
+        except Exception():
+            return None
 
 
 class PostSerializer(serializers.ModelSerializer):
-    media = PostMediaSerializer(many=True, read_only=True)
-    is_saved = serializers.SerializerMethodField()
+    # CHANGED: Mapping 'post_id' to 'id' and 'content_text' to 'content' for the frontend
+    id = serializers.IntegerField(source="post_id")
+    content = serializers.CharField(source="content_text")
 
-    def get_is_saved(self, obj):
-        request = self.context.get("request")
-        if request and request.user.is_authenticated():
-            return SavedPost.objects.filter(user=request.user, post=obj).exists()
-        return False
+    # CHANGED: Added nested author field to replace 'get_author_data'
+    author = serializers.SerializerMethodField()
+
+    # CHANGED: Added engagement fields that were previously manually added
+    media = PostMediaSerializer(many=True, read_only=True)
+    likes_count = serializers.IntegerField(source="reactions_count", read_only=True)
+    comments_count = serializers.IntegerField(read_only=True)
+    is_liked = serializers.BooleanField(read_only=True)
+    is_saved = serializers.BooleanField(read_only=True)
+
+    # Added support for the pinning feature
+    is_pinned = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Post
         fields = [
-            "post_id",
-            "content_text",
+            "id",
+            "content",
             "post_type",
-            "author_user",
-            "author_page",
-            "community",
+            "author",
             "created_at",
             "media",
+            "likes_count",
+            "comments_count",
+            "is_liked",
             "is_saved",
+            "is_pinned",
         ]
+
+    def get_author(self, obj):
+        # Replaces 'get_author_data' logic
+        request = self.context.get("request")
+        if obj.author_user:
+            profile = getattr(obj.author_user, "profile", None)
+            avatar = profile.profile_image if profile else None
+            return {
+                "id": obj.author_user_id,
+                "type": "user",
+                "username": obj.author_user.username,
+                "avatar": request.build_absolute_uri(avatar.url) if avatar else None,
+                "tag": None,
+            }
+        if obj.author_page:
+            avatar = obj.author_page.profile_image
+            return {
+                "id": obj.author_page_id,
+                "type": "page",
+                "username": obj.author_page.page_name,
+                "avatar": request.build_absolute_uri(avatar.url) if avatar else None,
+                "tag": obj.author_page.page_type,
+            }
+        return None
 
 
 class NotificationSerializer(serializers.ModelSerializer):

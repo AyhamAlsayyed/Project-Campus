@@ -382,6 +382,7 @@ class Event(models.Model):
 
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to="events/", blank=True, null=True)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField(blank=True, null=True)
     location = models.CharField(max_length=255, blank=True)
@@ -430,6 +431,7 @@ class Post(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+    is_pinned = models.BooleanField(default=False)
 
     author_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
