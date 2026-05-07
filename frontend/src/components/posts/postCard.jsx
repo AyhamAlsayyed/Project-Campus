@@ -6,6 +6,7 @@ import Like from '../../Assets/icons/like.png';
 import LikeActive from '../../Assets/icons/like-active.png'
 import Share from '../../Assets/icons/share.png';
 import Pin from '../../Assets/icons/pin.png'
+import { createPortal } from "react-dom";
 
 export default function PostCard({ post, openComments, isOwnProfile }) {
   const [current, setCurrent] = useState(0);
@@ -15,12 +16,14 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
   const [showMenu, setShowMenu] = useState(false);
   const [isPinned, setIsPinned] = useState(post?.is_pinned || false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [shareSearch, setShareSearch] = useState("");
+
 
 
   const [showShareMenu, setShowShareMenu] = useState(false);
-  const [shareTargets, setShareTargets] = useState([]); // Dynamic active chats array
-  const [isLoadingChats, setIsLoadingChats] = useState(false); // Loading targets from API
-  const [isSharing, setIsSharing] = useState(false); // Active post delivery payload state
+  const [shareTargets, setShareTargets] = useState([]);
+  const [isLoadingChats, setIsLoadingChats] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
   const shareMenuRef = useRef(null);
   const menuRef = useRef(null);
@@ -404,35 +407,96 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
             <span className={styles.shareText}>Share</span>
           </button>
 
-          {showShareMenu && (
-            <div className={styles.shareDropdown}>
-              <div className={styles.shareHeader}>Share to</div>
-              <div className={styles.shareList}>
-                {isLoadingChats ? (
-                  <div className={styles.shareLoading}>Loading conversations...</div>
-                ) : shareTargets.length === 0 ? (
-                  <div className={styles.shareEmpty}>No recent chats found</div>
-                ) : (
-                  shareTargets.map((target) => (
-                    <button
-                      key={target.id}
-                      className={styles.shareItem}
-                      disabled={isSharing}
-                      onClick={() => handleShareToTarget(target.id)}
-                    >
-                      <div className={styles.targetAvatar}>
-                        {target.isGroup || target.is_group ? "👥" : (
-                          <img src={target.avatar || "/default-avatar.png"} alt="" />
+          {showShareMenu && createPortal(
+            <div className={styles.shareOverlay} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
+              <div className={styles.shareModal} onClick={e => e.stopPropagation()} ref={shareMenuRef}>
+
+                {/* Header */}
+                <div className={styles.shareHeader}>
+                  <h3 className={styles.shareTitle}>Share Post</h3>
+                  <button
+                    className={styles.closeBtn}
+                    onClick={() => { setShowShareMenu(false); setShareSearch(""); }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Search bar */}
+                <div className={styles.shareSearchWrapper}>
+                  <div className={styles.shareSearchInner}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.searchIcon}>
+                      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                    </svg>
+                    <input
+                      autoFocus
+                      placeholder="Search people or groups..."
+                      value={shareSearch}
+                      onChange={e => setShareSearch(e.target.value)}
+                      className={styles.shareInput}
+                    />
+                  </div>
+                </div>
+
+                {/* Chat list */}
+                <div className={styles.shareListContainer}>
+                  {isLoadingChats ? (
+                    <div className={styles.shareStatus}>Loading conversations...</div>
+                  ) : (() => {
+                    const filtered = shareTargets.filter(t =>
+                      (t.name || t.username || "").toLowerCase().includes(shareSearch.toLowerCase())
+                    );
+                    const groups = filtered.filter(t => t.is_group || t.isGroup);
+                    const directs = filtered.filter(t => !t.is_group && !t.isGroup);
+
+                    if (filtered.length === 0) return (
+                      <div className={styles.shareStatus}>No chats found</div>
+                    );
+
+                    const renderItem = (target) => (
+                      <button
+                        key={target.id}
+                        disabled={isSharing}
+                        onClick={() => handleShareToTarget(target.id)}
+                        className={styles.shareItem}
+                      >
+                        <div className={styles.shareAvatarWrapper}>
+                          {target.is_group || target.isGroup ? (
+                            <div className={styles.groupIconPlaceholder}>👥</div>
+                          ) : (
+                            <img src={target.avatar || "/default-avatar.png"} alt="" className={styles.shareAvatarImg} />
+                          )}
+                        </div>
+                        <span className={styles.targetName}>
+                          {target.name || target.username}
+                        </span>
+                        <div className={styles.sendLabel}>{isSharing ? "..." : "Send"}</div>
+                      </button>
+                    );
+
+                    return (
+                      <>
+                        {groups.length > 0 && (
+                          <div className={styles.sectionSection}>
+                            <div className={styles.sectionHeader}>Group Chats</div>
+                            {groups.map(renderItem)}
+                          </div>
                         )}
-                      </div>
-                      <span className={styles.targetName}>
-                        {isSharing ? "Sharing..." : target.name || target.username}
-                      </span>
-                    </button>
-                  ))
-                )}
+                        {directs.length > 0 && (
+                          <div className={styles.sectionSection}>
+                            <div className={styles.sectionHeader}>Direct Messages</div>
+                            {directs.map(renderItem)}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
-            </div>
+            </div>,
+            document.body
           )}
         </div>
       </div>
