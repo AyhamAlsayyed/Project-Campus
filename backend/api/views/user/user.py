@@ -1,3 +1,4 @@
+import json
 import re
 
 from django.contrib.auth import get_user_model
@@ -7,7 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Friendship
+from ...models import Friendship, UserDegree
 
 
 def get_user_academic_info(user):
@@ -184,10 +185,11 @@ def profile_view(request, user_id):
         "role": role,
         "friend_status": friend_status,
         "friends_count": friends_count,
-        "email": user.email,
+        "personal_email": user.email,
         "primary_phone": getattr(profile, "primary_phone", ""),
         "secondary_phone": getattr(profile, "secondary_phone", ""),
         "degree": degrees,
+        "birthday": getattr(profile, "birth_date", ""),
     }
 
     if instructor:
@@ -215,6 +217,9 @@ def update_profile(request):
             return Response({"message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
         user.username = request.data["username"]
 
+        if "personal_email" in request.data:
+            user.email = request.data["personal_email"]
+
     if profile:
         if "full_name" in request.data:
             profile.full_name = request.data["full_name"]
@@ -226,8 +231,8 @@ def update_profile(request):
             profile.secondary_phone = request.data["secondary_phone"]
         if "personal_email" in request.data:
             profile.secondary_email = request.data.get("personal_email", "")
-        if "birthday" in request.data:
-            profile.birthday = request.data["birthday"]
+        if "birth_date" in request.data:
+            profile.birth_date = request.data["birth_date"]
 
         if "avatar" in request.FILES:
             profile.profile_image = request.FILES["avatar"]
@@ -235,6 +240,41 @@ def update_profile(request):
             profile.banner_image = request.FILES["cover"]
 
         profile.save()
+
+    if "degrees" in request.data:
+        try:
+            degrees_data = request.data.get("degrees")
+            if isinstance(degrees_data, str):
+                degrees_data = json.loads(degrees_data)
+
+            existing_degree_ids = set(user.degrees.values_list("id", flat=True))
+            provided_degree_ids = []
+
+            for degree_item in degrees_data:
+                degree_id = degree_item.get("id")
+
+                if degree_id and int(degree_id) in existing_degree_ids:
+                    # update degree
+                    dg = UserDegree.objects.get(id=degree_id, user=user)
+                    dg.degree_type = degree_item.get("degree_type", dg.degree_type)
+                    dg.major = degree_item.get("major", dg.major)
+                    dg.institution = degree_item.get("institution", dg.institution)
+                    dg.save()
+                    provided_degree_ids.append(int(degree_id))
+                else:
+                    # create new degree
+                    new_dg = UserDegree.objects.create(
+                        user=user,
+                        degree_type=degree_item.get("degree_type"),
+                        major=degree_item.get("major", ""),
+                        institution=degree_item.get("institution", ""),
+                    )
+                    provided_degree_ids.append(new_dg.id)
+            # delete degree
+            UserDegree.objects.filter(user=user).exclude(id__in=provided_degree_ids).delete()
+
+        except Exception as e:
+            return Response({"error": f"Failed to update degrees: {str(e)}"}, status=400)
 
     # Update student profile if exists
     if hasattr(user, "student_profile") and "major" in request.data:

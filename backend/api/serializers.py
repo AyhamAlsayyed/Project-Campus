@@ -4,7 +4,6 @@ from .models import Comment, Community, Event, Friendship, Notification, Post, P
 
 
 class PostMediaSerializer(serializers.ModelSerializer):
-    # Remapping media fields to match the old serialize_post function output
     type = serializers.CharField(source="media_type")
     url = serializers.SerializerMethodField()
 
@@ -14,33 +13,27 @@ class PostMediaSerializer(serializers.ModelSerializer):
 
     def get_url(self, obj):
         request = self.context.get("request")
-        # Prioritize file over URL, same as your old helper function
         f = obj.media_file if obj.media_file else obj.media_url
         if not f:
             return None
         try:
-            # Build absolute URI for the frontend
             return request.build_absolute_uri(f.url) if hasattr(f, "url") else f
         except Exception():
             return None
 
 
 class PostSerializer(serializers.ModelSerializer):
-    # CHANGED: Mapping 'post_id' to 'id' and 'content_text' to 'content' for the frontend
     id = serializers.IntegerField(source="post_id")
     content = serializers.CharField(source="content_text")
 
-    # CHANGED: Added nested author field to replace 'get_author_data'
     author = serializers.SerializerMethodField()
 
-    # CHANGED: Added engagement fields that were previously manually added
     media = PostMediaSerializer(many=True, read_only=True)
     likes_count = serializers.IntegerField(source="reactions_count", read_only=True)
     comments_count = serializers.IntegerField(read_only=True)
     is_liked = serializers.BooleanField(read_only=True)
     is_saved = serializers.BooleanField(read_only=True)
 
-    # Added support for the pinning feature
     is_pinned = serializers.BooleanField(read_only=True)
 
     class Meta:
@@ -60,7 +53,6 @@ class PostSerializer(serializers.ModelSerializer):
         ]
 
     def get_author(self, obj):
-        # Replaces 'get_author_data' logic
         request = self.context.get("request")
         if obj.author_user:
             profile = getattr(obj.author_user, "profile", None)
