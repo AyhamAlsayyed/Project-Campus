@@ -290,15 +290,17 @@
   color: rgba(255, 255, 255, 0.82);
   cursor: pointer;
 }
+
 .shareText {
-    color: white;
-    font-size: 14px;
-    font-weight: 500;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .shareBtn:hover {
-    opacity: 0.8;
+  opacity: 0.8;
 }
+
 .shareBtn:hover {
   background: rgba(255, 255, 255, 0.08);
 }
@@ -423,7 +425,7 @@
 .shareContainer {
   position: relative;
   display: flex;
-    align-items: center;
+  align-items: center;
 }
 
 .shareDropdown {
@@ -492,10 +494,113 @@
 }
 
 .shareIcon {
- filter: brightness(0) invert(1) !important;
+  filter: brightness(0) invert(1) !important;
   display: inline-block;
   vertical-align: middle;
 
+}
+
+.pinMenuIcon {
+  filter:
+    brightness(0) saturate(100%) invert(100%);
+  opacity: 0.8;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  /* Slightly more transparent */
+  backdrop-filter: blur(8px);
+  /* Backdrop blur for focus */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.confirmModal {
+  background: #262626;
+  /* Dark grey, slightly lighter than absolute black for depth */
+  padding: 32px 24px;
+  border-radius: 20px;
+  width: 300px;
+  text-align: center;
+  border: 1px solid #444;
+  /* Dark border for definition */
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5);
+  /* Soft, deep shadow */
+  animation: modalScaleIn 0.2s ease-out;
+  /* Pop-in animation */
+}
+
+.modalTitle {
+  color: #ffffff;
+  font-size: 1.25rem;
+  /* 20px */
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.modalText {
+  color: #a1a1a1;
+  /* Softer grey for body text */
+  font-size: 0.95rem;
+  line-height: 1.4;
+  margin: 0 0 24px 0;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+}
+
+.modalActions button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 24px;
+  /* Fully rounded buttons */
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+/* Secondary Action: Darker, blends in */
+.cancelBtn {
+  background: #3a3a3a;
+  color: #ffffff;
+}
+
+.cancelBtn:hover {
+  background: #4a4a4a;
+}
+
+/* Primary Destructive Action: Red, stands out */
+.deleteConfirmBtn {
+  background: #ff4444;
+  color: #ffffff;
+}
+
+.deleteConfirmBtn:hover {
+  background: #ff6666;
+}
+
+/* Subtle Pop-in animation */
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes slideUp {

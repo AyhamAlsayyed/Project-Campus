@@ -28,6 +28,10 @@ export default function Header({ theme, toggleTheme, user }) {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [chats, setChats] = useState([]);
 
+  // ── Community join gate ──
+  const [joinGate, setJoinGate] = useState(null); // { id, name, avatar }
+  const [joinLoading, setJoinLoading] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
   const API = "http://localhost:8000";
@@ -81,13 +85,6 @@ export default function Header({ theme, toggleTheme, user }) {
     }
 
     setShowSearchDropdown(true);
-    setSearchResults({
-      people: [{ id: 1, full_name: "John Doe", username: "johndoe", university: "MIT" }],
-      communities: [{ id: 1, name: "React Devs", members_count: 120 }],
-   
-      pages: [{ id: 1, name: "Test Page" }],
-    });
-
     clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => fetchSearch(val.trim()), 350);
   };
@@ -117,11 +114,37 @@ export default function Header({ theme, toggleTheme, user }) {
     setSearchResults(null);
     switch (type) {
       case "person": navigate(`/profile/${item.id}`); break;
-      case "community": navigate(`/communities/${item.id}`); break;
-      case "post": navigate(`/home?openPost=${item.id}`); break;
+      case "community":
+        // If user hasn't joined, show the gate popup instead of navigating
+        if (!item.is_member) {
+          setJoinGate(item);
+          return;
+        }
+        navigate(`/communities/${item.id}`);
+        break;
       case "page": navigate(`/pages/${item.id}`); break;
       case "all": navigate(`/search?q=${encodeURIComponent(searchQuery)}`); break;
       default: break;
+    }
+  };
+
+  const handleJoinCommunity = async () => {
+    if (!joinGate) return;
+    setJoinLoading(true);
+    try {
+      const token = localStorage.getItem("access");
+      const res = await fetch(`${API}/api/communities/${joinGate.id}/join/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      if (res.ok) {
+        navigate(`/communities/${joinGate.id}`);
+      }
+    } catch (e) {
+      console.error("Join failed", e);
+    } finally {
+      setJoinLoading(false);
+      setJoinGate(null);
     }
   };
 
@@ -263,13 +286,28 @@ export default function Header({ theme, toggleTheme, user }) {
   const unreadCount = notifications.filter(n => !n.is_read).length;
   const displayCount = notifications.length;
 
-  // ── Count total results ──
+  // ── Count total results (no posts) ──
   const totalResults = searchResults
     ? (searchResults.people?.length || 0) +
-    (searchResults.communities?.length || 0) +
-    (searchResults.posts?.length || 0) +
-    (searchResults.pages?.length || 0)
+      (searchResults.communities?.length || 0) +
+      (searchResults.pages?.length || 0)
     : 0;
+
+  // ── Shared section label style ──
+  const sectionLabel = {
+    padding: "10px 18px 4px",
+    color: "rgba(255,255,255,0.35)",
+    fontSize: "0.72rem",
+    fontWeight: 700,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase"
+  };
+
+  const resultRow = {
+    display: "flex", alignItems: "center", gap: 12,
+    padding: "10px 18px", cursor: "pointer",
+    transition: "background 0.15s"
+  };
 
   return (
     <div className={styles.headerInner}>
@@ -304,7 +342,7 @@ export default function Header({ theme, toggleTheme, user }) {
           )}
         </div>
 
-        {/* Search dropdown */}
+        {/* ── Search dropdown ── */}
         {showSearchDropdown && searchQuery.trim() && (
           <div style={{
             position: "absolute",
@@ -322,7 +360,7 @@ export default function Header({ theme, toggleTheme, user }) {
             overflowY: "auto"
           }}>
 
-            {/* ── See all results — always first ── */}
+            {/* See all results */}
             <div
               onClick={() => handleResultClick("all")}
               style={{
@@ -360,21 +398,15 @@ export default function Header({ theme, toggleTheme, user }) {
               </div>
             ) : searchResults ? (
               <>
-                {/* ── People ── */}
+                {/* ── People (max 3) ── */}
                 {searchResults.people?.length > 0 && (
                   <div>
-                    <div style={{ padding: "10px 18px 4px", color: "rgba(255,255,255,0.35)", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                      People
-                    </div>
+                    <div style={sectionLabel}>People</div>
                     {searchResults.people.slice(0, 3).map(person => (
                       <div
                         key={person.id}
                         onClick={() => handleResultClick("person", person)}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 12,
-                          padding: "10px 18px", cursor: "pointer",
-                          transition: "background 0.15s"
-                        }}
+                        style={resultRow}
                         onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
                         onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                       >
@@ -398,7 +430,7 @@ export default function Header({ theme, toggleTheme, user }) {
                             {person.full_name || person.username}
                           </div>
                           <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>
-                            @{person.username} {person.university ? `· ${person.university}` : ""}
+                            @{person.username}{person.university ? ` · ${person.university}` : ""}
                           </div>
                         </div>
                       </div>
@@ -406,107 +438,99 @@ export default function Header({ theme, toggleTheme, user }) {
                   </div>
                 )}
 
-                {/* ── Communities ── */}
+                {/* ── Communities (max 3) — locked if not member ── */}
                 {searchResults.communities?.length > 0 && (
                   <div>
-                    <div style={{ padding: "10px 18px 4px", color: "rgba(255,255,255,0.35)", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                      Communities
-                    </div>
-                    {searchResults.communities.slice(0, 3).map(community => (
-                      <div
-                        key={community.id}
-                        onClick={() => handleResultClick("community", community)}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 12,
-                          padding: "10px 18px", cursor: "pointer",
-                          transition: "background 0.15s"
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                      >
-                        <div style={{ flexShrink: 0 }}>
-                          {community.avatar ? (
-                            <img
-                              src={community.avatar.startsWith("http") ? community.avatar : `${API}${community.avatar}`}
-                              alt=""
-                              style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover" }}
-                            />
-                          ) : (
-                            <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(139,45,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              <Users size={18} color="#c084fc" />
+                    <div style={sectionLabel}>Communities</div>
+                    {searchResults.communities.slice(0, 3).map(community => {
+                      const isMember = community.is_member;
+                      return (
+                        <div
+                          key={community.id}
+                          onClick={() => handleResultClick("community", community)}
+                          style={{ ...resultRow, opacity: isMember ? 1 : 0.75 }}
+                          onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        >
+                          <div style={{ flexShrink: 0, position: "relative" }}>
+                            {community.avatar ? (
+                              <img
+                                src={community.avatar.startsWith("http") ? community.avatar : `${API}${community.avatar}`}
+                                alt=""
+                                style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover" }}
+                              />
+                            ) : (
+                              <div style={{
+                                width: 36, height: 36, borderRadius: 10,
+                                background: "rgba(139,45,255,0.2)",
+                                display: "flex", alignItems: "center", justifyContent: "center"
+                              }}>
+                                <Users size={18} color="#c084fc" />
+                              </div>
+                            )}
+                            {/* Lock badge for non-members */}
+                            {!isMember && (
+                              <div style={{
+                                position: "absolute", bottom: -3, right: -3,
+                                width: 16, height: 16, borderRadius: "50%",
+                                background: "#1a1a1a", border: "1px solid #444",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                fontSize: 9
+                              }}>
+                                🔒
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.875rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {community.name}
                             </div>
-                          )}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.875rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {community.name}
+                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>
+                              {community.members_count ? `${community.members_count} members` : "Community"}
+                              {!isMember && (
+                                <span style={{
+                                  marginLeft: 6, fontSize: 10, fontWeight: 600,
+                                  color: "#f59e0b",
+                                  background: "rgba(245,158,11,0.1)",
+                                  border: "1px solid rgba(245,158,11,0.25)",
+                                  borderRadius: 5, padding: "1px 5px"
+                                }}>
+                                  Not joined
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>
-                            {community.members_count ? `${community.members_count} members` : "Community"}
-                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
-                {/* ── Posts ── */}
-                {searchResults.posts?.length > 0 && (
-                  <div>
-                    <div style={{ padding: "10px 18px 4px", color: "rgba(255,255,255,0.35)", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                      Posts
-                    </div>
-                    {searchResults.posts.slice(0, 2).map(post => (
-                      <div
-                        key={post.id}
-                        onClick={() => handleResultClick("post", post)}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 12,
-                          padding: "10px 18px", cursor: "pointer",
-                          transition: "background 0.15s"
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                      >
-                        <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <FileText size={18} color="rgba(255,255,255,0.5)" />
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ color: "#fff", fontSize: "0.875rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {post.content?.slice(0, 60) || "Post"}…
-                          </div>
-                          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>
-                            by @{post.author?.username || post.author_username}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* ── Pages ── */}
+                {/* ── Pages (max 3) ── */}
                 {searchResults.pages?.length > 0 && (
                   <div>
-                    <div style={{ padding: "10px 18px 4px", color: "rgba(255,255,255,0.35)", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                      Pages
-                    </div>
-                    {searchResults.pages.slice(0, 2).map(page => (
+                    <div style={sectionLabel}>Pages</div>
+                    {searchResults.pages.slice(0, 3).map(page => (
                       <div
                         key={page.id}
                         onClick={() => handleResultClick("page", page)}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 12,
-                          padding: "10px 18px", cursor: "pointer",
-                          transition: "background 0.15s"
-                        }}
+                        style={resultRow}
                         onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
                         onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                       >
                         <div style={{ flexShrink: 0 }}>
                           {page.avatar ? (
-                            <img src={page.avatar.startsWith("http") ? page.avatar : `${API}${page.avatar}`} alt="" style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover" }} />
+                            <img
+                              src={page.avatar.startsWith("http") ? page.avatar : `${API}${page.avatar}`}
+                              alt=""
+                              style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover" }}
+                            />
                           ) : (
-                            <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <div style={{
+                              width: 36, height: 36, borderRadius: 10,
+                              background: "rgba(255,255,255,0.06)",
+                              display: "flex", alignItems: "center", justifyContent: "center"
+                            }}>
                               <BookOpen size={18} color="rgba(255,255,255,0.5)" />
                             </div>
                           )}
@@ -522,7 +546,7 @@ export default function Header({ theme, toggleTheme, user }) {
                   </div>
                 )}
 
-                {/* ── No results ── */}
+                {/* No results */}
                 {totalResults === 0 && !searchLoading && (
                   <div style={{ padding: "20px 18px", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "0.875rem" }}>
                     No results found for "<span style={{ color: "rgba(255,255,255,0.6)" }}>{searchQuery}</span>"
@@ -559,11 +583,21 @@ export default function Header({ theme, toggleTheme, user }) {
               </div>
               <div className={styles.chatSearchContainer}>
                 <Search size={18} className={styles.chatSearchIcon} />
-                <input className={styles.chatSearchInput} placeholder="Searching for someone?" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                <input
+                  className={styles.chatSearchInput}
+                  placeholder="Searching for someone?"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
               <div className={styles.chatListWrapper}>
                 {filteredChats.length > 0 ? filteredChats.map((chat) => (
-                  <div key={chat.id} className={styles.chatItem} onClick={() => { setShowChats(false); navigate(`/chats/${chat.id}`); }} style={{ cursor: 'pointer' }}>
+                  <div
+                    key={chat.id}
+                    className={styles.chatItem}
+                    onClick={() => { setShowChats(false); navigate(`/chats/${chat.id}`); }}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className={styles.chatAvatarWrap}>
                       <img src={chat.avatar} alt="" className={styles.chatAvatar} />
                       {!chat.isGroup && (
@@ -581,7 +615,9 @@ export default function Header({ theme, toggleTheme, user }) {
                     </div>
                   </div>
                 )) : (
-                  <div className={styles.emptyState} style={{ padding: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>No users found</div>
+                  <div className={styles.emptyState} style={{ padding: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
+                    No users found
+                  </div>
                 )}
               </div>
             </div>
@@ -611,7 +647,11 @@ export default function Header({ theme, toggleTheme, user }) {
                 {notifications.length === 0 ? (
                   <div className={styles.emptyState}>No new notifications</div>
                 ) : notifications.map((n) => (
-                  <div key={n.id} onClick={() => handleNotificationClick(n)} className={`${styles.notificationItem} ${!n.is_read ? styles.unread : ""}`}>
+                  <div
+                    key={n.id}
+                    onClick={() => handleNotificationClick(n)}
+                    className={`${styles.notificationItem} ${!n.is_read ? styles.unread : ""}`}
+                  >
                     {!n.is_read && <span className={styles.unreadDot} />}
                     <div className={styles.notifAvatarWrap}>
                       <img src={n.avatar || "/default-avatar.png"} alt="" className={styles.notifAvatar} />
@@ -625,7 +665,10 @@ export default function Header({ theme, toggleTheme, user }) {
                       <p className={styles.notifText}>{n.text}</p>
                     </div>
                     <div className={styles.notifMenuWrapper}>
-                      <button className={styles.notifMenuBtn} onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === n.id ? null : n.id); }}>
+                      <button
+                        className={styles.notifMenuBtn}
+                        onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === n.id ? null : n.id); }}
+                      >
                         <MoreHorizontal size={18} />
                       </button>
                       {openMenuId === n.id && (
@@ -644,9 +687,124 @@ export default function Header({ theme, toggleTheme, user }) {
         </div>
 
         <button className={styles.iconButton} type="button" onClick={handleAvatarClick}>
-          {isInProfileSection ? <Home size={24} /> : <img src={avatarSrc} alt="Profile" className={styles.userProfilePicture} />}
+          {isInProfileSection
+            ? <Home size={24} />
+            : <img src={avatarSrc} alt="Profile" className={styles.userProfilePicture} />
+          }
         </button>
       </div>
+
+      {/* ══════════════════════════════════════
+          COMMUNITY JOIN GATE POPUP
+      ══════════════════════════════════════ */}
+      {joinGate && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 10000,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          {/* Backdrop */}
+          <div
+            style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+            onClick={() => setJoinGate(null)}
+          />
+
+          {/* Card */}
+          <div style={{
+            position: "relative",
+            background: "linear-gradient(145deg, #1e1e2e, #252535)",
+            border: "1px solid rgba(255,255,255,0.09)",
+            borderRadius: 20,
+            padding: "28px 28px 24px",
+            width: 380,
+            boxShadow: "0 24px 60px rgba(0,0,0,0.7)"
+          }}>
+            {/* Close */}
+            <button
+              onClick={() => setJoinGate(null)}
+              style={{
+                position: "absolute", top: 14, right: 14,
+                background: "rgba(255,255,255,0.07)", border: "none",
+                borderRadius: "50%", width: 30, height: 30,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: "rgba(255,255,255,0.6)"
+              }}
+            >
+              <X size={15} />
+            </button>
+
+            {/* Community avatar + name */}
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
+              {joinGate.avatar ? (
+                <img
+                  src={joinGate.avatar.startsWith("http") ? joinGate.avatar : `${API}${joinGate.avatar}`}
+                  alt=""
+                  style={{ width: 52, height: 52, borderRadius: 14, objectFit: "cover", flexShrink: 0 }}
+                />
+              ) : (
+                <div style={{
+                  width: 52, height: 52, borderRadius: 14, flexShrink: 0,
+                  background: "rgba(139,45,255,0.2)",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <Users size={26} color="#c084fc" />
+                </div>
+              )}
+              <div>
+                <div style={{ color: "#fff", fontWeight: 700, fontSize: "1rem" }}>{joinGate.name}</div>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.78rem", marginTop: 2 }}>
+                  {joinGate.members_count ? `${joinGate.members_count} members` : "Community"}
+                </div>
+              </div>
+            </div>
+
+            {/* Lock icon + message */}
+            <div style={{
+              display: "flex", gap: 12, alignItems: "flex-start",
+              background: "rgba(245,158,11,0.07)",
+              border: "1px solid rgba(245,158,11,0.2)",
+              borderRadius: 12, padding: "12px 14px", marginBottom: 22
+            }}>
+              <span style={{ fontSize: 20, flexShrink: 0, lineHeight: 1 }}>🔒</span>
+              <p style={{ margin: 0, color: "rgba(255,255,255,0.75)", fontSize: "0.875rem", lineHeight: 1.5 }}>
+                You have to join <strong style={{ color: "#fff" }}>{joinGate.name}</strong> to see what's inside it.
+                Would you like to join?
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setJoinGate(null)}
+                style={{
+                  flex: 1, background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 12, padding: "11px 0",
+                  color: "rgba(255,255,255,0.7)", fontWeight: 600,
+                  fontSize: "0.9rem", cursor: "pointer"
+                }}
+              >
+                Not now
+              </button>
+              <button
+                onClick={handleJoinCommunity}
+                disabled={joinLoading}
+                style={{
+                  flex: 2,
+                  background: joinLoading
+                    ? "rgba(139,45,255,0.4)"
+                    : "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))",
+                  border: "none", borderRadius: 12, padding: "11px 0",
+                  color: "#fff", fontWeight: 700, fontSize: "0.9rem",
+                  cursor: joinLoading ? "not-allowed" : "pointer",
+                  transition: "opacity 0.15s"
+                }}
+              >
+                {joinLoading ? "Joining…" : "Join Community"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

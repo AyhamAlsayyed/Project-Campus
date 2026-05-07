@@ -16,6 +16,9 @@ import MobileEditView from '../../components/profile/mobileEditView';
 import MobileProfileView from '../../components/profile/mobileProfileView';
 import { useProfileEdit } from '../../components/profile/useEditProfile';
 import ProfileEditCard from '../../components/profile/profileEditCard';
+import Like from '../../Assets/icons/like.png';
+import Comment from '../../Assets/icons/comment.png';
+import Save from '../../Assets/icons/save-icon.png';
 import {
     User, UserPlus, Bell, Users, Settings,
     Languages, Home, HelpCircle, MessageSquare,
@@ -44,6 +47,9 @@ export default function ProfilePage() {
     const [communityPicks, setCommunityPicks] = useState([]);
     const [picksSlide, setPicksSlide] = useState(0);
     const [savedPosts, setSavedPosts] = useState([]);
+    const [activitiesFilter, setActivitiesFilter] = useState('likes');
+    const [activitiesDropdownOpen, setActivitiesDropdownOpen] = useState(false);
+    const activitiesDropdownRef = useRef(null);
     const [savedLoading, setSavedLoading] = useState(false);
 
     const resolveUrl = (url) => {
@@ -51,6 +57,7 @@ export default function ProfilePage() {
         if (url.startsWith('http')) return url;
         return `${API}${url}`;
     };
+
     const API = "http://localhost:8000";
     const edit = useProfileEdit({ user, token, API, onSaved: () => onSavedRef.current?.() });
     const { isEditing, setIsEditing } = edit;
@@ -71,11 +78,26 @@ export default function ProfilePage() {
         window.addEventListener("resize", check);
         return () => window.removeEventListener("resize", check);
     }, []);
+    const filteredActivityPosts = activityPosts.filter(post => {
+        if (activitiesFilter === 'saves') return post.is_saved;
+        if (activitiesFilter === 'likes') return post.is_liked;
+        if (activitiesFilter === 'comments') return true; // backend already filters by commented posts
+        return true;
+    });
 
     useEffect(() => {
         document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [mobileMenuOpen]);
+
+    useEffect(() => {
+        const close = (e) => {
+            if (activitiesDropdownRef.current && !activitiesDropdownRef.current.contains(e.target))
+                setActivitiesDropdownOpen(false);
+        };
+        document.addEventListener("mousedown", close);
+        return () => document.removeEventListener("mousedown", close);
+    }, []);
 
 
     const loadCurrentUser = async () => {
@@ -313,7 +335,7 @@ export default function ProfilePage() {
 
                     <div className={styles.profileContent}>
                         {isEditing ? (
-                            <ProfileEditCard styles={styles} edit={edit} setIsEditing={setIsEditing} />
+                            <ProfileEditCard styles={styles} edit={edit} setIsEditing={setIsEditing}  user={user}/>
 
                         ) : (
                             <div className={styles.profileCard}>
@@ -379,7 +401,7 @@ export default function ProfilePage() {
                                                             <span className={styles.role}>/{role}</span>
                                                         </div>
                                                     </div>
-                                                    <div className={styles.subRow}style={{ gap: '8px' }}>
+                                                    <div className={styles.subRow} style={{ gap: '8px' }}>
                                                         <span className={styles.fullName}>{fullName}</span>
                                                         <span className={styles.dot} />
                                                         <span className={styles.friendsCount}>{user?.friends_count || 0} friends</span>
@@ -414,26 +436,87 @@ export default function ProfilePage() {
 
                                 <div className={styles.tabs}>
                                     {(isOwnProfile
-                                        ? ['Posts', 'Activities', 'Saved']
+                                        ? ['Posts', 'Activities', 'About']
                                         : ['Posts', 'Photos', 'Friends']
                                     ).map(tab => (
-                                        <button
-                                            key={tab}
-                                            className={`${styles.tabBtn} ${activeTab === tab ? styles.tabActive : ''}`}
-                                            onClick={() => {
-                                                setActiveTab(tab);
-                                                if (tab === 'Saved') loadSavedPosts();
-                                                if (tab === 'Activities') loadActivities();
-                                            }}
-                                        >
-                                            {tab}
-                                        </button>
+                                        tab === 'Activities' && isOwnProfile ? (
+                                            <div key="Activities" ref={activitiesDropdownRef} style={{ position: 'relative' }}>
+                                                <button
+                                                    className={`${styles.tabBtn} ${activeTab === 'Activities' ? styles.tabActive : ''}`}
+                                                    onClick={() => {
+                                                        setActiveTab('Activities');
+                                                        loadActivities();
+                                                        setActivitiesDropdownOpen(prev => !prev);
+                                                    }}
+                                                >
+                                                    Activities
+                                                </button>
+                                                {activitiesDropdownOpen && activeTab === 'Activities' && (
+                                                    <div style={{
+                                                        position: 'absolute', top: '110%', left: '50%',
+                                                        transform: 'translateX(-50%)',
+                                                        background: 'var(--bg-secondary, #1e1e2e)',
+                                                        border: '1px solid rgba(255,255,255,0.1)',
+                                                        borderRadius: 12, padding: '6px 0',
+                                                        minWidth: 150, zIndex: 100,
+                                                        boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
+                                                    }}>
+                                                        {[
+                                                            { key: 'saves', icon: Save, label: 'Saves' },
+                                                            { key: 'comments', icon: Comment, label: 'Comments' },
+                                                            { key: 'likes', icon: Like, label: 'Likes' },
+                                                        ].map(({ key, icon, label }) => (
+                                                            <button
+                                                                key={key}
+                                                                onClick={() => { setActivitiesFilter(key); setActivitiesDropdownOpen(false); }}
+                                                                style={{
+                                                                    display: 'flex', alignItems: 'center', gap: 10,
+                                                                    width: '100%', padding: '10px 18px',
+                                                                    background: activitiesFilter === key ? 'rgba(221, 219, 224, 0.11)' : 'transparent',
+                                                                    border: 'none', cursor: 'pointer',
+                                                                    color: activitiesFilter === key ? '#f0e7f8' : 'rgba(255,255,255,0.8)',
+                                                                    fontSize: '0.9rem', fontWeight: activitiesFilter === key ? 600 : 400,
+                                                                    transition: 'background 0.15s',
+                                                                    borderRadius: 6,
+                                                                }}
+                                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                                                                onMouseLeave={e => e.currentTarget.style.background = activitiesFilter === key ? 'rgba(139,45,255,0.15)' : 'transparent'}
+                                                            >
+                                                                <img
+                                                                    src={icon}
+                                                                    alt={label}
+                                                                    style={{
+                                                                        width: 18, height: 18,
+                                                                        filter: activitiesFilter === key
+                                                                            ? 'invert(100%) sepia(100%) grayscale(200%) brightness(150%)'
+                                                                            : 'invert(100%) sepia(100%) grayscale(200%) brightness(80%)'
+                                                                            
+                                                                    }}
+                                                                />
+                                                                {label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <button
+                                                key={tab}
+                                                className={`${styles.tabBtn} ${activeTab === tab ? styles.tabActive : ''}`}
+                                                onClick={() => {
+                                                    setActiveTab(tab);
+                                                    if (tab === 'Activities') loadActivities();
+                                                }}
+                                            >
+                                                {tab}
+                                            </button>
+                                        )
                                     ))}
                                 </div>
 
                                 {activeTab === 'Posts' && (
                                     <div className={styles.postsSection}>
-                                        {postsLoading ? <div className={styles.notice}>Loading...</div> : posts.map(post => <PostCard key={post.id} post={post} openComments={openComments} />)}
+                                        {postsLoading ? <div className={styles.notice}>Loading...</div> : posts.map(post => <PostCard key={post.id} post={post} openComments={openComments} isOwnProfile={true} />)}
                                     </div>
                                 )}
                                 {activeTab === 'Photos' && (
@@ -447,16 +530,22 @@ export default function ProfilePage() {
                                 {activeTab === 'Friends' && <div className={styles.friendsTabContent}><FriendsTab friends={friends} /></div>}
                                 {activeTab === 'Activities' && (
                                     <div className={styles.postsSection}>
-                                        {activitiesLoading ? <div className={styles.notice}>Loading activities...</div>
-                                            : activityPosts.length > 0 ? activityPosts.map(post => <PostCard key={post.id} post={post} openComments={openComments} />)
-                                                : <div className={styles.notice}>No recent activity to show.</div>}
+                                        {activitiesLoading
+                                            ? <div className={styles.notice}>Loading activities...</div>
+                                            : filteredActivityPosts.length > 0
+                                                ? filteredActivityPosts.map(post => (
+                                                    <PostCard key={post.id} post={post} openComments={openComments} />
+                                                ))
+                                                : <div className={styles.notice}>
+                                                    No {activitiesFilter === 'saves' ? 'saved posts' : activitiesFilter === 'likes' ? 'liked posts' : 'commented posts'} yet.
+                                                </div>
+                                        }
                                     </div>
                                 )}
-                                {activeTab === 'Saved' && (
+
+                                {activeTab === 'About' && (
                                     <div className={styles.postsSection}>
-                                        {savedLoading ? <div className={styles.notice}>Loading saved posts...</div>
-                                            : savedPosts.length > 0 ? savedPosts.map(post => <PostCard key={post.id} post={post} openComments={openComments} />)
-                                                : <div className={styles.notice}>You haven't saved any posts yet.</div>}
+                                        <UserDetails user={user} hidePill />
                                     </div>
                                 )}
                             </div>

@@ -15,7 +15,7 @@ export function useProfileEdit({ user, token, API, onSaved }) {
     const [coverFile, setCoverFile] = useState(null);
     const [coverPreview, setCoverPreview] = useState(null);
     const [verifyTarget, setVerifyTarget] = useState('');
-    const [otpDigits, setOtpDigits] = useState(['','','','','','']);
+    const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
     const [otpError, setOtpError] = useState('');
     const [otpLoading, setOtpLoading] = useState(false);
 
@@ -51,6 +51,9 @@ export function useProfileEdit({ user, token, API, onSaved }) {
             primaryPhone: u.primary_phone || '',
             secondaryPhone: u.secondary_phone || '',
             birthday: parseBirthday(u.birthday),
+            degrees: user?.degrees || [],           
+            educationEntries: user?.education || [],
+            teachingPositions: user?.teaching_positions || []
         });
     };
 
@@ -68,7 +71,7 @@ export function useProfileEdit({ user, token, API, onSaved }) {
                 const res = await fetch(`${API}/api/auth/check-username/?username=${encodeURIComponent(val)}`, { headers: { Authorization: `Bearer ${token}` } });
                 const data = await res.json();
                 if (!data.available) setUsernameError('Username unavailable.');
-            } catch {}
+            } catch { }
             finally { setUsernameChecking(false); }
         }, 600);
     };
@@ -92,8 +95,8 @@ export function useProfileEdit({ user, token, API, onSaved }) {
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone }),
             });
-        } catch {}
-        setOtpDigits(['','','','','','']);
+        } catch { }
+        setOtpDigits(['', '', '', '', '', '']);
         setOtpError('');
         setEditView('verify');
         setTimeout(() => otpRefs[0].current?.focus(), 100);
@@ -138,14 +141,14 @@ export function useProfileEdit({ user, token, API, onSaved }) {
             fd.append('primary_phone', formData.primaryPhone);
             fd.append('secondary_phone', formData.secondaryPhone);
             const { day, month, year } = formData.birthday;
-            if (day && month && year) fd.append('birthday', `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`);
+            if (day && month && year) fd.append('birthday', `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
             if (avatarFile) fd.append('avatar', avatarFile);
             if (coverFile) fd.append('cover', coverFile);
             const res = await fetch(`${API}/api/auth/profile/update/`, {
                 method: 'PATCH', headers: { Authorization: `Bearer ${token}` }, body: fd,
             });
             if (res.ok) { setIsEditing(false); onSaved?.(); }
-        } catch {}
+        } catch { }
         finally { setEditSaving(false); }
     };
 

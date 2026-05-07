@@ -6,14 +6,39 @@ import {
     Upload, Trash2, Mail, Phone, Edit2, Camera
 } from "lucide-react";
 import { useState } from "react";
+
 const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS_SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
 const firstDay = (y, m) => new Date(y, m, 1).getDay();
 
-// Update the function signature to accept setIsEditing:
-export default function ProfileEditCard({ styles, edit, setIsEditing }) {
+const SubLabel = ({ children, topPad = true }) => (
+    <div style={{
+        padding: topPad ? '10px 0 4px' : '4px 0 4px',
+        color: '#666', fontSize: 11, fontWeight: 600,
+        letterSpacing: '0.06em', textTransform: 'uppercase'
+    }}>
+        {children}
+    </div>
+);
+
+export default function ProfileEditCard({ styles, edit, setIsEditing, user }) {
     const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, target: null });
+
+    // Degrees
+    const [showAddDegree, setShowAddDegree] = useState(false);
+    const [newDegree, setNewDegree] = useState({ title: '', field: '' });
+
+    // Education (instructor only)
+    const [showAddEducation, setShowAddEducation] = useState(false);
+    const [newEducation, setNewEducation] = useState({ institution: '', degree: '' });
+
+    // Teaching positions (instructor only)
+    const [showAddPosition, setShowAddPosition] = useState(false);
+    const [newPosition, setNewPosition] = useState({ institution: '', type: 'parttime' });
+
+    const isInstructor = user?.role === 'instructor';
+
     const handleConfirmDelete = () => {
         if (deleteConfirm.target === 'avatar') {
             setAvatarFile(null);
@@ -23,7 +48,6 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
             setCoverPreview(null);
             setShowCoverDropdown(false);
         }
-        // Close the modal after deleting
         setDeleteConfirm({ isOpen: false, target: null });
     };
 
@@ -42,7 +66,34 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
         handleEditSave, handleEditCancel,
     } = edit;
 
-    // Paste the entire desktop editCard JSX here
+    // Shared input style
+    const inlineInput = (flex = 1) => ({
+        flex, background: '#262626', border: '1px solid #444',
+        borderRadius: 12, padding: '9px 14px', color: 'white',
+        outline: 'none', fontSize: 13, boxSizing: 'border-box'
+    });
+
+    const addBtn = {
+        background: 'rgba(139,45,255,0.2)', border: '1px solid rgba(139,45,255,0.4)',
+        color: '#c084fc', borderRadius: 10, padding: '8px 14px',
+        cursor: 'pointer', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap'
+    };
+
+    const dashedAddBtn = {
+        background: 'transparent', border: '1px dashed rgba(139,45,255,0.35)',
+        borderRadius: 10, color: 'rgba(139,45,255,0.8)', padding: '7px 14px',
+        cursor: 'pointer', fontSize: 13, fontWeight: 500, width: '100%', marginTop: 4
+    };
+
+    const cancelIconBtn = {
+        background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', padding: 4
+    };
+
+    const trashBtn = {
+        background: 'transparent', border: 'none', color: '#e91e63',
+        cursor: 'pointer', marginLeft: 'auto', padding: 4
+    };
+
     return (
         <div className={styles.editCard}>
 
@@ -55,9 +106,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                     <h1 className={styles.whiteHeaderText}>Edit Your Profile</h1>
                 </div>
                 <div className={styles.editActions}>
-                    <button className={styles.cancelLink} onClick={handleEditCancel}>
-                        Cancel
-                    </button>
+                    <button className={styles.cancelLink} onClick={handleEditCancel}>Cancel</button>
                     <button className={styles.savePill} onClick={handleEditSave} disabled={!!usernameError || editSaving}>
                         {editSaving ? 'Saving…' : 'Save'}
                     </button>
@@ -80,7 +129,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                             <button
                                 className={`${styles.mediaTextBtn} ${styles.deleteText}`}
                                 onClick={(e) => {
-                                    e.stopPropagation(); // Prevents triggering the parent upload click
+                                    e.stopPropagation();
                                     setDeleteConfirm({ isOpen: true, target: 'avatar' });
                                 }}
                             >
@@ -94,7 +143,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                     </div>
                 </div>
 
-
+                {/* Cover */}
                 <div style={{ flex: 1, position: "relative" }}>
                     <div style={{
                         width: "100%", minHeight: 180, height: "100%",
@@ -105,8 +154,6 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                             <img src={coverPreview} alt="cover"
                                 style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                         )}
-
-                        {/* Camera button — BOTTOM RIGHT of the cover */}
                         <button
                             className={styles.centeredCameraBtn}
                             style={{ position: "absolute", bottom: 10, right: 10, top: "auto", left: "auto", transform: "none" }}
@@ -114,8 +161,6 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                         >
                             <Camera size={16} />
                         </button>
-
-                        {/* Dropdown — anchored bottom-right */}
                         {showCoverDropdown && (
                             <div className={styles.coverActionsDropdown}
                                 style={{ position: "absolute", bottom: 50, right: 10, top: "auto", left: "auto", transform: "none" }}>
@@ -176,13 +221,12 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                                 style={{
                                     flex: 1, background: "#262626", border: "1px solid #444",
                                     borderRadius: 24, padding: "14px 16px", color: "white",
-                                    outline: "none", fontSize: 14, boxSizing: "border-box", opacity: 0.4,
-                                    cursor: "not-allowed",
+                                    outline: "none", fontSize: 14, boxSizing: "border-box",
+                                    opacity: 0.4, cursor: "not-allowed",
                                 }}
                                 type="text"
                                 value={formData.university}
                                 placeholder="University"
-                                onChange={e => setFormData(p => ({ ...p, university: e.target.value }))}
                             />
                             <input
                                 style={{
@@ -216,7 +260,6 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                     </div>
                 </div>
 
-                {/* Username error — only shows when there's actually an error */}
                 {usernameError && (
                     <p style={{ color: "#ff4b4b", fontSize: 11, margin: "4px 0 0 4px", lineHeight: 1.4 }}>
                         {usernameError}
@@ -237,33 +280,31 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                 {/* Inset fields panel */}
                 <div className={styles.insetFieldsPanel}>
 
-                    {/* Contact Info */}
+                    {/* ── Contact Info ── */}
                     <div className={styles.sectionLabelDivider}>
                         <span>Contact Info</span>
                         <div className={styles.dividerLine} />
                     </div>
 
-                    {/* Email row */}
                     <div className={styles.detailFieldItem}>
                         <span><Mail size={16} /> Email</span>
                         <span className={styles.fieldValueText}>{formData.primaryEmail || 'username@gmail.com'}</span>
                         <Edit2 size={16} className={styles.fieldEditIcon} onClick={() => setEditView("email")} />
                     </div>
 
-                    {/* Phone row */}
                     <div className={styles.detailFieldItem}>
                         <span><Phone size={16} /> Phone</span>
                         <span className={styles.fieldValueText}>{formData.primaryPhone || '—'}</span>
                         <Edit2 size={16} className={styles.fieldEditIcon} onClick={() => setEditView("phone")} />
                     </div>
 
-                    {/* Personal Details */}
+                    {/* ── Personal Details ── */}
                     <div className={styles.sectionLabelDivider}>
                         <span>Personal Details</span>
                         <div className={styles.dividerLine} />
                     </div>
 
-                    {/* Birthday row */}
+                    {/* Birthday */}
                     <div className={styles.detailFieldItem} style={{ position: "relative" }}>
                         <span>🎂 Birthday</span>
                         <div className={styles.birthdayInputsGroup}>
@@ -286,13 +327,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                                 onChange={e => setFormData(p => ({ ...p, birthday: { ...p.birthday, year: e.target.value } }))}
                             />
                         </div>
-                        {/* Calendar icon opens picker */}
-                        <Calendar
-                            size={18}
-                            className={styles.fieldEditIcon}
-                            onClick={() => setShowCalendar(p => !p)}
-                        />
-                        {/* Calendar dropdown */}
+                        <Calendar size={18} className={styles.fieldEditIcon} onClick={() => setShowCalendar(p => !p)} />
                         {showCalendar && (
                             <div style={{
                                 position: "absolute", bottom: "calc(100% + 8px)", right: 0,
@@ -301,7 +336,6 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                                 borderRadius: 16, padding: 14, zIndex: 50,
                                 boxShadow: "0 16px 40px rgba(0,0,0,0.6)"
                             }}>
-                                {/* Month nav */}
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                                     <button onClick={() => setCalViewDate(new Date(calViewDate.getFullYear(), calViewDate.getMonth() - 1, 1))}
                                         style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "1.2rem", cursor: "pointer", width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>‹</button>
@@ -311,13 +345,11 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                                     <button onClick={() => setCalViewDate(new Date(calViewDate.getFullYear(), calViewDate.getMonth() + 1, 1))}
                                         style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "1.2rem", cursor: "pointer", width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>›</button>
                                 </div>
-                                {/* Day headers */}
                                 <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", marginBottom: 6 }}>
                                     {DAYS_SHORT.map(d => (
                                         <span key={d} style={{ textAlign: "center", fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.35)", padding: "2px 0" }}>{d}</span>
                                     ))}
                                 </div>
-                                {/* Day grid */}
                                 <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
                                     {Array.from({ length: firstDay(calViewDate.getFullYear(), calViewDate.getMonth()) }).map((_, i) => (
                                         <span key={`e${i}`} />
@@ -344,7 +376,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                                                 }}
                                                 style={{
                                                     aspectRatio: "1", display: "flex", alignItems: "center",
-                                                    justifyContent: "center", background: isSelected
+                                                    justifyContent: "center",
+                                                    background: isSelected
                                                         ? "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))"
                                                         : "transparent",
                                                     border: "none", borderRadius: "50%",
@@ -361,12 +394,196 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                             </div>
                         )}
                     </div>
-                </div>
-            </div>
+
+                    {/* ── Degrees (both roles) ── */}
+                    <SubLabel>Degrees</SubLabel>
+
+                    {(formData.degrees || []).map((deg, i) => (
+                        <div key={i} className={styles.detailFieldItem}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ fontSize: 16 }}>🎓</span>
+                                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
+                                    {deg.title}{deg.field ? ` — ${deg.field}` : ''}
+                                </span>
+                            </span>
+                            <button
+                                style={trashBtn}
+                                onClick={() => setFormData(p => ({ ...p, degrees: p.degrees.filter((_, idx) => idx !== i) }))}
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        </div>
+                    ))}
+
+                    {showAddDegree ? (
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0' }}>
+                            <input
+                                placeholder="e.g. Bachelor's"
+                                value={newDegree.title}
+                                onChange={e => setNewDegree(p => ({ ...p, title: e.target.value }))}
+                                style={inlineInput(1)}
+                            />
+                            <input
+                                placeholder="Field e.g. Computer Science"
+                                value={newDegree.field}
+                                onChange={e => setNewDegree(p => ({ ...p, field: e.target.value }))}
+                                style={inlineInput(1.5)}
+                            />
+                            <button
+                                style={addBtn}
+                                onClick={() => {
+                                    if (!newDegree.title.trim()) return;
+                                    setFormData(p => ({ ...p, degrees: [...(p.degrees || []), newDegree] }));
+                                    setNewDegree({ title: '', field: '' });
+                                    setShowAddDegree(false);
+                                }}
+                            >
+                                Add
+                            </button>
+                            <button style={cancelIconBtn} onClick={() => { setShowAddDegree(false); setNewDegree({ title: '', field: '' }); }}>
+                                <X size={16} />
+                            </button>
+                        </div>
+                    ) : (
+                        <button style={dashedAddBtn} onClick={() => setShowAddDegree(true)}>
+                            + Add Degree
+                        </button>
+                    )}
+
+                    {/* ── Instructor only: Teaching Positions + Education ── */}
+                    {isInstructor && (
+                        <>
+                            {/* Teaching Positions */}
+                            <SubLabel>Teaching Positions</SubLabel>
+
+                            {(formData.teachingPositions || []).map((pos, i) => (
+                                <div key={i} className={styles.detailFieldItem}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                        <span style={{ fontSize: 16 }}>🏛️</span>
+                                        <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>{pos.institution}</span>
+                                        <span style={{
+                                            fontSize: 11, fontWeight: 600,
+                                            background: pos.type === 'primary' ? 'rgba(139,45,255,0.15)' : 'rgba(255,180,0,0.12)',
+                                            color: pos.type === 'primary' ? '#c084fc' : '#f59e0b',
+                                            border: `1px solid ${pos.type === 'primary' ? 'rgba(139,45,255,0.3)' : 'rgba(245,158,11,0.3)'}`,
+                                            borderRadius: 6, padding: '1px 7px'
+                                        }}>
+                                            {pos.type === 'primary' ? 'Primary' : 'Part-time'}
+                                        </span>
+                                    </span>
+                                    <button
+                                        style={trashBtn}
+                                        onClick={() => setFormData(p => ({ ...p, teachingPositions: p.teachingPositions.filter((_, idx) => idx !== i) }))}
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            ))}
+
+                            {showAddPosition ? (
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', flexWrap: 'wrap' }}>
+                                    <input
+                                        placeholder="Institution name"
+                                        value={newPosition.institution}
+                                        onChange={e => setNewPosition(p => ({ ...p, institution: e.target.value }))}
+                                        style={inlineInput(2)}
+                                    />
+                                    <select
+                                        value={newPosition.type}
+                                        onChange={e => setNewPosition(p => ({ ...p, type: e.target.value }))}
+                                        style={{
+                                            flex: 1, background: '#262626', border: '1px solid #444',
+                                            borderRadius: 12, padding: '9px 14px', color: 'white',
+                                            outline: 'none', fontSize: 13, cursor: 'pointer'
+                                        }}
+                                    >
+                                        <option value="primary">Primary</option>
+                                        <option value="parttime">Part-time</option>
+                                    </select>
+                                    <button
+                                        style={addBtn}
+                                        onClick={() => {
+                                            if (!newPosition.institution.trim()) return;
+                                            setFormData(p => ({ ...p, teachingPositions: [...(p.teachingPositions || []), newPosition] }));
+                                            setNewPosition({ institution: '', type: 'parttime' });
+                                            setShowAddPosition(false);
+                                        }}
+                                    >
+                                        Add
+                                    </button>
+                                    <button style={cancelIconBtn} onClick={() => { setShowAddPosition(false); setNewPosition({ institution: '', type: 'parttime' }); }}>
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <button style={dashedAddBtn} onClick={() => setShowAddPosition(true)}>
+                                    + Add Teaching Position
+                                </button>
+                            )}
+
+                            {/* Education */}
+                            <SubLabel>Education</SubLabel>
+
+                            {(formData.educationEntries || []).map((edu, i) => (
+                                <div key={i} className={styles.detailFieldItem}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <span style={{ fontSize: 16 }}>📚</span>
+                                        <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
+                                            {edu.institution}{edu.degree ? ` — ${edu.degree}` : ''}
+                                        </span>
+                                    </span>
+                                    <button
+                                        style={trashBtn}
+                                        onClick={() => setFormData(p => ({ ...p, educationEntries: p.educationEntries.filter((_, idx) => idx !== i) }))}
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            ))}
+
+                            {showAddEducation ? (
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0' }}>
+                                    <input
+                                        placeholder="Institution"
+                                        value={newEducation.institution}
+                                        onChange={e => setNewEducation(p => ({ ...p, institution: e.target.value }))}
+                                        style={inlineInput(1.5)}
+                                    />
+                                    <input
+                                        placeholder="Degree obtained"
+                                        value={newEducation.degree}
+                                        onChange={e => setNewEducation(p => ({ ...p, degree: e.target.value }))}
+                                        style={inlineInput(1)}
+                                    />
+                                    <button
+                                        style={addBtn}
+                                        onClick={() => {
+                                            if (!newEducation.institution.trim()) return;
+                                            setFormData(p => ({ ...p, educationEntries: [...(p.educationEntries || []), newEducation] }));
+                                            setNewEducation({ institution: '', degree: '' });
+                                            setShowAddEducation(false);
+                                        }}
+                                    >
+                                        Add
+                                    </button>
+                                    <button style={cancelIconBtn} onClick={() => { setShowAddEducation(false); setNewEducation({ institution: '', degree: '' }); }}>
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <button style={dashedAddBtn} onClick={() => setShowAddEducation(true)}>
+                                    + Add Education
+                                </button>
+                            )}
+                        </>
+                    )}
+
+                </div>{/* end insetFieldsPanel */}
+            </div>{/* end editForm */}
 
             {/* ══════════════════════════════════════
-        PHONE EDIT POPUP
-    ══════════════════════════════════════ */}
+                PHONE EDIT POPUP
+            ══════════════════════════════════════ */}
             {editView === "phone" && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)" }} onClick={() => setEditView("main")} />
@@ -375,7 +592,6 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                         padding: 28, width: 380, boxShadow: "0 20px 50px rgba(0,0,0,0.7)",
                         border: "1px solid rgba(255,255,255,0.08)"
                     }}>
-                        {/* Header */}
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                 <Phone size={20} color="white" />
@@ -387,8 +603,6 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                             </div>
                         </div>
                         <div style={{ height: 1, background: "#2a2a2a", marginBottom: 20 }} />
-
-                        {/* Primary phone */}
                         <div style={{ marginBottom: 16 }}>
                             <label style={{ color: "#888", fontSize: "0.85rem", display: "block", marginBottom: 8 }}>Primary</label>
                             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -407,8 +621,6 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                                 </button>
                             </div>
                         </div>
-
-                        {/* Secondary phone */}
                         <div>
                             <label style={{ color: "#888", fontSize: "0.85rem", display: "block", marginBottom: 8 }}>Secondary</label>
                             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -440,8 +652,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
             )}
 
             {/* ══════════════════════════════════════
-        EMAIL EDIT POPUP
-    ══════════════════════════════════════ */}
+                EMAIL EDIT POPUP
+            ══════════════════════════════════════ */}
             {editView === "email" && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)" }} onClick={() => setEditView("main")} />
@@ -461,8 +673,6 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                             </div>
                         </div>
                         <div style={{ height: 1, background: "#2a2a2a", marginBottom: 20 }} />
-
-                        {/* Academic email — read-only, clearly labelled */}
                         <div style={{ marginBottom: 16 }}>
                             <label style={{ color: "#888", fontSize: "0.85rem", display: "block", marginBottom: 8 }}>
                                 Primary <span style={{ color: "rgba(139,45,255,0.85)", fontSize: "0.72rem", background: "rgba(139,45,255,0.12)", border: "1px solid rgba(139,45,255,0.3)", borderRadius: 6, padding: "1px 6px", marginLeft: 6 }}>Academic · Read-only</span>
@@ -471,8 +681,6 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                                 {formData.primaryEmail || 'username@university.edu'}
                             </div>
                         </div>
-
-                        {/* Personal email — editable */}
                         <div>
                             <label style={{ color: "#888", fontSize: "0.85rem", display: "block", marginBottom: 8 }}>Personal (optional)</label>
                             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -498,8 +706,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
             )}
 
             {/* ══════════════════════════════════════
-        OTP VERIFICATION POPUP
-    ══════════════════════════════════════ */}
+                OTP VERIFICATION POPUP
+            ══════════════════════════════════════ */}
             {editView === "verify" && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)" }} onClick={() => setEditView("phone")} />
@@ -517,8 +725,6 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                         <p style={{ margin: "0 0 24px", color: "#777", fontSize: "0.85rem", lineHeight: 1.5 }}>
                             A verification code was sent via SMS, check your messages. Do not share that code with anyone!
                         </p>
-
-                        {/* 6 OTP boxes */}
                         <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 16 }}>
                             {otpDigits.map((d, i) => (
                                 <input
@@ -531,7 +737,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                                     onChange={e => handleOtpChange(i, e.target.value)}
                                     onKeyDown={e => handleOtpKeyDown(i, e)}
                                     style={{
-                                        width: 52, height: 56, background: d ? "rgba(139,45,255,0.12)" : "transparent",
+                                        width: 52, height: 56,
+                                        background: d ? "rgba(139,45,255,0.12)" : "transparent",
                                         border: `2px solid ${d ? "rgba(139,45,255,0.7)" : "rgba(139,45,255,0.45)"}`,
                                         borderRadius: 12, color: "white", fontSize: "1.3rem",
                                         fontWeight: 700, textAlign: "center", outline: "none",
@@ -540,9 +747,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                                 />
                             ))}
                         </div>
-
                         {otpError && <p style={{ color: "#ff4b4b", fontSize: "0.8rem", textAlign: "center", margin: "0 0 12px" }}>{otpError}</p>}
-
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
                             <button
                                 onClick={() => handleSendOtp(verifyTarget)}
@@ -567,6 +772,10 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                     </div>
                 </div>
             )}
+
+            {/* ══════════════════════════════════════
+                DELETE CONFIRM MODAL
+            ══════════════════════════════════════ */}
             {deleteConfirm.isOpen && (
                 <div className={styles.modalOverlay}>
                     <div className={styles.confirmModal}>
@@ -575,16 +784,10 @@ export default function ProfileEditCard({ styles, edit, setIsEditing }) {
                             Are you sure you want to remove your {deleteConfirm.target === 'avatar' ? 'profile picture' : 'banner'}? This cannot be undone.
                         </p>
                         <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-                            <button
-                                className={styles.modalCancelBtn}
-                                onClick={() => setDeleteConfirm({ isOpen: false, target: null })}
-                            >
+                            <button className={styles.modalCancelBtn} onClick={() => setDeleteConfirm({ isOpen: false, target: null })}>
                                 Cancel
                             </button>
-                            <button
-                                className={styles.modalConfirmBtn}
-                                onClick={handleConfirmDelete}
-                            >
+                            <button className={styles.modalConfirmBtn} onClick={handleConfirmDelete}>
                                 Yes, remove it
                             </button>
                         </div>

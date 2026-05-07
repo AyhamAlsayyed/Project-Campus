@@ -13,7 +13,8 @@ import FriendsPage from './pages/FriendsPage/FriendsPage';
 import FollowedPages from './pages/followedPages/followedPages';
 import JoinedCommunities from './pages/joinedCommunities/joinedCommunities';
 import Universities from "./pages/universtities/universities";
-import EventsPage  from "./pages/eventsPage/eventsPage";
+import EventsPage from "./pages/eventsPage/eventsPage";
+import SearchResultsPage from './pages/searchResultPage/searchResults.jsx'
 
 function App() {
   return (
@@ -99,7 +100,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-         <Route
+        <Route
           path="/Universities"
           element={
             <ProtectedRoute>
@@ -107,7 +108,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-         <Route
+        <Route
           path="/events"
           element={
             <ProtectedRoute>
@@ -115,6 +116,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/search"
+          element={
+            <ProtectedRoute>
+              <SearchResultsPage />
+            </ProtectedRoute>
+          }
+        />
+
+
+
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -1,24 +1,27 @@
 import styles from "./posts.module.css";
 import { useState, useRef, useEffect } from "react";
-import { Share2, MoreHorizontal, Bookmark, Ban, Flag } from "lucide-react";
+import { Trash2, MoreHorizontal, Bookmark, Ban, Flag } from "lucide-react";
 import { Link } from "react-router-dom";
 import Like from '../../Assets/icons/like.png';
 import LikeActive from '../../Assets/icons/like-active.png'
 import Share from '../../Assets/icons/share.png';
+import Pin from '../../Assets/icons/pin.png'
 
-export default function PostCard({ post, openComments }) {
+export default function PostCard({ post, openComments, isOwnProfile }) {
   const [current, setCurrent] = useState(0);
   const [isLiked, setIsLiked] = useState(post?.is_liked || post?.has_liked || false);
   const [isSaved, setIsSaved] = useState(post?.is_saved || false);
   const [likesCount, setLikesCount] = useState(post?.likes_count || 0);
   const [showMenu, setShowMenu] = useState(false);
-  
-  // Share Menu States
+  const [isPinned, setIsPinned] = useState(post?.is_pinned || false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [shareTargets, setShareTargets] = useState([]); // Dynamic active chats array
   const [isLoadingChats, setIsLoadingChats] = useState(false); // Loading targets from API
   const [isSharing, setIsSharing] = useState(false); // Active post delivery payload state
-  
+
   const shareMenuRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -59,7 +62,7 @@ export default function PostCard({ post, openComments }) {
         // Replace this URL endpoint with your exact backend endpoint for fetching recent chat/room threads
         const res = await fetch("http://localhost:8000/api/chats/", {
           method: "GET",
-          headers: { 
+          headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json"
           },
@@ -103,6 +106,13 @@ export default function PostCard({ post, openComments }) {
     const token = localStorage.getItem("access");
     setShowMenu(false);
 
+
+    if (actionType === 'delete') {
+      setShowDeleteConfirm(true);
+      return;
+    }
+
+    if (actionType === 'pin') setIsPinned(prev => !prev);
     if (actionType === 'save') setIsSaved(prev => !prev);
 
     try {
@@ -110,11 +120,33 @@ export default function PostCard({ post, openComments }) {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok && actionType === 'save') setIsSaved(prev => !prev);
+
+      if (res.ok && actionType === 'pin') {
+
+      } else if (!res.ok) {
+        // Revert UI on failure
+        if (actionType === 'pin') setIsPinned(prev => !prev);
+        if (actionType === 'save') setIsSaved(prev => !prev);
+      }
     } catch (err) {
       console.error(`Failed to ${actionType} post`);
-      if (actionType === 'save') setIsSaved(prev => !prev);
     }
+  };
+  const confirmDelete = async () => {
+    const token = localStorage.getItem("access");
+    try {
+      const res = await fetch(`http://localhost:8000/api/posts/${post.id}/`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        // Handle post removal from UI (e.g., refresh page or filter state)
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
+    setShowDeleteConfirm(false);
   };
 
   const validMedia = post?.media?.map((item) => {
@@ -166,6 +198,31 @@ export default function PostCard({ post, openComments }) {
 
   return (
     <article className={styles.card}>
+      {showDeleteConfirm && (
+        // Clicking the dark overlay now triggers cancel (closes the modal)
+        <div className={styles.modalOverlay} onClick={() => setShowDeleteConfirm(false)}>
+          {/* stopPropagation prevents clicking inside the white box from closing it */}
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>Delete Post?</h3>
+            <p className={styles.modalText}>This action cannot be undone.</p>
+
+            <div className={styles.modalActions}>
+              <button
+                className={styles.cancelBtn}
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.deleteConfirmBtn}
+                onClick={confirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className={styles.topRow}>
         <div className={styles.user}>
           <Link to={(post.author?.id || post.author_id) ? `/profile/${post.author?.id || post.author_id}` : "#"}>
@@ -177,6 +234,9 @@ export default function PostCard({ post, openComments }) {
               {post.tag && <span className={styles.tag}>{post.tag}</span>}
             </div>
             <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>
+            {isPinned && (
+              <img src={Pin} alt="pinned" width={14} height={14} className={styles.pinIcon} />
+            )}
           </div>
         </div>
 
@@ -186,18 +246,64 @@ export default function PostCard({ post, openComments }) {
           </button>
           {showMenu && (
             <div className={styles.dropdownMenu}>
-              <button className={styles.menuItem} onClick={() => handleMenuAction('save')}>
-                <Bookmark size={16} fill={isSaved ? "currentColor" : "none"} />
-                {isSaved ? "Unsave" : "Save"}
-              </button>
+
+              {/* WHITE ACTIONS */}
+              <div className={styles.menuSection}>
+                {isOwnProfile && (
+                  <button
+                    className={styles.menuItem}
+                    onClick={() => handleMenuAction('pin')}
+                  >
+                    <img
+                      src={Pin}
+                      width={16}
+                      alt=""
+                      className={styles.pinMenuIcon}
+                    />
+                    {isPinned ? "Unpin Post" : "Pin Post"}
+                  </button>
+                )}
+
+                <button
+                  className={styles.menuItem}
+                  onClick={() => handleMenuAction('save')}
+                >
+                  <Bookmark size={16} fill={isSaved ? "currentColor" : "none"} />
+                  {isSaved ? "Unsave" : "Save"}
+                </button>
+              </div>
+
               <div className={styles.menuDivider} />
-              <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('block')}>
-                <Ban size={16} /> Block
-              </button>
-              <div className={styles.menuDivider} />
-              <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('report')}>
-                <Flag size={16} /> Report
-              </button>
+
+              {/* RED ACTIONS */}
+              <div className={styles.menuSection}>
+                {isOwnProfile && (
+                  <button
+                    className={`${styles.menuItem} ${styles.danger}`}
+                    onClick={() => handleMenuAction('delete')}
+                  >
+                    <Trash2 size={16} />
+                    Delete Post
+                  </button>
+                )}
+
+                <button
+                  className={`${styles.menuItem} ${styles.danger}`}
+                  onClick={() => handleMenuAction('report')}
+                >
+                  <Flag size={16} />
+                  Report
+                </button>
+
+                <button
+                  className={`${styles.menuItem} ${styles.danger}`}
+                  onClick={() => handleMenuAction('block')}
+                >
+                  <Ban size={16} />
+                  Block
+                </button>
+              </div>
+
             </div>
           )}
         </div>
