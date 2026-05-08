@@ -133,6 +133,7 @@ class PostSerializer(serializers.ModelSerializer):
             "likes_count",
             "comments_count",
             "author",
+            "is_pinned"
         ]
 
 

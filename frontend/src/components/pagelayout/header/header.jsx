@@ -2,7 +2,7 @@ import styles from "./header.module.css";
 import ThemeToggler from "../../pagelayout/themeToggle";
 import darkModeIcon from "../../../Assets/Pictures/LogoDarkMode.png";
 import {
-  Search, Home, Check, MoreHorizontal,
+  Search, Check, MoreHorizontal,
   Volume2, Calendar, UserPlus, Heart,
   Users, FileText, User, BookOpen, X
 } from "lucide-react";
@@ -11,6 +11,7 @@ import { useState, useEffect, useRef } from "react";
 import MessageSquare from "../../../Assets/icons/messages.png";
 import Bell from '../../../Assets/icons/notifications.png';
 import BellActive from '../../../Assets/icons/notifications-active.png';
+import Home from '../../../Assets/icons/home.png'
 
 export default function Header({ theme, toggleTheme, user }) {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -689,7 +690,11 @@ export default function Header({ theme, toggleTheme, user }) {
 
         <button className={styles.iconButton} type="button" onClick={handleAvatarClick}>
           {isInProfileSection
-            ? <Home size={24} />
+            ? <img
+              src={Home}
+              alt="home"
+              style={{ filter: "invert(1)", width: 24, height: 24 }}
+            />
             : <img src={avatarSrc} alt="Profile" className={styles.userProfilePicture} />
           }
         </button>

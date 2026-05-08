@@ -19,7 +19,14 @@ import ProfileEditCard from '../../components/profile/profileEditCard';
 import Like from '../../Assets/icons/like.png';
 import Comment from '../../Assets/icons/comment.png';
 import Save from '../../Assets/icons/save-icon.png';
+import Community from '../../Assets/icons/community.png';
 import VerifiedBadge from '../../Assets/icons/verified-mark.png';
+import Star from '../../Assets/icons/star.png';
+import Events from '../../Assets/icons/event.png';
+import Share from '../../Assets/icons/share.png';
+import Bin from '../../Assets/icons/bin.png';
+import Info from '../../Assets/icons/info.png';
+import { createPortal } from 'react-dom';
 import {
     User, UserPlus, Bell, Users, Settings,
     Languages, Home, HelpCircle, MessageSquare,
@@ -58,11 +65,28 @@ export default function ProfilePage() {
     const [hoverRating, setHoverRating] = useState(0);
     const [pagePosts, setPagePosts] = useState([]);
     const [pageEvents, setPageEvents] = useState([]);
+    const [picksPopup, setPicksPopup] = useState(null);
+    const [reminders, setReminders] = useState([]);
+    const [remindersMonth, setRemindersMonth] = useState(new Date());
+    const [remindersPopup, setRemindersPopup] = useState(null);
+    const [eventMenuOpen, setEventMenuOpen] = useState(null);
+
 
     const resolveUrl = (url) => {
         if (!url) return null;
         if (url.startsWith('http')) return url;
         return `${API}${url}`;
+    };
+    const loadReminders = async () => {
+        try {
+            const res = await fetch(`${API}/api/events/reminders/`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setReminders(Array.isArray(data) ? data : []);
+            }
+        } catch (e) { console.error(e); }
     };
 
     const API = "http://localhost:8000";
@@ -117,10 +141,12 @@ export default function ProfilePage() {
 
     const loadCommunityPicks = async () => {
         try {
-            // try pages endpoint first, fall back to users
             let res = await fetch(`${API}/api/pages/${userId}/community-picks/`, { headers: { Authorization: `Bearer ${token}` } });
             if (!res.ok) res = await fetch(`${API}/api/users/${userId}/community-picks/`, { headers: { Authorization: `Bearer ${token}` } });
-            if (res.ok) { const data = await res.json(); setCommunityPicks(Array.isArray(data) ? data : []); }
+            if (res.ok) {
+                const data = await res.json();
+                setCommunityPicks(Array.isArray(data) ? data : []);
+            }
         } catch (e) { console.error(e); }
     };
 
@@ -299,7 +325,7 @@ export default function ProfilePage() {
 
     useEffect(() => {
         const isOwn = currentUser?.id === Number(userId) || (!userId && currentUser);
-        if (isOwn) { loadActivities(); loadSavedPosts(); }
+        if (isOwn) { loadActivities(); loadSavedPosts(); loadReminders(); }
     }, [currentUser, userId]);
 
     const handleMessage = () => { navigate(`/messages/${userId}`); };
@@ -712,7 +738,78 @@ export default function ProfilePage() {
 
                     </div>
                     <div className={styles.rightSection}>
-                        {isOwnProfile ? <FriendsSuggestion /> : (
+                        {isOwnProfile ? (
+                            <>
+                                <FriendsSuggestion />
+                                {(() => {
+                                    const year = remindersMonth.getFullYear();
+                                    const month = remindersMonth.getMonth();
+                                    const monthName = remindersMonth.toLocaleString('default', { month: 'long' });
+                                    const firstDay = new Date(year, month, 1).getDay();
+                                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+                                    const eventDays = new Set(
+                                        reminders.map(e => {
+                                            const d = new Date(e.start_date || e.date || e.event_date);
+                                            return (d.getFullYear() === year && d.getMonth() === month) ? d.getDate() : null;
+                                        }).filter(Boolean)
+                                    );
+                                    const cells = [];
+                                    for (let i = 0; i < firstDay; i++) cells.push(null);
+                                    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+                                    return (
+                                        <div style={{
+                                            background: "rgba(61,60,60,0.45)", borderRadius: 20,
+                                            padding: "20px 20px 16px", border: "1px solid rgba(255,255,255,0.08)",
+                                            backdropFilter: "blur(10px)", marginTop: 16
+                                        }}>
+                                            <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+                                                <img src={Events} alt="events" style={{ width: 20, height: 20, flexShrink: 0, filter: "brightness(0) saturate(100%) invert(22%) sepia(80%) saturate(1300%) hue-rotate(280deg) brightness(90%)" }} />
+                                                <span style={{ color: "white", fontWeight: 700, fontSize: "1.1rem", marginLeft: 8 }}>
+                                                    Reminders set
+                                                </span>
+                                                <span style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.85rem", marginLeft: "auto", borderBottom: "1.5px solid #A6279C" }}>
+                                                    {monthName} {year}
+                                                </span>
+                                            </div>
+
+                                            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
+                                                {cells.map((day, i) => {
+                                                    const hasEvent = day && eventDays.has(day);
+                                                    return (
+                                                        <div
+                                                            key={i}
+                                                            onClick={() => {
+                                                                if (!hasEvent) return;
+                                                                const eventsOnDay = reminders.filter(e => {
+                                                                    const d = new Date(e.start_date || e.date || e.event_date);
+                                                                    return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
+                                                                });
+                                                                setRemindersPopup({ day, monthName, events: eventsOnDay });
+                                                            }}
+                                                            style={{
+                                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                                                width: 30, height: 30, margin: "2px auto",
+                                                                borderRadius: "50%",
+                                                                background: hasEvent ? "#A4279C" : "transparent",
+                                                                color: day ? (hasEvent ? "white" : "rgba(255,255,255,0.7)") : "transparent",
+                                                                fontSize: "0.78rem", fontWeight: hasEvent ? 700 : 400,
+                                                                cursor: hasEvent ? "pointer" : "default",
+                                                                transition: "background 0.15s, transform 0.15s",
+                                                            }}
+                                                            onMouseEnter={e => { if (hasEvent) e.currentTarget.style.transform = "scale(1.1)"; }}
+                                                            onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+                                                        >
+                                                            {day || ""}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+                            </>
+                        ) : (
                             <>
                                 <UserDetails user={user} />
                                 {user?.type === 'page' && !isOwnProfile && (
@@ -721,11 +818,11 @@ export default function ProfilePage() {
                                         padding: "20px 24px", border: "1px solid rgba(255,255,255,0.08)",
                                         backdropFilter: "blur(10px)", marginTop: 16
                                     }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                                            <span style={{ fontSize: "1.4rem" }}>⭐</span>
-                                            <span style={{ color: "white", fontWeight: 700, fontSize: "1rem" }}>Add a Review</span>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 30, marginLeft: 20 }}>
+                                            <img src={Star} alt="star" style={{ width: "2rem", height: "2rem", filter: "brightness(0) saturate(100%) invert(23%) sepia(76%) saturate(1200%) hue-rotate(280deg) brightness(95%)" }} />
+                                            <span style={{ color: "white", fontWeight: 700, fontSize: "1.15rem" }}>Add a Review</span>
                                         </div>
-                                        <div style={{ display: "flex", gap: 8 }}>
+                                        <div style={{ display: "flex", justifyContent: "space-around" }}>
                                             {[1, 2, 3, 4, 5].map(star => (
                                                 <button
                                                     key={star}
@@ -734,15 +831,21 @@ export default function ProfilePage() {
                                                     onClick={() => handleReview(star)}
                                                     style={{
                                                         background: "none", border: "none", cursor: "pointer",
-                                                        fontSize: "1.8rem", padding: 0,
-                                                        filter: star <= (hoverRating || reviewRating)
-                                                            ? "none"
-                                                            : "grayscale(100%) brightness(0.5)",
+                                                        padding: 0,
                                                         transition: "filter 0.15s, transform 0.15s",
-                                                        transform: star <= (hoverRating || reviewRating) ? "scale(1.15)" : "scale(1)"
+                                                        transform: star <= (hoverRating || reviewRating) ? "scale(1.1)" : "scale(1)"
                                                     }}
                                                 >
-                                                    ⭐
+                                                    <img
+                                                        src={Star}
+                                                        alt="star"
+                                                        style={{
+                                                            width: "1.9rem", height: "1.9rem", display: "block",
+                                                            filter: star <= (hoverRating || reviewRating)
+                                                                ? "brightness(0) invert(1) opacity(0.72)"        // #B8B8B8
+                                                                : "brightness(0) invert(1) opacity(0.28)"        // dark unselected
+                                                        }}
+                                                    />
                                                 </button>
                                             ))}
                                         </div>
@@ -756,40 +859,101 @@ export default function ProfilePage() {
                                 {communityPicks.length > 0 && (
                                     <div className={styles.picksCard}>
                                         <div className={styles.picksHeader}>
-                                            <Users size={18} className={styles.picksIcon} />
+                                            <img
+                                                src={Community}
+                                                alt="icon"
+                                                className={styles.picksIconPng}
+                                                style={{ filter: 'brightness(0) saturate(100%) invert(23%) sepia(85%) saturate(1200%) hue-rotate(280deg) brightness(90%)' }}
+                                            />
                                             <span className={styles.picksTitle}>{user?.username?.split(' ')[0]}'s Picks</span>
                                         </div>
-                                        <div className={styles.picksSliderWrapper}>
-                                            <button className={styles.picksArrow} onClick={() => setPicksSlide(prev => Math.max(0, prev - 1))} disabled={picksSlide === 0}>‹</button>
-                                            <div className={styles.picksSlide}>
-                                                {communityPicks[picksSlide] && (() => {
-                                                    const pick = communityPicks[picksSlide];
-                                                    return (
-                                                        <div className={styles.pickItem}>
-                                                            {pick.cover_image && <img src={pick.cover_image} alt={pick.name} className={styles.pickCoverImage} />}
-                                                            <div className={styles.pickInfo}>
-                                                                <div className={styles.pickNameRow}>
-                                                                    <span className={styles.pickName}>{pick.name}</span>
-                                                                    {pick.is_verified && <svg width="14" height="14" viewBox="0 0 24 24" fill="#8b2dff"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                                                                    <button className={styles.pickViewBtn}>View</button>
+
+                                        <div className={styles.picksSlideWrapper}>
+                                            {communityPicks[picksSlide] && (() => {
+                                                const pick = communityPicks[picksSlide];
+                                                return (
+                                                    <div
+                                                        className={styles.pickItemCard}
+                                                        style={{ backgroundImage: `url(${pick.cover_image})` }}
+                                                    >
+                                                        <div className={styles.pickOverlay}>
+                                                            <div className={styles.pickContentTop}>
+                                                                <div className={styles.pickTitleGroup}>
+                                                                    <h2 className={styles.pickName}>{pick.name}</h2>
+                                                                    {pick.is_verified && (
+                                                                        <img src={VerifiedBadge} alt="Verified" width={18} height={18} style={{ filter: "brightness(0) invert(1)" }} />
+                                                                    )}
                                                                 </div>
+                                                                <button
+                                                                    className={styles.pickViewBtn}
+                                                                    onClick={() => navigate(`/communities/${pick.id}`)}
+                                                                >
+                                                                    view
+                                                                </button>
+                                                            </div>
+
+                                                            <div className={styles.pickContentBottom}>
                                                                 <p className={styles.pickDescription}>{pick.description}</p>
-                                                                {pick.description?.length > 80 && <button className={styles.readMore}>read more</button>}
+                                                                {pick.description?.length > 80 && (
+                                                                    <button
+                                                                        className={styles.readMore}
+                                                                        onClick={() => setPicksPopup(pick)}
+                                                                    >
+                                                                        read more
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                    );
-                                                })()}
-                                            </div>
-                                            <button className={styles.picksArrow} onClick={() => setPicksSlide(prev => Math.min(communityPicks.length - 1, prev + 1))} disabled={picksSlide === communityPicks.length - 1}>›</button>
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
-                                        {communityPicks.length > 1 && (
+
+                                        <div className={styles.paginationRow}>
+                                            <button className={styles.navArrow} onClick={() => setPicksSlide(prev => Math.max(0, prev - 1))} disabled={picksSlide === 0}>
+                                                <div className={styles.arrowLeft} />
+                                            </button>
                                             <div className={styles.picksDots}>
                                                 {communityPicks.map((_, i) => (
                                                     <button key={i} className={`${styles.picksDot} ${i === picksSlide ? styles.picksDotActive : ''}`} onClick={() => setPicksSlide(i)} />
                                                 ))}
                                             </div>
-                                        )}
+                                            <button className={styles.navArrow} onClick={() => setPicksSlide(prev => Math.min(communityPicks.length - 1, prev + 1))} disabled={picksSlide === communityPicks.length - 1}>
+                                                <div className={styles.arrowRight} />
+                                            </button>
+                                        </div>
                                     </div>
+                                )}
+
+                                {/* Picks popup — outside the picks card */}
+                                {picksPopup && createPortal(
+                                    <div style={{
+                                        position: "fixed", inset: 0, zIndex: 9999,
+                                        background: "rgba(0,0,0,0.6)", backdropFilter: "blur(5px)",
+                                        display: "flex", alignItems: "center", justifyContent: "center"
+                                    }} onClick={() => setPicksPopup(null)}>
+                                        <div style={{
+                                            background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.1)",
+                                            borderRadius: 20, padding: 32, width: "90%", maxWidth: 500,
+                                            position: "relative", boxShadow: "0 10px 40px rgba(0,0,0,0.5)"
+                                        }} onClick={e => e.stopPropagation()}>
+                                            <button onClick={() => setPicksPopup(null)} style={{
+                                                position: "absolute", top: 16, right: 16,
+                                                background: "none", border: "none",
+                                                color: "rgba(255,255,255,0.5)", fontSize: 20, cursor: "pointer"
+                                            }}>✕</button>
+                                            <h3 style={{ color: "#fff", fontSize: 24, fontWeight: 800, margin: "0 0 16px" }}>
+                                                {picksPopup.name}
+                                            </h3>
+                                            <p style={{
+                                                color: "rgba(255,255,255,0.85)", fontSize: 15,
+                                                lineHeight: 1.6, margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word"
+                                            }}>
+                                                {picksPopup.description}
+                                            </p>
+                                        </div>
+                                    </div>,
+                                    document.body
                                 )}
                             </>
                         )}
@@ -831,11 +995,7 @@ export default function ProfilePage() {
                                 savedLoading={savedLoading}
                                 openComments={openComments}
                                 handleMessage={handleMessage}
-                                handleAddFriend={handleAddFriend}
-                                handleAccept={handleAccept}
-                                handleDecline={handleDecline}
-                                onEditClick={() => edit.setIsEditing(true)}
-                                edit={edit}
+                                handleAddFriend={handleAddFriend} handleAccept={handleAccept} handleDecline={handleDecline} onEditClick={() => edit.setIsEditing(true)} edit={edit}
                             />)}
 
                     </div>
@@ -844,6 +1004,159 @@ export default function ProfilePage() {
 
             {selectedPost && (
                 <CommentModal post={selectedPost} onClose={closeComments} currentUser={currentUser} />
+            )}
+            {remindersPopup && createPortal(
+                <div
+                    style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    onClick={() => { setRemindersPopup(null); setEventMenuOpen(null); }}
+                >
+                    <div
+                        style={{ background: "#383838", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 24, padding: "24px 20px", width: "92%", maxWidth: 480, maxHeight: "85vh", overflowY: "auto", position: "relative", boxShadow: "0 10px 40px rgba(0,0,0,0.7)" }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
+                            <img src={Events} alt="events" style={{ width: 22, height: 22, filter: "brightness(0) invert(1)" }} />
+                            <h3 style={{ color: "white", fontSize: "1.15rem", fontWeight: 700, margin: 0 }}>
+                                Events on {remindersPopup.monthName} {remindersPopup.day}{[1, 21, 31].includes(remindersPopup.day) ? 'st' : [2, 22].includes(remindersPopup.day) ? 'nd' : [3, 23].includes(remindersPopup.day) ? 'rd' : 'th'}
+                            </h3>
+                            <button
+                                onClick={() => setRemindersPopup(null)}
+                                style={{ marginLeft: "auto", background: "none", border: "none", color: "#e84d70", fontSize: "0.9rem", fontWeight: 600, cursor: "pointer", padding: 0 }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+
+                        {/* Events list */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                            {remindersPopup.events.map((event, index) => (
+                                <div key={event.id}>
+                                    {/* Separator between events */}
+                                    {index > 0 && (
+                                        <div style={{ width: "40%", height: 1, background: "rgba(255,255,255,0.1)", margin: "0 auto 20px auto" }} />
+                                    )}
+
+                                    {/* Host row */}
+                                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                                        {event.page?.avatar || event.host?.avatar
+                                            ? <img src={(event.page?.avatar || event.host?.avatar).startsWith("http") ? (event.page?.avatar || event.host?.avatar) : `${API}${event.page?.avatar || event.host?.avatar}`}
+                                                alt="" style={{ width: 42, height: 42, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "2px solid rgba(255,255,255,0.1)" }} />
+                                            : <div style={{ width: 42, height: 42, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><User size={20} color="rgba(255,255,255,0.4)" /></div>
+                                        }
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                                <span style={{ color: "white", fontWeight: 700, fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                    {event.page?.name || event.host?.name || event.host?.username || "Unknown Host"}
+                                                </span>
+                                                {(event.page?.is_verified || event.host?.is_verified) && (
+                                                    <img src={VerifiedBadge} alt="verified" style={{ width: 14, height: 14, filter: "brightness(0) invert(1)", flexShrink: 0 }} />
+                                                )}
+                                            </div>
+                                            {(event.page?.description || event.host?.bio) && (
+                                                <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                    {event.page?.description || event.host?.bio}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: "50%", width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 6 }}>
+                                            <Bell size={14} color="rgba(255,255,255,0.8)" />
+                                        </div>
+                                        <button style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 20, color: "white", fontSize: "0.75rem", fontWeight: 600, padding: "6px 16px", cursor: "pointer", flexShrink: 0 }}>
+                                            Followed
+                                        </button>
+                                    </div>
+
+                                    {/* Event card */}
+                                    <div style={{ borderRadius: 24, overflow: "hidden", position: "relative", minHeight: 160 }}>
+                                        {/* Banner background */}
+                                        {event.banner
+                                            ? <img src={event.banner.startsWith("http") ? event.banner : `${API}${event.banner}`} alt=""
+                                                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                                            : <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.05)" }} />
+                                        }
+
+                                        {/* Dark gradient overlay covering the card to ensure text is visible */}
+                                        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.85) 100%)" }} />
+
+                                        {/* 3-dot menu floating at top right */}
+                                        <div style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }}>
+                                            <button
+                                                onClick={e => { e.stopPropagation(); setEventMenuOpen(eventMenuOpen === event.id ? null : event.id); }}
+                                                style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)", border: "none", borderRadius: "50%", cursor: "pointer", color: "white", padding: 6, display: "flex", alignItems: "center", justifyContent: "center" }}
+                                            >
+                                                <MoreHorizontal size={18} />
+                                            </button>
+                                            {eventMenuOpen === event.id && (
+                                                <div
+                                                    style={{ position: "absolute", right: 0, top: "115%", zIndex: 200, background: "#222224", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "8px 0", minWidth: 160, boxShadow: "0 8px 24px rgba(0,0,0,0.8)" }}
+                                                    onClick={e => e.stopPropagation()}
+                                                >
+                                                    {[
+                                                        { icon: <Upload size={14} />, label: "Share event", color: "white" },
+                                                        { icon: <Trash2 size={14} />, label: "Delete event", color: "#e84d70" },
+                                                        { icon: <HelpCircle size={14} />, label: "Report event", color: "#e84d70" },
+                                                    ].map(({ icon, label, color }) => (
+                                                        <button
+                                                            key={label}
+                                                            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 16px", background: "transparent", border: "none", cursor: "pointer", color: color, fontSize: "0.85rem", fontWeight: 500, transition: "background 0.15s" }}
+                                                            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                                                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                                        >
+                                                            {icon}{label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Content at the bottom */}
+                                        <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "flex-end", gap: 16, padding: "20px 16px 16px 16px", minHeight: 160 }}>
+                                            {/* Left: title + desc + read more */}
+                                            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+                                                <span style={{ color: "white", fontWeight: 800, fontSize: "1.05rem" }}>{event.title}</span>
+                                                {event.description && (
+                                                    <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.8rem", margin: 0, lineHeight: 1.4, fontStyle: "italic", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                                                        {event.description}
+                                                    </p>
+                                                )}
+                                                {event.description?.length > 80 && (
+                                                    <button style={{ background: "none", border: "none", color: "white", textDecoration: "underline", fontSize: "0.75rem", cursor: "pointer", padding: 0, fontWeight: 500, textAlign: "left", marginTop: 2 }}>
+                                                        read more
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Right: Information panel */}
+                                            {(event.start_date || event.location) && (
+                                                <div style={{ width: 140, flexShrink: 0, padding: "12px", background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", borderRadius: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+                                                    <span style={{ color: "white", fontSize: "0.6rem", fontWeight: 600 }}>Information</span>
+                                                    {event.start_date && (
+                                                        <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e84d70" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                                            <span style={{ color: "white", fontSize: "0.65rem", lineHeight: 1.3 }}>
+                                                                {new Date(event.start_date) <= new Date()
+                                                                    ? "Happening Now!"
+                                                                    : `The event starts in ${Math.ceil((new Date(event.start_date) - new Date()) / 3600000)} hours`}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {event.location && (
+                                                        <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e84d70" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                                            <span style={{ color: "white", fontSize: "0.65rem", lineHeight: 1.3 }}>{event.location}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
     );

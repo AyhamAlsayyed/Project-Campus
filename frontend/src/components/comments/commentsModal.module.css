@@ -189,34 +189,24 @@
 .stats {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 10px 0;
     font-size: 12px;
     color: rgba(255, 255, 255, 0.75);
 }
 
-/* ACTIONS (Match PostCard actions) */
+
 .actions {
     margin-top: 12px;
     padding: 10px 0;
     border-top: 1px solid rgba(255, 255, 255, 0.07);
     border-bottom: 1px solid rgba(255, 255, 255, 0.07);
     display: flex;
-    align-items: center;
-    justify-content: space-around;
-    gap: 12px;
+    justify-content: space-evenly;
+
+ 
 }
 
-.actionBtn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 14px;
-    font-weight: 600;
-}
 
 .iconBtn {
   display: inline-flex;
@@ -432,9 +422,8 @@
 
 /* Like functionality styles */
 .actionBtn {
-    flex: 1;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     gap: 8px;
     padding: 8px 0;

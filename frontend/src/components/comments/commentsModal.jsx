@@ -5,6 +5,9 @@ import { X } from "lucide-react";
 import { Link } from "react-router-dom";
 import LikeActive from '../../Assets/icons/like-active.png';
 import { useRef } from "react";
+import { createPortal } from "react-dom";
+import postStyles from '../posts/posts.module.css';
+import Share from '../../Assets/icons/share.png';
 export default function CommentModal({ post, onClose, currentUser }) {
     const highlightCommentId = post.highlightCommentId || null;
     const [highlightedId, setHighlightedId] = useState(highlightCommentId);
@@ -22,6 +25,55 @@ export default function CommentModal({ post, onClose, currentUser }) {
     const files = post.media?.filter(item => item.type === "file") || [];
     const parentComments = comments.filter(c => !c.parent_comment);
     const replies = comments.filter(c => c.parent_comment);
+    const [showShareMenu, setShowShareMenu] = useState(false);
+    const [shareSearch, setShareSearch] = useState("");
+    const [shareTargets, setShareTargets] = useState([]);
+    const [isLoadingChats, setIsLoadingChats] = useState(false);
+    const [isSharing, setIsSharing] = useState(false);
+    const shareMenuRef = useRef(null);
+    useEffect(() => {
+        if (!showShareMenu) return;
+        const fetchActiveChats = async () => {
+            const token = localStorage.getItem("access");
+            if (!token) return;
+            setIsLoadingChats(true);
+            try {
+                const res = await fetch("http://localhost:8000/api/chats/", {
+                    method: "GET",
+                    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setShareTargets(data.map(chat => ({
+                        ...chat,
+                        avatar: chat.avatar
+                            ? chat.avatar.startsWith("http") ? chat.avatar : `http://localhost:8000${chat.avatar}`
+                            : "/default-avatar.png"
+                    })));
+                }
+            } catch (err) { console.error("Error fetching chats:", err); }
+            finally { setIsLoadingChats(false); }
+        };
+        fetchActiveChats();
+    }, [showShareMenu]);
+    const handleShareToTarget = async (targetId) => {
+        const token = localStorage.getItem("access");
+        if (!token) return;
+        setIsSharing(true);
+        try {
+            const res = await fetch(`http://localhost:8000/api/messages/send/`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    recipient_id: targetId,
+                    post_id: post.id || post.post_id,
+                    content: `Shared a post`,
+                }),
+            });
+            if (res.ok) { setShowShareMenu(false); setShareSearch(""); }
+        } catch (err) { console.error("Error sharing:", err); }
+        finally { setIsSharing(false); }
+    };
     useEffect(() => {
         if (!highlightedId || comments.length === 0) return;
         console.log("highlightedId:", highlightedId);
@@ -74,7 +126,8 @@ export default function CommentModal({ post, onClose, currentUser }) {
         const fetchComments = async () => {
             try {
                 const token = localStorage.getItem("access");
-                const res = await fetch(`http://localhost:8000/api/posts/${post.id}/comments/`, {
+                const postId = post.id || post.post_id;
+                const res = await fetch(`http://localhost:8000/api/posts/${postId}/comments/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const data = await res.json();
@@ -117,7 +170,8 @@ export default function CommentModal({ post, onClose, currentUser }) {
         const token = localStorage.getItem("access");
 
         try {
-            const res = await fetch(`http://localhost:8000/api/posts/${post.id}/comments/create/`, {
+            const postId = post.id || post.post_id;
+            const res = await fetch(`http://localhost:8000/api/posts/${postId}/comments/create/`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -147,7 +201,9 @@ export default function CommentModal({ post, onClose, currentUser }) {
 
     const handleLikePost = async () => {
         const token = localStorage.getItem("access");
-        if (!token || !post?.id) return;
+        const postId = post?.id || post?.post_id;
+
+        if (!token || !postId) return;
 
         const originalLiked = isLiked;
         const originalCount = likesCount;
@@ -156,14 +212,17 @@ export default function CommentModal({ post, onClose, currentUser }) {
         setLikesCount(prev => (isLiked ? prev - 1 : prev + 1));
 
         try {
-            const res = await fetch(`http://localhost:8000/api/posts/${post.id}/like/`, {
+            const res = await fetch(`http://localhost:8000/api/posts/${postId}/like/`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
             });
-            if (!res.ok) throw new Error("Failed to like");
+
+            if (!res.ok) {
+                throw new Error("Failed to like");
+            }
         } catch (err) {
             setIsLiked(originalLiked);
             setLikesCount(originalCount);
@@ -237,7 +296,9 @@ export default function CommentModal({ post, onClose, currentUser }) {
                         </div>
                     </div>
 
-                    {post.content && <p className={styles.postText}>{post.content}</p>}
+                    {(post.content || post.content_text) && (
+                        <p className={styles.postText}>{post.content || post.content_text}</p>
+                    )}
 
                     {visualMedia.length > 0 && (
                         <div className={styles.media}>
@@ -317,8 +378,76 @@ export default function CommentModal({ post, onClose, currentUser }) {
                             <img src={isLiked ? LikeActive : Like} width={20} alt="" />
                             <span>Like</span>
                         </div>
-                        <div className={styles.actionBtn}>↗ Share</div>
+
+                        {/* Share button */}
+                        <div ref={shareMenuRef}>
+                            <div className={styles.actionBtn} onClick={() => setShowShareMenu(!showShareMenu)}>
+                                <img src={Share} width={20} alt="Share" />
+                                <span>Share</span>
+                            </div>
+
+
+                        </div>
                     </div>
+                    {showShareMenu && createPortal(
+                        <div className={postStyles.shareOverlay} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
+                            <div className={postStyles.shareModal} onClick={e => e.stopPropagation()}>
+                                <div className={postStyles.shareHeader}>
+                                    <h3 className={postStyles.shareTitle}>Share Post</h3>
+                                    <button className={postStyles.closeBtn} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                                            <path d="M18 6L6 18M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div className={postStyles.shareSearchWrapper}>
+                                    <div className={postStyles.shareSearchInner}>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={postStyles.searchIcon}>
+                                            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                                        </svg>
+                                        <input
+                                            autoFocus
+                                            placeholder="Search people or groups..."
+                                            value={shareSearch}
+                                            onChange={e => setShareSearch(e.target.value)}
+                                            className={postStyles.shareInput}
+                                        />
+                                    </div>
+                                </div>
+                                <div className={postStyles.shareListContainer}>
+                                    {isLoadingChats ? (
+                                        <div className={postStyles.shareStatus}>Loading conversations...</div>
+                                    ) : (() => {
+                                        const filtered = shareTargets.filter(t =>
+                                            (t.name || t.username || "").toLowerCase().includes(shareSearch.toLowerCase())
+                                        );
+                                        const groups = filtered.filter(t => t.is_group || t.isGroup);
+                                        const directs = filtered.filter(t => !t.is_group && !t.isGroup);
+                                        if (filtered.length === 0) return <div className={postStyles.shareStatus}>No chats found</div>;
+                                        const renderItem = (target) => (
+                                            <button key={target.id} disabled={isSharing} onClick={() => handleShareToTarget(target.id)} className={postStyles.shareItem}>
+                                                <div className={postStyles.shareAvatarWrapper}>
+                                                    {target.is_group || target.isGroup
+                                                        ? <div>👥</div>
+                                                        : <img src={target.avatar || "/default-avatar.png"} alt="" className={postStyles.shareAvatarImg} />
+                                                    }
+                                                </div>
+                                                <span className={postStyles.targetName}>{target.name || target.username}</span>
+                                                <div className={postStyles.sendLabel}>{isSharing ? "..." : "Send"}</div>
+                                            </button>
+                                        );
+                                        return (
+                                            <>
+                                                {groups.length > 0 && <div><div className={postStyles.sectionHeader}>Group Chats</div>{groups.map(renderItem)}</div>}
+                                                {directs.length > 0 && <div><div className={postStyles.sectionHeader}>Direct Messages</div>{directs.map(renderItem)}</div>}
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )}
 
                     <div className={styles.commentsSection} ref={commentsSectionRef}>
                         {parentComments.map((c) => {

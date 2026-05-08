@@ -14,7 +14,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
   const [isSaved, setIsSaved] = useState(post?.is_saved || false);
   const [likesCount, setLikesCount] = useState(post?.likes_count || 0);
   const [showMenu, setShowMenu] = useState(false);
-  const [isPinned, setIsPinned] = useState(post?.is_pinned || false);
+  const [isPinned, setIsPinned] = useState(!!post?.is_pinned);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [shareSearch, setShareSearch] = useState("");
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -97,7 +97,8 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
     setIsLiked(!isLiked);
     setLikesCount(prev => (isLiked ? prev - 1 : prev + 1));
     try {
-      const res = await fetch(`http://localhost:8000/api/posts/${post.id}/like/`, {
+      const postId = post.id || post.post_id;
+      const res = await fetch(`http://localhost:8000/api/posts/${postId}/like/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
@@ -118,12 +119,38 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
       setShowDeleteConfirm(true);
       return;
     }
+   
 
-    if (actionType === 'pin') setIsPinned(prev => !prev);
+    if (actionType === 'pin') {
+      try {
+        const postId = post.id || post.post_id;
+
+        const res = await fetch(
+          `http://localhost:8000/api/posts/${postId}/pin/`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (res.ok) {
+          const data = await res.json();
+
+          setIsPinned(Boolean(data.is_pinned));
+        }
+      } catch (err) {
+        console.error("Failed to pin post");
+      }
+
+      return;
+    }
     if (actionType === 'save') setIsSaved(prev => !prev);
 
     try {
-      const res = await fetch(`http://localhost:8000/api/posts/${post.id}/${actionType}/`, {
+      const postId = post.id || post.post_id;
+      const res = await fetch(`http://localhost:8000/api/posts/${postId}/${actionType}/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -186,7 +213,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
         },
         body: JSON.stringify({
           recipient_id: targetId,
-          post_id: post.id,
+          post_id: post.id || post.post_id,
           content: `Shared a post`,
         }),
       });
@@ -247,7 +274,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
             {isPinned && (
               <>
                 <img src={Pin} alt="pinned" width={14} height={14} style={{ filter: 'brightness(0) invert(1)' }} className={styles.pinIcon} />
-                <p style={{color:"white"}}>Pinned</p>
+                <p style={{ color: "white" }}>Pinned</p>
               </>
             )}
           </div>
