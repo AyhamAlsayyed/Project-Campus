@@ -1,6 +1,17 @@
 from rest_framework import serializers
 
-from .models import Comment, Community, Event, Friendship, Notification, Post, PostMedia
+from .models import (
+    Comment,
+    Community,
+    Event,
+    Friendship,
+    Notification,
+    Post,
+    PostMedia,
+    PostReaction,
+    SavedPost,
+)
+from .utils.blocked_users import get_all_blocked_relationships
 
 
 class PostMediaSerializer(serializers.ModelSerializer):
@@ -23,58 +34,106 @@ class PostMediaSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source="post_id")
-    content = serializers.CharField(source="content_text")
-
+    media = PostMediaSerializer(many=True, read_only=True)
+    is_saved = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
 
-    media = PostMediaSerializer(many=True, read_only=True)
-    likes_count = serializers.IntegerField(source="reactions_count", read_only=True)
-    comments_count = serializers.IntegerField(read_only=True)
-    is_liked = serializers.BooleanField(read_only=True)
-    is_saved = serializers.BooleanField(read_only=True)
+    def get_is_saved(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return SavedPost.objects.filter(user=request.user, post=obj).exists()
+        return False
 
-    is_pinned = serializers.BooleanField(read_only=True)
+    def get_is_liked(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return PostReaction.objects.filter(user=request.user, post=obj).exists()
+        return False
 
-    class Meta:
-        model = Post
-        fields = [
-            "id",
-            "title",
-            "content",
-            "post_type",
-            "author",
-            "created_at",
-            "media",
-            "likes_count",
-            "comments_count",
-            "is_liked",
-            "is_saved",
-            "is_pinned",
-        ]
+    def get_likes_count(self, obj):
+        if obj.community_id:
+            return PostReaction.objects.filter(post=obj, user__isnull=False).count()
+
+        if obj.author_user_id:
+            blocked_map = get_all_blocked_relationships()
+            blocked_users = blocked_map.get(obj.author_user_id, set())
+
+            if blocked_users:
+                return (
+                    PostReaction.objects.filter(post=obj, user__isnull=False).exclude(user_id__in=blocked_users).count()
+                )
+
+        return PostReaction.objects.filter(post=obj, user__isnull=False).count()
+
+    def get_comments_count(self, obj):
+        if obj.community_id:
+            return Comment.objects.filter(post=obj).count()
+
+        if obj.author_user_id:
+            blocked_map = get_all_blocked_relationships()
+            blocked_users = blocked_map.get(obj.author_user_id, set())
+
+            if blocked_users:
+                return Comment.objects.filter(post=obj).exclude(author_user_id__in=blocked_users).count()
+
+        return Comment.objects.filter(post=obj).count()
 
     def get_author(self, obj):
         request = self.context.get("request")
+
         if obj.author_user:
             profile = getattr(obj.author_user, "profile", None)
-            avatar = profile.profile_image if profile else None
+            avatar = None
+            if profile and profile.profile_image:
+                avatar = request.build_absolute_uri(profile.profile_image.url) if request else profile.profile_image.url
+
             return {
                 "id": obj.author_user_id,
                 "type": "user",
                 "username": obj.author_user.username,
-                "avatar": request.build_absolute_uri(avatar.url) if avatar else None,
+                "avatar": avatar,
                 "tag": None,
             }
+
         if obj.author_page:
-            avatar = obj.author_page.profile_image
+            avatar = None
+            if obj.author_page.profile_image:
+                avatar = (
+                    request.build_absolute_uri(obj.author_page.profile_image.url)
+                    if request
+                    else obj.author_page.profile_image.url
+                )
+
             return {
                 "id": obj.author_page_id,
                 "type": "page",
                 "username": obj.author_page.page_name,
-                "avatar": request.build_absolute_uri(avatar.url) if avatar else None,
+                "avatar": avatar,
                 "tag": obj.author_page.page_type,
             }
+
         return None
+
+    class Meta:
+        model = Post
+        fields = [
+            "post_id",
+            "content_text",
+            "post_type",
+            "author_user",
+            "author_page",
+            "community",
+            "created_at",
+            "media",
+            "is_saved",
+            "is_liked",
+            "likes_count",
+            "comments_count",
+            "author",
+        ]
 
 
 class NotificationSerializer(serializers.ModelSerializer):

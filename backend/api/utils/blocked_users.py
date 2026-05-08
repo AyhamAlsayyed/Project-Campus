@@ -4,7 +4,6 @@ from ..models import Friendship
 
 
 def get_blocked_user_sets(user):
-    # this returns the users who blicked me and vis versa
     friendships = Friendship.objects.filter(Q(user1=user) | Q(user2=user), status=Friendship.Status.BLOCKED).values(
         "user1_id", "user2_id"
     )
@@ -21,17 +20,21 @@ def get_blocked_user_sets(user):
     return users_blocked_by_me, users_who_blocked_me
 
 
-def apply_block_filters(queryset, user, is_community_feed=False):
-    users_blocked_by_me, users_who_blocked_me = get_blocked_user_sets(user)
+def get_all_blocked_relationships():
+    friendships = Friendship.objects.filter(status=Friendship.Status.BLOCKED).values("user1_id", "user2_id")
 
-    all_blocked_users = users_blocked_by_me | users_who_blocked_me
+    blocked_map = {}
 
-    if not all_blocked_users:
-        return queryset
+    for f in friendships:
+        user1_id = f["user1_id"]
+        user2_id = f["user2_id"]
 
-    # inside community page
-    if is_community_feed:
-        return queryset
+        if user1_id not in blocked_map:
+            blocked_map[user1_id] = set()
+        if user2_id not in blocked_map:
+            blocked_map[user2_id] = set()
 
-    # everywhere else
-    return queryset.exclude(author_user_id__in=all_blocked_users)
+        blocked_map[user1_id].add(user2_id)
+        blocked_map[user2_id].add(user1_id)
+
+    return blocked_map

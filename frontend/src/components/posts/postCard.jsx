@@ -320,7 +320,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
         </div>
       </div>
 
-      {post.content && <p className={styles.text}>{post.content}</p>}
+      {post.content_text && <p className={styles.text}>{post.content_text}</p>}
 
       {validMedia.length > 0 && validMedia[current]?.type !== "file" && (
         <div className={styles.media}>

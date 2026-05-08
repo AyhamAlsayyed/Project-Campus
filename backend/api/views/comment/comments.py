@@ -99,7 +99,6 @@ def comment_list(request, post_id):
         .order_by("-created_at")
     )
 
-    # Filter out comments from blocked users (only if post is NOT in a community)
     if not post.community_id:
         users_blocked_by_me, users_who_blocked_me = get_blocked_user_sets(user)
         all_blocked_users = users_blocked_by_me | users_who_blocked_me
