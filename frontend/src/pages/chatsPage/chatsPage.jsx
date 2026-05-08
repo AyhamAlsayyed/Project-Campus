@@ -94,14 +94,13 @@ export default function ChatsPage() {
     };
     useEffect(() => {
         const handleOutsideClick = (event) => {
-            // 1. Existing logic for showAttachments
+            
             if (showAttachments &&
                 attachmentRef.current &&
                 !attachmentRef.current.contains(event.target)) {
                 setShowAttachments(false);
             }
-
-            // 2. ADD THIS: Logic for attachmentMenuOpen
+            
             if (
                 attachmentMenuOpen &&
                 attachmentRef.current &&
@@ -128,7 +127,7 @@ export default function ChatsPage() {
         return () => {
             document.removeEventListener('mousedown', handleOutsideClick);
         };
-        // 3. Update dependencies to include attachmentMenuOpen
+
     }, [showAttachments, attachmentMenuOpen, activeChatMenuOpen, openMenuId]);
     const scrollToBottom = () => {
         setTimeout(() => {
