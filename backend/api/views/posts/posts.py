@@ -116,6 +116,8 @@ def feed(request, community_id=None):
         qs = qs.filter(author_user_id=user_id).order_by("-is_pinned", "-created_at")
         # Don't hide blocked users' posts on their own profile
 
+    
+   
     # friends feed
     elif filter_type == "friends":
         accepted_users, _ = get_friendship_sets(user)

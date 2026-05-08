@@ -19,6 +19,7 @@ import ProfileEditCard from '../../components/profile/profileEditCard';
 import Like from '../../Assets/icons/like.png';
 import Comment from '../../Assets/icons/comment.png';
 import Save from '../../Assets/icons/save-icon.png';
+import VerifiedBadge from '../../Assets/icons/verified-mark.png';
 import {
     User, UserPlus, Bell, Users, Settings,
     Languages, Home, HelpCircle, MessageSquare,
@@ -51,6 +52,12 @@ export default function ProfilePage() {
     const [activitiesDropdownOpen, setActivitiesDropdownOpen] = useState(false);
     const activitiesDropdownRef = useRef(null);
     const [savedLoading, setSavedLoading] = useState(false);
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followersCount, setFollowersCount] = useState(0);
+    const [reviewRating, setReviewRating] = useState(0);
+    const [hoverRating, setHoverRating] = useState(0);
+    const [pagePosts, setPagePosts] = useState([]);
+    const [pageEvents, setPageEvents] = useState([]);
 
     const resolveUrl = (url) => {
         if (!url) return null;
@@ -110,21 +117,51 @@ export default function ProfilePage() {
 
     const loadCommunityPicks = async () => {
         try {
-            const res = await fetch(`${API}/api/users/${userId}/community-picks/`, { headers: { Authorization: `Bearer ${token}` } });
+            // try pages endpoint first, fall back to users
+            let res = await fetch(`${API}/api/pages/${userId}/community-picks/`, { headers: { Authorization: `Bearer ${token}` } });
+            if (!res.ok) res = await fetch(`${API}/api/users/${userId}/community-picks/`, { headers: { Authorization: `Bearer ${token}` } });
             if (res.ok) { const data = await res.json(); setCommunityPicks(Array.isArray(data) ? data : []); }
         } catch (e) { console.error(e); }
     };
 
     const loadProfileUser = async () => {
         try {
-            const res = await fetch(`${API}/api/users/${userId}`, { headers: { Authorization: `Bearer ${token}` } });
             let data;
-            try { data = await res.json(); } catch (err) { setUserError("API Error"); setUser(null); setUserLoading(false); return; }
-            if (!res.ok) { setUserError(data?.message || "Failed to load user"); setUser(null); return; }
+            let res = await fetch(`${API}/api/users/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            console.log("users/ status:", res.status); // what do you get here?
+
+            if (res.status === 404) {
+                res = await fetch(`${API}/api/pages/${userId}/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                console.log("pages/ status:", res.status); // and here?
+                data = await res.json();
+                console.log("page raw data:", data); // does this print?
+                data = {
+                    ...data,
+                    type: 'page',
+                    username: data.name,
+                    avatar_url: data.avatar,
+                    cover_url: data.banner,
+                    bio: data.description,
+                    is_verified: data.verified,
+                };
+            } else {
+                data = await res.json();
+            }
+
+            console.log("final user data:", data); // is user being set?
+            if (!res.ok) { setUserError(data?.message || "Failed"); setUser(null); return; }
             setUser(data);
             setFriendStatus(data.friend_status);
-            if (data?.id) loadPosts(data.id);
-        } catch (e) { setUser(null); setUserError(e?.message || "Something went wrong"); }
+            if (data?.id) loadPosts(data.id, data.type);;
+        } catch (e) {
+            console.error("loadProfileUser error:", e); // any crash?
+            setUser(null);
+            setUserError(e?.message || "Something went wrong");
+        }
         finally { setUserLoading(false); }
     };
     onSavedRef.current = loadProfileUser;
@@ -137,6 +174,48 @@ export default function ProfilePage() {
                 body: JSON.stringify({ to_user: userId }),
             });
             if (res.ok) setFriendStatus("sent");
+        } catch (e) { console.error(e); }
+    };
+    useEffect(() => {
+        if (user?.type === 'page') {
+            setIsFollowing(user?.is_following || false);
+            setFollowersCount(user?.followers_count || 0);
+        }
+    }, [user]);
+    const handleFollow = async () => {
+        const wasFollowing = isFollowing;
+        setIsFollowing(!wasFollowing);
+        setFollowersCount(prev => wasFollowing ? prev - 1 : prev + 1);
+        try {
+            const res = await fetch(`${API}/api/users/${userId}/follow/`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                setIsFollowing(wasFollowing);
+                setFollowersCount(prev => wasFollowing ? prev + 1 : prev - 1);
+            }
+        } catch {
+            setIsFollowing(wasFollowing);
+        }
+    };
+    const handleReview = async (rating) => {
+        setReviewRating(rating);
+        try {
+            await fetch(`${API}/api/users/${userId}/review/`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ rating })
+            });
+        } catch (e) { console.error(e); }
+    };
+
+    const loadPageEvents = async () => {
+        try {
+            const res = await fetch(`${API}/api/users/${userId}/events/`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) { const data = await res.json(); setPageEvents(Array.isArray(data) ? data : []); }
         } catch (e) { console.error(e); }
     };
 
@@ -170,8 +249,9 @@ export default function ProfilePage() {
         try {
             setFriendsLoading(true);
             const res = await fetch(`${API}/api/users/${userId}/friends/`, { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } });
+            if (!res.ok) { setFriends([]); return; } // add this
             const data = await res.json();
-            setFriends(data);
+            setFriends(Array.isArray(data) ? data : []);
         } catch (err) { console.error(err); }
         finally { setFriendsLoading(false); }
     };
@@ -195,9 +275,11 @@ export default function ProfilePage() {
         if (res.ok) setFriendStatus("none");
     };
 
-    const loadPosts = async (id) => {
+    const loadPosts = async (id, type) => {  // ← add type here
         try {
-            const res = await fetch(`${API}/api/posts?user=${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            const param = type === 'page' ? 'page' : 'user';  // ← use param, not user?.type
+            console.log("fetching posts:", `?${param}=${id}`); // confirm in console
+            const res = await fetch(`${API}/api/posts?${param}=${id}`, { headers: { Authorization: `Bearer ${token}` } });
             let data;
             try { data = await res.json(); } catch (err) { setPostsError("Invalid server response."); setPosts([]); setPostsLoading(false); return; }
             if (!res.ok) { setPostsError(data?.message || "Failed to load posts"); setPosts([]); return; }
@@ -335,7 +417,7 @@ export default function ProfilePage() {
 
                     <div className={styles.profileContent}>
                         {isEditing ? (
-                            <ProfileEditCard styles={styles} edit={edit} setIsEditing={setIsEditing}  user={user}/>
+                            <ProfileEditCard styles={styles} edit={edit} setIsEditing={setIsEditing} user={user} />
 
                         ) : (
                             <div className={styles.profileCard}>
@@ -351,7 +433,27 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
                                     <div className={styles.profileMeta}>
-                                        {user?.role === 'instructor' ? (
+                                        {user?.type === 'page' ? (
+                                            <>
+                                                <div className={styles.nameRow} style={{ justifyContent: "normal" }}>
+                                                    <h2 className={styles.username}>{username}</h2>
+                                                    {user?.is_verified && (
+                                                        <img
+                                                            src={VerifiedBadge}
+                                                            alt="verified"
+                                                            style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', marginLeft: 3 }}
+                                                        />
+                                                    )}
+                                                </div>
+                                                <div className={styles.subRow} style={{ gap: "10px" }}>
+                                                    {user?.category && <span className={styles.department}>{user.category}</span>}
+                                                    {user?.category && <span className={styles.dot} />}
+                                                    <span className={styles.friendsCount}>{followersCount.toLocaleString()} followers</span>
+                                                </div>
+                                                {bio && <p className={styles.bio}>{bio}</p>}
+                                            </>
+
+                                        ) : user?.type === 'instructor' ? (
                                             <>
                                                 <div className={styles.nameRow}>
                                                     <h2 className={styles.username}>{username}</h2>
@@ -416,18 +518,34 @@ export default function ProfilePage() {
                                     </div>
                                     {!isOwnProfile && (
                                         <div className={styles.profileActions}>
-                                            <button className={styles.messageBtn} onClick={handleMessage}><MessageSquare size={18} /></button>
-                                            {friendStatus === "none" && (
-                                                <button className={styles.addFriendBtn} onClick={handleAddFriend}>
-                                                    <UserPlus size={18} />
-                                                    <span>
-                                                        Add<span className="hidden sm:inline"> friend</span>
-                                                    </span>
-                                                </button>
+                                            {user?.type === 'page' ? (
+                                                <>
+                                                    <button className={styles.messageBtn} onClick={handleMessage}>
+                                                        <MessageSquare size={18} />
+                                                    </button>
+                                                    <button className={styles.messageBtn}>
+                                                        <Bell size={18} />
+                                                    </button>
+                                                    <button
+                                                        className={isFollowing ? styles.friendsBtn : styles.addFriendBtn}
+                                                        onClick={handleFollow}
+                                                    >
+                                                        {isFollowing ? 'Followed' : 'Follow'}
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button className={styles.messageBtn} onClick={handleMessage}><MessageSquare size={18} /></button>
+                                                    {friendStatus === "none" && (
+                                                        <button className={styles.addFriendBtn} onClick={handleAddFriend}>
+                                                            <UserPlus size={18} /><span>Add<span className="hidden sm:inline"> friend</span></span>
+                                                        </button>
+                                                    )}
+                                                    {friendStatus === "sent" && <button className={styles.pendingBtn}>⏳ Request Sent</button>}
+                                                    {friendStatus === "received" && (<><button className={styles.acceptBtn} onClick={handleAccept}>✅ Accept</button><button className={styles.declineBtn} onClick={handleDecline}>❌ Decline</button></>)}
+                                                    {friendStatus === "friends" && <button className={styles.friendsBtn}>Friends</button>}
+                                                </>
                                             )}
-                                            {friendStatus === "sent" && <button className={styles.pendingBtn}>⏳ Request Sent</button>}
-                                            {friendStatus === "received" && (<><button className={styles.acceptBtn} onClick={handleAccept}>✅ Accept</button><button className={styles.declineBtn} onClick={handleDecline}>❌ Decline</button></>)}
-                                            {friendStatus === "friends" && <button className={styles.friendsBtn}> Friends</button>}
                                         </div>
                                     )}
                                 </div>
@@ -435,9 +553,11 @@ export default function ProfilePage() {
                                 <div className={styles.hr} />
 
                                 <div className={styles.tabs}>
-                                    {(isOwnProfile
-                                        ? ['Posts', 'Activities', 'About']
-                                        : ['Posts', 'Photos', 'Friends']
+                                    {(user?.type === 'page'
+                                        ? ['Posts', 'Photos', 'Events']
+                                        : isOwnProfile
+                                            ? ['Posts', 'Activities', 'About']
+                                            : ['Posts', 'Photos', 'Friends']
                                     ).map(tab => (
                                         tab === 'Activities' && isOwnProfile ? (
                                             <div key="Activities" ref={activitiesDropdownRef} style={{ position: 'relative' }}>
@@ -490,7 +610,7 @@ export default function ProfilePage() {
                                                                         filter: activitiesFilter === key
                                                                             ? 'invert(100%) sepia(100%) grayscale(200%) brightness(150%)'
                                                                             : 'invert(100%) sepia(100%) grayscale(200%) brightness(80%)'
-                                                                            
+
                                                                     }}
                                                                 />
                                                                 {label}
@@ -505,6 +625,7 @@ export default function ProfilePage() {
                                                 className={`${styles.tabBtn} ${activeTab === tab ? styles.tabActive : ''}`}
                                                 onClick={() => {
                                                     setActiveTab(tab);
+                                                    if (tab === 'Events') loadPageEvents();
                                                     if (tab === 'Activities') loadActivities();
                                                 }}
                                             >
@@ -516,7 +637,7 @@ export default function ProfilePage() {
 
                                 {activeTab === 'Posts' && (
                                     <div className={styles.postsSection}>
-                                        {postsLoading ? <div className={styles.notice}>Loading...</div> : posts.map(post => <PostCard key={post.id} post={post} openComments={openComments} isOwnProfile={true} />)}
+                                        {postsLoading ? <div className={styles.notice}>Loading...</div> : posts.map(post => <PostCard key={post.id} post={post} openComments={openComments} isOwnProfile={isOwnProfile} />)}
                                     </div>
                                 )}
                                 {activeTab === 'Photos' && (
@@ -532,13 +653,20 @@ export default function ProfilePage() {
                                     <div className={styles.postsSection}>
                                         {activitiesLoading
                                             ? <div className={styles.notice}>Loading activities...</div>
-                                            : filteredActivityPosts.length > 0
-                                                ? filteredActivityPosts.map(post => (
-                                                    <PostCard key={post.id} post={post} openComments={openComments} />
-                                                ))
-                                                : <div className={styles.notice}>
-                                                    No {activitiesFilter === 'saves' ? 'saved posts' : activitiesFilter === 'likes' ? 'liked posts' : 'commented posts'} yet.
-                                                </div>
+                                            : (() => {
+                                                // use savedPosts directly for saves filter
+                                                const postsToShow = activitiesFilter === 'saves'
+                                                    ? savedPosts
+                                                    : filteredActivityPosts;
+
+                                                return postsToShow.length > 0
+                                                    ? postsToShow.map(post => (
+                                                        <PostCard key={post.id} post={post} openComments={openComments} isOwnProfile={isOwnProfile} />
+                                                    ))
+                                                    : <div className={styles.notice}>``
+                                                        No {activitiesFilter === 'saves' ? 'saved posts' : activitiesFilter === 'likes' ? 'liked posts' : 'commented posts'} yet.
+                                                    </div>
+                                            })()
                                         }
                                     </div>
                                 )}
@@ -548,6 +676,35 @@ export default function ProfilePage() {
                                         <UserDetails user={user} hidePill />
                                     </div>
                                 )}
+                                {activeTab === 'Events' && (
+                                    <div className={styles.postsSection}>
+                                        {pageEvents.length > 0 ? pageEvents.map(event => (
+                                            <div key={event.id} style={{
+                                                background: "rgba(255,255,255,0.04)", borderRadius: 16,
+                                                overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)"
+                                            }}>
+                                                {event.banner && (
+                                                    <img src={event.banner.startsWith("http") ? event.banner : `${API}${event.banner}`}
+                                                        alt="" style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
+                                                )}
+                                                <div style={{ padding: "14px 16px" }}>
+                                                    <div style={{ color: "white", fontWeight: 700, fontSize: "1rem" }}>{event.title}</div>
+                                                    {event.start_date && (
+                                                        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem", marginTop: 4 }}>
+                                                            {event.start_date} {event.end_date ? `→ ${event.end_date}` : ""}
+                                                        </div>
+                                                    )}
+                                                    {event.description && (
+                                                        <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.85rem", marginTop: 8, lineHeight: 1.5 }}>
+                                                            {event.description}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )) : <div className={styles.notice}>No events yet.</div>}
+                                    </div>
+                                )}
+
                             </div>
 
                         )}
@@ -558,6 +715,44 @@ export default function ProfilePage() {
                         {isOwnProfile ? <FriendsSuggestion /> : (
                             <>
                                 <UserDetails user={user} />
+                                {user?.type === 'page' && !isOwnProfile && (
+                                    <div style={{
+                                        background: "rgba(61,60,60,0.45)", borderRadius: 20,
+                                        padding: "20px 24px", border: "1px solid rgba(255,255,255,0.08)",
+                                        backdropFilter: "blur(10px)", marginTop: 16
+                                    }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                                            <span style={{ fontSize: "1.4rem" }}>⭐</span>
+                                            <span style={{ color: "white", fontWeight: 700, fontSize: "1rem" }}>Add a Review</span>
+                                        </div>
+                                        <div style={{ display: "flex", gap: 8 }}>
+                                            {[1, 2, 3, 4, 5].map(star => (
+                                                <button
+                                                    key={star}
+                                                    onMouseEnter={() => setHoverRating(star)}
+                                                    onMouseLeave={() => setHoverRating(0)}
+                                                    onClick={() => handleReview(star)}
+                                                    style={{
+                                                        background: "none", border: "none", cursor: "pointer",
+                                                        fontSize: "1.8rem", padding: 0,
+                                                        filter: star <= (hoverRating || reviewRating)
+                                                            ? "none"
+                                                            : "grayscale(100%) brightness(0.5)",
+                                                        transition: "filter 0.15s, transform 0.15s",
+                                                        transform: star <= (hoverRating || reviewRating) ? "scale(1.15)" : "scale(1)"
+                                                    }}
+                                                >
+                                                    ⭐
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {reviewRating > 0 && (
+                                            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem", marginTop: 10 }}>
+                                                You rated this {reviewRating}/5
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                                 {communityPicks.length > 0 && (
                                     <div className={styles.picksCard}>
                                         <div className={styles.picksHeader}>

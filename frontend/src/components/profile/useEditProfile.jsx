@@ -51,7 +51,7 @@ export function useProfileEdit({ user, token, API, onSaved }) {
             primaryPhone: u.primary_phone || '',
             secondaryPhone: u.secondary_phone || '',
             birthday: parseBirthday(u.birthday),
-            degrees: user?.degrees || [],           
+            degrees: user?.degrees || [],
             educationEntries: user?.education || [],
             teachingPositions: user?.teaching_positions || []
         });
@@ -62,7 +62,8 @@ export function useProfileEdit({ user, token, API, onSaved }) {
         setUsernameError('');
         clearTimeout(usernameTimer.current);
         if (!val.trim()) { setUsernameError('Username is required.'); return; }
-        if (/[^a-zA-Z0-9_]/.test(val)) { setUsernameError('No spaces or special characters.'); return; }
+        if (/[A-Z]/.test(val)) { setUsernameError('Username must be lowercase only — no capital letters.'); return; }
+        if (/[^a-z0-9]/.test(val)) { setUsernameError('Username must only contain small letters, numbers, or underscores. Special characters like @, #, $, %, !, -, +, =,_ are not allowed.'); return; }
         if (val.length > 50) { setUsernameError('Max 50 characters.'); return; }
         usernameTimer.current = setTimeout(async () => {
             if (val === user?.username) return;

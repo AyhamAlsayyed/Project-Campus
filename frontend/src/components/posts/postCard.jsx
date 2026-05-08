@@ -17,14 +17,10 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
   const [isPinned, setIsPinned] = useState(post?.is_pinned || false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [shareSearch, setShareSearch] = useState("");
-
-
-
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [shareTargets, setShareTargets] = useState([]);
   const [isLoadingChats, setIsLoadingChats] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
-
   const shareMenuRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -207,15 +203,18 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
     }
   };
 
+
   return (
     <article className={styles.card}>
       {showDeleteConfirm && (
-        // Clicking the dark overlay now triggers cancel (closes the modal)
         <div className={styles.modalOverlay} onClick={() => setShowDeleteConfirm(false)}>
-          {/* stopPropagation prevents clicking inside the white box from closing it */}
           <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
-            <h3 className={styles.modalTitle}>Delete Post?</h3>
-            <p className={styles.modalText}>This action cannot be undone.</p>
+            <div className={styles.modalContent}>
+              <h3 className={styles.modalTitle}>Delete this post?</h3>
+              <p className={styles.modalText}>
+                Once you delete this post, it can't be restored.
+              </p>
+            </div>
 
             <div className={styles.modalActions}>
               <button
@@ -246,7 +245,10 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
             </div>
             <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>
             {isPinned && (
-              <img src={Pin} alt="pinned" width={14} height={14} className={styles.pinIcon} />
+              <>
+                <img src={Pin} alt="pinned" width={14} height={14} style={{ filter: 'brightness(0) invert(1)' }} className={styles.pinIcon} />
+                <p style={{color:"white"}}>Pinned</p>
+              </>
             )}
           </div>
         </div>
@@ -288,7 +290,8 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
 
               {/* RED ACTIONS */}
               <div className={styles.menuSection}>
-                {isOwnProfile && (
+                {isOwnProfile ? (
+                  /* ── ACTIONS FOR YOUR OWN POST ── */
                   <button
                     className={`${styles.menuItem} ${styles.danger}`}
                     onClick={() => handleMenuAction('delete')}
@@ -296,23 +299,26 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
                     <Trash2 size={16} />
                     Delete Post
                   </button>
+                ) : (
+                  /* ── ACTIONS FOR OTHER PEOPLE'S POSTS ── */
+                  <>
+                    <button
+                      className={`${styles.menuItem} ${styles.danger}`}
+                      onClick={() => handleMenuAction('report')}
+                    >
+                      <Flag size={16} />
+                      Report
+                    </button>
+
+                    <button
+                      className={`${styles.menuItem} ${styles.danger}`}
+                      onClick={() => handleMenuAction('block')}
+                    >
+                      <Ban size={16} />
+                      Block
+                    </button>
+                  </>
                 )}
-
-                <button
-                  className={`${styles.menuItem} ${styles.danger}`}
-                  onClick={() => handleMenuAction('report')}
-                >
-                  <Flag size={16} />
-                  Report
-                </button>
-
-                <button
-                  className={`${styles.menuItem} ${styles.danger}`}
-                  onClick={() => handleMenuAction('block')}
-                >
-                  <Ban size={16} />
-                  Block
-                </button>
               </div>
 
             </div>
@@ -464,6 +470,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
                     );
 
                     const renderItem = (target) => (
+
                       <button
                         key={target.id}
                         disabled={isSharing}
