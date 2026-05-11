@@ -123,6 +123,9 @@ class Page(models.Model):
     page_id = models.BigAutoField(primary_key=True, db_column="page_id")
 
     page_name = models.CharField(max_length=255)
+    page_full_name = models.CharField(max_length=255, null=True, blank=True)
+    page_name_arabic = models.CharField(max_length=255, null=True, blank=True)
+    page_branch = models.CharField(max_length=255, null=True, blank=True)
 
     class PageType(models.TextChoices):
         UNIVERSITY = "university", "University"
@@ -874,7 +877,7 @@ class Message(models.Model):
     )
 
     content = models.TextField(blank=True, null=True)
-    shared_post = models.ForeignKey("post", on_delete=models.SET_NULL, null=True)
+    shared_post = models.ForeignKey("post", on_delete=models.SET_NULL, null=True, blank=True)
 
     sender_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

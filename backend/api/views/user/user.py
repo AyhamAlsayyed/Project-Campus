@@ -86,46 +86,45 @@ def profile_view(request, user_id):
 
     profile = getattr(user, "profile", None)
 
-    avatar = None
-    if profile and profile.profile_image:
-        avatar = request.build_absolute_uri(profile.profile_image.url)
+    avatar = request.build_absolute_uri(profile.profile_image.url) if profile and profile.profile_image else None
+    cover = request.build_absolute_uri(profile.banner_image.url) if profile and profile.banner_image else None
 
-    cover = None
-    if profile and profile.banner_image:
-        cover = request.build_absolute_uri(profile.banner_image.url)
-
-    # academic info
     student = getattr(user, "student_profile", None)
     instructor = getattr(user, "instructor_profile", None)
     admin = getattr(user, "admin_profile", None)
 
-    if student:
-        university = student.university_page.page_name if student.university_page else None
-        major = student.major
-        role = "student"
-    elif instructor:
-        university = instructor.university_page.page_name if instructor.university_page else None
-        major = None
-        role = "instructor"
+    university = None
+    university_full_name = None
+    university_branch = None
+    major = None
+    academic_title = None
+    department = None
+    instructor_type = None
+    role = "unknown"
 
-        instructor_data = {
-            "academic_title": instructor.academic_title,
-            "department": instructor.department,
-            "instructor_type": instructor.instructor_type,
-            "university_page": university,
-        }
+    if student:
+        role = "student"
+        major = student.major
+        uni_page = getattr(student, "university_page", None)
+    elif instructor:
+        role = "instructor"
+        academic_title = instructor.academic_title
+        department = instructor.department
+        instructor_type = instructor.instructor_type
+        uni_page = getattr(instructor, "university_page", None)
     elif admin:
-        university = None
-        major = None
         role = "admin"
+        uni_page = None
     else:
-        university = None
-        major = None
-        role = "unknown"
+        uni_page = None
+
+    if uni_page:
+        university = uni_page.page_name
+        university_full_name = uni_page.page_full_name
+        university_branch = uni_page.page_branch
 
     # friendship status
     current_user = request.user
-
     if current_user == user:
         friend_status = "self"
     else:
@@ -135,33 +134,20 @@ def profile_view(request, user_id):
 
         if not friendship:
             friend_status = "none"
-        elif friendship.status == Friendship.Status.PENDING:
-            friend_status = "sent" if friendship.user1 == current_user else "received"
-        elif friendship.status == Friendship.Status.ACCEPTED:
-            friend_status = "friends"
-        elif friendship.status == Friendship.Status.BLOCKED:
-            friend_status = "blocked"
         else:
-            friend_status = "none"
+            status_map = {
+                Friendship.Status.PENDING: "sent" if friendship.user1 == current_user else "received",
+                Friendship.Status.ACCEPTED: "friends",
+                Friendship.Status.BLOCKED: "blocked",
+            }
+            friend_status = status_map.get(friendship.status, "none")
 
     friends_count = Friendship.objects.filter(Q(user1=user) | Q(user2=user), status=Friendship.Status.ACCEPTED).count()
 
-    DEGREE_ORDER = {
-        "PhD": 1,
-        "Master": 2,
-        "Bachelor": 3,
-        "Diploma": 4,
-    }
-
+    DEGREE_ORDER = {"PhD": 1, "Master": 2, "Bachelor": 3, "Diploma": 4}
     degrees_qs = getattr(user, "degrees", None)
     degrees = []
-
     if degrees_qs:
-        degrees = sorted(
-            degrees_qs.all(),
-            key=lambda d: DEGREE_ORDER.get(d.degree_type, 99),
-        )
-
         degrees = [
             {
                 "id": d.id,
@@ -169,7 +155,7 @@ def profile_view(request, user_id):
                 "major": d.major,
                 "institution": d.institution,
             }
-            for d in degrees
+            for d in sorted(degrees_qs.all(), key=lambda d: DEGREE_ORDER.get(d.degree_type, 99))
         ]
 
     response_data = {
@@ -181,7 +167,12 @@ def profile_view(request, user_id):
         "avatar": avatar,
         "cover": cover,
         "university": university,
+        "university_full_name": university_full_name,
+        "university_branch": university_branch,
         "major": major,
+        "academic_title": academic_title,  # Included directly
+        "department": department,  # Included directly
+        "instructor_type": instructor_type,  # Included directly
         "role": role,
         "friend_status": friend_status,
         "friends_count": friends_count,
@@ -191,9 +182,6 @@ def profile_view(request, user_id):
         "degree": degrees,
         "birthday": getattr(profile, "birth_date", ""),
     }
-
-    if instructor:
-        response_data["instructor_info"] = instructor_data
 
     return Response(response_data, status=status.HTTP_200_OK)
 
@@ -240,8 +228,10 @@ def update_profile(request):
             profile.banner_image = request.FILES["cover"]
 
         profile.save()
-
+    print("1")
+    print(request.data)
     if "degrees" in request.data:
+        print("2")
         try:
             degrees_data = request.data.get("degrees")
             if isinstance(degrees_data, str):
