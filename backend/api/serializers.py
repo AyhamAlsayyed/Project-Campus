@@ -110,7 +110,7 @@ class PostSerializer(serializers.ModelSerializer):
             return {
                 "id": obj.author_page_id,
                 "type": "page",
-                "username": obj.author_page.page_name,
+                "username": obj.author_page.page_full_name,
                 "avatar": avatar,
                 "tag": obj.author_page.page_type,
             }
@@ -133,7 +133,7 @@ class PostSerializer(serializers.ModelSerializer):
             "likes_count",
             "comments_count",
             "author",
-            "is_pinned"
+            "is_pinned",
         ]
 
 
@@ -260,7 +260,8 @@ class CommunitySerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source="event_id", read_only=True)
 
-    organization_name = serializers.CharField(source="page.page_name")
+    organization_name = serializers.CharField(source="page.page_full_name")
+    page_type = serializers.CharField(source="page.page_type")
     avatar = serializers.SerializerMethodField()
     banner = serializers.SerializerMethodField()
 
@@ -272,6 +273,7 @@ class EventSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "organization_name",
+            "page_type",
             "avatar",
             "banner",
             "is_followed",

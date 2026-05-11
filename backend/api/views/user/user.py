@@ -19,6 +19,9 @@ def get_user_academic_info(user):
         result["role"] = "student"
         result["major"] = student.major
         result["academic"] = student.academic_level
+        result["university_page_full_name"] = (
+            student.university_page.page_full_name if student.university_page else None
+        )
         result["university_page_name"] = student.university_page.page_name if student.university_page else None
         return result
 
@@ -26,6 +29,9 @@ def get_user_academic_info(user):
     if instructor:
         result["role"] = "instructor"
         result["department"] = instructor.department
+        result["university_page_full_name"] = (
+            instructor.university_page.page_full_name if instructor.university_page else None
+        )
         result["university_page_name"] = instructor.university_page.page_name if instructor.university_page else None
         return result
 
@@ -150,7 +156,7 @@ def profile_view(request, user_id):
         uni_page = None
 
     if uni_page:
-        university = uni_page.page_name
+        university = uni_page.page_full_name
         university_full_name = uni_page.page_full_name
         university_branch = uni_page.page_branch
 

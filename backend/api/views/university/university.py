@@ -38,13 +38,13 @@ def university_info(request):
     return Response(
         {
             "id": university_page.page_id,
-            "name": university_page.page_name,
-            "name_arabic": "جامعة فلسطين التقنية خضوري",  # getattr(university_page, "name_arabic", None),
+            "name": university_page.page_full_name,
+            "name_arabic": university_page.page_name_arabic or "",
             "description": university_page.description,
             "logo": file_url(request, university_page.profile_image),
             "banner": file_url(request, university_page.banner_image),
             "verified": university_page.verified,
-            "branch": "Ramallah Branch",
+            "branch": university_page.page_branch or "",
             "stats": {
                 "students": students_count,
                 "instructors": instructors_count,

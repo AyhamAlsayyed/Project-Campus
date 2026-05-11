@@ -33,7 +33,7 @@ def followed_pages(request):
         pages_data.append(
             {
                 "id": page.page_id,
-                "name": page.page_name,
+                "name": page.page_full_name,
                 "category": page.get_page_type_display(),
                 "avatar": file_url(request, page.profile_image),
                 "banner": file_url(request, page.banner_image),
@@ -67,7 +67,7 @@ def recommended_pages(request):
         recommendations.append(
             {
                 "id": page.page_id,
-                "name": page.page_name,
+                "name": page.page_full_name,
                 "category": page.get_page_type_display(),
                 "avatar": file_url(request, page.profile_image),
                 "banner": file_url(request, page.banner_image),
@@ -113,7 +113,7 @@ def page_detail(request, page_id):
     return Response(
         {
             "id": page.page_id,
-            "name": page.page_name,
+            "name": page.page_full_name,
             "description": page.description,
             "category": page.get_page_type_display(),
             "avatar": file_url(request, page.profile_image),
