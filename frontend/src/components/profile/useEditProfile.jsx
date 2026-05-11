@@ -51,7 +51,12 @@ export function useProfileEdit({ user, token, API, onSaved }) {
             primaryPhone: u.primary_phone || '',
             secondaryPhone: u.secondary_phone || '',
             birthday: parseBirthday(u.birthday),
-            degrees: user?.degrees || [],
+            degrees: (u.degree || []).map(deg => ({
+                id: deg.id,
+                title: deg.degree_type, 
+                field: deg.major,       
+                institution: deg.institution
+            })),
             educationEntries: user?.education || [],
             teachingPositions: user?.teaching_positions || []
         });

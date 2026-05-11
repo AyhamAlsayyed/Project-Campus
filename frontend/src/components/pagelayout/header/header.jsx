@@ -12,6 +12,7 @@ import MessageSquare from "../../../Assets/icons/messages.png";
 import Bell from '../../../Assets/icons/notifications.png';
 import BellActive from '../../../Assets/icons/notifications-active.png';
 import Home from '../../../Assets/icons/home.png'
+import { createPortal } from 'react-dom';
 
 export default function Header({ theme, toggleTheme, user }) {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -28,6 +29,10 @@ export default function Header({ theme, toggleTheme, user }) {
   const chatRef = useRef(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [chats, setChats] = useState([]);
+  const searchInputRef = useRef(null);
+  const [searchBoxRect, setSearchBoxRect] = useState(null);
+  const [requestGate, setRequestGate] = useState(null);
+  const searchDropdownRef = useRef(null);
 
   // ── Community join gate ──
   const [joinGate, setJoinGate] = useState(null); // { id, name, avatar }
@@ -78,6 +83,7 @@ export default function Header({ theme, toggleTheme, user }) {
   const handleSearchChange = (e) => {
     const val = e.target.value;
     setSearchQuery(val);
+    setSearchBoxRect(searchInputRef.current?.getBoundingClientRect());
 
     if (!val.trim()) {
       setSearchResults(null);
@@ -115,15 +121,16 @@ export default function Header({ theme, toggleTheme, user }) {
     setSearchResults(null);
     switch (type) {
       case "person": navigate(`/profile/${item.id}`); break;
+      case "page": navigate(`/profile/${item.id}`); break;
       case "community":
-        // If user hasn't joined, show the gate popup instead of navigating
-        if (!item.is_member) {
-          setJoinGate(item);
-          return;
+        if (item.is_member) {
+          navigate(`/communities/${item.id}`);
+        } else if (item.is_private) {
+          setRequestGate(item); // private → request to join
+        } else {
+          setJoinGate(item); // public → confirm join
         }
-        navigate(`/communities/${item.id}`);
         break;
-      case "page": navigate(`/pages/${item.id}`); break;
       case "all": navigate(`/search?q=${encodeURIComponent(searchQuery)}`); break;
       default: break;
     }
@@ -146,6 +153,22 @@ export default function Header({ theme, toggleTheme, user }) {
     } finally {
       setJoinLoading(false);
       setJoinGate(null);
+    }
+  };
+  const handleRequestJoin = async () => {
+    if (!requestGate) return;
+    setJoinLoading(true);
+    try {
+      const token = localStorage.getItem("access");
+      const res = await fetch(`${API}/api/communities/${requestGate.id}/request/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      if (res.ok) setRequestGate(null);
+    } catch (e) {
+      console.error("Request failed", e);
+    } finally {
+      setJoinLoading(false);
     }
   };
 
@@ -233,8 +256,12 @@ export default function Header({ theme, toggleTheme, user }) {
       if (chatRef.current && !chatRef.current.contains(event.target)) {
         setShowChats(false);
       }
+      // ← only close search if click is outside BOTH the input AND the portal dropdown
       if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setShowSearchDropdown(false);
+        const portal = document.getElementById('search-results-portal');
+        if (!portal || !portal.contains(event.target)) {
+          setShowSearchDropdown(false);
+        }
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -322,12 +349,18 @@ export default function Header({ theme, toggleTheme, user }) {
         <div className={styles.searchWrap} style={{ position: "relative" }}>
           <Search className={styles.searchIcon} size={24} />
           <input
+            ref={searchInputRef}
             className={styles.searchInput}
             type="text"
             placeholder="What are you looking for?"
             value={searchQuery}
             onChange={handleSearchChange}
-            onFocus={() => { if (searchQuery.trim()) setShowSearchDropdown(true); }}
+            onFocus={() => {
+              if (searchQuery.trim()) {
+                setShowSearchDropdown(true);
+                setSearchBoxRect(searchInputRef.current?.getBoundingClientRect());
+              }
+            }}
           />
           {searchQuery && (
             <button
@@ -341,18 +374,18 @@ export default function Header({ theme, toggleTheme, user }) {
               <X size={16} />
             </button>
           )}
-          {showSearchDropdown && searchQuery.trim() && (
-            <div style={{
-              position: "absolute",
-              top: "calc(100% + 8px)",
-              left: "50%",
+          {showSearchDropdown && searchQuery.trim() && searchBoxRect && createPortal(
+            <div ref={searchDropdownRef} id="search-results-portal" style={{
+              position: "fixed",
+              top: searchBoxRect.bottom + 8,
+              left: searchBoxRect.left + searchBoxRect.width / 2,
               transform: "translateX(-50%)",
               width: "min(850px, 100vw)",
               background: "#333333",
               borderRadius: 20,
               border: "1px solid rgba(255,255,255,0.1)",
               boxShadow: "0 20px 50px rgba(0,0,0,0.6)",
-              zIndex: 9999,
+              zIndex: 99999,
               overflow: "hidden",
               maxHeight: "70vh",
               overflowY: "auto"
@@ -360,7 +393,7 @@ export default function Header({ theme, toggleTheme, user }) {
 
               {/* See all results */}
               <div
-                onClick={() => handleResultClick("all")}
+                onMouseDown={() => handleResultClick("all")}
                 style={{
                   display: "flex", alignItems: "center", gap: 12,
                   padding: "14px 18px", cursor: "pointer",
@@ -403,14 +436,18 @@ export default function Header({ theme, toggleTheme, user }) {
                       {searchResults.people.slice(0, 3).map(person => (
                         <div
                           key={person.id}
-                          onClick={() => handleResultClick("person", person)}
+                          onMouseDown={() => handleResultClick("person", person)}
                           style={resultRow}
                           onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
                           onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                         >
                           <div style={{ position: "relative", flexShrink: 0 }}>
                             <img
-                              src={person.avatar?.startsWith("http") ? person.avatar : person.avatar ? `${API}${person.avatar}` : "/default-avatar.png"}
+                              src={(() => {
+                                const av = person.profile?.profile_image || person.avatar_url || person.avatar;
+                                if (!av) return "/default-avatar.png";
+                                return av.startsWith("http") ? av : `${API}${av}`;
+                              })()}
                               alt=""
                               style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }}
                             />
@@ -445,7 +482,7 @@ export default function Header({ theme, toggleTheme, user }) {
                         return (
                           <div
                             key={community.id}
-                            onClick={() => handleResultClick("community", community)}
+                            onMouseDown={() => handleResultClick("community", community)}
                             style={{ ...resultRow, opacity: isMember ? 1 : 0.75 }}
                             onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
                             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
@@ -511,16 +548,17 @@ export default function Header({ theme, toggleTheme, user }) {
                       {searchResults.pages.slice(0, 3).map(page => (
                         <div
                           key={page.id}
-                          onClick={() => handleResultClick("page", page)}
+                          onMouseDown={() => handleResultClick("page", page)}
                           style={resultRow}
                           onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
                           onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                         >
                           <div style={{ flexShrink: 0 }}>
-                            {page.avatar ? (
+                            {/* Updated to use profile_image from your backend */}
+                            {page.profile_image ? (
                               <img
-                                src={page.avatar.startsWith("http") ? page.avatar : `${API}${page.avatar}`}
-                                alt=""
+                                src={page.profile_image.startsWith("http") ? page.profile_image : `${API}${page.profile_image}`}
+                                alt={page.page_full_name || "Page"}
                                 style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover" }}
                               />
                             ) : (
@@ -533,11 +571,16 @@ export default function Header({ theme, toggleTheme, user }) {
                               </div>
                             )}
                           </div>
+
                           <div style={{ minWidth: 0 }}>
                             <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.875rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                              {page.name}
+                              {/* Priority: Full Name > Short Name > fallback */}
+                              {page.page_full_name || page.page_name || page.name}
                             </div>
-                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>Page</div>
+                            {/* Display the Page Type (University, Library, etc.) as the subtitle */}
+                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>
+                              {page.page_type ? page.page_type : "Page"}
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -552,7 +595,8 @@ export default function Header({ theme, toggleTheme, user }) {
                   )}
                 </>
               ) : null}
-            </div>
+            </div>,
+            document.body
           )}
         </div>
 
@@ -806,6 +850,104 @@ export default function Header({ theme, toggleTheme, user }) {
                 }}
               >
                 {joinLoading ? "Joining…" : "Join Community"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {requestGate && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 10000,
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          <div
+            style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+            onClick={() => setRequestGate(null)}
+          />
+          <div style={{
+            position: "relative",
+            background: "linear-gradient(145deg, #1e1e2e, #252535)",
+            border: "1px solid rgba(255,255,255,0.09)",
+            borderRadius: 20, padding: "28px 28px 24px",
+            width: 380, boxShadow: "0 24px 60px rgba(0,0,0,0.7)"
+          }}>
+            <button
+              onClick={() => setRequestGate(null)}
+              style={{
+                position: "absolute", top: 14, right: 14,
+                background: "rgba(255,255,255,0.07)", border: "none",
+                borderRadius: "50%", width: 30, height: 30,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: "rgba(255,255,255,0.6)"
+              }}
+            >
+              <X size={15} />
+            </button>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
+              {requestGate.avatar ? (
+                <img
+                  src={requestGate.avatar.startsWith("http") ? requestGate.avatar : `${API}${requestGate.avatar}`}
+                  alt=""
+                  style={{ width: 52, height: 52, borderRadius: 14, objectFit: "cover", flexShrink: 0 }}
+                />
+              ) : (
+                <div style={{
+                  width: 52, height: 52, borderRadius: 14, flexShrink: 0,
+                  background: "rgba(139,45,255,0.2)",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <Users size={26} color="#c084fc" />
+                </div>
+              )}
+              <div>
+                <div style={{ color: "#fff", fontWeight: 700, fontSize: "1rem" }}>{requestGate.name}</div>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.78rem", marginTop: 2 }}>
+                  🔒 Private Community
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              display: "flex", gap: 12, alignItems: "flex-start",
+              background: "rgba(99,102,241,0.07)",
+              border: "1px solid rgba(99,102,241,0.2)",
+              borderRadius: 12, padding: "12px 14px", marginBottom: 22
+            }}>
+              <span style={{ fontSize: 20, flexShrink: 0, lineHeight: 1 }}>🔒</span>
+              <p style={{ margin: 0, color: "rgba(255,255,255,0.75)", fontSize: "0.875rem", lineHeight: 1.5 }}>
+                <strong style={{ color: "#fff" }}>{requestGate.name}</strong> is a private community.
+                You need to request access to join.
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setRequestGate(null)}
+                style={{
+                  flex: 1, background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 12, padding: "11px 0",
+                  color: "rgba(255,255,255,0.7)", fontWeight: 600,
+                  fontSize: "0.9rem", cursor: "pointer"
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRequestJoin}
+                disabled={joinLoading}
+                style={{
+                  flex: 2,
+                  background: joinLoading
+                    ? "rgba(99,102,241,0.4)"
+                    : "linear-gradient(-90deg, rgba(99,102,241,0.95), rgba(139,45,255,0.95))",
+                  border: "none", borderRadius: 12, padding: "11px 0",
+                  color: "#fff", fontWeight: 700, fontSize: "0.9rem",
+                  cursor: joinLoading ? "not-allowed" : "pointer"
+                }}
+              >
+                {joinLoading ? "Requesting…" : "Request to Join"}
               </button>
             </div>
           </div>

@@ -85,6 +85,7 @@ export default function EventsPage() {
                             : "",
                         isFollowed: event.is_followed,
                         startDate: event.start_date,
+                        isReminded: event.is_reminded,
                         endDate: event.end_date,
                         title: event.title,
                         description: event.description,
@@ -92,10 +93,11 @@ export default function EventsPage() {
                     }));
                     setEvents(formatted);
                     const initialReminders = {};
-                    formatted.forEach(e => { initialReminders[e.id] = e.is_reminded || false; });
+                    formatted.forEach(e => {
+                        initialReminders[e.id] = e.isReminded || false;
+                    });
                     setReminders(initialReminders);
 
-                    // Logic for recommended (if separate, otherwise slice from events)
                     setRecommendedEvents(formatted.slice(0, 3));
                 }
 
@@ -211,9 +213,10 @@ export default function EventsPage() {
                                                 className={styles.reminderBtn}
                                                 onClick={() => handleReminder(event.id)}
                                                 style={{
+                                                    // Using reminders[event.id] ensures the UI updates immediately
                                                     background: reminders[event.id]
-                                                        ? "rgba(255,255,255,0.2)"
-                                                        : "#7b1fa2",
+                                                        ? "rgba(255,255,255,0.2)" // Style for "Set"
+                                                        : "#7b1fa2",               // Style for "Not Set"
                                                     transition: "background 0.2s"
                                                 }}
                                             >

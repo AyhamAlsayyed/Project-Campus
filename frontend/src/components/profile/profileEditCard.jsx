@@ -427,7 +427,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user }) {
                                 <option value="Bachelor's">Bachelor's</option>
                                 <option value="Master's">Master's</option>
                                 <option value="PhD">PhD</option>
-                               
+
                             </select>
                             <input
                                 placeholder="Field e.g. Computer Science"
@@ -542,23 +542,25 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user }) {
                             {/* Education */}
                             <SubLabel>Education</SubLabel>
 
-                            {(formData.educationEntries || []).map((edu, i) => (
+                            {(formData.degrees || []).map((deg, i) => (
                                 <div key={i} className={styles.detailFieldItem}>
                                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                        <span style={{ fontSize: 16 }}>📚</span>
+                                        <span style={{ fontSize: 16 }}>🎓</span>
                                         <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
-                                            {edu.institution}{edu.degree ? ` — ${edu.degree}` : ''}
+                                            {/* Use degree_type and major instead of title and field */}
+                                            {deg.degree_type || deg.title}
+                                            {(deg.major || deg.field) ? ` — ${deg.major || deg.field}` : ''}
+                                            {deg.institution ? ` at ${deg.institution}` : ''}
                                         </span>
                                     </span>
                                     <button
                                         style={trashBtn}
-                                        onClick={() => setFormData(p => ({ ...p, educationEntries: p.educationEntries.filter((_, idx) => idx !== i) }))}
+                                        onClick={() => setFormData(p => ({ ...p, degrees: p.degrees.filter((_, idx) => idx !== i) }))}
                                     >
                                         <Trash2 size={14} />
                                     </button>
                                 </div>
                             ))}
-
                             {showAddEducation ? (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0' }}>
                                     <input

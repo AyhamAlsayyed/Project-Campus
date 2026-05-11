@@ -210,20 +210,30 @@ export default function ProfilePage() {
         }
     }, [user]);
     const handleFollow = async () => {
-        const wasFollowing = isFollowing;
-        setIsFollowing(!wasFollowing);
-        setFollowersCount(prev => wasFollowing ? prev - 1 : prev + 1);
         try {
-            const res = await fetch(`${API}/api/users/${userId}/follow/`, {
-                method: "POST",
-                headers: { Authorization: `Bearer ${token}` }
+
+            const path = user?.type === 'page'
+                ? `pages/${user.id}/follow/`
+                : `friends/request/`;
+
+            const token = localStorage.getItem('access'); // Make sure the key matches exactly what you used during login
+
+            const response = await fetch(`${API}/api/pages/${user.id}/follow/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`, // Ensure space between Bearer and token
+                    'Content-Type': 'application/json'
+                }
             });
-            if (!res.ok) {
-                setIsFollowing(wasFollowing);
-                setFollowersCount(prev => wasFollowing ? prev + 1 : prev - 1);
+
+            if (response.ok) {
+                setIsFollowing(!isFollowing);
+            } else {
+                const errorData = await response.json();
+                console.error("Server Error:", errorData);
             }
-        } catch {
-            setIsFollowing(wasFollowing);
+        } catch (error) {
+            console.error("Network Error:", error);
         }
     };
     const handleReview = async (rating) => {
@@ -337,7 +347,7 @@ export default function ProfilePage() {
         if (!user || !currentUser) return;
         const isOwn = currentUser.id === Number(userId);
         if (isOwn) return;
-        if (user.type === 'instructor' || user.type === 'page') {
+        if (user.type === 'page' || user.role === 'instructor') {
             loadCommunityPicks();
         }
         if (user.type !== 'page') {
@@ -345,9 +355,44 @@ export default function ProfilePage() {
         }
     }, [user, currentUser, userId]);
 
+    const handleMessage = async () => {
+        try {
+            // 1. Fetch existing chats to see if a conversation already exists
+            const res = await fetch(`${API}/api/chats/`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const chats = await res.json();
 
+            // 2. Try to find a private chat with this user
+            // We check if it's not a group and if the target user is a participant
+            const existing = chats.find(c =>
+                !c.is_group && (c.participants?.some(p => p.id === user?.id) || c.name === user?.username)
+            );
 
-    const handleMessage = () => { navigate(`/messages/${userId}`); };
+            if (existing) {
+                navigate(`/chats/${existing.id}`);
+            } else {
+                // 3. If no chat exists, create a new one
+                const createRes = await fetch(`${API}/api/chats/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        participants: [user.id], // The ID of the profile you're viewing
+                        is_group: false
+                    })
+                });
+                const newChat = await createRes.json();
+                if (newChat.id) {
+                    navigate(`/chats/${newChat.id}`);
+                }
+            }
+        } catch (e) {
+            console.error("Error opening chat:", e);
+        }
+    };
     const toggleTheme = () => setTheme((p) => (p === "light" ? "dark" : "light"));
     const openComments = (post) => setSelectedPost(post);
     const closeComments = () => setSelectedPost(null);

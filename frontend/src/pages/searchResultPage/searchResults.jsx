@@ -134,7 +134,11 @@ export default function SearchResults() {
                                                     className={styles.personCard}
                                                     onClick={() => navigate(`/profile/${person.id}`)}
                                                 >
-                                                    <img src={avatarUrl(person.avatar)} alt="" className={styles.personAvatar} />
+                                                    <img src={(() => {
+                                                        const av = person.profile?.profile_image || person.avatar_url || person.avatar;
+                                                        if (!av) return "/default-avatar.png";
+                                                        return av.startsWith("http") ? av : `${API}${av}`;
+                                                    })()} alt="" className={styles.personAvatar} />
                                                     <div className={styles.personName}>{person.full_name || person.username}</div>
                                                     <div className={styles.personSub}>@{person.username}</div>
                                                     {person.university && <div className={styles.personSub}>{person.university}</div>}
@@ -171,7 +175,8 @@ export default function SearchResults() {
                                 {/* ── Pages ── */}
                                 {visiblePages.length > 0 && (
                                     <section className={styles.section}>
-                                        {(filter === "All") && <h2 className={styles.sectionTitle}>Pages</h2>}
+                                        {filter === "All" && <h2 className={styles.sectionTitle}>Pages</h2>}
+
                                         <div className={styles.listStack}>
                                             {visiblePages.map(p => (
                                                 <div
@@ -179,20 +184,32 @@ export default function SearchResults() {
                                                     className={styles.listItem}
                                                     onClick={() => navigate(`/profile/${p.id}`)}
                                                 >
-                                                    {p.avatar
-                                                        ? <img src={avatarUrl(p.avatar)} alt="" className={styles.listAvatar} style={{ borderRadius: 10 }} />
-                                                        : <div className={styles.listAvatarPlaceholder}>📄</div>
-                                                    }
+                                                    {/* Use profile_image from your backend */}
+                                                    {p.profile_image ? (
+                                                        <img
+                                                            src={p.profile_image} // No need for avatarUrl() if the backend provides the full http://localhost link
+                                                            alt={p.page_full_name}
+                                                            className={styles.listAvatar}
+                                                            style={{ borderRadius: 10, objectFit: 'cover' }}
+                                                        />
+                                                    ) : (
+                                                        <div className={styles.listAvatarPlaceholder}>📄</div>
+                                                    )}
+
                                                     <div className={styles.listInfo}>
-                                                        <div className={styles.listName}>{p.name}</div>
-                                                        <div className={styles.listSub}>Page{p.category ? ` · ${p.category}` : ""}</div>
+                                                        {/* Use page_full_name for the correct display name */}
+                                                        <div className={styles.listName}>{p.page_full_name}</div>
+
+                                                        {/* Use page_type for the category/subtitle */}
+                                                        <div className={styles.listSub}>
+                                                            Page{p.page_type ? ` · ${p.page_type}` : ""}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </section>
                                 )}
-
                                 {/* ── Posts ── */}
                                 {visiblePosts.length > 0 && (
                                     <section className={styles.section}>
