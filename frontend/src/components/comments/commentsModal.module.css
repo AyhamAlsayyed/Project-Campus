@@ -476,3 +476,14 @@
 .fileItem:hover {
     background: rgba(255, 255, 255, 0.15);
 }
+.readMore {
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: underline;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.readMore:hover {
+    color: rgba(255, 255, 255, 0.85);
+}

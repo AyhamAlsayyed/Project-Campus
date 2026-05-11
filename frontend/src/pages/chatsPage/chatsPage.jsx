@@ -8,7 +8,7 @@ import {
     Trash2, Ban, Reply, AlertCircle, ChevronLeft, Info, CheckSquare,
     Paperclip, Send, FileText
 } from 'lucide-react';
-
+import CommentModal from '../../components/comments/commentsModal';
 
 export default function ChatsPage() {
     const [theme, setTheme] = useState("dark");
@@ -37,7 +37,7 @@ export default function ChatsPage() {
     const [pollQuestion, setPollQuestion] = useState('');
     const [pollOptions, setPollOptions] = useState(['', '']);
     const [showAttachments, setShowAttachments] = useState(false);
-
+    const [openPost, setOpenPost] = useState(null);
     const attachmentRef = useRef(null);
     const attachmentMenuRef = useRef(null);
     const imageInputRef = useRef(null);
@@ -94,13 +94,13 @@ export default function ChatsPage() {
     };
     useEffect(() => {
         const handleOutsideClick = (event) => {
-            
+
             if (showAttachments &&
                 attachmentRef.current &&
                 !attachmentRef.current.contains(event.target)) {
                 setShowAttachments(false);
             }
-            
+
             if (
                 attachmentMenuOpen &&
                 attachmentRef.current &&
@@ -186,62 +186,78 @@ export default function ChatsPage() {
             .then(setGroups);
     }, []);
     const togglePin = async (id) => {
-        const res = await fetch(`/api/chats/${id}/pin/`, {
+        const res = await fetch(`${API}/api/chats/${id}/pin/`, {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
         });
-
         if (res.ok) {
-            setChats(prev =>
-                prev.map(c =>
-                    c.id === id ? { ...c, is_pinned: !c.is_pinned } : c
-                )
-            );
+            setChats(prev => prev.map(c =>
+                c.id === id ? { ...c, is_pinned: !c.is_pinned } : c
+            ));
         }
     };
     const deleteChat = async (id) => {
-        await fetch(`/api/chats/${id}/`, {
+        const res = await fetch(`${API}/api/chats/${id}/`, {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` },
         });
-
-        setChats(prev => prev.filter(c => c.id !== id));
+        if (res.ok) {
+            setChats(prev => prev.filter(c => c.id !== id));
+            if (selectedChat?.id === id) setSelectedChat(null);
+        }
     };
     const toggleMute = async (id) => {
-        await fetch(`/api/chats/${id}/mute/`, {
+        const res = await fetch(`${API}/api/chats/${id}/mute/`, {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
         });
+        if (res.ok) {
+            setChats(prev => prev.map(c =>
+                c.id === id ? { ...c, is_muted: !c.is_muted } : c
+            ));
+        }
     };
-    const markUnread = async (id) => {
-        await fetch(`/api/chats/${id}/mark-unread/`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
-        });
 
-        setChats(prev =>
-            prev.map(c =>
-                c.id === id ? { ...c, unread_count: 1 } : c
-            )
-        );
+    const markUnread = async (id) => {
+        const res = await fetch(`${API}/api/chats/${id}/mark-unread/`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+            setChats(prev => prev.map(c =>
+                c.id === id ? { ...c, unread_count: (c.unread_count || 0) + 1 } : c
+            ));
+        }
     };
+
     const clearChat = async (id) => {
-        await fetch(`/api/chats/${id}/clear/`, {
+        const res = await fetch(`${API}/api/chats/${id}/clear/`, {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` },
         });
+        if (res.ok && selectedChat?.id === id) {
+            setMessages([]);
+        }
     };
+
     const blockUser = async (id) => {
-        await fetch(`/api/chats/${id}/block/`, {
+        const res = await fetch(`${API}/api/chats/${id}/block/`, {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
         });
+        if (res.ok) {
+            setChats(prev => prev.map(c =>
+                c.id === id ? { ...c, is_blocked: !c.is_blocked } : c
+            ));
+        }
     };
+
     const reportUser = async (id) => {
-        await fetch(`/api/chats/${id}/report/`, {
+        await fetch(`${API}/api/chats/${id}/report/`, {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
         });
+        setOpenMenuId(null);
     };
 
     useEffect(() => {
@@ -614,7 +630,62 @@ export default function ChatsPage() {
                                                                                     <p className={styles.replyTextPreview}>{msg.reply_to_details.text}</p>
                                                                                 </div>
                                                                             )}
-                                                                            {msg.type === 'file' ? (
+                                                                            {msg.post ? (
+                                                                                <div
+                                                                                    onClick={() => setOpenPost(msg.post)}
+                                                                                    style={{
+                                                                                        cursor: "pointer",
+                                                                                        background: "rgba(255,255,255,0.06)",
+                                                                                        border: "1px solid rgba(255,255,255,0.1)",
+                                                                                        borderRadius: 14,
+                                                                                        overflow: "hidden",
+                                                                                        maxWidth: 280,
+                                                                                        transition: "background 0.2s"
+                                                                                    }}
+                                                                                    onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
+                                                                                    onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                                                                                >
+                                                                                    {/* Banner/image */}
+                                                                                    {(msg.post.media?.[0]?.url || msg.post.image) && (
+                                                                                        <img
+                                                                                            src={msg.post.media?.[0]?.url || msg.post.image}
+                                                                                            alt=""
+                                                                                            style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }}
+                                                                                        />
+                                                                                    )}
+                                                                                    <div style={{ padding: "10px 12px" }}>
+                                                                                        {/* Author row */}
+                                                                                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                                                                                            <img
+                                                                                                src={msg.post.author?.avatar || "/default-avatar.png"}
+                                                                                                alt=""
+                                                                                                style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }}
+                                                                                            />
+                                                                                            <span style={{ color: "white", fontWeight: 600, fontSize: "0.82rem" }}>
+                                                                                                {msg.post.author?.username || "User"}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                        {/* Post text preview */}
+                                                                                        {msg.post.content_text && (
+                                                                                            <p style={{
+                                                                                                color: "rgba(255,255,255,0.75)",
+                                                                                                fontSize: "0.78rem",
+                                                                                                margin: 0,
+                                                                                                lineHeight: 1.4,
+                                                                                                display: "-webkit-box",
+                                                                                                WebkitLineClamp: 3,
+                                                                                                WebkitBoxOrient: "vertical",
+                                                                                                overflow: "hidden"
+                                                                                            }}>
+                                                                                                {msg.post.content_text}
+                                                                                            </p>
+                                                                                        )}
+                                                                                        <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", marginTop: 6, display: "block" }}>
+                                                                                            Tap to view post
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            ) : msg.type === 'file' ? (
                                                                                 <div className={styles.fileAttachment}>
                                                                                     <div className={styles.fileIcon}><FileText size={24} /></div>
                                                                                     <div className={styles.fileDetails}>
@@ -799,6 +870,13 @@ export default function ChatsPage() {
                     </div>
                 </div>
             </div>
+            {openPost && (
+                <CommentModal
+                    post={openPost}
+                    onClose={() => setOpenPost(null)}
+                    currentUser={user}
+                />
+            )}
         </div>
 
     )

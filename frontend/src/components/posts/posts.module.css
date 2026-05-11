@@ -5,6 +5,8 @@
   margin: 5% auto 0 auto;
   background: #262626;
   border: 1px solid rgba(255, 255, 255, 0.08);
+   overflow: hidden; 
+    min-width: 0; 
 
 
 }
@@ -79,12 +81,18 @@
 
 /* Text */
 .text {
-  margin: 12px 0 12px;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 14px;
-  line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;   /* ← forces wrap even on single long "words" */
+    word-wrap: break-word;       /* ← fallback for older browsers */
+    line-height: 1.6;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.88);
+    margin: 10px 0 14px 0;
+    letter-spacing: 0.01em;
+    max-width: 100%;             /* ← never exceeds card width */
+    width: 100%;
 }
-
 /* Media block */
 .media {
   border-radius: 18px;
@@ -807,4 +815,15 @@
         opacity: 1; 
         transform: scale(1) translateY(0); 
     }
+}
+.readMore {
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: underline;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.readMore:hover {
+    color: rgba(255, 255, 255, 0.85);
 }

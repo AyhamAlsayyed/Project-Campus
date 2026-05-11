@@ -2,6 +2,7 @@ import styles from './eventsPage.module.css';
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 export default function EventsPage() {
     const API = "http://localhost:8000";
@@ -13,6 +14,22 @@ export default function EventsPage() {
     const [loading, setLoading] = useState(true);
     const [reminders, setReminders] = useState({});
     const [popupEvent, setPopupEvent] = useState(null);
+    const location = useLocation();
+    const [highlightId, setHighlightId] = useState(location.state?.highlightId || null);
+    useEffect(() => {
+        if (highlightId && events.length > 0) {
+            const el = document.getElementById(`event-${highlightId}`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.classList.add(styles.highlighted);
+                setTimeout(() => {
+                    el.classList.remove(styles.highlighted);
+                    setHighlightId(null);
+                }, 2000);
+            }
+        }
+    }, [highlightId, events]);
+
     const handleReminder = async (eventId) => {
         const token = localStorage.getItem("access");
         const isSet = reminders[eventId];
@@ -40,7 +57,7 @@ export default function EventsPage() {
             };
 
             try {
-                // Using Promise.all and the same /api/auth/me/ endpoint
+
                 const [eventsRes, userRes] = await Promise.all([
                     fetch(`${API}/api/events/`, { headers }),
                     fetch(`${API}/api/auth/me/`, { headers })
@@ -70,7 +87,8 @@ export default function EventsPage() {
                         startDate: event.start_date,
                         endDate: event.end_date,
                         title: event.title,
-                        description: event.description
+                        description: event.description,
+                        pageType: event.page_type,
                     }));
                     setEvents(formatted);
                     const initialReminders = {};
@@ -90,12 +108,19 @@ export default function EventsPage() {
 
         fetchData();
     }, []);
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
+    };
     const handleFollow = async (eventId) => {
         const token = localStorage.getItem("access");
         const event = events.find(e => e.id === eventId);
         const wasFollowed = event.isFollowed;
 
-        // Optimistic update
         setEvents(prev => prev.map(e =>
             e.id === eventId ? { ...e, isFollowed: !e.isFollowed } : e
         ));
@@ -104,12 +129,11 @@ export default function EventsPage() {
         ));
 
         try {
-            const res = await fetch(`${API}/api/events/${eventId}/follow/`, {
+            const res = await fetch(`${API}/api/pages/${eventId}/follow/`, {  // ← changed
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!res.ok) {
-                // Revert on fail
                 setEvents(prev => prev.map(e =>
                     e.id === eventId ? { ...e, isFollowed: wasFollowed } : e
                 ));
@@ -138,7 +162,7 @@ export default function EventsPage() {
 
                     <div className={styles.eventsContainer}>
                         {events.map((event) => (
-                            <div key={event.id} className={styles.eventCard}>
+                            <div key={event.id} id={`event-${event.id}`} className={styles.eventCard}>
 
                                 <div className={styles.cardHeader}>
                                     <div className={styles.orgInfo}>
@@ -148,7 +172,7 @@ export default function EventsPage() {
                                                 <h3>{event.orgName}</h3>
                                                 <span className={styles.verifyBadge}>✓</span>
                                             </div>
-                                            <p>{event.description}</p>
+                                            <p>{event.pageType}</p>
                                         </div>
                                     </div>
                                     <div className={styles.headerActions}>
@@ -180,8 +204,8 @@ export default function EventsPage() {
                                         />
                                         <div className={styles.dateWidget}>
                                             <div className={styles.dateText}>
-                                                <p>Starts {event.startDate}</p>
-                                                <p>Ends - {event.endDate}</p>
+                                                <p>Starts {formatDate(event.startDate)}</p>
+                                                <p>Ends — {formatDate(event.endDate)}</p>
                                             </div>
                                             <button
                                                 className={styles.reminderBtn}
@@ -232,7 +256,7 @@ export default function EventsPage() {
                                                             <h4>{rec.orgName}</h4>
                                                             <span className={styles.verifyBadgeSmall}>✓</span>
                                                         </div>
-                                                        <p>{rec.description}</p>
+                                                        <p>{rec.pageType}</p>
                                                     </div>
                                                 </div>
                                                 <button

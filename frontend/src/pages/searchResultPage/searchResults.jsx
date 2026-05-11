@@ -47,26 +47,19 @@ export default function SearchResults() {
     // Fetch search results whenever query changes
     useEffect(() => {
         if (!query.trim()) return;
-        setResults({
-            people: [
-                { id: 1, username: "ahmedkhalil", full_name: "Ahmed Khalil", avatar: null, university: "PTUK" },
-                { id: 2, username: "laithh", full_name: "Laith Hassan", avatar: null, university: "Birzeit" },
-                { id: 3, username: "saranasser", full_name: "Sara Nasser", avatar: null, university: "An-Najah" },
-            ],
-            communities: [
-                { id: 1, name: "Palestine Tech Students", avatar: null, members_count: 1240, is_member: true },
-                { id: 2, name: "CS Palestine Network", avatar: null, members_count: 873, is_member: false },
-            ],
-            pages: [
-                { id: 1, name: "TechnoPark - Palestine", avatar: null, category: "Business Center" },
-                { id: 2, name: "Palestine Technical University", avatar: null, category: "Education" },
-            ],
-            posts: [
-                { id: 1, content: "Just finished my finals at PTUK — what a semester!", created_at: new Date().toISOString(), likes_count: 12, is_liked: false, is_saved: false, media: [], author: { id: 99, username: "ahmedkhalil", avatar: null } },
-                { id: 2, content: "Excited to announce I'll be joining a new internship this summer!", created_at: new Date().toISOString(), likes_count: 34, is_liked: true, is_saved: false, media: [], author: { id: 98, username: "laithh", avatar: null } },
-            ]
-        });
-
+        const fetchResults = async () => {
+            setLoading(true);
+            try {
+                const token = localStorage.getItem("access");
+                const res = await fetch(
+                    `${API}/api/search/?q=${encodeURIComponent(query)}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                if (res.ok) setResults(await res.json());
+            } catch (e) { console.error(e); }
+            finally { setLoading(false); }
+        };
+        fetchResults();
     }, [query]);
 
     // What to show based on active filter

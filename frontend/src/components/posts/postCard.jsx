@@ -23,6 +23,8 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
   const [isSharing, setIsSharing] = useState(false);
   const shareMenuRef = useRef(null);
   const menuRef = useRef(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const CHAR_LIMIT = 150;
 
   const formatTimeAgo = (dateString) => {
     const now = new Date();
@@ -36,6 +38,20 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
     if (hours < 24) return `${hours} hr ago`;
     if (days < 7) return `${days} d ago`;
     return past.toLocaleDateString();
+  };
+  const formatText = (text) => {
+    return text.split('\n').map((line, i, arr) => {
+      // Empty line = paragraph break
+      if (line.trim() === '') {
+        return <br key={i} />;
+      }
+      return (
+        <span key={i}>
+          {line}
+          {i < arr.length - 1 && arr[i + 1]?.trim() !== '' && <br />}
+        </span>
+      );
+    });
   };
 
   // Close menus on clicking outside
@@ -119,7 +135,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
       setShowDeleteConfirm(true);
       return;
     }
-   
+
 
     if (actionType === 'pin') {
       try {
@@ -214,7 +230,19 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
         body: JSON.stringify({
           recipient_id: targetId,
           post_id: post.id || post.post_id,
-          content: `Shared a post`,
+          content: "Shared a post",
+          shared_post: {
+            id: post.id || post.post_id,
+            content_text: post.content_text,
+            image: post.image,
+            media: post.media,
+            author: post.author,
+            created_at: post.created_at,
+            likes_count: post.likes_count,
+            comments_count: post.comments_count,
+            is_liked: post.is_liked,
+            is_saved: post.is_saved,
+          }
         }),
       });
 
@@ -353,7 +381,26 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
         </div>
       </div>
 
-      {post.content_text && <p className={styles.text}>{post.content_text}</p>}
+     {post.content_text && (
+    <p className={styles.text}>
+        {post.content_text.length > CHAR_LIMIT && !isExpanded
+            ? <>
+                {formatText(post.content_text.substring(0, CHAR_LIMIT))}...{' '}
+                <span className={styles.readMore} onClick={() => setIsExpanded(true)}>
+                    read more
+                </span>
+              </>
+            : <>
+                {formatText(post.content_text)}
+                {post.content_text.length > CHAR_LIMIT && (
+                    <span className={styles.readMore} onClick={() => setIsExpanded(false)} style={{ marginLeft: 6 }}>
+                        show less
+                    </span>
+                )}
+              </>
+        }
+    </p>
+)}
 
       {validMedia.length > 0 && validMedia[current]?.type !== "file" && (
         <div className={styles.media}>

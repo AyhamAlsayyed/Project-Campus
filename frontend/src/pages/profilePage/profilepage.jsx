@@ -70,6 +70,7 @@ export default function ProfilePage() {
     const [remindersMonth, setRemindersMonth] = useState(new Date());
     const [remindersPopup, setRemindersPopup] = useState(null);
     const [eventMenuOpen, setEventMenuOpen] = useState(null);
+    const [showRemindersMonthPicker, setShowRemindersMonthPicker] = useState(false);
 
 
     const resolveUrl = (url) => {
@@ -319,14 +320,32 @@ export default function ProfilePage() {
     useEffect(() => {
         loadCurrentUser();
         loadProfileUser();
-        loadFriends(userId);
-        if (!isOwnProfile) loadCommunityPicks();
     }, [userId]);
 
+
     useEffect(() => {
-        const isOwn = currentUser?.id === Number(userId) || (!userId && currentUser);
-        if (isOwn) { loadActivities(); loadSavedPosts(); loadReminders(); }
+        if (!currentUser) return;
+        const isOwn = currentUser.id === Number(userId);
+        if (!isOwn) return;
+
+        loadActivities();
+        loadSavedPosts();
+        loadReminders();
     }, [currentUser, userId]);
+
+    useEffect(() => {
+        if (!user || !currentUser) return;
+        const isOwn = currentUser.id === Number(userId);
+        if (isOwn) return;
+        if (user.type === 'instructor' || user.type === 'page') {
+            loadCommunityPicks();
+        }
+        if (user.type !== 'page') {
+            loadFriends(userId);
+        }
+    }, [user, currentUser, userId]);
+
+
 
     const handleMessage = () => { navigate(`/messages/${userId}`); };
     const toggleTheme = () => setTheme((p) => (p === "light" ? "dark" : "light"));
@@ -761,17 +780,83 @@ export default function ProfilePage() {
                                         <div style={{
                                             background: "rgba(61,60,60,0.45)", borderRadius: 20,
                                             padding: "20px 20px 16px", border: "1px solid rgba(255,255,255,0.08)",
-                                            backdropFilter: "blur(10px)", marginTop: 16
+                                            backdropFilter: "blur(10px)", marginTop: 16, position: "relative"
                                         }}>
                                             <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
                                                 <img src={Events} alt="events" style={{ width: 20, height: 20, flexShrink: 0, filter: "brightness(0) saturate(100%) invert(22%) sepia(80%) saturate(1300%) hue-rotate(280deg) brightness(90%)" }} />
                                                 <span style={{ color: "white", fontWeight: 700, fontSize: "1.1rem", marginLeft: 8 }}>
                                                     Reminders set
                                                 </span>
-                                                <span style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.85rem", marginLeft: "auto", borderBottom: "1.5px solid #A6279C" }}>
+                                                <span
+                                                    onClick={() => setShowRemindersMonthPicker(p => !p)}
+                                                    style={{
+                                                        color: "rgba(255,255,255,0.45)", fontSize: "0.85rem", marginLeft: "auto",
+                                                        borderBottom: "1.5px solid #A6279C", cursor: "pointer",
+                                                        userSelect: "none", transition: "color 0.15s"
+                                                    }}
+                                                    onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.75)"}
+                                                    onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.45)"}
+                                                >
                                                     {monthName} {year}
                                                 </span>
                                             </div>
+                                            {showRemindersMonthPicker && (
+                                                <div style={{
+                                                    position: "absolute",        // ← float over content
+                                                    top: 56,                     // ← sits just below the header row
+                                                    left: 0,
+                                                    right: 0,
+                                                    zIndex: 50,                  // ← above the calendar grid
+                                                    background: "#252525",
+                                                    border: "1px solid rgba(255,255,255,0.1)",
+                                                    borderRadius: 16, padding: 14,
+                                                    boxShadow: "0 16px 40px rgba(0,0,0,0.6)",
+                                                    margin: "0 0 0 0"           // ← remove the old marginBottom
+                                                }}>
+                                                    {/* Year navigation */}
+                                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                                                        <button
+                                                            onClick={() => setRemindersMonth(new Date(year - 1, month, 1))}
+                                                            style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "1.2rem", cursor: "pointer", width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                                        >‹</button>
+                                                        <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem" }}>{year}</span>
+                                                        <button
+                                                            onClick={() => setRemindersMonth(new Date(year + 1, month, 1))}
+                                                            style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "1.2rem", cursor: "pointer", width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                                        >›</button>
+                                                    </div>
+
+                                                    {/* Month grid */}
+                                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+                                                        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => {
+                                                            const isSelected = i === month;
+                                                            return (
+                                                                <button
+                                                                    key={m}
+                                                                    onClick={() => {
+                                                                        setRemindersMonth(new Date(year, i, 1));
+                                                                        setShowRemindersMonthPicker(false);
+                                                                    }}
+                                                                    style={{
+                                                                        background: isSelected
+                                                                            ? "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))"
+                                                                            : "transparent",
+                                                                        border: "none", borderRadius: 10,
+                                                                        color: isSelected ? "#fff" : "rgba(255,255,255,0.7)",
+                                                                        padding: "8px 4px", fontSize: "0.8rem",
+                                                                        fontWeight: isSelected ? 700 : 400,
+                                                                        cursor: "pointer", transition: "background 0.15s"
+                                                                    }}
+                                                                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+                                                                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
+                                                                >
+                                                                    {m}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
                                                 {cells.map((day, i) => {

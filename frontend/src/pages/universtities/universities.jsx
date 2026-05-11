@@ -1,9 +1,13 @@
 import styles from './universities.module.css'
 import Header from '../../components/pagelayout/header/header'
 import SidebarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
-import { useState, useEffect } from 'react'
+
 import { Search, ChevronRight, ChevronLeft, Calendar } from 'lucide-react'
 import PtukLogo from '../../Assets/icons/Ptuk.jpg'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
+import Events from '../../Assets/icons/event.png';
 export default function Universities() {
     const [theme, setTheme] = useState("dark");
     const [user, setUser] = useState(null);
@@ -13,6 +17,8 @@ export default function Universities() {
     const [searchTerm, setSearchTerm] = useState('')
     const [doctors, setDoctors] = useState([]);
     const [news, setNews] = useState([]);
+    const [popupItem, setPopupItem] = useState(null);
+    const navigate = useNavigate();
     const [univData, setUnivData] = useState(null);
     const [events, setEvents] = useState([]);
     const API = "http://localhost:8000";
@@ -141,7 +147,9 @@ export default function Universities() {
                                             <h3 className={styles.newsMainTitle}>{currentNews.title}</h3>
                                             <p className={styles.newsDesc}>{currentNews.desc}</p>
                                         </div>
-                                        <a href="#readmore" className={styles.readMore}>read more</a>
+                                        <a className={styles.readMore}
+                                            onClick={(e) => { e.preventDefault(); setPopupItem({ title: currentNews.title, description: currentNews.desc }); }}
+                                            style={{ cursor: "pointer" }}>read more</a>
                                     </div>
                                 )}
 
@@ -190,7 +198,10 @@ export default function Universities() {
 
                             <div className={styles.scrollableList}>
                                 {filteredDoctors.map(doc => (
-                                    <div key={doc.id} className={styles.doctorItem}>
+                                    <div key={doc.id}
+                                        className={styles.doctorItem}
+                                        onClick={() => navigate(`/profile/${doc.id}`)}
+                                        style={{ cursor: "pointer" }}>
                                         <div className={styles.docAvatar}>
                                             {/* ONLY CHANGE: show real avatar if available, fallback to original SVG */}
                                             {doc.avatar || doc.profile_picture ? (
@@ -223,12 +234,15 @@ export default function Universities() {
                     </div>
 
                     {/* Related Events */}
+                    {/* Related Events */}
                     <div className={styles.rightCardWrapper}>
-                        <div className={styles.pill}>
-                            <Calendar size={14} style={{ color: '#d81b60', marginRight: '6px' }} />
-                            Related events
-                        </div>
                         <div className={styles.rightCard}>
+                            {/* Header now sits INSIDE the card */}
+                            <div className={styles.relatedEventsHeader}>
+                                <img src={Events} alt="events" style={{ width: 30, height: 30 }} />
+                                <span className={styles.relatedEventsTitle}>Related events</span>
+                            </div>
+
                             <div className={styles.eventCard}>
                                 {currentEvent?.img && (
                                     <img
@@ -241,14 +255,30 @@ export default function Universities() {
                                     <div className={styles.eventInfo}>
                                         <h4>{currentEvent?.title || "No events yet"}</h4>
                                         {currentEvent?.date && <p style={{ fontSize: "0.75rem", opacity: 0.7 }}>{currentEvent.date}</p>}
-                                        {currentEvent?.desc && <p>{currentEvent.desc}</p>}
+                                        {currentEvent?.desc && (
+                                            <p>
+                                                {currentEvent.desc.length > 30
+                                                    ? <>{currentEvent.desc.substring(0, 30)}... <span
+                                                        className={styles.readMore}
+                                                        onClick={() => setPopupItem({ title: currentEvent.title, description: currentEvent.desc })}
+                                                    >read more</span></>
+                                                    : currentEvent.desc
+                                                }
+                                            </p>
+                                        )}
                                         {currentEvent?.location && <p>📍 {currentEvent.location}</p>}
                                     </div>
-                                    {currentEvent && <button className={styles.viewBtn}>View</button>}
+                                    {currentEvent && (
+                                        <button
+                                            className={styles.viewBtn}
+                                            onClick={() => navigate('/events', { state: { highlightId: currentEvent.id } })}
+                                        >
+                                            View
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Only show controls if 2 or more events */}
                             {events.length > 1 && (
                                 <div className={styles.eventSliderControls}>
                                     <button className={styles.arrowBtn} onClick={() => setEventIndex(p => p === 0 ? events.length - 1 : p - 1)}>
@@ -273,6 +303,39 @@ export default function Universities() {
 
                 </div>
             </div>
+            {popupItem && createPortal(
+                <div
+                    style={{
+                        position: "fixed", inset: 0, zIndex: 9999,
+                        background: "rgba(0,0,0,0.6)", display: "flex",
+                        alignItems: "center", justifyContent: "center"
+                    }}
+                    onClick={() => setPopupItem(null)}
+                >
+                    <div
+                        style={{
+                            background: "#2a2a2a", borderRadius: 20, padding: 28,
+                            maxWidth: 480, width: "90%", position: "relative",
+                            border: "1px solid rgba(255,255,255,0.08)"
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setPopupItem(null)}
+                            style={{
+                                position: "absolute", top: 14, right: 14,
+                                background: "none", border: "none", color: "white",
+                                fontSize: "1.1rem", cursor: "pointer"
+                            }}
+                        >✕</button>
+                        <h3 style={{ color: "white", margin: "0 0 12px" }}>{popupItem.title}</h3>
+                        <p style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.6, margin: 0 }}>
+                            {popupItem.description}
+                        </p>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }

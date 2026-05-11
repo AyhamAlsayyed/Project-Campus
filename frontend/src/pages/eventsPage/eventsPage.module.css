@@ -142,25 +142,35 @@
   justify-content: center;
 }
 
-.followBtn, .followedBtn {
-  padding: 5px 20px;
-  border-radius: 25px;
-  border: none;
-  font-weight: 700;
-  cursor: pointer;
-}
 
 .followBtn {
-  background: #9c27b0;
-  color: white;
+    background: linear-gradient(135deg, #5B2598, #962892);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 20px;        /* match the same padding as .followedBtn */
+    font-size: 0.85rem;       /* match font size */
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s;
 }
-
+.followBtn:hover {
+    opacity: 0.85;
+}
 .followedBtn {
-  background: #555;
-  color: #ddd;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 20px;       
+    font-size: 0.85rem;       
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
 }
 
-/* Image Container & Overlays */
 .bannerContainer {
   position: relative;
   width: 100%;
@@ -177,15 +187,14 @@
 }
 
 .bannerOverlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 40px;
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 70%);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* push everything to bottom */
+    padding: 16px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.75));
+    pointer-events: none;
 }
 
 .bannerContent h2 {
@@ -211,7 +220,7 @@
   padding-bottom: 5px;
 }
 
-/* The Floating Date Box */
+
 .dateWidget {
   position: absolute;
   top: 30px;
@@ -223,6 +232,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
+  z-index: 3;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -235,7 +245,7 @@
 }
 
 .reminderBtn {
-  background: #7b1fa2; /* Vibrant purple from image */
+ background: linear-gradient(135deg, #5B2598, #962892);
   color: white;
   border: none;
   padding: 8px 18px;
@@ -344,6 +354,13 @@
     display: flex;
     gap: 10px;
     align-items: center;
+    min-width: 0;      /* ← lets flex shrink it properly */
+    flex: 1;           /* ← takes available space, leaves room for button */
+    overflow: hidden;
+}
+.recOrgText {
+    min-width: 0;      /* ← needed for children to truncate */
+    overflow: hidden;
 }
 
 .recAvatar {
@@ -357,6 +374,7 @@
     display: flex;
     align-items: center;
     gap: 5px;
+    flex-wrap: nowrap; /* ← badge stays on same line as name */
 }
 
 .recNameRow h4 {
@@ -364,8 +382,10 @@
     font-size: 0.85rem;
     color: white;
     font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* ← long names truncate instead of wrap */
 }
-
 .verifyBadgeSmall {
     background: #fff;
     color: #000;
@@ -442,4 +462,14 @@
     height: 1px;
     background: rgba(255, 255, 255, 0.1);
     margin: 10px 0;
+}
+@keyframes highlightPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(158, 39, 157, 0.7); }
+    50%  { box-shadow: 0 0 0 12px rgba(158, 39, 157, 0.2); }
+    100% { box-shadow: 0 0 0 0 rgba(158, 39, 157, 0); }
+}
+
+.highlighted {
+    animation: highlightPulse 1.5s ease-out;
+    border-color: rgba(158, 39, 157, 0.6) !important;
 }

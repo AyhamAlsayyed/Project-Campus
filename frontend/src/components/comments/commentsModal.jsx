@@ -31,6 +31,8 @@ export default function CommentModal({ post, onClose, currentUser }) {
     const [isLoadingChats, setIsLoadingChats] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
     const shareMenuRef = useRef(null);
+    const [isExpanded, setIsExpanded] = useState(false);
+    const CHAR_LIMIT = 150;
     useEffect(() => {
         if (!showShareMenu) return;
         const fetchActiveChats = async () => {
@@ -297,9 +299,32 @@ export default function CommentModal({ post, onClose, currentUser }) {
                     </div>
 
                     {(post.content || post.content_text) && (
-                        <p className={styles.postText}>{post.content || post.content_text}</p>
+                        <p className={styles.postText}>
+                            {(post.content || post.content_text).length > CHAR_LIMIT && !isExpanded
+                                ? <>
+                                    {(post.content || post.content_text).substring(0, CHAR_LIMIT)}...{' '}
+                                    <span
+                                        className={styles.readMore}
+                                        onClick={() => setIsExpanded(true)}
+                                    >
+                                        read more
+                                    </span>
+                                </>
+                                : <>
+                                    {post.content || post.content_text}
+                                    {(post.content || post.content_text).length > CHAR_LIMIT && (
+                                        <span
+                                            className={styles.readMore}
+                                            onClick={() => setIsExpanded(false)}
+                                            style={{ marginLeft: 6 }}
+                                        >
+                                            show less
+                                        </span>
+                                    )}
+                                </>
+                            }
+                        </p>
                     )}
-
                     {visualMedia.length > 0 && (
                         <div className={styles.media}>
                             {visualMedia.length > 1 && (
