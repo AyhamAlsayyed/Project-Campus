@@ -51,7 +51,7 @@ from .views.user.friends import (
     user_friends_list,
 )
 from .views.user.recently_contacted import recently_contacted
-from .views.user.user import me, profile_view, update_profile
+from .views.user.user import get_events, me, profile_view, update_profile
 
 urlpatterns = [
     path("auth/send_code/", send_code),
@@ -61,11 +61,11 @@ urlpatterns = [
     path("auth/me/", me),
     path("users/<int:user_id>/", profile_view),
     path("auth/profile/update/", update_profile),
-    path("posts/feed/", feed, name="posts_feed"),
-    path("posts/", feed, name="user_posts"),
-    path("posts/saved/", get_saved_posts, name="posts_saved"),
-    path("posts/activity/", get_activity_posts, name="posts_activity"),
-    path("posts/create/", create_post, name="create_post"),
+    path("posts/feed/", feed),
+    path("posts/", feed),
+    path("posts/saved/", get_saved_posts),
+    path("posts/activity/", get_activity_posts),
+    path("posts/create/", create_post),
     path("posts/<int:post_id>/like/", toggle_like),
     path("posts/<int:post_id>/report/", report_post),
     path("posts/<int:post_id>/block/", block_user),
@@ -102,4 +102,5 @@ urlpatterns = [
     path("pages/<int:page_id>/follow/", toggle_follow_page),
     path("events/", events),
     path("events/<int:event_id>/remind/", toggle_event_reminder),
+    path("events/reminders/", get_events),
 ]

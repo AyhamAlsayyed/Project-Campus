@@ -122,8 +122,8 @@ class EmailVerification(models.Model):
 class Page(models.Model):
     page_id = models.BigAutoField(primary_key=True, db_column="page_id")
 
-    page_name = models.CharField(max_length=255)
-    page_full_name = models.CharField(max_length=255, null=True, blank=True)
+    page_name = models.CharField(max_length=255, null=True, blank=True)
+    page_full_name = models.CharField(max_length=255)
     page_name_arabic = models.CharField(max_length=255, null=True, blank=True)
     page_branch = models.CharField(max_length=255, null=True, blank=True)
 
@@ -157,7 +157,7 @@ class Page(models.Model):
         db_table = "page"
 
     def __str__(self):
-        return self.page_name
+        return self.page_full_name
 
 
 class UniversityDomain(models.Model):
@@ -389,6 +389,7 @@ class Event(models.Model):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField(blank=True, null=True)
     location = models.CharField(max_length=255, blank=True)
+    is_verified = models.BooleanField(default=False)
 
     class Meta:
         db_table = "event"

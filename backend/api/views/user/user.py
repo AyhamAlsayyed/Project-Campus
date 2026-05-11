@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Friendship, UserDegree
+from ...models import EventReminder, Friendship, UserDegree
 
 
 def get_user_academic_info(user):
@@ -71,6 +71,37 @@ def me(request):
         },
         status=status.HTTP_200_OK,
     )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_events(request):
+    reminders_qs = EventReminder.objects.filter(user=request.user).select_related("event", "event__page")
+
+    reminders_list = []
+
+    for r in reminders_qs:
+        event = r.event
+        page = event.page
+
+        reminders_list.append(
+            {
+                "id": event.event_id,
+                "title": event.title,
+                "description": event.description,
+                "start_date": event.start_date,
+                "location": event.location,
+                "banner": request.build_absolute_uri(event.image.url) if event.image else None,
+                "page": {
+                    "name": page.page_full_name,
+                    "page_id": page.page_id,
+                    "avatar": request.build_absolute_uri(page.profile_image.url) if page.profile_image else None,
+                    "is_verified": getattr(page, "verified", False),  # Using getattr as a safety check
+                },
+            }
+        )
+
+    return Response(reminders_list, status=status.HTTP_200_OK)
 
 
 User = get_user_model()
@@ -272,4 +303,4 @@ def update_profile(request):
 
     user.save()
 
-    return Response({"message": "Profile updated successfully"})
+    return Response({"message": "Profile updated successfully"}, status=status.HTTP_200_OK)

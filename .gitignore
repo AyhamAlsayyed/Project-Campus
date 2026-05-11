@@ -14,7 +14,7 @@ __pycache__/
 
 # Django runtime files
 db.sqlite3
-media/
+# media/
 staticfiles/
 static/
 logs/
