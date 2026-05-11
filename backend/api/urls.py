@@ -37,6 +37,7 @@ from .views.posts.post_action import (
 )
 from .views.posts.post_create import create_post
 from .views.posts.posts import feed, get_activity_posts, get_saved_posts
+from .views.search.search import search
 from .views.university.university import (
     university_doctors,
     university_events,
@@ -103,4 +104,5 @@ urlpatterns = [
     path("events/", events),
     path("events/<int:event_id>/remind/", toggle_event_reminder),
     path("events/reminders/", get_events),
+    path("search/", search),
 ]

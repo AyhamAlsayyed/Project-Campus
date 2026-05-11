@@ -1,17 +1,87 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from .models import (
     Comment,
     Community,
     Event,
+    FollowPage,
     Friendship,
     Notification,
+    Page,
     Post,
     PostMedia,
     PostReaction,
     SavedPost,
+    UserProfile,
 )
 from .utils.blocked_users import get_all_blocked_relationships
+
+User = get_user_model()
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ["full_name", "profile_image", "banner_image", "bio", "status", "academic_email"]
+
+
+class UserSerializer(serializers.ModelSerializer):
+    # Nest the profile details
+    profile = UserProfileSerializer(read_only=True)
+
+    # Custom fields for quick access in frontend
+    role = serializers.SerializerMethodField()
+    university = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "first_name", "last_name", "profile", "role", "university"]
+
+    def get_role(self, obj):
+        if hasattr(obj, "student_profile"):
+            return "Student"
+        elif hasattr(obj, "instructor_profile"):
+            return "Instructor"
+        elif hasattr(obj, "admin_profile"):
+            return "Admin"
+        return "User"
+
+    def get_university(self, obj):
+        # Reach through the profile to get the university page name
+        if hasattr(obj, "student_profile") and obj.student_profile.university_page:
+            return obj.student_profile.university_page.page_full_name
+        if hasattr(obj, "instructor_profile") and obj.instructor_profile.university_page:
+            return obj.instructor_profile.university_page.page_full_name
+        return None
+
+
+class PageSerializer(serializers.ModelSerializer):
+    # Rename page_id to id for frontend consistency
+    id = serializers.IntegerField(source="page_id", read_only=True)
+    is_followed = serializers.SerializerMethodField()
+    followers_count = serializers.IntegerField(source="followers.count", read_only=True)
+
+    class Meta:
+        model = Page
+        fields = [
+            "id",
+            "page_full_name",
+            "page_name",
+            "page_type",
+            "description",
+            "profile_image",
+            "banner_image",
+            "verified",
+            "is_followed",
+            "followers_count",
+        ]
+
+    def get_is_followed(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return FollowPage.objects.filter(user=request.user, page=obj).exists()
+        return False
 
 
 class PostMediaSerializer(serializers.ModelSerializer):
