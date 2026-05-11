@@ -170,9 +170,9 @@ def profile_view(request, user_id):
         "university_full_name": university_full_name,
         "university_branch": university_branch,
         "major": major,
-        "academic_title": academic_title,  # Included directly
-        "department": department,  # Included directly
-        "instructor_type": instructor_type,  # Included directly
+        "academic_title": academic_title,
+        "department": department,
+        "instructor_type": instructor_type,
         "role": role,
         "friend_status": friend_status,
         "friends_count": friends_count,
@@ -200,7 +200,7 @@ def update_profile(request):
                 {"message": "Username must contain only lowercase letters"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        # Enforce username uniqueness
+        # enforce username uniqueness
         if User.objects.filter(username__iexact=username).exists():
             return Response({"message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
         user.username = request.data["username"]
@@ -266,7 +266,6 @@ def update_profile(request):
         except Exception as e:
             return Response({"error": f"Failed to update degrees: {str(e)}"}, status=400)
 
-    # Update student profile if exists
     if hasattr(user, "student_profile") and "major" in request.data:
         user.student_profile.major = request.data["major"]
         user.student_profile.save()
