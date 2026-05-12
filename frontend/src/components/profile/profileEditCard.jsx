@@ -28,6 +28,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user }) {
     // Degrees
     const [showAddDegree, setShowAddDegree] = useState(false);
     const [newDegree, setNewDegree] = useState({ title: '', field: '' });
+    const [editingDegreeIdx, setEditingDegreeIdx] = useState(null);
+    const [editingDegree, setEditingDegree] = useState({ title: '', field: '', institution: '' });
 
     // Education (instructor only)
     const [showAddEducation, setShowAddEducation] = useState(false);
@@ -397,21 +399,74 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user }) {
 
                     {/* ── Degrees (both roles) ── */}
                     <SubLabel>Degrees</SubLabel>
-
                     {(formData.degrees || []).map((deg, i) => (
-                        <div key={i} className={styles.detailFieldItem}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span style={{ fontSize: 16 }}>🎓</span>
-                                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
-                                    {deg.title}{deg.field ? ` — ${deg.field}` : ''}
-                                </span>
-                            </span>
-                            <button
-                                style={trashBtn}
-                                onClick={() => setFormData(p => ({ ...p, degrees: p.degrees.filter((_, idx) => idx !== i) }))}
-                            >
-                                <Trash2 size={14} />
-                            </button>
+                        <div key={i}>
+                            {editingDegreeIdx === i ? (
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', flexWrap: 'wrap' }}>
+                                    <select
+                                        value={editingDegree.title}
+                                        onChange={e => setEditingDegree(p => ({ ...p, title: e.target.value }))}
+                                        style={inlineInput(1)}
+                                    >
+                                        <option value="">Degree type</option>
+                                        <option value="High School Diploma">Diploma</option>
+                                        <option value="Bachelor's">Bachelor's</option>
+                                        <option value="Master's">Master's</option>
+                                        <option value="PhD">PhD</option>
+                                    </select>
+                                    <input
+                                        placeholder="Field e.g. Computer Science"
+                                        value={editingDegree.field}
+                                        onChange={e => setEditingDegree(p => ({ ...p, field: e.target.value }))}
+                                        style={inlineInput(1.5)}
+                                    />
+                                    <input
+                                        placeholder="Institution e.g. Harvard University"
+                                        value={editingDegree.institution}
+                                        onChange={e => setEditingDegree(p => ({ ...p, institution: e.target.value }))}
+                                        style={inlineInput(1.5)}
+                                    />
+                                    <button
+                                        style={addBtn}
+                                        onClick={() => {
+                                            if (!editingDegree.title.trim()) return;
+                                            setFormData(p => ({
+                                                ...p,
+                                                degrees: p.degrees.map((d, idx) => idx === i ? editingDegree : d)
+                                            }));
+                                            setEditingDegreeIdx(null);
+                                        }}
+                                    >
+                                        Save
+                                    </button>
+                                    <button style={cancelIconBtn} onClick={() => setEditingDegreeIdx(null)}>
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div key={i} className={styles.detailFieldItem}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <span style={{ fontSize: 16 }}>🎓</span>
+                                        <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
+                                            {deg.title}{deg.field ? ` — ${deg.field}` : ''}{deg.institution ? ` · ${deg.institution}` : ''}
+                                        </span>
+                                    </span>
+                                    <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
+                                        <button
+                                            style={{ background: 'transparent', border: 'none', color: '#c084fc', cursor: 'pointer', padding: 4 }}
+                                            onClick={() => { setEditingDegreeIdx(i); setEditingDegree(deg); }}
+                                        >
+                                            <Edit2 size={14} />
+                                        </button>
+                                        <button
+                                            style={trashBtn}
+                                            onClick={() => setFormData(p => ({ ...p, degrees: p.degrees.filter((_, idx) => idx !== i) }))}
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ))}
 

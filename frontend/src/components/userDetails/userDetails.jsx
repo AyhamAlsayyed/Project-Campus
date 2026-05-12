@@ -20,19 +20,32 @@ export default function UserDetails({ user, hidePill = false }) {
                     <div className={styles.contactList} style={{ width: "100%", boxSizing: "border-box" }}>
 
                         {/* ── Contact ── */}
+                        {/* ── Contact ── */}
                         <div className={styles.contactCard} style={{ width: "100%", boxSizing: "border-box" }}>
                             <div className={styles.detailsSection}>
                                 <h4>Contact</h4>
-                                {user.phone?.map((p, i) => (
-                                    <p key={i}>
+                                {user.primary_phone && (
+                                    <p>
                                         <Phone size={16} className={styles.detailIcon} />
-                                        {p.phone || p}
+                                        {user.primary_phone}
                                     </p>
-                                ))}
-                                {user.email && (
+                                )}
+                                {user.secondary_phone && (
+                                    <p>
+                                        <Phone size={16} className={styles.detailIcon} />
+                                        {user.secondary_phone}
+                                    </p>
+                                )}
+                                {user.academic_email && (
                                     <p>
                                         <Mail size={16} className={styles.detailIcon} />
-                                        {user.email}
+                                        {user.academic_email}
+                                    </p>
+                                )}
+                                {user.personal_email && (
+                                    <p>
+                                        <Mail size={16} className={styles.detailIcon} />
+                                        {user.personal_email}
                                     </p>
                                 )}
                             </div>

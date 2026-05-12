@@ -79,7 +79,7 @@ export default function Header({ theme, toggleTheme, user }) {
     chat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // ── Search handler ──
+
   const handleSearchChange = (e) => {
     const val = e.target.value;
     setSearchQuery(val);
@@ -101,7 +101,7 @@ export default function Header({ theme, toggleTheme, user }) {
     try {
       const token = localStorage.getItem("access");
       const res = await fetch(
-        `${API}/api/search/?q=${encodeURIComponent(query)}`,
+        `${API}/api/search/?q=${encodeURIComponent(query)}&dropdown=true`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.ok) {
@@ -123,12 +123,14 @@ export default function Header({ theme, toggleTheme, user }) {
       case "person": navigate(`/profile/${item.id}`); break;
       case "page": navigate(`/profile/${item.id}`); break;
       case "community":
-        if (item.is_member) {
+        if (item.is_joined) {
           navigate(`/communities/${item.id}`);
+        } else if (item.request_sent) {
+          
         } else if (item.is_private) {
-          setRequestGate(item); // private → request to join
+          setRequestGate(item);
         } else {
-          setJoinGate(item); // public → confirm join
+          setJoinGate(item);
         }
         break;
       case "all": navigate(`/search?q=${encodeURIComponent(searchQuery)}`); break;
@@ -209,6 +211,7 @@ export default function Header({ theme, toggleTheme, user }) {
           setNotifications(formattedNotifs);
         }
 
+
         const chatRes = await fetch(`${API}/api/chats/`, { headers });
         if (chatRes.ok) {
           const chatData = await chatRes.json();
@@ -246,6 +249,15 @@ export default function Header({ theme, toggleTheme, user }) {
     else if (n.actor_id) navigate(`/profile/${n.actor_id}`);
     setShowNotifications(false);
   };
+  useEffect(() => {
+    const updateRect = () => {
+      if (showSearchDropdown && searchInputRef.current) {
+        setSearchBoxRect(searchInputRef.current.getBoundingClientRect());
+      }
+    };
+    window.addEventListener('scroll', updateRect, true);
+    return () => window.removeEventListener('scroll', updateRect, true);
+  }, [showSearchDropdown]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -478,7 +490,7 @@ export default function Header({ theme, toggleTheme, user }) {
                     <div>
                       <div style={sectionLabel}>Communities</div>
                       {searchResults.communities.slice(0, 3).map(community => {
-                        const isMember = community.is_member;
+                        const isMember = community.is_joined;
                         return (
                           <div
                             key={community.id}
@@ -504,7 +516,7 @@ export default function Header({ theme, toggleTheme, user }) {
                                 </div>
                               )}
                               {/* Lock badge for non-members */}
-                              {!isMember && (
+                              {!isMember && community.is_private && (
                                 <div style={{
                                   position: "absolute", bottom: -3, right: -3,
                                   width: 16, height: 16, borderRadius: "50%",
@@ -521,18 +533,15 @@ export default function Header({ theme, toggleTheme, user }) {
                                 {community.name}
                               </div>
                               <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>
-                                {community.members_count ? `${community.members_count} members` : "Community"}
-                                {!isMember && (
-                                  <span style={{
-                                    marginLeft: 6, fontSize: 10, fontWeight: 600,
-                                    color: "#f59e0b",
-                                    background: "rgba(245,158,11,0.1)",
-                                    border: "1px solid rgba(245,158,11,0.25)",
-                                    borderRadius: 5, padding: "1px 5px"
-                                  }}>
-                                    Not joined
-                                  </span>
-                                )}
+                                <span style={{
+                                  marginLeft: 6, fontSize: 10, fontWeight: 600,
+                                  color: isMember ? "#22c55e" : community.request_sent ? "#c084fc" : "#f59e0b",
+                                  background: isMember ? "rgba(34,197,94,0.1)" : community.request_sent ? "rgba(192,132,252,0.1)" : "rgba(245,158,11,0.1)",
+                                  border: `1px solid ${isMember ? "rgba(34,197,94,0.25)" : community.request_sent ? "rgba(192,132,252,0.25)" : "rgba(245,158,11,0.25)"}`,
+                                  borderRadius: 5, padding: "1px 5px"
+                                }}>
+                                  {isMember ? "✓ Joined" : community.request_sent ? "⏳ Requested" : community.is_private ? "🔒 Private" : "Not joined"}
+                                </span>
                               </div>
                             </div>
                           </div>

@@ -52,7 +52,7 @@ export default function SearchResults() {
             try {
                 const token = localStorage.getItem("access");
                 const res = await fetch(
-                    `${API}/api/search/?q=${encodeURIComponent(query)}`,
+                    `${API}/api/search/?q=${encodeURIComponent(query)}&dropdown=false`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 if (res.ok) setResults(await res.json());

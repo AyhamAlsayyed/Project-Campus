@@ -101,7 +101,7 @@
   color: #fff;
 }
 
-
+.searchResult
 .active {
   background-color: #4a4a4a;
   color: #fff;
@@ -133,7 +133,7 @@
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 16px;
 }
-
+.section{}
 .personCard {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.06);
@@ -175,12 +175,14 @@
 .listStack {
     display: flex;
     flex-direction: column;
+    
     gap: 4px;
 }
 
 .listItem {
     display: flex;
     align-items: center;
+   
     gap: 14px;
     padding: 12px 16px;
     border-radius: 14px;

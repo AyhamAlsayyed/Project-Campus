@@ -7,7 +7,8 @@ import BellIcon from '../../Assets/icons/notifications.png';
 import BellActiveIcon from '../../Assets/icons/notifications-active.png';
 import NotifsBottomSheet from '../dropDownMenus/NotificationsBottomSheet';
 import ChatsBottomSheet from '../dropDownMenus/ChatsBottomSheet';
-
+import { createPortal } from 'react-dom';
+import { Users, User, BookOpen, X } from 'lucide-react';
 export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token, API, homeMode = false }) {
     const navigate = useNavigate();
     const avatarDropdownRef = useRef(null);
@@ -27,7 +28,45 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
     const [drawerChats, setDrawerChats] = useState([]);
     const [drawerChatsLoading, setDrawerChatsLoading] = useState(false);
     const [drawerSearchQuery, setDrawerSearchQuery] = useState('');
+    //search results are filtered client-side from drawerChats
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState(null);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+    const [searchBoxRect, setSearchBoxRect] = useState(null);
+    const searchInputRef = useRef(null);
+    const searchTimer = useRef(null);
+    const fetchSearch = async (query) => {
+        setSearchLoading(true);
+        try {
+            const res = await fetch(
+                `${API}/api/search/?q=${encodeURIComponent(query)}&dropdown=true`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (res.ok) setSearchResults(await res.json());
+        } catch (e) { console.error(e); }
+        finally { setSearchLoading(false); }
+    };
 
+    const handleSearchChange = (e) => {
+        const val = e.target.value;
+
+        setSearchQuery(val);
+        setSearchBoxRect(searchInputRef.current?.getBoundingClientRect());
+        if (!val.trim()) { setSearchResults(null); setShowSearchDropdown(false); return; }
+        setShowSearchDropdown(true);
+        clearTimeout(searchTimer.current);
+        searchTimer.current = setTimeout(() => fetchSearch(val.trim()), 350);
+    };
+
+    const handleResultClick = (type, item) => {
+        setShowSearchDropdown(false);
+        setSearchQuery('');
+        setSearchResults(null);
+        if (type === 'person' || type === 'page') navigate(`/profile/${item.id}`);
+        else if (type === 'community') navigate(`/communities/${item.id}`);
+        else if (type === 'all') navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+    };
     // ── Helpers ──
     const timeAgo = (dateString) => {
         if (!dateString) return '';
@@ -211,16 +250,31 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                 <div style={{
                     flex: 1, display: "flex", alignItems: "center", gap: 8,
                     background: "#535353", borderRadius: 999, padding: "7px 14px",
-                    minWidth: 0
+                    minWidth: 0, position: "relative"
                 }}>
                     <Search size={15} color="rgba(255,255,255,0.6)" style={{ flexShrink: 0 }} />
                     <input
+                        ref={searchInputRef}
                         style={{
                             flex: 1, background: "transparent", border: "none",
                             outline: "none", color: "#fff", fontSize: "0.85rem", minWidth: 0
                         }}
                         placeholder="Search..."
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        onFocus={() => {
+                            if (searchQuery.trim()) {
+                                setShowSearchDropdown(true);
+                                setSearchBoxRect(searchInputRef.current?.getBoundingClientRect());
+                            }
+                        }}
                     />
+                    {searchQuery && (
+                        <button onClick={() => { setSearchQuery(''); setSearchResults(null); setShowSearchDropdown(false); }}
+                            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", padding: 0, display: "flex" }}>
+                            <X size={14} />
+                        </button>
+                    )}
                 </div>
 
                 {/* Avatar — opens 3-option dropdown */}
@@ -342,6 +396,113 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                         </div>
                     )}
                 </div>
+                {showSearchDropdown && searchQuery.trim() && searchBoxRect && createPortal(
+                    <div id="mobile-search-portal" style={{
+                        position: "fixed",
+                        top: searchBoxRect.bottom + 6,
+                        left: searchBoxRect.left + 8,     
+                        width: `calc(${searchBoxRect.width}px - 16px)`,
+                        maxWidth: "500px",
+                       
+                        minWidth: "280px",
+                        /* ------------------------ */
+
+                        background: "#333333",
+                        borderRadius: 16,
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        boxShadow: "0 20px 50px rgba(0,0,0,0.6)",
+                        zIndex: 99999,
+                        overflow: "hidden",
+                        maxHeight: "60vh",
+                        overflowY: "auto"
+                    }}>
+                        {/* See all */}
+                        <div onMouseDown={() => handleResultClick("all")}
+                            style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", cursor: "pointer", background: "rgba(139,45,255,0.08)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+                            onMouseEnter={e => e.currentTarget.style.background = "rgba(139,45,255,0.18)"}
+                            onMouseLeave={e => e.currentTarget.style.background = "rgba(139,45,255,0.08)"}
+                        >
+                            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(-90deg, rgba(166,39,156,0.8), rgba(49,32,169,0.8))", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                <Search size={14} color="white" />
+                            </div>
+                            <span style={{ color: "#fff", fontWeight: 600, fontSize: "0.85rem" }}>
+                                See all results for "<span style={{ color: "#c084fc" }}>{searchQuery}</span>"
+                            </span>
+                        </div>
+
+                        {searchLoading ? (
+                            <div style={{ padding: 16, textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "0.85rem" }}>Searching…</div>
+                        ) : searchResults ? (
+                            <>
+                                {searchResults.people?.length > 0 && (
+                                    <div>
+                                        <div style={{ padding: "8px 16px 4px", color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>People</div>
+                                        {searchResults.people.slice(0, 3).map(person => (
+                                            <div key={person.id} onMouseDown={() => handleResultClick("person", person)}
+                                                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", cursor: "pointer" }}
+                                                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                            >
+                                                <img src={(() => { const av = person.profile?.profile_image || person.avatar_url || person.avatar; if (!av) return "/default-avatar.png"; return av.startsWith("http") ? av : `${API}${av}`; })()}
+                                                    alt="" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                                                <div style={{ minWidth: 0 }}>
+                                                    <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{person.profile?.full_name || person.full_name || person.username}</div>
+                                                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>@{person.username}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {searchResults.communities?.length > 0 && (
+                                    <div>
+                                        <div style={{ padding: "8px 16px 4px", color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>Communities</div>
+                                        {searchResults.communities.slice(0, 3).map(community => (
+                                            <div key={community.id} onMouseDown={() => handleResultClick("community", community)}
+                                                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", cursor: "pointer" }}
+                                                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                            >
+                                                {community.avatar
+                                                    ? <img src={community.avatar.startsWith("http") ? community.avatar : `${API}${community.avatar}`} alt="" style={{ width: 34, height: 34, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                                                    : <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(139,45,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Users size={16} color="#c084fc" /></div>
+                                                }
+                                                <div style={{ minWidth: 0 }}>
+                                                    <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{community.name}</div>
+                                                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>{community.is_joined ? "✓ Joined" : community.is_private ? "🔒 Private" : "Not joined"}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {searchResults.pages?.length > 0 && (
+                                    <div>
+                                        <div style={{ padding: "8px 16px 4px", color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>Pages</div>
+                                        {searchResults.pages.slice(0, 3).map(page => (
+                                            <div key={page.id} onMouseDown={() => handleResultClick("page", page)}
+                                                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", cursor: "pointer" }}
+                                                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                            >
+                                                {page.profile_image
+                                                    ? <img src={page.profile_image.startsWith("http") ? page.profile_image : `${API}${page.profile_image}`} alt="" style={{ width: 34, height: 34, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                                                    : <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BookOpen size={16} color="rgba(255,255,255,0.5)" /></div>
+                                                }
+                                                <div style={{ minWidth: 0 }}>
+                                                    <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{page.page_full_name || page.page_name || page.name}</div>
+                                                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>{page.page_type || "Page"}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {!searchLoading && searchResults && (searchResults.people?.length || 0) + (searchResults.communities?.length || 0) + (searchResults.pages?.length || 0) === 0 && (
+                                    <div style={{ padding: 16, textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "0.85rem" }}>No results found</div>
+                                )}
+                            </>
+                        ) : null}
+                    </div>,
+                    document.body
+                )}
             </div>
 
             {/* Dropdowns — rendered outside sticky bar so they're never clipped */}

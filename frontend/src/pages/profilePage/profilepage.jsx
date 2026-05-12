@@ -347,7 +347,7 @@ export default function ProfilePage() {
         if (!user || !currentUser) return;
         const isOwn = currentUser.id === Number(userId);
         if (isOwn) return;
-        if (user.type === 'page' || user.role === 'instructor') {
+        if ( user.role === 'instructor') {
             loadCommunityPicks();
         }
         if (user.type !== 'page') {
@@ -357,38 +357,13 @@ export default function ProfilePage() {
 
     const handleMessage = async () => {
         try {
-            // 1. Fetch existing chats to see if a conversation already exists
-            const res = await fetch(`${API}/api/chats/`, {
+            const res = await fetch(`${API}/api/conversations/get-or-create/${userId}/`, {
+                method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
             });
-            const chats = await res.json();
-
-            // 2. Try to find a private chat with this user
-            // We check if it's not a group and if the target user is a participant
-            const existing = chats.find(c =>
-                !c.is_group && (c.participants?.some(p => p.id === user?.id) || c.name === user?.username)
-            );
-
-            if (existing) {
-                navigate(`/chats/${existing.id}`);
-            } else {
-                // 3. If no chat exists, create a new one
-                const createRes = await fetch(`${API}/api/chats/`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        participants: [user.id], // The ID of the profile you're viewing
-                        is_group: false
-                    })
-                });
-                const newChat = await createRes.json();
-                if (newChat.id) {
-                    navigate(`/chats/${newChat.id}`);
-                }
-            }
+            const data = await res.json();
+            console.log("conversation response:", data);
+           if (data.conversation_id) navigate(`/chats/${data.conversation_id}`);
         } catch (e) {
             console.error("Error opening chat:", e);
         }
@@ -1004,7 +979,7 @@ export default function ProfilePage() {
                                                 return (
                                                     <div
                                                         className={styles.pickItemCard}
-                                                        style={{ backgroundImage: `url(${pick.cover_image})` }}
+                                                        style={{ backgroundImage: `url(${pick.image})` }}
                                                     >
                                                         <div className={styles.pickOverlay}>
                                                             <div className={styles.pickContentTop}>
