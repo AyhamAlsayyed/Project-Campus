@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ...models import Comment, Notification, Page, Post
-from ...utils.blocked_users import get_blocked_user_sets
+from ...utils.blocked_users import get_blocked_user_sets, is_normal_post
 
 
 def get_comment_author_data(request, c):
@@ -99,7 +99,8 @@ def comment_list(request, post_id):
         .order_by("-created_at")
     )
 
-    if not post.community_id:
+    # filter comments on normal posts
+    if is_normal_post(post):
         users_blocked_by_me, users_who_blocked_me = get_blocked_user_sets(user)
         all_blocked_users = users_blocked_by_me | users_who_blocked_me
 

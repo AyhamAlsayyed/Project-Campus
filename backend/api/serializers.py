@@ -15,7 +15,7 @@ from .models import (
     SavedPost,
     UserProfile,
 )
-from .utils.blocked_users import get_all_blocked_relationships
+from .utils.blocked_users import get_all_blocked_relationships, is_normal_post
 
 User = get_user_model()
 
@@ -27,10 +27,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    # Nest the profile details
     profile = UserProfileSerializer(read_only=True)
 
-    # Custom fields for quick access in frontend
     role = serializers.SerializerMethodField()
     university = serializers.SerializerMethodField()
 
@@ -48,7 +46,6 @@ class UserSerializer(serializers.ModelSerializer):
         return "User"
 
     def get_university(self, obj):
-        # Reach through the profile to get the university page name
         if hasattr(obj, "student_profile") and obj.student_profile.university_page:
             return obj.student_profile.university_page.page_full_name
         if hasattr(obj, "instructor_profile") and obj.instructor_profile.university_page:
@@ -57,7 +54,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class PageSerializer(serializers.ModelSerializer):
-    # Rename page_id to id for frontend consistency
     id = serializers.IntegerField(source="page_id", read_only=True)
     is_followed = serializers.SerializerMethodField()
     followers_count = serializers.IntegerField(source="followers.count", read_only=True)
@@ -124,9 +120,16 @@ class PostSerializer(serializers.ModelSerializer):
         return False
 
     def get_likes_count(self, obj):
-        if obj.community_id:
+        """
+        For normal posts: exclude likes from blocked users
+        For community posts: show all likes
+        """
+
+        if not is_normal_post(obj):
+            # Community post - show all likes
             return PostReaction.objects.filter(post=obj, user__isnull=False).count()
 
+        # Normal post - exclude blocked users
         if obj.author_user_id:
             blocked_map = get_all_blocked_relationships()
             blocked_users = blocked_map.get(obj.author_user_id, set())
@@ -139,9 +142,15 @@ class PostSerializer(serializers.ModelSerializer):
         return PostReaction.objects.filter(post=obj, user__isnull=False).count()
 
     def get_comments_count(self, obj):
-        if obj.community_id:
+        """
+        For normal posts: exclude comments from blocked users
+        For community posts: show all comments
+        """
+        if not is_normal_post(obj):
+            # Community post - show all comments
             return Comment.objects.filter(post=obj).count()
 
+        # Normal post - exclude blocked users
         if obj.author_user_id:
             blocked_map = get_all_blocked_relationships()
             blocked_users = blocked_map.get(obj.author_user_id, set())
@@ -265,10 +274,7 @@ class NotificationSerializer(serializers.ModelSerializer):
 
         if model_class == Community:
             return obj.object_id
-        """
-        if model_class == Message:
-            this is handled in the messaging popup
-        """
+
         if model_class == Friendship:
             if obj.actor_user:
                 return obj.actor_user_id

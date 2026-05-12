@@ -43,12 +43,6 @@ def _get_user_university_page_id(user):
 
 
 def base_annotations(user):
-    # Get ALL blocked relationships globally
-    # blocked_map = get_all_blocked_relationships()
-
-    # For each post author, if they have block relationships, exclude those users' reactions/comments
-    # This is complex, so we'll filter in Python after fetching
-
     return {
         "reactions_count": Count("reactions", filter=Q(reactions__user__isnull=False), distinct=True),
         "comments_count": Count("comments", distinct=True),
@@ -114,21 +108,14 @@ def feed(request, community_id=None):
     # user profile feed
     if user_id:
         qs = qs.filter(author_user_id=user_id).order_by("-is_pinned", "-created_at")
-        # Don't hide blocked users' posts on their own profile
 
-    
-   
     # friends feed
     elif filter_type == "friends":
         accepted_users, _ = get_friendship_sets(user)
         if not accepted_users:
             qs = Post.objects.none()
         else:
-            # Exclude blocked users from friends feed
-            qs = qs.filter(author_user_id__in=accepted_users)
-            if all_blocked_users:
-                qs = qs.exclude(author_user_id__in=all_blocked_users)
-            qs = qs.order_by("-created_at")
+            qs = qs.filter(author_user_id__in=accepted_users).order_by("-created_at")
 
     elif filter_type == "follow_page":
         followed_page_ids = FollowPage.objects.filter(user=user).values_list("page_id", flat=True)
@@ -137,10 +124,9 @@ def feed(request, community_id=None):
         else:
             qs = qs.filter(author_page_id__in=followed_page_ids).order_by("-created_at")
 
-    # community feed (inside a specific community)
+    # community feed
     elif community_id:
         qs = qs.filter(community_id=community_id)
-        # DON'T filter blocked users in community view - everyone can see everything
 
         if filter_type in ["recommended", "popular", "trending"]:
             qs = qs.annotate(**engagement_annotations())
@@ -165,10 +151,10 @@ def feed(request, community_id=None):
         accepted_users, blocked_users = get_friendship_sets(user)
         uni_page_id = _get_user_university_page_id(user)
 
-        # Exclude own posts and blocked users' posts (INCLUDING community posts)
+        # exclude own and blocked users posts
         qs = qs.exclude(author_user_id=user.id)
         if all_blocked_users:
-            qs = qs.exclude(author_user_id__in=all_blocked_users)
+            qs = qs.exclude(Q(community__isnull=True) & Q(author_user_id__in=all_blocked_users))
 
         if filter_type != "latest":
             qs = qs.annotate(**engagement_annotations())
@@ -218,19 +204,25 @@ def feed(request, community_id=None):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_saved_posts(request):
-    """Saved posts - show even if author is blocked (user explicitly saved it)"""
+    """Saved posts - hide normal posts from blocked users"""
     user = request.user
+
+    users_blocked_by_me, users_who_blocked_me = get_blocked_user_sets(user)
+    all_blocked_users = users_blocked_by_me | users_who_blocked_me
 
     saved = SavedPost.objects.filter(user=user).order_by("-created_at")
 
-    post_map = {
-        p.post_id: p
-        for p in Post.objects.filter(post_id__in=[s.post_id for s in saved])
-        .annotate(**base_annotations(user))
-        .select_related("author_user__profile", "author_page")
-        .prefetch_related("media")
-    }
+    post_ids = [s.post_id for s in saved]
 
+    posts_qs = Post.objects.filter(post_id__in=post_ids).annotate(**base_annotations(user))
+
+    # exclude normal posts
+    if all_blocked_users:
+        posts_qs = posts_qs.exclude(Q(community__isnull=True) & Q(author_user_id__in=all_blocked_users))
+
+    posts_qs = posts_qs.select_related("author_user__profile", "author_page").prefetch_related("media")
+
+    post_map = {p.post_id: p for p in posts_qs}
     ordered_posts = [post_map[s.post_id] for s in saved if s.post_id in post_map]
 
     serializer = PostSerializer(ordered_posts, many=True, context={"request": request})
@@ -240,7 +232,11 @@ def get_saved_posts(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_activity_posts(request):
+    """Activity posts - exclude posts from blocked users (normal posts only)"""
     user = request.user
+
+    users_blocked_by_me, users_who_blocked_me = get_blocked_user_sets(user)
+    all_blocked_users = users_blocked_by_me | users_who_blocked_me
 
     liked_ids = PostReaction.objects.filter(user=user).values_list("post_id", flat=True)
     commented_ids = Comment.objects.filter(author_user=user).values_list("post_id", flat=True)
@@ -253,6 +249,10 @@ def get_activity_posts(request):
         .order_by("-created_at")
         .distinct()
     )
+
+    # filter out normal posts from blocked users in activity
+    if all_blocked_users:
+        posts = posts.exclude(Q(community__isnull=True) & Q(author_user_id__in=all_blocked_users))
 
     serializer = PostSerializer(posts, many=True, context={"request": request})
     return Response(serializer.data)

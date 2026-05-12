@@ -4,6 +4,14 @@ from ..models import Friendship
 
 
 def get_blocked_user_sets(user):
+    """
+    Returns two sets:
+    - users_blocked_by_me: Users I have blocked
+    - users_who_blocked_me: Users who have blocked me
+    """
+    if not user or not user.is_authenticated:
+        return set(), set()
+
     friendships = Friendship.objects.filter(Q(user1=user) | Q(user2=user), status=Friendship.Status.BLOCKED).values(
         "user1_id", "user2_id"
     )
@@ -21,6 +29,10 @@ def get_blocked_user_sets(user):
 
 
 def get_all_blocked_relationships():
+    """
+    Returns a dict mapping user_id -> set of all users they have a block relationship with
+    (bidirectional - if A blocks B, both A and B are in each other's sets)
+    """
     friendships = Friendship.objects.filter(status=Friendship.Status.BLOCKED).values("user1_id", "user2_id")
 
     blocked_map = {}
@@ -38,3 +50,8 @@ def get_all_blocked_relationships():
         blocked_map[user2_id].add(user1_id)
 
     return blocked_map
+
+
+def is_normal_post(post):
+    """Check if a post is a normal post (not in a community)"""
+    return post.community_id is None
