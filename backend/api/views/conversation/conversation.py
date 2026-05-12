@@ -1,10 +1,14 @@
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import ConversationMember, Message, Notification
+from ...models import Conversation, ConversationMember, Message, Notification
 from ...serializers import PostSerializer
+
+User = get_user_model()
 
 
 def get_actor(request):
@@ -261,3 +265,29 @@ def send_message(request, conversation_id):
             ),
         }
     )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def get_or_create_dm(request, user_id):
+    target_user = get_object_or_404(User, id=user_id)
+    current_user = request.user
+
+    if target_user == current_user:
+        return Response({"error": "You cannot DM yourself."}, status=400)
+
+    existing_convo = (
+        Conversation.objects.filter(is_group=False, members__user=current_user)
+        .filter(members__user=target_user)
+        .first()
+    )
+
+    if existing_convo:
+        return Response({"conversation_id": existing_convo.conversation_id})
+
+    new_convo = Conversation.objects.create(is_group=False, is_private=False, is_academic=False, created_by_user=None)
+
+    ConversationMember.objects.create(conversation=new_convo, user=current_user, role="member")
+    ConversationMember.objects.create(conversation=new_convo, user=target_user, role="member")
+
+    return Response({"conversation_id": new_convo.conversation_id}, status=201)

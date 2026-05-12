@@ -16,6 +16,7 @@ from .views.communities.communitie import (
 from .views.conversation.conversation import (
     get_conversations,
     get_messages,
+    get_or_create_dm,
     send_message,
 )
 from .views.event.event_action import toggle_event_reminder
@@ -93,6 +94,7 @@ urlpatterns = [
     path("chats/", get_conversations),
     path("chats/<int:conversation_id>/messages/", get_messages),
     path("chats/<int:conversation_id>/send/", send_message),
+    path("conversations/get-or-create/<int:user_id>/", get_or_create_dm),
     path("university/news/", university_news),
     path("university/events/", university_events),
     path("university/doctors/", university_doctors),

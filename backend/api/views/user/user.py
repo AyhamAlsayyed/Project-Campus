@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import EventReminder, Friendship, UserDegree
+from ...models import Conversation, EventReminder, Friendship, UserDegree
 
 
 def get_user_academic_info(user):
@@ -117,10 +117,17 @@ User = get_user_model()
 @permission_classes([IsAuthenticated])
 def profile_view(request, user_id):
     try:
-        user = User.objects.get(id=user_id)
+        user = (
+            User.objects.select_related(
+                "profile", "student_profile__university_page", "instructor_profile__university_page", "admin_profile"
+            )
+            .prefetch_related("degrees")
+            .get(id=user_id)
+        )
     except User.DoesNotExist:
-        return Response({"error": "User not found"}, status=404)
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
+    current_user = request.user
     profile = getattr(user, "profile", None)
 
     avatar = request.build_absolute_uri(profile.profile_image.url) if profile and profile.profile_image else None
@@ -133,35 +140,31 @@ def profile_view(request, user_id):
     university = None
     university_full_name = None
     university_branch = None
-    major = None
-    academic_title = None
-    department = None
-    instructor_type = None
+    major = ""
+    academic_title = ""
+    department = ""
+    instructor_type = ""
     role = "unknown"
+    uni_page = None
 
     if student:
         role = "student"
         major = student.major
-        uni_page = getattr(student, "university_page", None)
+        uni_page = student.university_page
     elif instructor:
         role = "instructor"
         academic_title = instructor.academic_title
         department = instructor.department
         instructor_type = instructor.instructor_type
-        uni_page = getattr(instructor, "university_page", None)
+        uni_page = instructor.university_page
     elif admin:
         role = "admin"
-        uni_page = None
-    else:
-        uni_page = None
 
     if uni_page:
         university = uni_page.page_full_name
         university_full_name = uni_page.page_full_name
         university_branch = uni_page.page_branch
 
-    # friendship status
-    current_user = request.user
     if current_user == user:
         friend_status = "self"
     else:
@@ -182,18 +185,24 @@ def profile_view(request, user_id):
     friends_count = Friendship.objects.filter(Q(user1=user) | Q(user2=user), status=Friendship.Status.ACCEPTED).count()
 
     DEGREE_ORDER = {"PhD": 1, "Master": 2, "Bachelor": 3, "Diploma": 4}
-    degrees_qs = getattr(user, "degrees", None)
-    degrees = []
-    if degrees_qs:
-        degrees = [
-            {
-                "id": d.id,
-                "degree_type": d.degree_type,
-                "major": d.major,
-                "institution": d.institution,
-            }
-            for d in sorted(degrees_qs.all(), key=lambda d: DEGREE_ORDER.get(d.degree_type, 99))
-        ]
+    degrees_qs = user.degrees.all()
+    degrees = [
+        {
+            "id": d.id,
+            "degree_type": d.degree_type,
+            "major": d.major,
+            "institution": d.institution,
+        }
+        for d in sorted(degrees_qs, key=lambda d: DEGREE_ORDER.get(d.degree_type, 99))
+    ]
+
+    conversation_id = None
+    if current_user.is_authenticated and current_user != user:
+        conversation = (
+            Conversation.objects.filter(is_group=False, members__user=current_user).filter(members__user=user).first()
+        )
+        if conversation:
+            conversation_id = conversation.conversation_id
 
     response_data = {
         "id": user.id,
@@ -218,6 +227,7 @@ def profile_view(request, user_id):
         "secondary_phone": getattr(profile, "secondary_phone", ""),
         "degree": degrees,
         "birthday": getattr(profile, "birth_date", ""),
+        "conversation_id": conversation_id,
     }
 
     return Response(response_data, status=status.HTTP_200_OK)
