@@ -19,6 +19,15 @@ from .views.conversation.conversation import (
     get_or_create_dm,
     send_message,
 )
+from .views.conversation.conversation_action import (
+    block_user_from_chat,
+    chat_requests,
+    clear_chat,
+    delete_or_leave_chat,
+    mark_unread,
+    toggle_mute,
+    toggle_pin,
+)
 from .views.event.event_action import toggle_event_reminder
 from .views.event.events import events
 from .views.notification.notification import get_notifications, notification_delete_mark
@@ -95,6 +104,13 @@ urlpatterns = [
     path("chats/<int:conversation_id>/messages/", get_messages),
     path("chats/<int:conversation_id>/send/", send_message),
     path("conversations/get-or-create/<int:user_id>/", get_or_create_dm),
+    path("chats/<int:id>/pin/", toggle_pin),
+    path("chats/<int:id>/mute/", toggle_mute),
+    path("chats/<int:id>/mark-unread/", mark_unread),
+    path("chats/<int:id>/", delete_or_leave_chat),
+    path("chats/<int:id>/clear/", clear_chat),
+    path("chats/<int:id>/block/", block_user_from_chat),
+    path("chat-requests/", chat_requests),
     path("university/news/", university_news),
     path("university/events/", university_events),
     path("university/doctors/", university_doctors),
