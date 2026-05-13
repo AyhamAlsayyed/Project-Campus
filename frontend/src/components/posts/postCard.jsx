@@ -6,6 +6,10 @@ import Like from '../../Assets/icons/like.png';
 import LikeActive from '../../Assets/icons/like-active.png'
 import Share from '../../Assets/icons/share.png';
 import Pin from '../../Assets/icons/pin.png'
+import GoodReview from '../../Assets/icons/good-review.png';
+import BadReview from '../../Assets/icons/bad-review.png';
+import NatrualReview from '../../Assets/icons/neutral-review.png';
+import ReportModal from "./ReportModal";
 import { createPortal } from "react-dom";
 
 export default function PostCard({ post, openComments, isOwnProfile }) {
@@ -24,6 +28,11 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
   const shareMenuRef = useRef(null);
   const menuRef = useRef(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+  const [isBlocked, setIsBlocked] = useState(post?.author?.is_blocked || false);
+  const [adReaction, setAdReaction] = useState(post?.ad_reaction || null);
+  const [showReport, setShowReport] = useState(false);
+
   const CHAR_LIMIT = 150;
 
   const formatTimeAgo = (dateString) => {
@@ -53,6 +62,24 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
       );
     });
   };
+  const handleAdReaction = async (reaction) => {
+    const token = localStorage.getItem("access");
+    const postId = post.id || post.post_id;
+    const prev = adReaction;
+
+    // Toggle off if same reaction clicked again
+    const newReaction = adReaction === reaction ? null : reaction;
+    setAdReaction(newReaction);
+
+    try {
+      const res = await fetch(`http://localhost:8000/api/posts/${postId}/react/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ reaction: newReaction }),
+      });
+      if (!res.ok) setAdReaction(prev); // revert on fail
+    } catch { setAdReaction(prev); }
+  };
 
   // Close menus on clicking outside
   useEffect(() => {
@@ -63,6 +90,12 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+  useEffect(() => {
+    if (!showMenu) return;
+    const handleScroll = () => setShowMenu(false);
+    window.addEventListener("scroll", handleScroll, true); // true = capture phase catches all scroll events
+    return () => window.removeEventListener("scroll", handleScroll, true);
+  }, [showMenu]);
 
   // Fetch actual chats dynamically when the share dropdown is opened
   useEffect(() => {
@@ -128,6 +161,19 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
 
   const handleMenuAction = async (actionType) => {
     const token = localStorage.getItem("access");
+    if (actionType === 'block') {
+      const postId = post.id || post.post_id;
+      const newBlocked = !isBlocked;
+      setIsBlocked(newBlocked);  // update state FIRST
+      setShowMenu(false);        // THEN close
+      try {
+        await fetch(`http://localhost:8000/api/posts/${postId}/block/`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (err) { setIsBlocked(!newBlocked); } // revert on fail
+      return;
+    }
     setShowMenu(false);
 
 
@@ -162,6 +208,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
 
       return;
     }
+
     if (actionType === 'save') setIsSaved(prev => !prev);
 
     try {
@@ -174,7 +221,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
       if (res.ok && actionType === 'pin') {
 
       } else if (!res.ok) {
-        // Revert UI on failure
+
         if (actionType === 'pin') setIsPinned(prev => !prev);
         if (actionType === 'save') setIsSaved(prev => !prev);
       }
@@ -259,6 +306,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
   };
 
 
+
   return (
     <article className={styles.card}>
       {showDeleteConfirm && (
@@ -309,33 +357,46 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
         </div>
 
         <div className={styles.menuContainer} ref={menuRef}>
-          <button className={styles.menuBtn} onClick={() => setShowMenu(prev => !prev)} aria-label="menu">
+          <button
+            className={styles.menuBtn}
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setMenuPosition({
+                top: rect.bottom + 6,
+                right: window.innerWidth - rect.right
+              });
+              setShowMenu(prev => !prev);
+            }}
+            aria-label="menu"
+          >
             <MoreHorizontal size={20} />
           </button>
-          {showMenu && (
-            <div className={styles.dropdownMenu}>
 
+          {showMenu && createPortal(
+            <div
+              style={{
+                position: "fixed",
+                top: menuPosition.top,
+                right: menuPosition.right,
+                zIndex: 9999,
+                background: "#2a2a2a",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 14,
+                padding: "6px 0",
+                minWidth: 160,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.6)"
+              }}
+              ref={menuRef}
+            >
               {/* WHITE ACTIONS */}
               <div className={styles.menuSection}>
                 {isOwnProfile && (
-                  <button
-                    className={styles.menuItem}
-                    onClick={() => handleMenuAction('pin')}
-                  >
-                    <img
-                      src={Pin}
-                      width={16}
-                      alt=""
-                      className={styles.pinMenuIcon}
-                    />
+                  <button className={styles.menuItem} onClick={() => handleMenuAction('pin')}>
+                    <img src={Pin} width={16} alt="" className={styles.pinMenuIcon} />
                     {isPinned ? "Unpin Post" : "Pin Post"}
                   </button>
                 )}
-
-                <button
-                  className={styles.menuItem}
-                  onClick={() => handleMenuAction('save')}
-                >
+                <button className={styles.menuItem} onClick={() => handleMenuAction('save')}>
                   <Bookmark size={16} fill={isSaved ? "currentColor" : "none"} />
                   {isSaved ? "Unsave" : "Save"}
                 </button>
@@ -346,61 +407,50 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
               {/* RED ACTIONS */}
               <div className={styles.menuSection}>
                 {isOwnProfile ? (
-                  /* ── ACTIONS FOR YOUR OWN POST ── */
-                  <button
-                    className={`${styles.menuItem} ${styles.danger}`}
-                    onClick={() => handleMenuAction('delete')}
-                  >
-                    <Trash2 size={16} />
-                    Delete Post
+                  <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('delete')}>
+                    <Trash2 size={16} /> Delete Post
                   </button>
                 ) : (
-                  /* ── ACTIONS FOR OTHER PEOPLE'S POSTS ── */
                   <>
-                    <button
-                      className={`${styles.menuItem} ${styles.danger}`}
-                      onClick={() => handleMenuAction('report')}
-                    >
-                      <Flag size={16} />
-                      Report
+                    <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => { setShowMenu(false); setShowReport(true); }}>
+                      <Flag size={16} /> Report
                     </button>
-
                     <button
                       className={`${styles.menuItem} ${styles.danger}`}
                       onClick={() => handleMenuAction('block')}
                     >
                       <Ban size={16} />
-                      Block
+                      {isBlocked ? "Unblock" : "Block"}
                     </button>
                   </>
                 )}
               </div>
-
-            </div>
+            </div>,
+            document.body
           )}
         </div>
       </div>
 
-     {post.content_text && (
-    <p className={styles.text}>
-        {post.content_text.length > CHAR_LIMIT && !isExpanded
+      {post.content_text && (
+        <p className={styles.text}>
+          {post.content_text.length > CHAR_LIMIT && !isExpanded
             ? <>
-                {formatText(post.content_text.substring(0, CHAR_LIMIT))}...{' '}
-                <span className={styles.readMore} onClick={() => setIsExpanded(true)}>
-                    read more
-                </span>
-              </>
+              {formatText(post.content_text.substring(0, CHAR_LIMIT))}...{' '}
+              <span className={styles.readMore} onClick={() => setIsExpanded(true)}>
+                read more
+              </span>
+            </>
             : <>
-                {formatText(post.content_text)}
-                {post.content_text.length > CHAR_LIMIT && (
-                    <span className={styles.readMore} onClick={() => setIsExpanded(false)} style={{ marginLeft: 6 }}>
-                        show less
-                    </span>
-                )}
-              </>
-        }
-    </p>
-)}
+              {formatText(post.content_text)}
+              {post.content_text.length > CHAR_LIMIT && (
+                <span className={styles.readMore} onClick={() => setIsExpanded(false)} style={{ marginLeft: 6 }}>
+                  show less
+                </span>
+              )}
+            </>
+          }
+        </p>
+      )}
 
       {validMedia.length > 0 && validMedia[current]?.type !== "file" && (
         <div className={styles.media}>
@@ -442,41 +492,66 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
         </div>
       )}
 
-      <div className={`${styles.actions} flex flex-nowrap items-center justify-between gap-2`}>
-        <div className={`${styles.leftActions} flex flex-nowrap items-center gap-2 flex-1 min-w-0 overflow-hidden`}
-          style={{ width: "auto" }}>
-
-          <button
-            className={`${styles.iconBtn} flex-shrink-0 ${isLiked ? styles.liked : ""}`}
-            onClick={handleLike}
-            type="button"
-          >
-            <span className={styles.heart}>
-              {isLiked
-                ? <img src={LikeActive} alt="liked" className={styles.likeActive} width={22} height={22} />
-                : <img src={Like} alt="like" className={styles.like} width={22} height={22} />
-              }
-            </span>
-            {likesCount > 0 &&
-              <span className={styles.count}>{likesCount}</span>
+      <div className={styles.actions}>
+        {/* Left — like button */}
+        <button
+          className={`${styles.iconBtn} ${isLiked ? styles.liked : ""}`}
+          onClick={handleLike}
+          type="button"
+        >
+          <span className={styles.heart}>
+            {isLiked
+              ? <img src={LikeActive} alt="liked" className={styles.likeActive} width={22} height={22} />
+              : <img src={Like} alt="like" className={styles.like} width={22} height={22} />
             }
-          </button>
+          </span>
+          {likesCount > 0 && <span className={styles.count}>{likesCount}</span>}
+        </button>
 
-          {post.post_type === "advertisement" && (
-            <>
-              <span className={`${styles.prompt} hidden sm:inline`}>how do you feel about this ad?</span>
+
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {post.post_type === "advertisement" ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span className={styles.prompt}>how do you feel about this ad?</span>
               <div className={styles.reactions}>
-                <button className={styles.reactionBtn}>🙂</button>
-                <button className={styles.reactionBtn}>😐</button>
-                <button className={styles.reactionBtn}>🙁</button>
+                <button
+                  className={styles.reactionBtn}
+                  onClick={() => handleAdReaction('good')}
+                  style={{
+                    transform: adReaction === 'good' ? 'scale(1.25)' : 'scale(1)',
+                    filter: adReaction && adReaction !== 'good' ? 'grayscale(1) opacity(0.4)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <img src={GoodReview} alt="good" width={28} height={28} />
+                </button>
+                <button
+                  className={styles.reactionBtn}
+                  onClick={() => handleAdReaction('neutral')}
+                  style={{
+                    transform: adReaction === 'neutral' ? 'scale(1.25)' : 'scale(1)',
+                    filter: adReaction && adReaction !== 'neutral' ? 'grayscale(1) opacity(0.4)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <img src={NatrualReview} alt="neutral" width={28} height={28} />
+                </button>
+                <button
+                  className={styles.reactionBtn}
+                  onClick={() => handleAdReaction('bad')}
+                  style={{
+                    transform: adReaction === 'bad' ? 'scale(1.25)' : 'scale(1)',
+                    filter: adReaction && adReaction !== 'bad' ? 'grayscale(1) opacity(0.4)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <img src={BadReview} alt="bad" width={28} height={28} />
+                </button>
               </div>
-            </>
-          )}
-
-          {post.post_type !== "advertisement" && (
+            </div>) : (
             <div
-              className={`${styles.commentInputPill} flex-1 min-w-0`}
-              style={{ maxWidth: "200px", margin: "0 auto 0 auto" }}
+              className={styles.commentInputPill}
+              style={{ maxWidth: "200px" }}
               onClick={() => openComments(post)}
             >
               <span className={styles.placeholderText}>Add a comment ...</span>
@@ -484,10 +559,10 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
           )}
         </div>
 
-        {/* ── Dynamic Share Popover UI Overlay ── */}
+        {/* Right — share button */}
         <div className={styles.shareContainer} ref={shareMenuRef} style={{ position: 'relative' }}>
           <button
-            className={`${styles.shareBtn} flex items-center gap-1.5 flex-shrink-0`}
+            className={styles.shareBtn}
             type="button"
             onClick={() => setShowShareMenu(!showShareMenu)}
           >
@@ -499,7 +574,6 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
             <div className={styles.shareOverlay} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
               <div className={styles.shareModal} onClick={e => e.stopPropagation()} ref={shareMenuRef}>
 
-                {/* Header */}
                 <div className={styles.shareHeader}>
                   <h3 className={styles.shareTitle}>Share Post</h3>
                   <button
@@ -512,7 +586,6 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
                   </button>
                 </div>
 
-                {/* Search bar */}
                 <div className={styles.shareSearchWrapper}>
                   <div className={styles.shareSearchInner}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.searchIcon}>
@@ -528,7 +601,6 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
                   </div>
                 </div>
 
-                {/* Chat list */}
                 <div className={styles.shareListContainer}>
                   {isLoadingChats ? (
                     <div className={styles.shareStatus}>Loading conversations...</div>
@@ -544,7 +616,6 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
                     );
 
                     const renderItem = (target) => (
-
                       <button
                         key={target.id}
                         disabled={isSharing}
@@ -588,6 +659,13 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
             document.body
           )}
         </div>
+        {showReport && (
+          <ReportModal
+            contentId={post.id || post.post_id}
+            contentType="post"
+            onClose={() => setShowReport(false)}
+          />
+        )}
       </div>
     </article>
   );

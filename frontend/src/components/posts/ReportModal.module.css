@@ -1,0 +1,386 @@
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(24px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(18px); }
+    to   { opacity: 1; transform: translateX(0);    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes popIn {
+    0%   { transform: scale(0.6); opacity: 0; }
+    70%  { transform: scale(1.12); }
+    100% { transform: scale(1);   opacity: 1; }
+}
+
+@keyframes checkDraw {
+    from { stroke-dashoffset: 40; }
+    to   { stroke-dashoffset: 0;  }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Backdrop ── */
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Modal container ── */
+.modal {
+    background: linear-gradient(160deg, #1e1e20 0%, #242426 100%);
+    border-radius: 20px;
+    width: min(520px, 93vw);
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+    overflow: hidden;
+    animation: slideUp 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Header ── */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 20px 16px;
+    position: relative;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.02);
+    flex-shrink: 0;
+}
+
+.headerTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.backBtn,
+.closeBtn {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+    font-size: 1.1rem;
+}
+
+.backBtn { left: 16px; }
+.closeBtn { right: 16px; }
+
+.backBtn:hover,
+.closeBtn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: white;
+}
+
+/* ── Progress bar ── */
+.progressBar {
+    height: 2px;
+    background: rgba(255, 255, 255, 0.06);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.progressFill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #5B2598, #962892);
+    border-radius: 2px;
+    transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Scrollable body ── */
+.body {
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+.body::-webkit-scrollbar { width: 4px; }
+.body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+}
+
+/* ── Step 1 — Reasons ── */
+.reasonsStep {
+    animation: fadeIn 0.25s ease both;
+}
+
+.reasonsIntro {
+    padding: 16px 20px 10px;
+}
+
+.reasonsIntro h4 {
+    color: white;
+    font-weight: 700;
+    margin: 0 0 5px;
+    font-size: 0.95rem;
+}
+
+.reasonsIntro p {
+    color: rgba(255, 255, 255, 0.42);
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.5;
+}
+
+.reasonRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 13px 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+    color: white;
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.91rem;
+    font-weight: 500;
+    font-family: inherit;
+    transition: background 0.15s, padding-left 0.18s;
+    animation: fadeIn 0.3s ease both;
+}
+
+.reasonRow:hover {
+    background: rgba(255, 255, 255, 0.06);
+    padding-left: 26px;
+}
+
+.reasonRow:last-child {
+    border-bottom: none;
+}
+
+.reasonLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.reasonEmoji {
+    font-size: 1.1rem;
+    display: inline-block;
+    transition: transform 0.2s;
+}
+
+.reasonRow:hover .reasonEmoji {
+    transform: scale(1.2);
+}
+
+.reasonChevron {
+    flex-shrink: 0;
+    transition: color 0.15s, transform 0.15s;
+}
+
+.reasonRow:hover .reasonChevron {
+    transform: translateX(3px);
+}
+
+/* ── Step 2 — Details ── */
+.detailsStep {
+    padding: 20px;
+    animation: slideIn 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.selectedPill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(91, 37, 152, 0.18);
+    border: 1px solid rgba(150, 40, 146, 0.35);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+}
+
+.selectedPill span:first-child {
+    font-size: 1.2rem;
+}
+
+.selectedPillLabel {
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 0.7rem;
+    margin: 0 0 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-weight: 700;
+}
+
+.selectedPillValue {
+    color: white;
+    margin: 0;
+    font-weight: 600;
+    font-size: 0.88rem;
+}
+
+.textareaLabel {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.8rem;
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.textareaLabel span {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: white;
+    font-size: 0.88rem;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+    line-height: 1.6;
+    box-sizing: border-box;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.textarea:focus {
+    border-color: rgba(150, 40, 146, 0.6);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.submitBtn {
+    margin-top: 16px;
+    width: 100%;
+    padding: 13px;
+    background: linear-gradient(135deg, #5B2598, #962892);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.01em;
+    transition: opacity 0.2s, transform 0.15s;
+}
+
+.submitBtn:hover:not(:disabled) {
+    opacity: 0.88;
+}
+
+.submitBtn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.submitBtn:disabled {
+    background: rgba(255, 255, 255, 0.08);
+    cursor: not-allowed;
+}
+
+.spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.spinnerDot {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    display: inline-block;
+    animation: spin 0.7s linear infinite;
+}
+
+/* ── Step 3 — Done ── */
+.doneStep {
+    padding: 48px 24px 36px;
+    text-align: center;
+    animation: fadeIn 0.3s ease both;
+    /* no overflow here — parent .body handles scroll */
+}
+
+.doneIcon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5B2598, #962892);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    animation: popIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    box-shadow: 0 0 0 8px rgba(91, 37, 152, 0.15), 0 0 0 16px rgba(91, 37, 152, 0.07);
+}
+
+.checkmark {
+    stroke-dasharray: 40;
+    stroke-dashoffset: 0;
+    animation: checkDraw 0.4s 0.3s ease both;
+}
+
+.doneTitle {
+    color: white;
+    margin: 0 0 10px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.doneText {
+    color: rgba(255, 255, 255, 0.45);
+    margin: 0 auto 28px;
+    font-size: 0.86rem;
+    line-height: 1.6;
+    max-width: 320px;
+}
+
+.doneBtn {
+    padding: 10px 32px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: background 0.15s;
+}
+
+.doneBtn:hover {
+    background: rgba(255, 255, 255, 0.13);
+}

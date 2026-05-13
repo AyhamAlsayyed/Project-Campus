@@ -138,18 +138,17 @@
 
 /* Actions */
 .actions {
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
-
 .leftActions {
   display: flex;
-  width: 60%;
+  width: 40%;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -257,7 +256,31 @@
 .activeDot {
   background: white;
 }
+.reactions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
 
+.reactionBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s;
+    flex-shrink: 0;
+}
+
+.reactionBtn:hover {
+    transform: scale(1.15);
+}
+
+.reactionBtn img {
+    filter: brightness(0) saturate(100%) invert(32%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(95%);
+}
 .leftArrow {
   left: 10px;
 }
@@ -266,37 +289,19 @@
   right: 10px;
 }
 
-.reactions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.reactionBtn {
-  width: 36px;
-  height: 36px;
-  font-size: 1.2rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.9);
-  cursor: pointer;
-}
-
-.reactionBtn:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
 
 .shareBtn {
-  height: 34px;
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.82);
-  cursor: pointer;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    gap: 6px;                /* ← adds space between icon and text */
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #3A3A3A;
+    color: rgba(255, 255, 255, 0.82);
+    cursor: pointer;
 }
 
 .shareText {
@@ -502,12 +507,10 @@
 }
 
 .shareIcon {
-  filter: brightness(0) invert(1) !important;
-  display: inline-block;
-  vertical-align: middle;
-
+    filter: brightness(0) saturate(100%) invert(84%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%);
+    display: inline-block;
+    vertical-align: middle;
 }
-
 .pinMenuIcon {
   filter:
     brightness(0) saturate(100%) invert(100%);

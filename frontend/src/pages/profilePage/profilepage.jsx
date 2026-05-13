@@ -32,7 +32,7 @@ import {
     Languages, Home, HelpCircle, MessageSquare,
     Menu, X, Search, Check, MoreHorizontal,
     Volume2, Calendar, Heart, ChevronLeft,
-    Upload, Trash2, Mail, Phone, Edit2, Camera
+    Upload, Trash2, Mail, Phone, Ban,Edit2, Camera
 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -71,6 +71,10 @@ export default function ProfilePage() {
     const [remindersPopup, setRemindersPopup] = useState(null);
     const [eventMenuOpen, setEventMenuOpen] = useState(null);
     const [showRemindersMonthPicker, setShowRemindersMonthPicker] = useState(false);
+    const [isBlocked, setIsBlocked] = useState(false);
+    useEffect(() => {
+        if (user) setIsBlocked(user?.is_blocked || false);
+    }, [user]);
 
 
     const resolveUrl = (url) => {
@@ -88,6 +92,17 @@ export default function ProfilePage() {
                 setReminders(Array.isArray(data) ? data : []);
             }
         } catch (e) { console.error(e); }
+    };
+    const handleBlock = async () => {
+        const wasBlocked = isBlocked;
+        setIsBlocked(!wasBlocked);
+        try {
+            const res = await fetch(`${API}/api/users/${userId}/block/`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) setIsBlocked(wasBlocked);
+        } catch { setIsBlocked(wasBlocked); }
     };
 
     const API = "http://localhost:8000";
@@ -262,12 +277,17 @@ export default function ProfilePage() {
             const res = await fetch(`${API}/api/posts/activity/`, { headers: { Authorization: `Bearer ${token}` } });
             if (res.ok) {
                 const data = await res.json();
-                const formattedActivities = (Array.isArray(data) ? data : []).map(post => ({
+                const formatted = (Array.isArray(data) ? data : []).map(post => ({
                     ...post,
-                    username: post.author?.username || currentUser?.username,
-                    avatar: post.author?.avatar || currentUser?.avatar_url
+                    id: post.post_id || post.id,          // ← normalize post_id → id
+                    content: post.content_text || post.content,  // ← normalize content_text → content
+                    author: post.author || {
+                        id: post.author_user || post.author_page,
+                        username: post.author_username || "Unknown",
+                        avatar: post.author_avatar || null,
+                    }
                 }));
-                setActivityPosts(formattedActivities);
+                setActivityPosts(formatted);
             }
         } catch (e) { console.error(e); }
         finally { setActivitiesLoading(false); }
@@ -347,7 +367,7 @@ export default function ProfilePage() {
         if (!user || !currentUser) return;
         const isOwn = currentUser.id === Number(userId);
         if (isOwn) return;
-        if ( user.role === 'instructor') {
+        if (user.role === 'instructor') {
             loadCommunityPicks();
         }
         if (user.type !== 'page') {
@@ -363,7 +383,7 @@ export default function ProfilePage() {
             });
             const data = await res.json();
             console.log("conversation response:", data);
-           if (data.conversation_id) navigate(`/chats/${data.conversation_id}`);
+            if (data.conversation_id) navigate(`/chats/${data.conversation_id}`);
         } catch (e) {
             console.error("Error opening chat:", e);
         }
@@ -483,12 +503,58 @@ export default function ProfilePage() {
                     <div className={styles.profileContent}>
                         {isEditing ? (
                             <ProfileEditCard styles={styles} edit={edit} setIsEditing={setIsEditing} user={user} />
-
+                        ) : isBlocked ? (
+                            <div className={styles.profileCard}>
+                                <div className={styles.coverWrap}>
+                                    <div className={styles.coverPlaceholder} style={{ filter: "grayscale(1)", opacity: 0.3 }} />
+                                </div>
+                                <div className={styles.profileHeaderRow}>
+                                    <div className={styles.avatarWrap}>
+                                        <div className={styles.avatarCircle} style={{ filter: "grayscale(1)", opacity: 0.4 }}>
+                                            <User size={52} />
+                                        </div>
+                                    </div>
+                                    <div className={styles.profileMeta}>
+                                        <div className={styles.nameRow}>
+                                            <h2 className={styles.username} style={{ opacity: 0.5 }}>{username}</h2>
+                                        </div>
+                                        <div style={{ marginTop: 8, color: "rgba(255,255,255,0.4)", fontSize: "0.85rem" }}>
+                                            You've blocked this user. Their content is hidden.
+                                        </div>
+                                    </div>
+                                    <div className={styles.profileActions}>
+                                        <button
+                                            onClick={handleBlock}
+                                            style={{
+                                                background: "rgba(255,255,255,0.08)",
+                                                border: "1px solid rgba(255,255,255,0.15)",
+                                                borderRadius: 20, padding: "8px 20px",
+                                                color: "rgba(255,255,255,0.7)", fontWeight: 600,
+                                                fontSize: "0.9rem", cursor: "pointer"
+                                            }}
+                                        >
+                                            Unblock
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className={styles.hr} />
+                                <div style={{
+                                    display: "flex", flexDirection: "column", alignItems: "center",
+                                    justifyContent: "center", padding: "60px 20px", gap: 16
+                                }}>
+                                    <Ban size={48} color="rgba(255,255,255,0.2)" />
+                                    <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "1rem", margin: 0 }}>
+                                        This profile is blocked
+                                    </p>
+                                    <p style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.85rem", margin: 0, textAlign: "center" }}>
+                                        Unblock to see their posts, photos, and other content.
+                                    </p>
+                                </div>
+                            </div>
                         ) : (
                             <div className={styles.profileCard}>
                                 <div className={styles.coverWrap}>
                                     {coverUrl ? <img className={styles.coverImage} src={coverUrl} alt="cover" /> : <div className={styles.coverPlaceholder} />}
-
                                 </div>
 
                                 <div className={styles.profileHeaderRow}>
@@ -517,7 +583,6 @@ export default function ProfilePage() {
                                                 </div>
                                                 {bio && <p className={styles.bio}>{bio}</p>}
                                             </>
-
                                         ) : user?.type === 'instructor' ? (
                                             <>
                                                 <div className={styles.nameRow}>
@@ -539,7 +604,6 @@ export default function ProfilePage() {
                                                 {bio && <p className={styles.bio}>{bio}</p>}
                                             </>
                                         ) : isOwnProfile ? (
-                                            // OWN student profile
                                             <>
                                                 <div className={styles.info}>
                                                     <div className={styles.nameRow}>
@@ -559,7 +623,6 @@ export default function ProfilePage() {
                                                 {user?.bio && <p className={styles.bio}>{user.bio}</p>}
                                             </>
                                         ) : (
-                                            // OTHER student profile
                                             <>
                                                 <div className={styles.info}>
                                                     <div className={styles.nameRow}>
@@ -609,6 +672,18 @@ export default function ProfilePage() {
                                                     {friendStatus === "sent" && <button className={styles.pendingBtn}>⏳ Request Sent</button>}
                                                     {friendStatus === "received" && (<><button className={styles.acceptBtn} onClick={handleAccept}>✅ Accept</button><button className={styles.declineBtn} onClick={handleDecline}>❌ Decline</button></>)}
                                                     {friendStatus === "friends" && <button className={styles.friendsBtn}>Friends</button>}
+                                                    <button
+                                                        onClick={handleBlock}
+                                                        style={{
+                                                            background: isBlocked ? "rgba(255,100,100,0.15)" : "rgba(255,255,255,0.07)",
+                                                            border: `1px solid ${isBlocked ? "rgba(255,100,100,0.3)" : "rgba(255,255,255,0.1)"}`,
+                                                            borderRadius: 20, padding: "8px 14px",
+                                                            color: isBlocked ? "#ff6464" : "rgba(255,255,255,0.5)",
+                                                            fontWeight: 600, fontSize: "0.85rem", cursor: "pointer"
+                                                        }}
+                                                    >
+                                                        {isBlocked ? "Unblock" : "Block"}
+                                                    </button>
                                                 </>
                                             )}
                                         </div>
@@ -675,7 +750,6 @@ export default function ProfilePage() {
                                                                         filter: activitiesFilter === key
                                                                             ? 'invert(100%) sepia(100%) grayscale(200%) brightness(150%)'
                                                                             : 'invert(100%) sepia(100%) grayscale(200%) brightness(80%)'
-
                                                                     }}
                                                                 />
                                                                 {label}
@@ -719,23 +793,20 @@ export default function ProfilePage() {
                                         {activitiesLoading
                                             ? <div className={styles.notice}>Loading activities...</div>
                                             : (() => {
-                                                // use savedPosts directly for saves filter
                                                 const postsToShow = activitiesFilter === 'saves'
                                                     ? savedPosts
                                                     : filteredActivityPosts;
-
                                                 return postsToShow.length > 0
                                                     ? postsToShow.map(post => (
                                                         <PostCard key={post.id} post={post} openComments={openComments} isOwnProfile={isOwnProfile} />
                                                     ))
-                                                    : <div className={styles.notice}>``
+                                                    : <div className={styles.notice}>
                                                         No {activitiesFilter === 'saves' ? 'saved posts' : activitiesFilter === 'likes' ? 'liked posts' : 'commented posts'} yet.
                                                     </div>
                                             })()
                                         }
                                     </div>
                                 )}
-
                                 {activeTab === 'About' && (
                                     <div className={styles.postsSection}>
                                         <UserDetails user={user} hidePill />
@@ -769,12 +840,9 @@ export default function ProfilePage() {
                                         )) : <div className={styles.notice}>No events yet.</div>}
                                     </div>
                                 )}
-
                             </div>
-
                         )}
                         {userLoading && <div className={styles.notice}>Loading profile...</div>}
-
                     </div>
                     <div className={styles.rightSection}>
                         {isOwnProfile ? (

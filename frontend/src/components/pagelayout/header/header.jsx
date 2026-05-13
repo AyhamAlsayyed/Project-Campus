@@ -12,6 +12,7 @@ import MessageSquare from "../../../Assets/icons/messages.png";
 import Bell from '../../../Assets/icons/notifications.png';
 import BellActive from '../../../Assets/icons/notifications-active.png';
 import Home from '../../../Assets/icons/home.png'
+import Read from '../../../Assets/icons/read.png'
 import { createPortal } from 'react-dom';
 
 export default function Header({ theme, toggleTheme, user }) {
