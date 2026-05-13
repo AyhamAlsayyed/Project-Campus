@@ -91,31 +91,28 @@ export default function CommunityPage() {
     };
 
     const handleCreatePost = async () => {
+        if (!content.trim() && !images.length && !files.length && !isPollOpen) return;
         const formData = new FormData();
         formData.append("content", content);
-
-        // Use the 'id' from useParams instead of 'selectedCommunity.id'
-        // This ensures that even if state is reset, the community link stays solid.
         formData.append("community_id", id);
-
+        images.forEach(img => formData.append("images", img));
+        files.forEach(file => formData.append("files", file));
+        if (isPollOpen) {
+            pollOptions.filter(opt => opt.trim()).forEach((opt, index) => {
+                formData.append(`poll_options[${index}]`, opt);
+            });
+        }
         try {
             const res = await fetch(`${API}/api/posts/create/`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` },
                 body: formData,
             });
-
-            if (res.ok) {
-                const newPost = await res.json();
-                setPosts(prev => [newPost, ...prev]);
-
-                // This is likely what was causing the 'null' issue for the NEXT post:
-                resetPostState();
-                setIsModalOpen(false);
-            }
-        } catch (err) {
-            console.error(err);
-        }
+            if (!res.ok) { console.error("Failed to create post"); return; }
+            resetPostState();
+            setIsModalOpen(false);
+            fetchPosts();
+        } catch (err) { console.error("Error:", err); }
     };
 
     const fetchPosts = async () => {
@@ -341,7 +338,7 @@ export default function CommunityPage() {
                             joinedCommunities={joinedCommunities}
                             API={API}
                             defaultCommunity={community}
-                            refreshPosts={fetchPosts}
+                         
                         />
                         <WeeklyNews communityId={id} />
                     </div>

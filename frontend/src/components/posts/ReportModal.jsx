@@ -4,15 +4,17 @@ import { createPortal } from 'react-dom';
 import styles from './ReportModal.module.css';
 
 const REPORT_REASONS = [
-    { label: "Problem involving someone under 18",  },
-    { label: "Bullying, harassment or abuse",       },
-    { label: "Suicide or self-harm",               },
-    { label: "Violent, hateful or disturbing content", },
-    { label: "Selling or promoting restricted items",  },
-    { label: "Adult content",                       },
-    { label: "Scam, fraud or false information",   },
-    { label: "Intellectual property",              },
-    { label: "I don't want to see this",             },
+    { label: "Harassment & Abuse", value: "harassment_abuse", },
+    { label: "Violence & Harm", value: "violence_harm", },
+    { label: "Sexual Content & Exploitation", value: "sexual_content_exploitation", },
+    { label: "Child Safety", value: "child_safety", },
+    { label: "Hate & Extremism", value: "hate_extremism", },
+    { label: "Self-Harm & Dangerous Behavior", value: "self_harm_dangerous_behavior", },
+    { label: "Misinformation & Manipulation", value: "misinformation_manipulation", },
+    { label: "Privacy & Impersonation", value: "privacy_impersonation", },
+    { label: "Spam, Scams & Fraud", value: "spam_scams_fraud", },
+    { label: "Illegal & Intellectual Property Violations", value: "illegal_ip_violations", },
+    { label: "Other", value: "other", },
 ];
 
 export default function ReportModal({ contentId, contentType, onClose }) {
@@ -47,9 +49,9 @@ export default function ReportModal({ contentId, contentType, onClose }) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    reported_content_id: contentId,
-                    content_type: contentType,
-                    reason: selectedReason.label,
+                    reported_content_id: contentId,   // ERD: reported_content_id
+                    content_type: contentType,         // ERD: content_type — e.g. "post"
+                    reason: selectedReason.value,      // ERD: reason — backend value e.g. "harassment_abuse"
                     extra_note: extraNote || null,
                 }),
             });
@@ -114,11 +116,14 @@ export default function ReportModal({ contentId, contentType, onClose }) {
                         <div className={styles.reasonsStep}>
                             <div className={styles.reasonsIntro}>
                                 <h4>Why are you reporting this {contentType}?</h4>
-                                <p>Your report is anonymous. If someone is in immediate danger, get help before reporting.</p>
+                                <p>
+                                    Your report is anonymous. If someone is in immediate danger,
+                                    get help before reporting.
+                                </p>
                             </div>
                             {REPORT_REASONS.map((reason, i) => (
                                 <button
-                                    key={reason.label}
+                                    key={reason.value}
                                     className={styles.reasonRow}
                                     style={{ animationDelay: `${i * 30}ms` }}
                                     onClick={() => handleSelectReason(reason)}
@@ -178,8 +183,11 @@ export default function ReportModal({ contentId, contentType, onClose }) {
                     {step === 'done' && (
                         <div className={styles.doneStep}>
                             <div className={styles.doneIcon}>
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-                                    stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <svg
+                                    width="28" height="28" viewBox="0 0 24 24"
+                                    fill="none" stroke="white" strokeWidth="2.5"
+                                    strokeLinecap="round" strokeLinejoin="round"
+                                >
                                     <polyline points="20 6 9 17 4 12" className={styles.checkmark} />
                                 </svg>
                             </div>
