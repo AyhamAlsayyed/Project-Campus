@@ -16,7 +16,7 @@ export default function CommunityPage() {
     const [user, setUser] = useState(null)
     const [theme, setTheme] = useState('dark');
     const [posts, setPosts] = useState([]);
-    const [filter, setFilter] = useState("recommended");
+    const [filter, setFilter] = useState("recent");
     const [community, setCommunity] = useState(null);
     const { id } = useParams();
     const [content, setContent] = useState("");
@@ -43,6 +43,9 @@ export default function CommunityPage() {
         window.addEventListener("resize", check);
         return () => window.removeEventListener("resize", check);
     }, []);
+    useEffect(() => {
+        if (community) setSelectedCommunity(community);
+    }, [community]);
 
     useEffect(() => {
         document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
@@ -88,28 +91,31 @@ export default function CommunityPage() {
     };
 
     const handleCreatePost = async () => {
-        if (!content.trim() && !images.length && !files.length && !isPollOpen) return;
         const formData = new FormData();
         formData.append("content", content);
+
+        // Use the 'id' from useParams instead of 'selectedCommunity.id'
+        // This ensures that even if state is reset, the community link stays solid.
         formData.append("community_id", id);
-        images.forEach(img => formData.append("images", img));
-        files.forEach(file => formData.append("files", file));
-        if (isPollOpen) {
-            pollOptions.filter(opt => opt.trim()).forEach((opt, index) => {
-                formData.append(`poll_options[${index}]`, opt);
-            });
-        }
+
         try {
             const res = await fetch(`${API}/api/posts/create/`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` },
                 body: formData,
             });
-            if (!res.ok) { console.error("Failed to create post"); return; }
-            resetPostState();
-            setIsModalOpen(false);
-            fetchPosts();
-        } catch (err) { console.error("Error:", err); }
+
+            if (res.ok) {
+                const newPost = await res.json();
+                setPosts(prev => [newPost, ...prev]);
+
+                // This is likely what was causing the 'null' issue for the NEXT post:
+                resetPostState();
+                setIsModalOpen(false);
+            }
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     const fetchPosts = async () => {
@@ -132,6 +138,7 @@ export default function CommunityPage() {
         : "/default-avatar.png";
 
     const mobileFilters = [
+        { key: "recent", label: "Most Recent" },
         { key: "recommended", label: "Recommended" },
         { key: "popular", label: "Popular" },
         { key: "trending", label: "Trending" },
@@ -333,6 +340,8 @@ export default function CommunityPage() {
                             setCommunityDropdownOpen={setCommunityDropdownOpen}
                             joinedCommunities={joinedCommunities}
                             API={API}
+                            defaultCommunity={community}
+                            refreshPosts={fetchPosts}
                         />
                         <WeeklyNews communityId={id} />
                     </div>

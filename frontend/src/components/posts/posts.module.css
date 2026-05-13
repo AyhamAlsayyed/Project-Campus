@@ -2,13 +2,11 @@
   width: 90%;
   border-radius: 20px;
   padding: 16px 16px 14px;
-  margin: 5% auto 0 auto;
+  margin: 2% auto 0 auto;
   background: #262626;
   border: 1px solid rgba(255, 255, 255, 0.08);
-   overflow: hidden; 
-    min-width: 0; 
-
-
+  overflow: hidden;
+  min-width: 0;
 }
 
 /* Header row */
@@ -81,18 +79,22 @@
 
 /* Text */
 .text {
-    white-space: pre-wrap;
-    word-break: break-word;
-    overflow-wrap: break-word;   /* ← forces wrap even on single long "words" */
-    word-wrap: break-word;       /* ← fallback for older browsers */
-    line-height: 1.6;
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.88);
-    margin: 10px 0 14px 0;
-    letter-spacing: 0.01em;
-    max-width: 100%;             /* ← never exceeds card width */
-    width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  /* ← forces wrap even on single long "words" */
+  word-wrap: break-word;
+  /* ← fallback for older browsers */
+  line-height: 1.6;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.88);
+  margin: 10px 0 14px 0;
+  letter-spacing: 0.01em;
+  max-width: 100%;
+  /* ← never exceeds card width */
+  width: 100%;
 }
+
 /* Media block */
 .media {
   border-radius: 18px;
@@ -138,14 +140,15 @@
 
 /* Actions */
 .actions {
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
+
 .leftActions {
   display: flex;
   width: 40%;
@@ -256,31 +259,33 @@
 .activeDot {
   background: white;
 }
+
 .reactions {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .reactionBtn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.15s;
-    flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+  flex-shrink: 0;
 }
 
 .reactionBtn:hover {
-    transform: scale(1.15);
+  transform: scale(1.15);
 }
 
 .reactionBtn img {
-    filter: brightness(0) saturate(100%) invert(32%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(95%);
+  filter: brightness(0) saturate(100%) invert(32%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(95%);
 }
+
 .leftArrow {
   left: 10px;
 }
@@ -292,16 +297,17 @@
 
 
 .shareBtn {
-    height: 34px;
-    display: flex;
-    align-items: center;
-    gap: 6px;                /* ← adds space between icon and text */
-    padding: 0 14px;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: #3A3A3A;
-    color: rgba(255, 255, 255, 0.82);
-    cursor: pointer;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* ← adds space between icon and text */
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #3A3A3A;
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
 }
 
 .shareText {
@@ -507,10 +513,11 @@
 }
 
 .shareIcon {
-    filter: brightness(0) saturate(100%) invert(84%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%);
-    display: inline-block;
-    vertical-align: middle;
+  filter: brightness(0) saturate(100%) invert(84%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%);
+  display: inline-block;
+  vertical-align: middle;
 }
+
 .pinMenuIcon {
   filter:
     brightness(0) saturate(100%) invert(100%);
@@ -717,116 +724,129 @@
     transform: translateY(0);
   }
 }
+
 /* The background dimming and blur */
 .modalOverlay {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: fadeIn 0.2s ease-out;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
 }
 
 /* The actual popup box */
 .confirmModal {
-    background: #1c1c1e; /* Deep iOS-style dark mode grey */
-    width: 290px;
-    border-radius: 18px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* Keeps the buttons neatly inside the rounded corners */
-    animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #1c1c1e;
+  /* Deep iOS-style dark mode grey */
+  width: 290px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Keeps the buttons neatly inside the rounded corners */
+  animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Text area spacing */
 .modalContent {
-    padding: 24px 20px 20px;
-    text-align: center;
+  padding: 24px 20px 20px;
+  text-align: center;
 }
 
 .modalTitle {
-    color: #ffffff;
-    font-size: 1.05rem;
-    font-weight: 600;
-    margin: 0 0 6px 0;
-    letter-spacing: -0.01em;
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.01em;
 }
 
 .modalText {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.85rem;
-    line-height: 1.4;
-    margin: 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin: 0;
 }
 
 /* Stacked, full-width buttons */
 .modalActions {
-    display: flex;
-    flex-direction: column;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .modalActions button {
-    background: transparent;
-    border: none;
-    padding: 16px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.15s ease;
-    font-family: inherit;
+  background: transparent;
+  border: none;
+  padding: 16px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-family: inherit;
 }
 
 /* The primary destructive action */
 .deleteConfirmBtn {
-    color: #ff453a; /* A vibrant, native-feeling red */
-    font-weight: 600;
+  color: #ff453a;
+  /* A vibrant, native-feeling red */
+  font-weight: 600;
 }
 
-.deleteConfirmBtn:hover, .deleteConfirmBtn:active {
-    background: rgba(255, 69, 58, 0.1);
+.deleteConfirmBtn:hover,
+.deleteConfirmBtn:active {
+  background: rgba(255, 69, 58, 0.1);
 }
 
 /* The secondary cancel action */
 .cancelBtn {
-    color: #ffffff;
-    font-weight: 400;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff;
+  font-weight: 400;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-.cancelBtn:hover, .cancelBtn:active {
-    background: rgba(255, 255, 255, 0.05);
+.cancelBtn:hover,
+.cancelBtn:active {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Smooth entry animations */
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes popIn {
-    from { 
-        opacity: 0; 
-        transform: scale(0.92) translateY(10px); 
-    }
-    to { 
-        opacity: 1; 
-        transform: scale(1) translateY(0); 
-    }
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
+
 .readMore {
-    color: rgba(255, 255, 255, 0.5);
-    text-decoration: underline;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: color 0.15s;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: underline;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: color 0.15s;
 }
 
 .readMore:hover {
-    color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.85);
 }

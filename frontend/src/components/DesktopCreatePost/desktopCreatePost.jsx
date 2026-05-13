@@ -1,5 +1,6 @@
 import React from 'react';
 import { Cloud } from 'lucide-react';
+import { useEffect } from 'react';
 import styles from './desktopCreatePost.module.css'; // Adjust path as needed
 
 const DesktopCreatePost = ({
@@ -15,11 +16,19 @@ const DesktopCreatePost = ({
     communityDropdownOpen,
     setCommunityDropdownOpen,
     joinedCommunities,
-    API
+    API,
+    defaultCommunity,
+    refreshPosts // 1. Added this prop from parent
 }) => {
-    // Helper for the greeting
     const hour = new Date().getHours();
     const timeGreeting = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
+
+    useEffect(() => {
+       
+        if (defaultCommunity && (!selectedCommunity || selectedCommunity.id !== defaultCommunity.id)) {
+            setSelectedCommunity(defaultCommunity);
+        }
+    }, [defaultCommunity, selectedCommunity, setSelectedCommunity]);
 
     return (
         <div className={styles.createPostSection} onClick={() => setIsModalOpen(true)}>
@@ -39,30 +48,37 @@ const DesktopCreatePost = ({
             </div>
 
             <div className={styles.actionsRow} onClick={e => e.stopPropagation()}>
-                {/* Media Upload */}
-                <label className={styles.actionButton} onClick={e => e.stopPropagation()}>
+                {/* 2. Added setIsModalOpen(true) to labels so clicking them opens the editor */}
+                <label
+                    className={styles.actionButton}
+                    onClick={() => setIsModalOpen(true)}
+                >
                     <span>🖼</span> Media
                     <input hidden type="file" accept="image/*,video/*" multiple onChange={handleMediaUpload} />
                 </label>
 
-                {/* File Upload */}
-                <label className={styles.actionButton} onClick={e => e.stopPropagation()}>
+                <label
+                    className={styles.actionButton}
+                    onClick={() => setIsModalOpen(true)}
+                >
                     <span>📁</span> File
                     <input hidden type="file" multiple onChange={handleFileUpload} />
                 </label>
 
-                {/* Poll Toggle */}
-                <button 
-                    type="button" 
+                <button
+                    type="button"
                     className={styles.actionButton}
-                    onClick={e => { e.stopPropagation(); setIsPollOpen(prev => !prev); }}
+                    onClick={e => {
+                        e.stopPropagation();
+                        setIsPollOpen(prev => !prev);
+                        setIsModalOpen(true); // 3. Open modal when Poll is clicked
+                    }}
                 >
                     <span>📊</span> Poll
                 </button>
 
-                {/* Community Selector */}
                 <div className={styles.communitySelector} onClick={e => e.stopPropagation()}>
-                    <button 
+                    <button
                         className={styles.communitySelectBtn}
                         onClick={e => { e.stopPropagation(); setCommunityDropdownOpen(prev => !prev); }}
                     >
@@ -74,23 +90,23 @@ const DesktopCreatePost = ({
 
                     {communityDropdownOpen && (
                         <div className={styles.communityDropdown} onClick={e => e.stopPropagation()}>
-                            <div 
+                            <div
                                 className={styles.communityDropdownItem}
                                 onClick={() => { setSelectedCommunity(null); setCommunityDropdownOpen(false); }}
                             >
                                 None
                             </div>
                             {joinedCommunities.map(c => (
-                                <div 
+                                <div
                                     key={c.id}
                                     className={`${styles.communityDropdownItem} ${selectedCommunity?.id === c.id ? styles.communityDropdownItemActive : ""}`}
                                     onClick={() => { setSelectedCommunity(c); setCommunityDropdownOpen(false); }}
                                 >
                                     {c.avatar && (
-                                        <img 
-                                            src={c.avatar.startsWith("http") ? c.avatar : `${API}${c.avatar}`} 
-                                            alt="" 
-                                            className={styles.communityDropdownAvatar} 
+                                        <img
+                                            src={c.avatar.startsWith("http") ? c.avatar : `${API}${c.avatar}`}
+                                            alt=""
+                                            className={styles.communityDropdownAvatar}
                                         />
                                     )}
                                     {c.name}
@@ -100,12 +116,12 @@ const DesktopCreatePost = ({
                     )}
                 </div>
             </div>
-            
-            <input 
-                type="text" 
-                placeholder="What did you learn today? . . ." 
-                className={styles.postInput} 
-                readOnly 
+
+            <input
+                type="text"
+                placeholder="What did you learn today? . . ."
+                className={styles.postInput}
+                readOnly
             />
         </div>
     );
