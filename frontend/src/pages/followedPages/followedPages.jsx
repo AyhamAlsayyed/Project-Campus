@@ -3,8 +3,11 @@ import { useState, useEffect } from 'react'
 import Header from '../../components/pagelayout/header/header'
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
 import PostCard from '../../components/posts/postCard'
+import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import Search from '../../Assets/icons/search.png';
 export default function FollowedPages() {
+    const navigate = useNavigate();
     const [theme, setTheme] = useState('dark');
     const [currentUser, setCurrentUser] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -15,7 +18,7 @@ export default function FollowedPages() {
     const [pages, setPages] = useState([]);
     const [recommendedPages, setRecommendedPages] = useState([]);
     const [currentSlide, setCurrentSlide] = useState(0);
-    
+
     const toggleTheme = () => {
         setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
     }
@@ -31,6 +34,7 @@ export default function FollowedPages() {
                 });
                 const userData = await userRes.json();
                 setCurrentUser(userData);
+
 
                 // 2. Fetch followed pages + posts
                 const [pagesRes, postsRes] = await Promise.all([
@@ -48,11 +52,18 @@ export default function FollowedPages() {
                 // Fix pages avatars
                 const formattedPages = pagesData.map(p => ({
                     ...p,
-                    avatar: p.avatar
-                        ? (p.avatar.startsWith("http")
-                            ? p.avatar
-                            : `http://localhost:8000${p.avatar}`)
-                        : "/default-avatar.png"
+                    // Map 'page_full_name' from API to 'name' for the component
+                    name: p.page_full_name || p.page_name || "Unknown Page",
+
+                    // Map 'profile_image' from API to 'avatar' for the component
+                    avatar: p.profile_image
+                        ? (p.profile_image.startsWith("http")
+                            ? p.profile_image
+                            : `http://localhost:8000${p.profile_image}`)
+                        : "/default-avatar.png",
+
+                    // Map 'page_type' to category if you want it dynamic
+                    category: p.page_type || "Page"
                 }));
 
                 setPages(formattedPages);
@@ -164,49 +175,58 @@ export default function FollowedPages() {
                     <h1 className={styles.title}>
                         <span className={styles.highlight}>Pages</span>  You Follow
                     </h1>
-                    <div className={styles.postContainer}>
-                        <div className={styles.innerContainer}>
-                            {posts.length > 0 ? (
-                                posts.map(post => (
+                    {posts.length > 0 ? (
+                        <div className={styles.postContainer}>
+                            <div className={styles.innerContainer}>
+                                {posts.map(post => (
                                     <PostCard key={post.id} post={post} />
-                                ))
-                            ) : (
-                                <p style={{ color: "#888", textAlign: "center" }}>
-                                    No posts from followed pages.
-                                </p>
-                            )}
-
-
+                                ))}
+                            </div>
                         </div>
-
-                    </div>
-
+                    ) : (
+                        <div className={styles.emptyState}>
+                            <div className={styles.emptyIconWrapper}>
+                                <span className={styles.emptyIcon}>📭</span>
+                            </div>
+                            <h2 className={styles.emptyTitle}>No posts yet</h2>
+                            <p className={styles.emptySubtitle}>Pages you follow haven't posted anything yet.</p>
+                        </div>
+                    )}
                 </div>
                 <div className={styles.rightSection}>
+
+                    {/* Block 1 - Followed Pages */}
                     <div className={styles.rightSectionWrapper}>
                         <div className={styles.pill}>FOLLOWED PAGES</div>
                         <div className={styles.rightCard}>
                             <div className={styles.searchContainer}>
-                                <input
-                                    type="text"
-                                    placeholder="Search followed pages..."
-                                    className={styles.searchBar}
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
+                                <div className={styles.searchWrapper}>
+                                    <img src={Search} alt="Search" className={styles.searchIcon} />
+                                    <input
+                                        type="text"
+                                        placeholder="Search followed pages..."
+                                        className={styles.searchBar}
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
                             </div>
                             <div className={styles.rightList}>
                                 {pages
-                                    .filter(page => page.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                                    .filter(page => (page.name || "").toLowerCase().includes(searchTerm.toLowerCase()))
                                     .map((page, index, arr) => (
                                         <div key={page.id} className={styles.pageWrapper}>
-                                            <div className={styles.pageItem}>
+                                            <div
+                                                className={styles.pageItem}
+                                                onClick={() => navigate(`/profile/${page.id}`)}
+                                                style={{ cursor: 'pointer' }}
+                                            >
                                                 <div className={styles.pageAvatarWrapper}>
                                                     <img src={page.avatar} alt={page.name} className={styles.pageAvatar} />
                                                 </div>
                                                 <div className={styles.pageInfo}>
                                                     <span className={styles.pageName}>{page.name}</span>
-                                                    <span className={styles.pageCategory}>Page</span>
+                                                    <span className={styles.pageCategory}>{page.page_type || "Page"}</span>
                                                 </div>
                                             </div>
                                             {index !== arr.length - 1 && <div className={styles.divider} />}
@@ -216,54 +236,32 @@ export default function FollowedPages() {
                         </div>
                     </div>
 
-
+                    {/* Block 2 - Recommended Pages (separate, no pill, title inside card) */}
                     {recommendedPages.length > 0 && (
-                        <div className={styles.recommendedContainer}>
-
-                            {/* 1. Header INSIDE the container, not a pill */}
-                            <div className={styles.recommendedHeader}>
-
-                                <h2>Recommended Pages</h2>
-                            </div>
-
-
-                            <div className={styles.recommendedSliderWindow}>
-                                <div
-                                    className={styles.recommendedTrack}
-                                    style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-                                >
-                                    {recommendedPages.map((page) => (
-                                        <div key={page.id} className={styles.recommendedItem}>
-                                            <img src={page.avatar} alt={page.name} className={styles.recommendedAvatar} />
-                                            <span className={styles.recommendedName}>{page.name}</span>
-                                            <span className={styles.recommendedCategory}>{page.category}</span>
-                                            <button className={styles.recommendedFollowBtn}>Follow</button>
+                        <div className={styles.rightSectionWrapper}>
+                            <div className={styles.rightCard}>
+                                <div className={styles.rightList}>
+                                    <span className={styles.recommendedHeader}>Recommended Pages</span>
+                                    {recommendedPages.map((page, index, arr) => (
+                                        <div key={page.id} className={styles.pageWrapper}>
+                                            <div
+                                                className={styles.pageItem}
+                                                onClick={() => navigate(`/profile/${page.id}`)}
+                                                style={{ cursor: 'pointer' }}
+                                            >
+                                                <div className={styles.pageAvatarWrapper}>
+                                                    <img src={page.avatar} alt={page.name} className={styles.pageAvatar} />
+                                                </div>
+                                                <div className={styles.pageInfo}>
+                                                    <span className={styles.pageName}>{page.page_name}</span>
+                                                    <span className={styles.pageCategory}>{page.page_category}</span>
+                                                </div>
+                                            </div>
+                                            {index !== arr.length - 1 && <div className={styles.divider} />}
                                         </div>
                                     ))}
                                 </div>
                             </div>
-
-
-                            <div className={styles.recommendedControls}>
-                                <button className={styles.recommendedArrow} onClick={handlePrevSlide}>
-                                    <ChevronLeft size={20} />
-                                </button>
-
-                                <div className={styles.recommendedDotsWrapper}>
-                                    {recommendedPages.map((_, index) => (
-                                        <button
-                                            key={index}
-                                            className={`${styles.recommendedDot} ${currentSlide === index ? styles.recommendedActiveDot : ''}`}
-                                            onClick={() => setCurrentSlide(index)}
-                                        />
-                                    ))}
-                                </div>
-
-                                <button className={styles.recommendedArrow} onClick={handleNextSlide}>
-                                    <ChevronRight size={20} />
-                                </button>
-                            </div>
-
                         </div>
                     )}
 

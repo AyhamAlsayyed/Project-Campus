@@ -49,9 +49,9 @@ export default function ReportModal({ contentId, contentType, onClose }) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    reported_content_id: contentId,   // ERD: reported_content_id
-                    content_type: contentType,         // ERD: content_type — e.g. "post"
-                    reason: selectedReason.value,      // ERD: reason — backend value e.g. "harassment_abuse"
+                    reported_content_id: contentId,
+                    content_type: contentType,
+                    reason: selectedReason.value,
                     extra_note: extraNote || null,
                 }),
             });
