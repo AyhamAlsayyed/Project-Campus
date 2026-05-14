@@ -4,8 +4,9 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import Q
+from django.db.models import Avg, Q
 from django.utils import timezone
 
 """
@@ -150,14 +151,40 @@ class Page(models.Model):
     description = models.TextField(blank=True, null=True)
     profile_image = models.ImageField(upload_to="profiles/", blank=True, null=True)
     banner_image = models.ImageField(upload_to="banners/", blank=True, null=True)
+    phone = models.CharField(max_length=11, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    location = models.CharField(max_length=255, blank=True, null=True)
+    link = models.URLField(blank=True, null=True)
     verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "page"
 
+    @property
+    def average_rating(self):
+        avg = self.ratings.aggregate(Avg("score"))["score__avg"]
+        return round(avg, 1) if avg else 0
+
+    @property
+    def total_ratings(self):
+        return self.ratings.count()
+
     def __str__(self):
         return self.page_full_name
+
+
+class PageRating(models.Model):
+    page = models.ForeignKey("Page", on_delete=models.CASCADE, related_name="ratings")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    score = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("page", "user")
+
+    def __str__(self):
+        return f"{self.user.username} rated {self.page.name}: {self.score}"
 
 
 class UniversityDomain(models.Model):

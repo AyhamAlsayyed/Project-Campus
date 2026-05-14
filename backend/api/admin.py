@@ -19,6 +19,7 @@ from .models import (
     MessageReaction,
     Notification,
     Page,
+    PageRating,
     Post,
     PostMedia,
     PostReaction,
@@ -33,6 +34,7 @@ from .models import (
 admin.site.register(UserProfile)
 admin.site.register(EmailVerification)
 admin.site.register(Page)
+admin.site.register(PageRating)
 admin.site.register(Admin)
 admin.site.register(Instructor)
 admin.site.register(Student)

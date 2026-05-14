@@ -121,6 +121,7 @@ urlpatterns = [
     path("pages/recommended/", recommended_pages),
     path("pages/<int:page_id>/", page_detail),
     path("pages/<int:page_id>/follow/", toggle_follow_page),
+    path("users/<int:page_id>/review/", profile_view),
     path("events/", events),
     path("events/<int:event_id>/remind/", toggle_event_reminder),
     path("events/reminders/", get_events),

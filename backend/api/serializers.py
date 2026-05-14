@@ -57,6 +57,8 @@ class PageSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source="page_id", read_only=True)
     is_followed = serializers.SerializerMethodField()
     followers_count = serializers.IntegerField(source="followers.count", read_only=True)
+    average_rating = serializers.ReadOnlyField()
+    total_ratings = serializers.ReadOnlyField()
 
     class Meta:
         model = Page
@@ -71,6 +73,8 @@ class PageSerializer(serializers.ModelSerializer):
             "verified",
             "is_followed",
             "followers_count",
+            "total_ratings",
+            "average_rating",
         ]
 
     def get_is_followed(self, obj):
