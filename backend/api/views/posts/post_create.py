@@ -54,8 +54,8 @@ def create_post(request):
 
         notifications = [
             Notification(
-                receiver_user=member.user,
-                actor_user=user,
+                receiver=member.user,
+                actor=user,
                 type=Notification.Type.ANNOUNCEMENTS,
                 content=f"{user.username} posted in {community.name}",
                 content_type=ContentType.objects.get_for_model(post),
@@ -80,9 +80,9 @@ def create_post(request):
 
         notifications = [
             Notification(
-                receiver_user=friend,
-                actor_user=user,
-                type=Notification.Type.ANNOUNCEMENTS,
+                receiver=friend,
+                actor=user,
+                type=Notification.Type.POST_CREATED,
                 content=f"{user.username} posted something new",
                 content_type=ContentType.objects.get_for_model(post),
                 object_id=post.post_id,

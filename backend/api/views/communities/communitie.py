@@ -33,7 +33,7 @@ def file_url(request, f):
         return None
 
 
-def notify_community_admins(community, actor_user, notif_type, text):
+def notify_community_admins(community, actor, notif_type, text):
     # send notification to owner and admins
     admins = CommunityMember.objects.filter(
         community=community,
@@ -43,15 +43,15 @@ def notify_community_admins(community, actor_user, notif_type, text):
 
     notifications = [
         Notification(
-            receiver_user=member.user,
-            actor_user=actor_user,
+            receiver=member.user,
+            actor=actor,
             type=notif_type,
             content=text,
             content_type=ContentType.objects.get_for_model(community),
             object_id=community.community_id,
         )
         for member in admins
-        if member.user != actor_user  # don't notify yourself
+        if member.user != actor  # don't notify yourself
     ]
 
     Notification.objects.bulk_create(notifications)
@@ -174,7 +174,7 @@ def join_community(request, community_id):
     if created:
         notify_community_admins(
             community=community,
-            actor_user=user,
+            actor=user,
             notif_type=Notification.Type.SYSTEM,
             text=f"{user.username} joined {community.name}",
         )
@@ -201,7 +201,7 @@ def request_join_community(request, community_id):
     if created:
         notify_community_admins(
             community=community,
-            actor_user=user,
+            actor=user,
             notif_type=Notification.Type.SYSTEM,
             text=f"{user.username} requested to join {community.name}",
         )

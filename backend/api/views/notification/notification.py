@@ -35,3 +35,4 @@ def notification_delete_mark(request, notification_id):
     if request.method == "DELETE":
         notif.delete()
         return Response(status=204)
+    return None

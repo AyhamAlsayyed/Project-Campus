@@ -1,49 +1,30 @@
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ...models import Conversation, ConversationMember, Message, Notification
 from ...serializers import PostSerializer
+from ...utils.user_type import get_user_avatar
 
 User = get_user_model()
 
 
-def get_actor(request):
-    user = request.user
-    page_id = request.headers.get("X-Page-Id")
-
-    if page_id:
-        from ...models import Page
-
-        try:
-            page = Page.objects.get(id=page_id)
-            return None, page
-        except Page.DoesNotExist:
-            return None, None
-
-    return user, None
-
-
-def notify_other_members(conversation, sent_message, actor_user, actor_page):
+def notify_other_members(conversation, sent_message, actor):
     """Notify all other members in the conversation that a new message was sent."""
-    actor_name = actor_user.username if actor_user else actor_page.page_name
+    actor_name = actor.username
 
     # get all members except the sender
     other_members = (
-        ConversationMember.objects.filter(conversation=conversation)
-        .select_related("user", "page")
-        .exclude(user=actor_user if actor_user else None)
+        ConversationMember.objects.filter(conversation=conversation).select_related("user").exclude(user=actor)
     )
-
-    if actor_page:
-        other_members = other_members.exclude(page=actor_page)
 
     notifications = []
     for member in other_members:
-        if not member.user and not member.page:
+        if not member:
             continue
 
         # skip if muted
@@ -52,10 +33,8 @@ def notify_other_members(conversation, sent_message, actor_user, actor_page):
 
         notifications.append(
             Notification(
-                receiver_user=member.user if member.user else None,
-                receiver_page=member.page if member.page else None,
-                actor_user=actor_user,
-                actor_page=actor_page,
+                receiver_user=member,
+                actor_user=actor,
                 type=Notification.Type.MESSAGE,
                 content=f"{actor_name} sent a message",
                 content_type=ContentType.objects.get_for_model(sent_message),
@@ -69,15 +48,12 @@ def notify_other_members(conversation, sent_message, actor_user, actor_page):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_conversations(request):
-    user, page = get_actor(request)
+    user = request.user
 
-    if user:
-        memberships = ConversationMember.objects.filter(user=user)
-    else:
-        memberships = ConversationMember.objects.filter(page=page)
-
-    memberships = memberships.select_related("conversation", "conversation__last_message").prefetch_related(
-        "conversation__members__user__profile"
+    memberships = (
+        ConversationMember.objects.filter(user=user)
+        .select_related("conversation", "conversation__last_message")
+        .prefetch_related("conversation__members__user__profile")
     )
 
     data = []
@@ -85,31 +61,28 @@ def get_conversations(request):
     for member in memberships:
         conv = member.conversation
         last_msg = conv.last_message
-        conversation_owner = None
-
+        conversation_owner = ""
+        avatar = ""
         if conv.is_group:
             name = conv.name or "Group"
-            avatar = conv.image.url if conv.image else ""
+            if conv.image:
+                avatar = conv.image.url
             conversation_owner = conv.created_by_user.username
         else:
-            other = conv.members.exclude(id=member.id).first()
+            other_member = conv.members.exclude(user=user).first()
             name = "Unknown"
-            avatar = ""
+            if other_member:
+                if other_member:
+                    name = other_member.username
+                    avatar = get_user_avatar(request, other_member)
 
-            if other:
-                if other.user:
-                    name = other.user.username
-                    if hasattr(other.user, "profile") and other.user.profile.profile_image:
-                        avatar = other.user.profile.profile_image.url
-                elif other.page:
-                    name = other.page.page_name
-                    if other.page.profile_image:
-                        avatar = other.page.profile_image.url
-
+        msg_query = Message.objects.filter(conversation=conv)
         if member.last_read_at:
-            unread_count = Message.objects.filter(conversation=conv, sent_at__gt=member.last_read_at).count()
-        else:
-            unread_count = Message.objects.filter(conversation=conv).count()
+            msg_query = msg_query.filter(sent_at__gt=member.last_read_at)
+        if member.cleared_at:
+            msg_query = msg_query.filter(sent_at__gt=member.cleared_at)
+
+        unread_count = msg_query.count()
 
         data.append(
             {
@@ -132,44 +105,33 @@ def get_conversations(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_messages(request, conversation_id):
-    user, page = get_actor(request)
+    user = request.user
 
-    try:
-        if user:
-            member = ConversationMember.objects.get(conversation_id=conversation_id, user=user)
-        else:
-            member = ConversationMember.objects.get(conversation_id=conversation_id, page=page)
-    except ConversationMember.DoesNotExist:
-        return Response({"error": "Not allowed"}, status=403)
-
-    messages = (
-        Message.objects.filter(conversation_id=conversation_id)
-        .select_related(
-            "sender_user", "sender_page", "shared_post", "shared_post__author_user", "shared_post__author_page"
-        )
-        .order_by("sent_at")
+    member = get_object_or_404(
+        ConversationMember,
+        conversation=conversation_id,
+        user=user,
     )
+
+    query = Message.objects.filter(conversation_id=conversation_id)
+
+    if member.cleared_at:
+        query = query.filter(sent_at__gt=member.cleared_at)
+
+    messages = query.select_related("sender_user", "sender_page").order_by("sent_at")
 
     data = []
 
     for msg in messages:
-        sender_name = "Unknown"
-        sender_id = "other"
-        avatar = ""
+        sender_name = msg.sender.username
+        avatar = get_user_avatar(request, msg.sender)
 
-        if msg.sender_user:
-            sender_name = msg.sender_user.username
-            if user and msg.sender_user == user:
-                sender_id = "me"
-            if hasattr(msg.sender_user, "profile") and msg.sender_user.profile.profile_image:
-                avatar = msg.sender_user.profile.profile_image.url
+        is_me = user and msg.sender == user
 
-        elif msg.sender_page:
-            sender_name = msg.sender_page.page_name
-            if page and msg.sender_page == page:
-                sender_id = "me"
-            if msg.sender_page.profile_image:
-                avatar = msg.sender_page.profile_image.url
+        if is_me:
+            sender_id = "me"
+        else:
+            sender_id = msg.sender.id
 
         message_data = {
             "id": msg.message_id,
@@ -183,21 +145,16 @@ def get_messages(request, conversation_id):
                 {
                     "id": msg.parent_message.message_id,
                     "text": msg.parent_message.content,
-                    "sender_name": (
-                        msg.parent_message.sender_user.username if msg.parent_message.sender_user else "Unknown"
-                    ),
+                    "sender_name": msg.parent_message.sender.username,
                 }
                 if msg.parent_message
                 else None
             ),
-            "post": None,
         }
 
         if msg.shared_post:
             message_data["post"] = PostSerializer(msg.shared_post, context={"request": request}).data
         data.append(message_data)
-
-    from django.utils import timezone
 
     member.last_read_at = timezone.now()
     member.save(update_fields=["last_read_at"])
@@ -208,7 +165,7 @@ def get_messages(request, conversation_id):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def send_message(request, conversation_id):
-    user, page = get_actor(request)
+    user = request.user
     text = request.data.get("text")
     reply_to_id = request.data.get("reply_to")
     parent_message = None
@@ -225,29 +182,24 @@ def send_message(request, conversation_id):
     try:
         if user:
             ConversationMember.objects.get(conversation_id=conversation_id, user=user)
-        else:
-            ConversationMember.objects.get(conversation_id=conversation_id, page=page)
     except ConversationMember.DoesNotExist:
-        return Response({"error": "Not allowed"}, status=403)
+        return Response({"error": "You are not a member!"}, status=403)
 
     msg = Message.objects.create(
         conversation_id=conversation_id,
         content=text,
-        sender_user=user if user else None,
-        sender_page=page if page else None,
+        sender=user,
         parent_message=parent_message,
     )
-    """
-    c
+
     # ---- notification ----
     conversation = Conversation.objects.get(conversation_id=conversation_id)
     notify_other_members(
         conversation=conversation,
         sent_message=msg,
-        actor_user=user,
-        actor_page=page,
+        actor=user,
     )
-    """
+
     return Response(
         {
             "id": msg.message_id,
@@ -258,7 +210,7 @@ def send_message(request, conversation_id):
                 {
                     "id": parent_message.message_id,
                     "text": parent_message.content,
-                    "sender_name": parent_message.sender_user.username if parent_message.sender_user else "Unknown",
+                    "sender_name": parent_message.sender.username if parent_message.sender_user else "Unknown",
                 }
                 if parent_message
                 else None
@@ -270,24 +222,23 @@ def send_message(request, conversation_id):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def get_or_create_dm(request, user_id):
-    target_user = get_object_or_404(User, id=user_id)
     current_user = request.user
+    target_type = request.data.get("target_type")
 
-    if target_user == current_user:
-        return Response({"error": "You cannot DM yourself."}, status=400)
+    target_user = User.objects.get(id=user_id) if target_type == "user" else None
 
-    existing_convo = (
-        Conversation.objects.filter(is_group=False, members__user=current_user)
+    existing = (
+        Conversation.objects.filter(is_group=False)
+        .filter(members__user=current_user)
         .filter(members__user=target_user)
         .first()
     )
 
-    if existing_convo:
-        return Response({"conversation_id": existing_convo.conversation_id})
+    if existing:
+        return Response({"id": existing.conversation_id})
 
-    new_convo = Conversation.objects.create(is_group=False, is_private=False, is_academic=False, created_by_user=None)
+    new_conv = Conversation.objects.create(is_group=False)
+    ConversationMember.objects.create(conversation=new_conv, user=current_user)
+    ConversationMember.objects.create(conversation=new_conv, user=target_user)
 
-    ConversationMember.objects.create(conversation=new_convo, user=current_user, role="member")
-    ConversationMember.objects.create(conversation=new_convo, user=target_user, role="member")
-
-    return Response({"conversation_id": new_convo.conversation_id}, status=201)
+    return Response({"id": new_conv.conversation_id}, status=201)

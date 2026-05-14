@@ -10,8 +10,8 @@ from ...models import Conversation, ConversationMember, Friendship
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def toggle_pin(request, id):
-    member = get_object_or_404(ConversationMember, conversation_id=id, user=request.user)
+def toggle_pin(request, conversation_id):
+    member = get_object_or_404(ConversationMember, conversation_id=conversation_id, user=request.user)
     member.is_pinned = not member.is_pinned
     member.save(update_fields=["is_pinned"])
     return Response({"is_pinned": member.is_pinned})
@@ -19,8 +19,8 @@ def toggle_pin(request, id):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def toggle_mute(request, id):
-    member = get_object_or_404(ConversationMember, conversation_id=id, user=request.user)
+def toggle_mute(request, conversation_id):
+    member = get_object_or_404(ConversationMember, conversation_id=conversation_id, user=request.user)
     member.is_muted = not member.is_muted
     member.save(update_fields=["is_muted"])
     return Response({"is_muted": member.is_muted})
@@ -28,26 +28,26 @@ def toggle_mute(request, id):
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
-def delete_or_leave_chat(request, id):
-    member = get_object_or_404(ConversationMember, conversation_id=id, user=request.user)
+def delete_or_leave_chat(request, conversation_id):
+    member = get_object_or_404(ConversationMember, conversation_id=conversation_id, user=request.user)
     member.delete()
     return Response(status=204)
 
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
-def clear_chat(request, id):
-    """Note: This usually requires a 'DeletedMessage' model to track per-user deletion,
-    but for a simple implementation, we can just return success."""
-    # Logic depends on how you want to handle 'clearing' for one user vs others
+def clear_chat(request, conversation_id):
+    member = get_object_or_404(ConversationMember, conversation_id=conversation_id, user=request.user)
+
+    member.cleared_at = timezone.now()
+    member.save(update_fields=["cleared_at"])
     return Response({"message": "Chat cleared"}, status=204)
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def mark_unread(request, id):
-    """Sets last_read_at to far in the past to force unread status."""
-    member = get_object_or_404(ConversationMember, conversation_id=id, user=request.user)
+def mark_unread(request, conversation_id):
+    member = get_object_or_404(ConversationMember, conversation_id=conversation_id, user=request.user)
     member.last_read_at = timezone.now() - timezone.timedelta(days=1)
     member.save(update_fields=["last_read_at"])
     return Response({"status": "marked unread"})
@@ -55,16 +55,15 @@ def mark_unread(request, id):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def block_user_from_chat(request, id):
+def block_user_from_chat(request, conversation_id):
     """Finds the 'other' person in a DM and blocks them via Friendship model."""
     # for now it only work for dm's and not group chats
-    convo = get_object_or_404(Conversation, conversation_id=id, is_group=False)
+    convo = get_object_or_404(Conversation, conversation_id=conversation_id, is_group=False)
     other_member = convo.members.exclude(user=request.user).first()
     if not other_member or not other_member.user:
-        return Response({"error": "Cannot block a page or empty user"}, status=400)
+        return Response({"error": "Cannot block nothing"}, status=400)
 
     # Update or create friendship status to 'blocked'
-    # Use your Friendship model logic here
     current_user = request.user
     target_user = other_member.user
 

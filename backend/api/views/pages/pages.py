@@ -8,18 +8,6 @@ from ...models import FollowPage, Page, PageRating
 from ...serializers import PageSerializer
 
 
-def file_url(request, f):
-    """Build absolute URL for file fields"""
-    if not f:
-        return None
-    if isinstance(f, str):
-        return request.build_absolute_uri(f) if f.startswith("/") else f
-    try:
-        return request.build_absolute_uri(f.url)
-    except Exception:
-        return None
-
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def followed_pages(request):

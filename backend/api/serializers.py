@@ -28,28 +28,42 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
+    page_details = serializers.SerializerMethodField()
 
     role = serializers.SerializerMethodField()
     university = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "first_name", "last_name", "profile", "role", "university"]
+        fields = ["id", "username", "profile", "page_details", "role", "university"]
 
     def get_role(self, obj):
+        if hasattr(obj, "page"):
+            return obj.page.page_type
+
         if hasattr(obj, "student_profile"):
             return "Student"
         elif hasattr(obj, "instructor_profile"):
             return "Instructor"
         elif hasattr(obj, "admin_profile"):
             return "Admin"
-        return "User"
+        return "unknown"
 
     def get_university(self, obj):
         if hasattr(obj, "student_profile") and obj.student_profile.university_page:
             return obj.student_profile.university_page.page_full_name
         if hasattr(obj, "instructor_profile") and obj.instructor_profile.university_page:
             return obj.instructor_profile.university_page.page_full_name
+        return None
+
+    def get_page_details(self, obj):
+        if hasattr(obj, "page"):
+            return {
+                "page_id": obj.page.page_id,
+                "full_name": obj.page.page_full_name,
+                "avatar": obj.page.profile_image.url if obj.page.profile_image else None,
+                "description": obj.page.description,
+            }
         return None
 
 
@@ -107,6 +121,7 @@ class PostSerializer(serializers.ModelSerializer):
     media = PostMediaSerializer(many=True, read_only=True)
     is_saved = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
+    is_commented = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
@@ -123,6 +138,12 @@ class PostSerializer(serializers.ModelSerializer):
             return PostReaction.objects.filter(user=request.user, post=obj).exists()
         return False
 
+    def get_is_commented(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return Comment.objects.filter(author=request.user, post=obj).exists()
+        return False
+
     def get_likes_count(self, obj):
         """
         For normal posts: exclude likes from blocked users
@@ -131,19 +152,17 @@ class PostSerializer(serializers.ModelSerializer):
 
         if not is_normal_post(obj):
             # Community post - show all likes
-            return PostReaction.objects.filter(post=obj, user__isnull=False).count()
+            return obj.reactions.count()
 
         # Normal post - exclude blocked users
-        if obj.author_user_id:
+        if obj.author_id:  # for this serves nothing but i might need it when i do the page block system
             blocked_map = get_all_blocked_relationships()
-            blocked_users = blocked_map.get(obj.author_user_id, set())
+            blocked_users = blocked_map.get(obj.author_id, set()) if obj.author_id else set()
 
             if blocked_users:
-                return (
-                    PostReaction.objects.filter(post=obj, user__isnull=False).exclude(user_id__in=blocked_users).count()
-                )
+                return obj.reactions.exclude(user_id__in=blocked_users).count()
 
-        return PostReaction.objects.filter(post=obj, user__isnull=False).count()
+        return obj.reactions.count()
 
     def get_comments_count(self, obj):
         """
@@ -151,54 +170,53 @@ class PostSerializer(serializers.ModelSerializer):
         For community posts: show all comments
         """
         if not is_normal_post(obj):
-            # Community post - show all comments
-            return Comment.objects.filter(post=obj).count()
+            return obj.comments.count()
 
         # Normal post - exclude blocked users
-        if obj.author_user_id:
+        if obj.author_id:
             blocked_map = get_all_blocked_relationships()
             blocked_users = blocked_map.get(obj.author_user_id, set())
 
             if blocked_users:
-                return Comment.objects.filter(post=obj).exclude(author_user_id__in=blocked_users).count()
+                return Comment.objects.filter(post=obj).exclude(author_id__in=blocked_users).count()
 
         return Comment.objects.filter(post=obj).count()
 
     def get_author(self, obj):
+        user = obj.author
+        if not user:
+            return None
+
         request = self.context.get("request")
 
-        if obj.author_user:
-            profile = getattr(obj.author_user, "profile", None)
-            avatar = None
-            if profile and profile.profile_image:
-                avatar = request.build_absolute_uri(profile.profile_image.url) if request else profile.profile_image.url
+        if hasattr(user, "page"):
+            page = user.page
+            avatar = page.profile_image.url if page.profile_image else ""
+            if request and avatar:
+                avatar = request.build_absolute_uri(avatar)
 
             return {
-                "id": obj.author_user_id,
-                "type": "user",
-                "username": obj.author_user.username,
-                "avatar": avatar,
-                "tag": None,
-            }
-
-        if obj.author_page:
-            avatar = None
-            if obj.author_page.profile_image:
-                avatar = (
-                    request.build_absolute_uri(obj.author_page.profile_image.url)
-                    if request
-                    else obj.author_page.profile_image.url
-                )
-
-            return {
-                "id": obj.author_page_id,
+                "id": page.page_id,
                 "type": "page",
-                "username": obj.author_page.page_full_name,
+                "username": page.page_full_name,
                 "avatar": avatar,
-                "tag": obj.author_page.page_type,
+                "tag": page.page_type,
             }
 
-        return None
+        profile = getattr(user, "profile", None)
+        avatar = ""
+        if profile and profile.profile_image:
+            avatar = profile.profile_image.url
+            if request:
+                avatar = request.build_absolute_uri(avatar)
+
+        return {
+            "id": user.id,
+            "type": "user",
+            "username": user.username,
+            "avatar": avatar,
+            "tag": None,
+        }
 
     class Meta:
         model = Post
@@ -206,16 +224,15 @@ class PostSerializer(serializers.ModelSerializer):
             "post_id",
             "content_text",
             "post_type",
-            "author_user",
-            "author_page",
+            "author",
             "community",
             "created_at",
             "media",
             "is_saved",
             "is_liked",
+            "is_commented",
             "likes_count",
             "comments_count",
-            "author",
             "is_pinned",
         ]
 
@@ -240,13 +257,24 @@ class NotificationSerializer(serializers.ModelSerializer):
         ]
 
     def get_avatar(self, obj):
-        if obj.actor_user and hasattr(obj.actor_user, "profile"):
-            if obj.actor_user.profile.profile_image:
-                return obj.actor_user.profile.profile_image.url
+        request = self.context.get("request")
+        actor = obj.actor
 
-        if obj.actor_page:
-            if obj.actor_page.profile_image:
-                return obj.actor_page.profile_image.url
+        if not actor:
+            return "/default-avatar.png"
+
+        avatar_url = None
+
+        if hasattr(actor, "page"):
+            if actor.page.profile_image:
+                avatar_url = actor.page.profile_image.url
+
+        elif hasattr(actor, "profile"):
+            if actor.profile.profile_image:
+                avatar_url = actor.profile.profile_image.url
+
+        if avatar_url:
+            return request.build_absolute_uri(avatar_url) if request else avatar_url
 
         return "/default-avatar.png"
 
@@ -279,18 +307,11 @@ class NotificationSerializer(serializers.ModelSerializer):
         if model_class == Community:
             return obj.object_id
 
-        if model_class == Friendship:
-            if obj.actor_user:
-                return obj.actor_user_id
-            else:
-                return None
-
-        # friend request / user profile
-        if obj.actor_user:
-            return obj.actor_user_id
-
-        if obj.actor_page:
-            return obj.actor_page_id
+        if model_class == Friendship or obj.type in ["friend_request", "follow"]:
+            if obj.actor:
+                if hasattr(obj.actor, "page"):
+                    return obj.actor.page.page_id
+                return obj.actor.id
 
         return None
 

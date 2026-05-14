@@ -19,8 +19,8 @@ def notify_friend_request(friendship, from_user, to_user, notification_type):
         content = (f"{from_user.username} interacted with your friend request",)
 
     Notification(
-        receiver_user=to_user,
-        actor_user=from_user,
+        receiver=to_user,
+        actor=from_user,
         type=notification_type,
         content=content,
         content_type=ContentType.objects.get_for_model(friendship),
@@ -136,11 +136,11 @@ def decline_friend_request(request):
 @permission_classes([IsAuthenticated])
 def block_user(request, post_id=None, user_id=None):
     current_user = request.user
-
+    target_user = ""
     if post_id:
         try:
             post = Post.objects.get(pk=post_id)
-            target_user = post.author_user
+            target_user = post.author
         except Post.DoesNotExist:
             return Response({"error": "Post not found"}, status=404)
 

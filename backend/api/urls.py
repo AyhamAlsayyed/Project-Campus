@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views.auth.login import login
+from .views.auth.page import page_login, page_logout, page_me, page_register
 from .views.auth.signup.send_code import send_code
 from .views.auth.signup.signup import signup
 from .views.auth.signup.verify_code import verify_code
@@ -31,6 +32,7 @@ from .views.conversation.conversation_action import (
 from .views.event.event_action import toggle_event_reminder
 from .views.event.events import events
 from .views.notification.notification import get_notifications, notification_delete_mark
+from .views.pages.page_update import get_page_profile, update_page_profile
 from .views.pages.pages import (
     followed_pages,
     page_detail,
@@ -106,12 +108,12 @@ urlpatterns = [
     path("chats/<int:conversation_id>/messages/", get_messages),
     path("chats/<int:conversation_id>/send/", send_message),
     path("conversations/get-or-create/<int:user_id>/", get_or_create_dm),
-    path("chats/<int:id>/pin/", toggle_pin),
-    path("chats/<int:id>/mute/", toggle_mute),
-    path("chats/<int:id>/mark-unread/", mark_unread),
-    path("chats/<int:id>/", delete_or_leave_chat),
-    path("chats/<int:id>/clear/", clear_chat),
-    path("chats/<int:id>/block/", block_user_from_chat),
+    path("chats/<int:conversation_id>/pin/", toggle_pin),
+    path("chats/<int:conversation_id>/mute/", toggle_mute),
+    path("chats/<int:conversation_id>/mark-unread/", mark_unread),
+    path("chats/<int:conversation_id>/", delete_or_leave_chat),
+    path("chats/<int:conversation_id>/clear/", clear_chat),
+    path("chats/<int:conversation_id>/block/", block_user_from_chat),
     path("chat-requests/", chat_requests),
     path("university/news/", university_news),
     path("university/events/", university_events),
@@ -127,4 +129,13 @@ urlpatterns = [
     path("events/reminders/", get_events),
     path("search/", search),
     path("reports/", create_report),
+]
+
+urlpatterns += [
+    path("auth/page/register/", page_register),
+    path("auth/page/login/", page_login),
+    path("auth/page/logout/", page_logout),
+    path("auth/page/me/", page_me),
+    path("pages/<int:page_id>/", get_page_profile),
+    path("page/profile/update/", update_page_profile),
 ]

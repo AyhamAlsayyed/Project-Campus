@@ -121,9 +121,15 @@ class EmailVerification(models.Model):
 
 
 class Page(models.Model):
-    page_id = models.BigAutoField(primary_key=True, db_column="page_id")
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="page",
+        db_column="user_id",
+        null=True,
+        blank=True,
+    )
 
-    page_name = models.CharField(max_length=255, null=True, blank=True)
     page_full_name = models.CharField(max_length=255)
     page_name_arabic = models.CharField(max_length=255, null=True, blank=True)
     page_branch = models.CharField(max_length=255, null=True, blank=True)
@@ -464,21 +470,13 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_pinned = models.BooleanField(default=False)
 
-    author_user = models.ForeignKey(
+    author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="posts_as_user",
-        db_column="author_user_id",
-    )
-    author_page = models.ForeignKey(
-        Page,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="posts_as_page",
-        db_column="author_page_id",
+        related_name="posts",
+        db_column="author_id",
     )
 
     community = models.ForeignKey(
@@ -490,24 +488,12 @@ class Post(models.Model):
         db_column="community_id",
     )
 
-    def clean(self):
-        validate_exactly_one(self, "author_user", "author_page")
-
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
 
     class Meta:
         db_table = "post"
-        constraints = [
-            models.CheckConstraint(
-                check=(
-                    (Q(author_user__isnull=False) & Q(author_page__isnull=True))
-                    | (Q(author_user__isnull=True) & Q(author_page__isnull=False))
-                ),
-                name="chk_post_author",
-            ),
-        ]
 
 
 class SavedPost(models.Model):
@@ -573,23 +559,13 @@ class Comment(models.Model):
 
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    # this is the author of the comment if he is a "user" (person and not a page)
-    author_user = models.ForeignKey(
+    author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name="comments_as_user",
-        db_column="author_user_id",
-    )
-    # and this is the author of the comment if he is a "page"
-    author_page = models.ForeignKey(
-        Page,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="comments_as_page",
-        db_column="author_page_id",
+        related_name="comments",
+        db_column="author_id",
     )
     # if it's the top comment it will save "null"
     parent_comment = models.ForeignKey(
@@ -601,24 +577,12 @@ class Comment(models.Model):
         db_column="parent_comment_id",
     )
 
-    def clean(self):
-        validate_exactly_one(self, "author_user", "author_page")
-
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
 
     class Meta:
         db_table = "comment"
-        constraints = [
-            models.CheckConstraint(
-                check=(
-                    (Q(author_user__isnull=False) & Q(author_page__isnull=True))
-                    | (Q(author_user__isnull=True) & Q(author_page__isnull=False))
-                ),
-                name="chk_comment_author",
-            ),
-        ]
 
 
 class PostReaction(models.Model):
@@ -635,18 +599,10 @@ class PostReaction(models.Model):
         db_column="user_id",
     )
 
-    page = models.ForeignKey(
-        Page, on_delete=models.SET_NULL, null=True, blank=True, related_name="post_reactions", db_column="page_id"
-    )
-
     def clean(self):
-        validate_exactly_one(self, "user", "page")
-
         qs = PostReaction.objects.filter(post_id=self.post_id)
         if self.user_id is not None:
             qs = qs.filter(user_id=self.user_id)
-        else:
-            qs = qs.filter(page_id=self.page_id)
 
         if self.pk:
             qs = qs.exclude(pk=self.pk)
@@ -661,19 +617,10 @@ class PostReaction(models.Model):
     class Meta:
         db_table = "post_reaction"
         constraints = [
-            models.CheckConstraint(
-                check=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
-                name="chk_post_reaction_author",
-            ),
             models.UniqueConstraint(
                 fields=["post", "user"],
                 condition=Q(user__isnull=False),
                 name="uniq_post_reaction_user",
-            ),
-            models.UniqueConstraint(
-                fields=["post", "page"],
-                condition=Q(page__isnull=False),
-                name="uniq_post_reaction_page",
             ),
         ]
 
@@ -691,18 +638,10 @@ class CommentReaction(models.Model):
         db_column="user_id",
     )
 
-    page = models.ForeignKey(
-        Page, on_delete=models.CASCADE, null=True, blank=True, related_name="comment_reactions", db_column="page_id"
-    )
-
     def clean(self):
-        validate_exactly_one(self, "user", "page")
-
         qs = CommentReaction.objects.filter(comment_id=self.comment_id)
         if self.user_id is not None:
             qs = qs.filter(user_id=self.user_id)
-        else:
-            qs = qs.filter(page_id=self.page_id)
 
         if self.pk:
             qs = qs.exclude(pk=self.pk)
@@ -717,19 +656,10 @@ class CommentReaction(models.Model):
     class Meta:
         db_table = "comment_reaction"
         constraints = [
-            models.CheckConstraint(
-                check=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
-                name="chk_comment_reaction_author",
-            ),
             models.UniqueConstraint(
                 fields=["comment", "user"],
                 condition=Q(user__isnull=False),
                 name="uniq_comment_reaction_user",
-            ),
-            models.UniqueConstraint(
-                fields=["comment", "page"],
-                condition=Q(page__isnull=False),
-                name="uniq_comment_reaction_page",
             ),
         ]
 
@@ -762,13 +692,13 @@ class Conversation(models.Model):
     is_private = models.BooleanField(default=False)
     is_academic = models.BooleanField(default=False)
 
-    created_by_user = models.ForeignKey(
+    created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="created_conversations",
-        db_column="created_by_user_id",
+        db_column="created_by_id",
     )
 
     last_message = models.ForeignKey(
@@ -781,25 +711,11 @@ class Conversation(models.Model):
     )
 
     def clean(self):
-        if self.is_group:
-            if not self.created_by_user:
-                raise ValidationError("Group must have a creator.")
-        else:
-            if self.created_by_user:
-                raise ValidationError("DM conversation cannot have a creator.")
+        if not self.created_by:
+            raise ValidationError("Group must have a creator.")
 
     class Meta:
         db_table = "conversation"
-        constraints = [
-            models.CheckConstraint(
-                check=(
-                    # if its a group one creator and is owner
-                    (Q(is_group=True) & Q(created_by_user__isnull=False))
-                    | (Q(is_group=False) & Q(created_by_user__isnull=True))  # if its a DM no creator
-                ),
-                name="chk_conversation_creator",
-            ),
-        ]
 
 
 class ConversationMember(models.Model):
@@ -821,15 +737,6 @@ class ConversationMember(models.Model):
         db_column="user_id",
     )
 
-    page = models.ForeignKey(
-        Page,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="conversations",
-        db_column="page_id",
-    )
-
     class Role(models.TextChoices):
         OWNER = "owner", "Owner"
         ADMIN = "admin", "Admin"
@@ -845,22 +752,17 @@ class ConversationMember(models.Model):
     is_muted = models.BooleanField(default=False)
 
     last_read_at = models.DateTimeField(null=True, blank=True)
-
+    cleared_at = models.DateTimeField(null=True, blank=True)
     joined_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
-        validate_exactly_one(self, "user", "page")
-
-        # enforce that a page is not a member of group.
-        if self.conversation.is_group and self.page is not None:
-            raise ValidationError("Pages cannot be members of group conversations.")
+        if self.conversation.is_group and hasattr(self.user, "page"):
+            raise ValidationError("Users associated with a Page cannot join group conversations.")
 
         qs = ConversationMember.objects.filter(conversation_id=self.conversation_id)
 
         if self.user_id is not None:
             qs = qs.filter(user_id=self.user_id)
-        else:
-            qs = qs.filter(page_id=self.page_id)
 
         if self.pk:
             qs = qs.exclude(pk=self.pk)
@@ -869,27 +771,18 @@ class ConversationMember(models.Model):
             raise ValidationError("Duplicate member.")
 
     def save(self, *args, **kwargs):
-        if self.conversation.is_group and self.page_id is not None:
+        """if self.conversation.is_group and self.page_id is not None:
             raise ValidationError("Pages cannot join group conversations.")
-        self.full_clean()
+        self.full_clean()"""
         super().save(*args, **kwargs)
 
     class Meta:
         db_table = "conversation_member"
         constraints = [
-            models.CheckConstraint(
-                check=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
-                name="chk_conversation_member_actor",
-            ),
             models.UniqueConstraint(
                 fields=["conversation", "user"],
                 condition=Q(user__isnull=False),
                 name="uniq_conversation_user",
-            ),
-            models.UniqueConstraint(
-                fields=["conversation", "page"],
-                condition=Q(page__isnull=False),
-                name="uniq_conversation_page",
             ),
         ]
 
@@ -907,22 +800,13 @@ class Message(models.Model):
     content = models.TextField(blank=True, null=True)
     shared_post = models.ForeignKey("post", on_delete=models.SET_NULL, null=True, blank=True)
 
-    sender_user = models.ForeignKey(
+    sender = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="sent_messages",
-        db_column="sender_user_id",
-    )
-
-    sender_page = models.ForeignKey(
-        Page,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="sent_messages",
-        db_column="sender_page_id",
+        db_column="sender_id",
     )
 
     parent_message = models.ForeignKey(
@@ -936,9 +820,6 @@ class Message(models.Model):
 
     sent_at = models.DateTimeField(auto_now_add=True)
 
-    def clean(self):
-        validate_exactly_one(self, "sender_user", "sender_page")
-
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
@@ -950,15 +831,6 @@ class Message(models.Model):
     class Meta:
         db_table = "message"
         ordering = ["sent_at"]
-        constraints = [
-            models.CheckConstraint(
-                check=(
-                    (Q(sender_user__isnull=False) & Q(sender_page__isnull=True))
-                    | (Q(sender_user__isnull=True) & Q(sender_page__isnull=False))
-                ),
-                name="chk_message_sender",
-            ),
-        ]
         indexes = [
             models.Index(fields=["conversation", "-sent_at"]),
         ]
@@ -1004,13 +876,9 @@ class MessageReaction(models.Model):
         related_name="message_reactions",
         db_column="user_id",
     )
-    page = models.ForeignKey(
-        Page, on_delete=models.CASCADE, null=True, blank=True, related_name="message_reactions", db_column="page_id"
-    )
     message_reaction_type = models.CharField(max_length=50)
 
     def clean(self):
-        validate_exactly_one(self, "user", "page")
 
         qs = MessageReaction.objects.filter(
             message_id=self.message_id,
@@ -1018,8 +886,6 @@ class MessageReaction(models.Model):
         )
         if self.user_id is not None:
             qs = qs.filter(user_id=self.user_id)
-        else:
-            qs = qs.filter(page_id=self.page_id)
 
         if self.pk:
             qs = qs.exclude(pk=self.pk)
@@ -1034,19 +900,10 @@ class MessageReaction(models.Model):
     class Meta:
         db_table = "message_reaction"
         constraints = [
-            models.CheckConstraint(
-                check=((Q(user__isnull=False) & Q(page__isnull=True)) | (Q(user__isnull=True) & Q(page__isnull=False))),
-                name="chk_message_reaction_author",
-            ),
             models.UniqueConstraint(
                 fields=["message", "user", "message_reaction_type"],
                 condition=Q(user__isnull=False),
                 name="uniq_msg_reaction_user_type",
-            ),
-            models.UniqueConstraint(
-                fields=["message", "page", "message_reaction_type"],
-                condition=Q(page__isnull=False),
-                name="uniq_msg_reaction_page_type",
             ),
         ]
 
@@ -1058,21 +915,13 @@ class Report(models.Model):
     object_id = models.PositiveBigIntegerField()
     reported_content = GenericForeignKey("content_type_obj", "object_id")
 
-    reporter_user = models.ForeignKey(
+    reporter = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="reports_as_user",
-        db_column="reporter_user_id",
-    )
-    reporter_page = models.ForeignKey(
-        Page,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="reports_as_page",
-        db_column="reporter_page_id",
+        related_name="reports",
+        db_column="reporter_id",
     )
 
     class ContentType(models.TextChoices):
@@ -1128,7 +977,7 @@ class Report(models.Model):
 class Notification(models.Model):
     notification_id = models.BigAutoField(primary_key=True, db_column="notification_id")
 
-    receiver_user = models.ForeignKey(
+    receiver = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=True,
@@ -1137,26 +986,13 @@ class Notification(models.Model):
         db_column="user_id",
     )
 
-    receiver_page = models.ForeignKey(
-        Page, on_delete=models.CASCADE, null=True, blank=True, related_name="notifications", db_column="page_id"
-    )
-
-    actor_user = models.ForeignKey(
+    actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
         related_name="notifications_sent",
-        db_column="actor_user_id",
-    )
-
-    actor_page = models.ForeignKey(
-        Page,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="notifications_sent",
-        db_column="actor_page_id",
+        db_column="actor_id",
     )
 
     class Type(models.TextChoices):
@@ -1186,9 +1022,6 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
-        validate_exactly_one(self, "actor_user", "actor_page")
-        validate_exactly_one(self, "receiver_user", "receiver_page")
-
         if bool(self.content_type) != bool(self.object_id):
             raise ValidationError("content_type and object_id must be set together.")
 
@@ -1197,19 +1030,13 @@ class Notification(models.Model):
 
         indexes = [
             models.Index(
-                fields=["receiver_user"],
-                name="notif_unread_user_idx",
-                condition=Q(is_read=False, receiver_user__isnull=False),
-            ),
-            models.Index(
-                fields=["receiver_page"],
-                name="notif_unread_page_idx",
-                condition=Q(is_read=False, receiver_page__isnull=False),
+                fields=["receiver"],
+                name="notif_unread_idx",
+                condition=Q(is_read=False, receiver__isnull=False),
             ),
             models.Index(fields=["content_type", "object_id"], name="notif_generic_lookup_idx"),
             models.Index(fields=["-created_at"], name="notif_created_at_idx"),
         ]
 
     def __str__(self):
-        receiver = self.receiver_user if self.receiver_user else self.receiver_page
-        return f"{receiver} - {self.type}"
+        return f"{self.receiver} - {self.type}"

@@ -212,7 +212,7 @@ def get_saved_posts(request):
 
     saved = SavedPost.objects.filter(user=user).order_by("-created_at")
 
-    post_ids = [s.post_id for s in saved]
+    post_ids = [s.post for s in saved]
 
     posts_qs = Post.objects.filter(post_id__in=post_ids).annotate(**base_annotations(user))
 
@@ -223,7 +223,7 @@ def get_saved_posts(request):
     posts_qs = posts_qs.select_related("author_user__profile", "author_page").prefetch_related("media")
 
     post_map = {p.post_id: p for p in posts_qs}
-    ordered_posts = [post_map[s.post_id] for s in saved if s.post_id in post_map]
+    ordered_posts = [post_map[s.post] for s in saved if s.post in post_map]
 
     serializer = PostSerializer(ordered_posts, many=True, context={"request": request})
     return Response(serializer.data)

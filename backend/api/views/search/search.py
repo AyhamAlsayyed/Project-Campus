@@ -20,7 +20,7 @@ def search(request):
         return Response({"people": [], "communities": [], "pages": [], "posts": []})
 
     users = (
-        User.objects.filter(Q(username__icontains=query) | Q(profile__full_name__icontains=query))
+        User.objects.filter(Q(username__icontains=query) | Q(profile__full_name__icontains=query), page__isnull=True)
         .select_related("profile")
         .distinct()[:3]
     )

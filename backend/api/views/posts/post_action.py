@@ -6,22 +6,6 @@ from rest_framework.response import Response
 from ...models import Message, Notification, Post, PostReaction, Report, SavedPost
 
 
-def get_actor(request):
-    user = request.user
-    page_id = request.headers.get("X-Page-Id")
-
-    if page_id:
-        from ...models import Page
-
-        try:
-            page = Page.objects.get(id=page_id)
-            return None, page
-        except Page.DoesNotExist:
-            return None, None
-
-    return user, None
-
-
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def toggle_like(request, post_id):
@@ -41,15 +25,13 @@ def toggle_like(request, post_id):
         PostReaction.objects.create(post=post, user=user)
         liked = True
 
-        receiver_user = post.author_user
-        receiver_page = post.author_page
+        receiver = post.author
 
-        should_notify = not (receiver_user and receiver_user == user)
+        should_notify = not (receiver == user)
 
         if should_notify:
             Notification.objects.create(
-                receiver_user=receiver_user,
-                receiver_page=receiver_page,
+                receiver=receiver,
                 actor_user=user,
                 type=Notification.Type.LIKE,
                 content=f"{user.username} liked your post",
@@ -73,11 +55,10 @@ def report_post(request, post_id):
     reason = request.data.get("reason", "No reason provided")
 
     Report.objects.create(
-        reporter_user=request.user,
+        reporter=request.user,
         reported_content_id=post.post_id,
-        content_type=Report.ContentType.SPAM_SCAMS_FRAUD,  # you can make this dynamic later
+        content_type=request.data["content_type"],
         reason=reason,
-        final_action=Report.FinalAction.CONTENT_LABELING,
     )
 
     return Response({"message": "Post reported successfully"}, status=201)
@@ -130,7 +111,7 @@ def toggle_pin_post(request, post_id):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def send_post(request):
-    user, page = get_actor(request)
+    user = request.user
     text = request.data.get("text", "")
     post_id = request.data.get("post_id")
 
@@ -149,8 +130,7 @@ def send_post(request):
     msg = Message.objects.create(
         conversation_id=request.data["recipient_id"],
         content=text,
-        sender_user=user,
-        sender_page=page,
+        sender=user,
         shared_post=shared_post,
         parent_message=None,
     )
