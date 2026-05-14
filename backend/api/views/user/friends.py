@@ -134,14 +134,21 @@ def decline_friend_request(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def block_user(request, post_id):
-    try:
-        post = Post.objects.get(pk=post_id)
-    except Post.DoesNotExist:
-        return Response({"error": "Post not found"}, status=404)
-
+def block_user(request, post_id=None, user_id=None):
     current_user = request.user
-    target_user = post.author_user
+
+    if post_id:
+        try:
+            post = Post.objects.get(pk=post_id)
+            target_user = post.author_user
+        except Post.DoesNotExist:
+            return Response({"error": "Post not found"}, status=404)
+
+    elif user_id:
+        try:
+            target_user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
 
     if not target_user:
         return Response({"error": "Cannot block page authors yet"}, status=400)
@@ -154,7 +161,10 @@ def block_user(request, post_id):
     ).first()
 
     if friendship:
-        friendship.status = Friendship.Status.BLOCKED
+        if friendship.status == Friendship.Status.BLOCKED:
+            friendship.status = Friendship.Status.REJECTED
+        else:
+            friendship.status = Friendship.Status.BLOCKED
         friendship.save()
     else:
         Friendship.objects.create(user1=current_user, user2=target_user, status=Friendship.Status.BLOCKED)

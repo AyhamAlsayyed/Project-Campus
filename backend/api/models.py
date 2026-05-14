@@ -1027,6 +1027,10 @@ class MessageReaction(models.Model):
 class Report(models.Model):
     report_id = models.BigAutoField(primary_key=True, db_column="report_id")
 
+    content_type_obj = models.ForeignKey(ContentType, on_delete=models.CASCADE, db_column="content_type_id")
+    object_id = models.PositiveBigIntegerField()
+    reported_content = GenericForeignKey("content_type_obj", "object_id")
+
     reporter_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -1044,8 +1048,6 @@ class Report(models.Model):
         db_column="reporter_page_id",
     )
 
-    reported_content_id = models.BigIntegerField(db_column="reported_content_id")
-
     class ContentType(models.TextChoices):
         HARASSMENT_ABUSE = "harassment_abuse", "Harassment & Abuse"
         VIOLENCE_HARM = "violence_harm", "Violence & Harm"
@@ -1057,6 +1059,7 @@ class Report(models.Model):
         PRIVACY_IMPERSONATION = "privacy_impersonation", "Privacy & Impersonation"
         SPAM_SCAMS_FRAUD = "spam_scams_fraud", "Spam, Scams & Fraud"
         ILLEGAL_IP_VIOLATIONS = "illegal_ip_violations", "Illegal & Intellectual Property Violations"
+        OTHER = "other", "Other"
 
     content_type = models.CharField(
         max_length=50,

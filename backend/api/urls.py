@@ -47,6 +47,7 @@ from .views.posts.post_action import (
 )
 from .views.posts.post_create import create_post
 from .views.posts.posts import feed, get_activity_posts, get_saved_posts
+from .views.report.report import create_report
 from .views.search.search import search
 from .views.university.university import (
     university_doctors,
@@ -71,6 +72,7 @@ urlpatterns = [
     path("auth/login/", login),
     path("auth/me/", me),
     path("users/<int:user_id>/", profile_view),
+    path("users/<int:user_id>/block/", block_user),
     path("auth/profile/update/", update_profile),
     path("posts/feed/", feed),
     path("posts/", feed),
@@ -123,4 +125,5 @@ urlpatterns = [
     path("events/<int:event_id>/remind/", toggle_event_reminder),
     path("events/reminders/", get_events),
     path("search/", search),
+    path("reports/", create_report),
 ]
