@@ -8,36 +8,47 @@ from ...models import Event, Instructor, Post
 def file_url(request, f):
     if not f:
         return None
-    if isinstance(f, str):
-        return request.build_absolute_uri(f) if f.startswith("/") else f
     try:
         return request.build_absolute_uri(f.url)
     except Exception:
         return None
 
 
+def get_user_university(user):
+    """
+    Helper to look up the university page linked to a student or instructor.
+    Uses select_related where appropriate to keep queries efficient.
+    """
+    student = getattr(user, "student_profile", None)
+    if student and student.university_page:
+        return student.university_page
+
+    instructor = getattr(user, "instructor_profile", None)
+    if instructor and instructor.university_page:
+        return instructor.university_page
+
+    return None
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def university_info(request):
-    user = request.user
-
-    university_page = None
-    if hasattr(user, "student_profile") and user.student_profile.university_page:
-        university_page = user.student_profile.university_page
-    elif hasattr(user, "instructor_profile") and user.instructor_profile.university_page:
-        university_page = user.instructor_profile.university_page
+    university_page = get_user_university(request.user)
 
     if not university_page:
         return Response({"error": "No university found for this user"}, status=404)
 
     students_count = university_page.students.count()
     instructors_count = university_page.instructors.count()
-    posts_count = Post.objects.filter(author_page=university_page).count()
+
+    posts_count = Post.objects.filter(author=university_page.user).count()
+
     events_count = Event.objects.filter(page=university_page).count()
 
     return Response(
         {
-            "id": university_page.page_id,
+            "id": university_page.id if hasattr(university_page, "id") else getattr(university_page, "page_id", None),
+            "university_handle": university_page.user.username if university_page.user else None,
             "name": university_page.page_full_name,
             "name_arabic": university_page.page_name_arabic or "",
             "description": university_page.description,
@@ -59,37 +70,28 @@ def university_info(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def university_news(request):
-    user = request.user
-
-    university_page = None
-    if hasattr(user, "student_profile") and user.student_profile.university_page:
-        university_page = user.student_profile.university_page
-    elif hasattr(user, "instructor_profile") and user.instructor_profile.university_page:
-        university_page = user.instructor_profile.university_page
-
+    university_page = get_user_university(request.user)
     if not university_page:
         return Response([])
 
-    posts = (
-        Post.objects.filter(author_page=university_page, post_type=Post.PostType.ANNOUNCEMENT)
-        .select_related("author_page")
-        .prefetch_related("media")
-        .order_by("-created_at")[:10]
-    )
+    posts = Post.objects.filter(
+        author=university_page.user,
+        post_type="announcement",
+    ).order_by("-created_at")
 
     news_data = []
     for post in posts:
         image = None
-        for media in post.media.all():
-            if media.media_type == "image":
-                image = file_url(request, media.media_file)
-                break
+        if hasattr(post, "media"):
+            first_media = post.media.filter(media_type="image").first()
+            if first_media:
+                image = file_url(request, first_media.media_file)
 
         news_data.append(
             {
                 "id": post.post_id,
-                "title": post.title if post.title else "",
-                "desc": post.content_text[:200] if post.content_text else "",
+                "title": getattr(post, "title", "") or "",
+                "desc": post.content_text[:200] if getattr(post, "content_text", None) else "",
                 "date": post.created_at.strftime("%B %d, %Y"),
                 "img": image or "/default-news.jpg",
             }
@@ -101,14 +103,7 @@ def university_news(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def university_events(request):
-    user = request.user
-
-    university_page = None
-    if hasattr(user, "student_profile") and user.student_profile.university_page:
-        university_page = user.student_profile.university_page
-    elif hasattr(user, "instructor_profile") and user.instructor_profile.university_page:
-        university_page = user.instructor_profile.university_page
-
+    university_page = get_user_university(request.user)
     if not university_page:
         return Response([])
 
@@ -123,7 +118,9 @@ def university_events(request):
                 "desc": event.description[:150] if event.description else "",
                 "date": event.start_date.strftime("%B %d, %Y at %I:%M %p"),
                 "location": event.location,
-                "img": file_url(request, university_page.banner_image) or "/default-event.jpg",
+                "img": file_url(request, event.image)
+                or file_url(request, university_page.banner_image)
+                or "/default-event.jpg",
             }
         )
 
@@ -133,17 +130,11 @@ def university_events(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def university_doctors(request):
-    user = request.user
-
-    university_page = None
-    if hasattr(user, "student_profile") and user.student_profile.university_page:
-        university_page = user.student_profile.university_page
-    elif hasattr(user, "instructor_profile") and user.instructor_profile.university_page:
-        university_page = user.instructor_profile.university_page
-
+    university_page = get_user_university(request.user)
     if not university_page:
         return Response([])
 
+    # Reaching through Instructor -> User -> UserProfile matching your new models
     instructors = (
         Instructor.objects.filter(university_page=university_page)
         .select_related("user", "user__profile")
@@ -155,17 +146,18 @@ def university_doctors(request):
         user_obj = instructor.user
         profile = getattr(user_obj, "profile", None)
 
-        full_name = getattr(profile, "full_name", "") or user_obj.username
+        raw_name = profile.full_name if profile and profile.full_name else user_obj.username
 
-        title_display = dict(Instructor.AcademicTitle.choices).get(instructor.academic_title, "")
-        if title_display:
-            full_name = f"{title_display} {full_name}"
+        # Uses your model's AcademicTitle choices safely
+        title_display = instructor.get_academic_title_display() if instructor.academic_title else ""
+        full_name = f"{title_display} {raw_name}".strip()
 
         doctors_data.append(
             {
                 "id": user_obj.id,
+                "username": user_obj.username,
                 "name": full_name,
-                "desc": instructor.department if instructor.department else None,
+                "desc": instructor.department or "Faculty Member",
                 "tag": instructor.get_instructor_type_display() if instructor.instructor_type else None,
                 "avatar": file_url(request, profile.profile_image) if profile and profile.profile_image else None,
             }

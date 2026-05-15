@@ -33,8 +33,8 @@ def notify_other_members(conversation, sent_message, actor):
 
         notifications.append(
             Notification(
-                receiver_user=member,
-                actor_user=actor,
+                receiver=member.user,
+                actor=actor,
                 type=Notification.Type.MESSAGE,
                 content=f"{actor_name} sent a message",
                 content_type=ContentType.objects.get_for_model(sent_message),
@@ -52,7 +52,7 @@ def get_conversations(request):
 
     memberships = (
         ConversationMember.objects.filter(user=user)
-        .select_related("conversation", "conversation__last_message")
+        .select_related("conversation", "conversation__last_message", "conversation__created_by")
         .prefetch_related("conversation__members__user__profile")
     )
 
@@ -63,18 +63,21 @@ def get_conversations(request):
         last_msg = conv.last_message
         conversation_owner = ""
         avatar = ""
+
         if conv.is_group:
             name = conv.name or "Group"
             if conv.image:
-                avatar = conv.image.url
-            conversation_owner = conv.created_by_user.username
+                avatar = request.build_absolute_uri(conv.image.url)
+            if conv.created_by:
+                conversation_owner = conv.created_by.username
         else:
-            other_member = conv.members.exclude(user=user).first()
+            other_member_obj = conv.members.exclude(user=user).first()
             name = "Unknown"
-            if other_member:
-                if other_member:
-                    name = other_member.username
-                    avatar = get_user_avatar(request, other_member)
+
+            if other_member_obj:
+                other_user = other_member_obj.user
+                name = other_user.username
+                avatar = get_user_avatar(request, other_user)
 
         msg_query = Message.objects.filter(conversation=conv)
         if member.last_read_at:
@@ -98,7 +101,6 @@ def get_conversations(request):
                 "conversations_owner": conversation_owner,
             }
         )
-
     return Response(data)
 
 
@@ -109,7 +111,7 @@ def get_messages(request, conversation_id):
 
     member = get_object_or_404(
         ConversationMember,
-        conversation=conversation_id,
+        conversation_id=conversation_id,
         user=user,
     )
 
@@ -118,20 +120,29 @@ def get_messages(request, conversation_id):
     if member.cleared_at:
         query = query.filter(sent_at__gt=member.cleared_at)
 
-    messages = query.select_related("sender_user", "sender_page").order_by("sent_at")
+    messages = query.select_related("sender", "parent_message", "parent_message__sender").order_by("sent_at")
 
     data = []
 
     for msg in messages:
-        sender_name = msg.sender.username
-        avatar = get_user_avatar(request, msg.sender)
-
-        is_me = user and msg.sender == user
-
-        if is_me:
-            sender_id = "me"
+        if msg.sender:
+            sender_name = msg.sender.username
+            avatar = get_user_avatar(request, msg.sender)
+            sender_id = "me" if msg.sender == user else msg.sender.id
         else:
-            sender_id = msg.sender.id
+            sender_name = "System"
+            avatar = None
+            sender_id = "system"
+
+        reply_to = None
+        if msg.parent_message:
+            parent_sender_name = getattr(msg.parent_message.sender, "username", "Unknown User")
+
+            reply_to = {
+                "id": msg.parent_message.message_id,
+                "text": msg.parent_message.content,
+                "sender_name": parent_sender_name,
+            }
 
         message_data = {
             "id": msg.message_id,
@@ -141,19 +152,12 @@ def get_messages(request, conversation_id):
             "sender": sender_name,
             "senderId": sender_id,
             "avatar": avatar,
-            "reply_to_details": (
-                {
-                    "id": msg.parent_message.message_id,
-                    "text": msg.parent_message.content,
-                    "sender_name": msg.parent_message.sender.username,
-                }
-                if msg.parent_message
-                else None
-            ),
+            "reply_to_details": reply_to,
         }
 
         if msg.shared_post:
             message_data["post"] = PostSerializer(msg.shared_post, context={"request": request}).data
+
         data.append(message_data)
 
     member.last_read_at = timezone.now()
@@ -210,7 +214,7 @@ def send_message(request, conversation_id):
                 {
                     "id": parent_message.message_id,
                     "text": parent_message.content,
-                    "sender_name": parent_message.sender.username if parent_message.sender_user else "Unknown",
+                    "sender_name": parent_message.sender.username if parent_message.sender else "Unknown",
                 }
                 if parent_message
                 else None

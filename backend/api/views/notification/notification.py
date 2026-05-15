@@ -10,9 +10,7 @@ from ...serializers import NotificationSerializer
 @permission_classes([IsAuthenticated])
 def get_notifications(request):
     notifications = (
-        Notification.objects.filter(receiver_user=request.user)
-        .select_related("actor_user__profile")
-        .order_by("-created_at")
+        Notification.objects.filter(receiver=request.user).select_related("actor__profile").order_by("-created_at")
     )
 
     serializer = NotificationSerializer(notifications, many=True)
@@ -23,7 +21,7 @@ def get_notifications(request):
 @permission_classes([IsAuthenticated])
 def notification_delete_mark(request, notification_id):
     try:
-        notif = Notification.objects.get(notification_id=notification_id, receiver_user=request.user)
+        notif = Notification.objects.get(notification_id=notification_id, receiver=request.user)
     except Notification.DoesNotExist:
         return Response(status=404)
 

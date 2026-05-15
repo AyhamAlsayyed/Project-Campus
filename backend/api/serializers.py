@@ -13,6 +13,7 @@ from .models import (
     PostMedia,
     PostReaction,
     SavedPost,
+    UserDegree,
     UserProfile,
 )
 from .utils.blocked_users import get_all_blocked_relationships, is_normal_post
@@ -21,50 +22,119 @@ User = get_user_model()
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+    cover = serializers.SerializerMethodField()
+
     class Meta:
         model = UserProfile
-        fields = ["full_name", "profile_image", "banner_image", "bio", "status", "academic_email"]
+        fields = [
+            "full_name",
+            "academic_email",
+            "bio",
+            "status",
+            "primary_phone",
+            "secondary_phone",
+            "birth_date",
+            "avatar",
+            "cover",
+        ]
+
+    def get_avatar(self, obj):
+        request = self.context.get("request")
+        if obj.profile_image and request:
+            return request.build_absolute_uri(obj.profile_image.url)
+        return None
+
+    def get_cover(self, obj):
+        request = self.context.get("request")
+        if obj.banner_image and request:
+            return request.build_absolute_uri(obj.banner_image.url)
+        return None
+
+
+class UserDegreeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserDegree
+        fields = ["id", "degree_type", "major", "institution"]
 
 
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
-    page_details = serializers.SerializerMethodField()
-
+    degrees = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
     university = serializers.SerializerMethodField()
+    university_full_name = serializers.SerializerMethodField()
+    major = serializers.SerializerMethodField()
+    department = serializers.SerializerMethodField()
+    academic_title = serializers.SerializerMethodField()
+    instructor_type = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "profile", "page_details", "role", "university"]
+        fields = [
+            "id",
+            "username",
+            "email",
+            "profile",
+            "role",
+            "university",
+            "university_full_name",
+            "major",
+            "department",
+            "academic_title",
+            "instructor_type",
+            "degrees",
+        ]
 
     def get_role(self, obj):
-        if hasattr(obj, "page"):
+        if hasattr(obj, "page") and obj.page:
             return obj.page.page_type
-
         if hasattr(obj, "student_profile"):
-            return "Student"
-        elif hasattr(obj, "instructor_profile"):
-            return "Instructor"
-        elif hasattr(obj, "admin_profile"):
-            return "Admin"
+            return "student"
+        if hasattr(obj, "instructor_profile"):
+            return "instructor"
+        if hasattr(obj, "admin_profile"):
+            return "admin"
         return "unknown"
 
-    def get_university(self, obj):
-        if hasattr(obj, "student_profile") and obj.student_profile.university_page:
-            return obj.student_profile.university_page.page_full_name
-        if hasattr(obj, "instructor_profile") and obj.instructor_profile.university_page:
-            return obj.instructor_profile.university_page.page_full_name
+    def _get_uni_page(self, obj):
+        student = getattr(obj, "student_profile", None)
+        if student:
+            return student.university_page
+        instructor = getattr(obj, "instructor_profile", None)
+        if instructor:
+            return instructor.university_page
         return None
 
-    def get_page_details(self, obj):
-        if hasattr(obj, "page"):
-            return {
-                "page_id": obj.page.page_id,
-                "full_name": obj.page.page_full_name,
-                "avatar": obj.page.profile_image.url if obj.page.profile_image else None,
-                "description": obj.page.description,
-            }
-        return None
+    def get_university(self, obj):
+        page = self._get_uni_page(obj)
+        return page.user.username if page and page.user else None
+
+    def get_university_full_name(self, obj):
+        page = self._get_uni_page(obj)
+        return page.page_full_name if page else None
+
+    def get_major(self, obj):
+        student = getattr(obj, "student_profile", None)
+        return student.major if student else ""
+
+    def get_department(self, obj):
+        instructor = getattr(obj, "instructor_profile", None)
+        return instructor.department if instructor else ""
+
+    def get_academic_title(self, obj):
+        instructor = getattr(obj, "instructor_profile", None)
+        return instructor.get_academic_title_display() if instructor and instructor.academic_title else ""
+
+    def get_instructor_type(self, obj):
+        instructor = getattr(obj, "instructor_profile", None)
+        return instructor.get_instructor_type_display() if instructor and instructor.instructor_type else ""
+
+    def get_degrees(self, obj):
+        DEGREE_ORDER = {"PhD": 1, "Master": 2, "Bachelor": 3, "Diploma": 4}
+        degrees_qs = obj.degrees.all()
+        sorted_degrees = sorted(degrees_qs, key=lambda d: DEGREE_ORDER.get(d.degree_type, 99))
+        return UserDegreeSerializer(sorted_degrees, many=True).data
 
 
 class PageSerializer(serializers.ModelSerializer):
@@ -175,7 +245,7 @@ class PostSerializer(serializers.ModelSerializer):
         # Normal post - exclude blocked users
         if obj.author_id:
             blocked_map = get_all_blocked_relationships()
-            blocked_users = blocked_map.get(obj.author_user_id, set())
+            blocked_users = blocked_map.get(obj.author_id, set())
 
             if blocked_users:
                 return Comment.objects.filter(post=obj).exclude(author_id__in=blocked_users).count()
@@ -196,7 +266,7 @@ class PostSerializer(serializers.ModelSerializer):
                 avatar = request.build_absolute_uri(avatar)
 
             return {
-                "id": page.page_id,
+                "id": page.user.id,
                 "type": "page",
                 "username": page.page_full_name,
                 "avatar": avatar,

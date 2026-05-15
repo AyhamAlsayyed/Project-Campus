@@ -42,16 +42,15 @@ def get_user_display_name(user):
 
 
 def get_user_avatar(request, user):
-    if is_person_user(user):
-        profile = getattr(user, "profile", None)
+    if not user:
+        return None
 
-        if profile and getattr(profile, "profile_image", None):
-            return request.build_absolute_uri(profile.profile_image.url)
+    profile = getattr(user, "profile", None)
+    if profile and profile.profile_image:
+        return request.build_absolute_uri(profile.profile_image.url)
 
-    elif is_page_user(user):
-        page = getattr(user, "page", None)
-
-        if page and getattr(page, "profile_image", None):
-            return request.build_absolute_uri(page.profile_image.url)
+    page = getattr(user, "page", None)
+    if page and page.profile_image:
+        return request.build_absolute_uri(page.profile_image.url)
 
     return None

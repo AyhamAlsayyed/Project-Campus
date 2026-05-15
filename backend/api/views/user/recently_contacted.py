@@ -18,7 +18,7 @@ def recently_contacted(request):
         .annotate(
             last_message_content=Subquery(last_message_qs.values("content")[:1]),
             last_message_time=Subquery(last_message_qs.values("sent_at")[:1]),
-            last_sender_id=Subquery(last_message_qs.values("sender_user_id")[:1]),
+            last_sender_id=Subquery(last_message_qs.values("sender_id")[:1]),
         )
         .prefetch_related(
             Prefetch(
@@ -65,7 +65,7 @@ def recently_contacted(request):
                 "status": status,
                 "message": conv.last_message_content or "",
                 "time": conv.last_message_time,
-                "is_group": conv.is_group
+                "is_group": conv.is_group,
             }
         )
 

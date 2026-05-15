@@ -2,81 +2,50 @@ import json
 import re
 
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Conversation, EventReminder, Friendship, UserDegree
+from ...models import EventReminder, UserDegree
+from ...serializers import UserSerializer
 
 
 def get_user_academic_info(user):
     result = {}
 
+    def extract_page_data(profile):
+        if profile and profile.university_page:
+            page = profile.university_page
+            return {
+                "university_page_name": page.user.username if page.user else None,
+                "university_page_full_name": page.page_full_name,
+            }
+        return {"university_page_name": None, "university_page_full_name": None}
+
     student = getattr(user, "student_profile", None)
     if student:
         result["role"] = "student"
         result["major"] = student.major
-        result["academic"] = student.academic_level
-        result["university_page_full_name"] = (
-            student.university_page.page_full_name if student.university_page else None
-        )
-        result["university_page_name"] = student.university_page.page_name if student.university_page else None
+        result.update(extract_page_data(student))
         return result
 
     instructor = getattr(user, "instructor_profile", None)
     if instructor:
         result["role"] = "instructor"
         result["department"] = instructor.department
-        result["university_page_full_name"] = (
-            instructor.university_page.page_full_name if instructor.university_page else None
-        )
-        result["university_page_name"] = instructor.university_page.page_name if instructor.university_page else None
+        result.update(extract_page_data(instructor))
         return result
 
-    admin = getattr(user, "admin_profile", None)
-    if admin:
-        result["role"] = "admin"
-        return result
-
-    result["role"] = "unknown"
+    result["role"] = "admin" if getattr(user, "admin_profile", None) else "unknown"
     return result
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def me(request):
-    user = request.user
-    profile = getattr(user, "profile", None)
-
-    avatar = None
-    if profile and getattr(profile, "profile_image", None):
-        avatar = request.build_absolute_uri(profile.profile_image.url)
-
-    cover = None
-    if profile and getattr(profile, "banner_image", None):
-        cover = request.build_absolute_uri(profile.banner_image.url)
-
-    user_info = get_user_academic_info(user)
-    return Response(
-        {
-            "id": user.id,
-            "username": user.username,
-            "full_name": getattr(profile, "full_name", ""),
-            "academic_email": getattr(profile, "academic_email", ""),
-            "email": user.email,
-            "bio": getattr(profile, "bio", ""),
-            "avatar": avatar,
-            "cover": cover,
-            "primary_phone": getattr(profile, "primary_phone", ""),
-            "secondary_phone": getattr(profile, "secondary_phone", ""),
-            "university": user_info.get("university_page_name"),
-            "major": user_info.get("major"),
-            "role": user_info.get("role"),
-        },
-        status=status.HTTP_200_OK,
-    )
+    serializer = UserSerializer(request.user, context={"request": request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
@@ -100,7 +69,7 @@ def get_events(request):
                 "banner": request.build_absolute_uri(event.image.url) if event.image else None,
                 "page": {
                     "name": page.page_full_name,
-                    "page_id": page.page_id,
+                    "page_id": page.user.id,
                     "avatar": request.build_absolute_uri(page.profile_image.url) if page.profile_image else None,
                     "is_verified": getattr(page, "verified", False),  # Using getattr as a safety check
                 },
@@ -119,7 +88,10 @@ def profile_view(request, user_id):
     try:
         user = (
             User.objects.select_related(
-                "profile", "student_profile__university_page", "instructor_profile__university_page", "admin_profile"
+                "profile",
+                "student_profile__university_page__user",
+                "instructor_profile__university_page__user",
+                "admin_profile",
             )
             .prefetch_related("degrees")
             .get(id=user_id)
@@ -127,110 +99,8 @@ def profile_view(request, user_id):
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    current_user = request.user
-    profile = getattr(user, "profile", None)
-
-    avatar = request.build_absolute_uri(profile.profile_image.url) if profile and profile.profile_image else None
-    cover = request.build_absolute_uri(profile.banner_image.url) if profile and profile.banner_image else None
-
-    student = getattr(user, "student_profile", None)
-    instructor = getattr(user, "instructor_profile", None)
-    admin = getattr(user, "admin_profile", None)
-
-    university = None
-    university_full_name = None
-    university_branch = None
-    major = ""
-    academic_title = ""
-    department = ""
-    instructor_type = ""
-    role = "unknown"
-    uni_page = None
-
-    if student:
-        role = "student"
-        major = student.major
-        uni_page = student.university_page
-    elif instructor:
-        role = "instructor"
-        academic_title = instructor.academic_title
-        department = instructor.department
-        instructor_type = instructor.instructor_type
-        uni_page = instructor.university_page
-    elif admin:
-        role = "admin"
-
-    if uni_page:
-        university = uni_page.page_full_name
-        university_full_name = uni_page.page_full_name
-        university_branch = uni_page.page_branch
-
-    if current_user == user:
-        friend_status = "self"
-    else:
-        friendship = Friendship.objects.filter(
-            Q(user1=current_user, user2=user) | Q(user1=user, user2=current_user)
-        ).first()
-
-        if not friendship:
-            friend_status = "none"
-        else:
-            status_map = {
-                Friendship.Status.PENDING: "sent" if friendship.user1 == current_user else "received",
-                Friendship.Status.ACCEPTED: "friends",
-                Friendship.Status.BLOCKED: "blocked",
-            }
-            friend_status = status_map.get(friendship.status, "none")
-
-    friends_count = Friendship.objects.filter(Q(user1=user) | Q(user2=user), status=Friendship.Status.ACCEPTED).count()
-
-    DEGREE_ORDER = {"PhD": 1, "Master": 2, "Bachelor": 3, "Diploma": 4}
-    degrees_qs = user.degrees.all()
-    degrees = [
-        {
-            "id": d.id,
-            "degree_type": d.degree_type,
-            "major": d.major,
-            "institution": d.institution,
-        }
-        for d in sorted(degrees_qs, key=lambda d: DEGREE_ORDER.get(d.degree_type, 99))
-    ]
-
-    conversation_id = None
-    if current_user.is_authenticated and current_user != user:
-        conversation = (
-            Conversation.objects.filter(is_group=False, members__user=current_user).filter(members__user=user).first()
-        )
-        if conversation:
-            conversation_id = conversation.conversation_id
-
-    response_data = {
-        "id": user.id,
-        "username": user.username,
-        "full_name": getattr(profile, "full_name", ""),
-        "academic_email": getattr(profile, "academic_email", ""),
-        "bio": getattr(profile, "bio", ""),
-        "avatar": avatar,
-        "cover": cover,
-        "university": university,
-        "university_full_name": university_full_name,
-        "university_branch": university_branch,
-        "major": major,
-        "academic_title": academic_title,
-        "department": department,
-        "instructor_type": instructor_type,
-        "role": role,
-        "friend_status": friend_status,
-        "friends_count": friends_count,
-        "personal_email": user.email,
-        "primary_phone": getattr(profile, "primary_phone", ""),
-        "secondary_phone": getattr(profile, "secondary_phone", ""),
-        "degree": degrees,
-        "birthday": getattr(profile, "birth_date", ""),
-        "conversation_id": conversation_id,
-    }
-
-    return Response(response_data, status=status.HTTP_200_OK)
+    serializer = UserSerializer(user, context={"request": request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["PATCH"])

@@ -190,7 +190,7 @@ class PageRating(models.Model):
         unique_together = ("page", "user")
 
     def __str__(self):
-        return f"{self.user.username} rated {self.page.name}: {self.score}"
+        return f"{self.user.username} rated {self.page.user.username}: {self.score}"
 
 
 class UniversityDomain(models.Model):
@@ -302,7 +302,6 @@ class Student(models.Model):
         MASTER = "master", "Master"
         PHD = "phd", "PhD"
 
-    # ayham: should we make the "major" here to be predefined as i did to the academic_level?
     major = models.CharField(max_length=100, blank=True)
     academic_level = models.CharField(max_length=20, choices=AcademicLevel.choices, blank=True)
 
