@@ -31,15 +31,16 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        <Route
-          path="/profile/:userId"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/profile/:userId" element={
+          <ProtectedRoute>
+            <ProfilePage type="user" />
+          </ProtectedRoute>
+        } />
+        <Route path="/page/:userId" element={
+          <ProtectedRoute>
+            <ProfilePage type="page" />
+          </ProtectedRoute>
+        } />
 
         <Route
           path="/communities"

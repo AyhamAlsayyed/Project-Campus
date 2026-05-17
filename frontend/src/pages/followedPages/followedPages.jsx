@@ -219,7 +219,7 @@ export default function FollowedPages() {
                                         <div key={page.id} className={styles.pageWrapper}>
                                             <div
                                                 className={styles.pageItem}
-                                                onClick={() => navigate(`/profile/${page.id}`)}
+                                                onClick={() => navigate(`/page/${page.id}`)}
                                                 style={{ cursor: 'pointer' }}
                                             >
                                                 <div className={styles.pageAvatarWrapper}>
@@ -247,7 +247,7 @@ export default function FollowedPages() {
                                         <div key={page.id} className={styles.pageWrapper}>
                                             <div
                                                 className={styles.pageItem}
-                                                onClick={() => navigate(`/profile/${page.id}`)}
+                                                onClick={() => navigate(`/page/${page.id}`)}
                                                 style={{ cursor: 'pointer' }}
                                             >
                                                 <div className={styles.pageAvatarWrapper}>

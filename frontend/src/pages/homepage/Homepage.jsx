@@ -220,6 +220,32 @@ export default function Homepage() {
 
         fetchPostContent();
     }, [pendingOpen, user]);
+    useEffect(() => {
+        if (!user || !location.state?.openPost) return;
+
+        const { post, postId, commentId } = location.state.openPost;
+
+        if (post) {
+            setSelectedPost({
+                ...post,
+                id: post.post_id || post.id || postId,
+                highlightCommentId: commentId ? Number(commentId) : null,
+                author: {
+                    ...post.author,
+                    avatar: post.author?.avatar?.startsWith("http")
+                        ? post.author.avatar
+                        : `${API}${post.author?.avatar}`
+                }
+            });
+        } else {
+            setPendingOpen({
+                postId: Number(postId),
+                commentId: commentId ? Number(commentId) : null
+            });
+        }
+
+        navigate('/home', { replace: true, state: {} });
+    }, [user, location.state]);
 
     useEffect(() => {
 
@@ -320,21 +346,28 @@ export default function Homepage() {
                         toggleTheme={toggleTheme}
                         user={user}
                         onOpenPost={(postId, commentId, post) => {
-                            if (post) {
-                                const avatar = post.author?.avatar;
-                                setSelectedPost({
-                                    ...post,
-                                    id: post.post_id || post.id || postId,
-                                    highlightCommentId: commentId ? Number(commentId) : null,
-                                    author: {
-                                        ...post.author,
-                                        avatar: avatar
-                                            ? (avatar.startsWith("http") ? avatar : `${API}${avatar}`)
-                                            : "/default-avatar.png"
-                                    }
+                            if (location.pathname !== '/home') {
+                                // Navigate with post data in state
+                                navigate('/home', {
+                                    state: { openPost: { post, postId, commentId } }
                                 });
                             } else {
-                                setPendingOpen({ postId: Number(postId), commentId: commentId ? Number(commentId) : null });
+                                // Already on home, open directly
+                                if (post) {
+                                    setSelectedPost({
+                                        ...post,
+                                        id: post.post_id || post.id || postId,
+                                        highlightCommentId: commentId ? Number(commentId) : null,
+                                        author: {
+                                            ...post.author,
+                                            avatar: post.author?.avatar?.startsWith("http")
+                                                ? post.author.avatar
+                                                : `${API}${post.author?.avatar}`
+                                        }
+                                    });
+                                } else {
+                                    setPendingOpen({ postId: Number(postId), commentId: commentId ? Number(commentId) : null });
+                                }
                             }
                         }}
                     />

@@ -173,7 +173,7 @@ export default function EventsPage() {
                                 <div className={styles.cardHeader}>
                                     <div
                                         className={styles.orgInfo}
-                                        onClick={() => navigate(`/profile/${event.pageId}`)}
+                                        onClick={() => navigate(`/page/${event.pageId}`)}
                                         style={{ cursor: 'pointer' }}
                                     >
                                         <img src={event.avatar} alt="Logo" className={styles.avatar} />

@@ -336,7 +336,12 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
       )}
       <div className={styles.topRow}>
         <div className={styles.user}>
-          <Link to={(post.author?.id || post.author_id) ? `/profile/${post.author?.id || post.author_id}` : "#"}>
+          <Link to={(post.author?.id || post.author_id) ?
+            post.author?.type === 'page'
+              ? `/page/${post.author?.id || post.author_id}`
+              : `/profile/${post.author?.id || post.author_id}`
+            : "#"
+          }>
             <img className={styles.avatar} src={post.author?.avatar || "/default-avatar.png"} alt="" />
           </Link>
           <div className={styles.userMeta}>

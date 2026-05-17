@@ -35,7 +35,7 @@ import {
     Upload, Trash2, Mail, Phone, Ban, Edit2, Camera
 } from "lucide-react";
 
-export default function ProfilePage() {
+export default function ProfilePage({ type }) {
     const [theme, setTheme] = useState("dark");
     const [user, setUser] = useState(null);
     const [friendStatus, setFriendStatus] = useState("none");
@@ -168,29 +168,26 @@ export default function ProfilePage() {
 
     const loadProfileUser = async () => {
         try {
-            const res = await fetch(`${API}/api/users/${userId}/`, {
+            const url = type === 'page'
+                ? `${API}/api/pages/${userId}/`
+                : `${API}/api/users/${userId}/`;
+
+            const res = await fetch(url, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            if (!res.ok) { setUserError("Failed to load profile"); setUser(null); return; }
-
+            if (!res.ok) { setUserError("Failed"); setUser(null); return; }
             const raw = await res.json();
-            console.log("profile raw data:", raw);
 
             let data;
-
-            if (raw.type === 'page' || raw.page_id) {
+            if (type === 'page') {
                 data = {
                     ...raw,
                     id: raw.page_id,
                     type: 'page',
-                    username: raw.page_full_name || raw.page_name || raw.name,
-                    avatar_url: raw.profile_image
-                        ? (raw.profile_image.startsWith("http") ? raw.profile_image : `${API}${raw.profile_image}`)
-                        : "",
-                    cover_url: raw.banner_image
-                        ? (raw.banner_image.startsWith("http") ? raw.banner_image : `${API}${raw.banner_image}`)
-                        : "",
+                    username: raw.page_full_name || raw.page_name,
+                    avatar_url: raw.profile_image?.startsWith("http") ? raw.profile_image : `${API}${raw.profile_image}`,
+                    cover_url: raw.banner_image?.startsWith("http") ? raw.banner_image : `${API}${raw.banner_image}`,
                     bio: raw.description || "",
                     is_verified: raw.verified,
                     is_following: raw.is_followed,
@@ -200,12 +197,8 @@ export default function ProfilePage() {
             } else {
                 data = {
                     ...raw,
-                    avatar_url: raw.profile?.avatar
-                        ? (raw.profile.avatar.startsWith("http") ? raw.profile.avatar : `${API}${raw.profile.avatar}`)
-                        : "",
-                    cover_url: raw.profile?.cover
-                        ? (raw.profile.cover.startsWith("http") ? raw.profile.cover : `${API}${raw.profile.cover}`)
-                        : "",
+                    avatar_url: raw.profile?.avatar?.startsWith("http") ? raw.profile.avatar : `${API}${raw.profile?.avatar}`,
+                    cover_url: raw.profile?.cover?.startsWith("http") ? raw.profile.cover : `${API}${raw.profile?.cover}`,
                     full_name: raw.profile?.full_name || raw.full_name || "",
                     bio: raw.profile?.bio || raw.bio || "",
                 };
@@ -214,10 +207,8 @@ export default function ProfilePage() {
             setUser(data);
             setFriendStatus(data.friend_status);
             if (data?.id) loadPosts(data.id, data.type);
-
         } catch (e) {
-            console.error("loadProfileUser error:", e);
-            setUser(null);
+            console.error(e);
             setUserError(e?.message || "Something went wrong");
         } finally {
             setUserLoading(false);
