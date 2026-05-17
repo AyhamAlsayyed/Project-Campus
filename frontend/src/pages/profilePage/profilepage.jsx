@@ -168,61 +168,60 @@ export default function ProfilePage() {
 
     const loadProfileUser = async () => {
         try {
-            let data;
-            let res = await fetch(`${API}/api/users/${userId}`, {
+            const res = await fetch(`${API}/api/users/${userId}/`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            console.log("users/ status:", res.status); 
 
-            if (res.status === 404) {
-                res = await fetch(`${API}/api/pages/${userId}/`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+            if (!res.ok) { setUserError("Failed to load profile"); setUser(null); return; }
 
-                data = await res.json();
+            const raw = await res.json();
+            console.log("profile raw data:", raw);
+
+            let data;
+
+            if (raw.type === 'page' || raw.page_id) {
                 data = {
-                    ...data,
-                    id: data.page_id,
+                    ...raw,
+                    id: raw.page_id,
                     type: 'page',
-                    username: data.page_full_name || data.page_name || data.name,
-                    avatar_url: data.profile_image
-                        ? (data.profile_image.startsWith("http") ? data.profile_image : `${API}${data.profile_image}`)
+                    username: raw.page_full_name || raw.page_name || raw.name,
+                    avatar_url: raw.profile_image
+                        ? (raw.profile_image.startsWith("http") ? raw.profile_image : `${API}${raw.profile_image}`)
                         : "",
-                    cover_url: data.banner_image
-                        ? (data.banner_image.startsWith("http") ? data.banner_image : `${API}${data.banner_image}`)
+                    cover_url: raw.banner_image
+                        ? (raw.banner_image.startsWith("http") ? raw.banner_image : `${API}${raw.banner_image}`)
                         : "",
-                    bio: data.description || "",
-                    is_verified: data.verified,
-                    is_following: data.is_followed,
-                    followers_count: data.followers_count || 0,
-                    category: data.page_type,
+                    bio: raw.description || "",
+                    is_verified: raw.verified,
+                    is_following: raw.is_followed,
+                    followers_count: raw.followers_count || 0,
+                    category: raw.page_type,
                 };
             } else {
-                data = await res.json();
                 data = {
-                    ...data,
-                    avatar_url: data.profile?.avatar
-                        ? (data.profile.avatar.startsWith("http") ? data.profile.avatar : `${API}${data.profile.avatar}`)
+                    ...raw,
+                    avatar_url: raw.profile?.avatar
+                        ? (raw.profile.avatar.startsWith("http") ? raw.profile.avatar : `${API}${raw.profile.avatar}`)
                         : "",
-                    cover_url: data.profile?.cover
-                        ? (data.profile.cover.startsWith("http") ? data.profile.cover : `${API}${data.profile.cover}`)
+                    cover_url: raw.profile?.cover
+                        ? (raw.profile.cover.startsWith("http") ? raw.profile.cover : `${API}${raw.profile.cover}`)
                         : "",
-                    full_name: data.profile?.full_name || data.full_name || "",
-                    bio: data.profile?.bio || data.bio || "",
+                    full_name: raw.profile?.full_name || raw.full_name || "",
+                    bio: raw.profile?.bio || raw.bio || "",
                 };
             }
 
-            console.log("final user data:", data); // is user being set?
-            if (!res.ok) { setUserError(data?.message || "Failed"); setUser(null); return; }
             setUser(data);
             setFriendStatus(data.friend_status);
-            if (data?.id) loadPosts(data.id, data.type);;
+            if (data?.id) loadPosts(data.id, data.type);
+
         } catch (e) {
-            console.error("loadProfileUser error:", e); // any crash?
+            console.error("loadProfileUser error:", e);
             setUser(null);
             setUserError(e?.message || "Something went wrong");
+        } finally {
+            setUserLoading(false);
         }
-        finally { setUserLoading(false); }
     };
     onSavedRef.current = loadProfileUser;
 
