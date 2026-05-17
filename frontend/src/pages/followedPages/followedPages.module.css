@@ -51,11 +51,12 @@ body {
 
 .title {
     font-size: 25px;
-    font-weight: 600;
+    font-weight: lighter;
     color: rgba(255, 255, 255, 0.85);
 }
 .highlight {
     font-size: 40px;
+    font-weight: 600;
     background: linear-gradient(30deg, #c72cff, #8b2dff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -154,13 +155,32 @@ body {
     padding: 10px 15px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: 25px;
     color: white;
     font-size: 14px;
     outline: none;
     transition: all 0.2s ease;
 }
+.searchWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
 
+.searchIcon {
+    position: absolute;
+    left: 10px;
+    width: 20px;
+    height: 20px;
+    opacity: 0.35;
+    pointer-events: none;
+     filter: invert();
+}
+
+.searchBar {
+    padding-left: 32px;
+}
 .searchBar:focus {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(166, 39, 156, 0.5); /* Matching your theme purple */
@@ -392,4 +412,37 @@ body {
     background-color: #a64aff; 
     width: 16px; 
     border-radius: 4px;
+}
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    min-height: 400px;
+    gap: 12px;
+    text-align: center;
+}
+
+.emptyIcon {
+    font-size: 48px;
+    opacity: 0.6;
+}
+
+.emptyTitle {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #ccc;
+    margin: 0;
+}
+
+.emptySubtitle {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0;
+}
+.recommendedHeader{
+    color: white;
+    font-size: 1.2rem;
 }

@@ -34,11 +34,12 @@
 
 .title {
   font-size: 42px;
-  font-weight: 600;
+  font-weight: lighter;
   color: rgba(255, 255, 255, 0.85);
 }
 
 .highlight {
+  font-weight: 600;
   background: linear-gradient(30deg, #c72cff, #8b2dff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

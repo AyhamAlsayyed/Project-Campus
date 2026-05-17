@@ -51,12 +51,13 @@ body {
 
 .title {
     font-size: 30px;
-    font-weight: 600;
+    font-weight: lighter;
     color: rgba(255, 255, 255, 0.85);
 }
 
 .highlight {
     font-size: 40px;
+    font-weight: 600;
     background: linear-gradient(30deg, #c72cff, #8b2dff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -83,65 +84,113 @@ body {
     position: relative;
     margin: 2% 0 0 0;
 }
+
 .innerContainer {
-  background-color: rgba(61, 60, 60);
-  border-radius: 30px 30px 0 0;
-  padding-top: 30px;
-  gap: 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  top: 10px;
-  z-index: 10;
+    background-color: rgba(61, 60, 60);
+    border-radius: 30px 30px 0 0;
+    padding-top: 30px;
+    gap: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    top: 10px;
+    z-index: 10;
 }
+
 .rightSection {
-  position: relative;
-  flex: 0 0 450px;
-  width: 25%;
-  margin: 5% 0 0 0;
-  gap: 70px;
-  display: flex;
-  flex-direction: column;
+    position: relative;
+    flex: 0 0 450px;
+    width: 25%;
+    margin: 5% 0 0 0;
+    gap: 70px;
+    display: flex;
+    flex-direction: column;
 }
-.rightCard{
-  position: relative;
-  z-index: 2;
 
-
-}
-.pill {
-   position: absolute;
-  top: -45px;
-  left: 10px;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  padding: 12px 20px;
-  border-radius: 18px 18px 0 0;
-  font-weight: 800  ;
-  height: 25px;
-  width: 30%;
-  letter-spacing: 0.6px;
-  font-size: 0.95rem;
-  color: rgba(255,255,255,0.92);
-  background-color: rgba(61, 60, 60, 0.95);
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow: 0 0 0 10px rgba(0,0,0,0);
-}
 .rightCard {
-  display: flex;
-  flex-direction: column;
-  background: rgba(61, 60, 60, 0.45);
-  border-radius: 24px;
-  padding: 16px;
-  border: 1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 2;
+
+
 }
-.rightList{
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 80px 20px;
+    text-align: center;
+    flex: 1;
+}
+
+.emptyIconWrapper {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.emptyIcon {
+    font-size: 32px;
+}
+
+.emptyTitle {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #ccc;
+    margin: 0;
+}
+
+.emptySubtitle {
+    font-size: 0.85rem;
+    color: #555;
+    margin: 0;
+    max-width: 260px;
+    line-height: 1.5;
+}
+
+.pill {
+    position: absolute;
+    top: -45px;
+    left: 10px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 18px 18px 0 0;
+    font-weight: 800;
+    height: 25px;
+    width: 30%;
+    letter-spacing: 0.6px;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.92);
+    background-color: rgba(61, 60, 60, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+}
+
+.rightCard {
+    display: flex;
+    flex-direction: column;
+    background: rgba(61, 60, 60, 0.45);
+    border-radius: 24px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+}
+
+.rightList {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
 }
 
 .searchContainer {
@@ -165,7 +214,8 @@ body {
 
 .searchBar:focus {
     background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(166, 39, 156, 0.5); /* Matching your theme purple */
+    border-color: rgba(166, 39, 156, 0.5);
+    /* Matching your theme purple */
     box-shadow: 0 0 10px rgba(166, 39, 156, 0.1);
 }
 
@@ -177,7 +227,7 @@ body {
 .friendWrapper {
     display: flex;
     flex-direction: column;
-    align-items: center; 
+    align-items: center;
 }
 
 .friendItem {
@@ -188,17 +238,17 @@ body {
     padding: 12px 20px;
     cursor: pointer;
     transition: all 0.2s ease;
-    user-select: none; 
+    user-select: none;
 }
 
 .friendItem:hover {
     background: rgba(255, 255, 255, 0.05);
-    padding-left: 25px; 
+    padding-left: 25px;
 }
 
 .friendItem:active {
     background: rgba(255, 255, 255, 0.1);
-    transform: scale(0.98); 
+    transform: scale(0.98);
 }
 
 .friendName {
@@ -209,7 +259,7 @@ body {
 }
 
 .friendItem:hover .friendName {
-    color: var(--highlight-color, #a6279c); 
+    color: var(--highlight-color, #a6279c);
 }
 
 .divider {
@@ -227,11 +277,17 @@ body {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    border: 2px solid #1a1a1a; 
+    border: 2px solid #1a1a1a;
 }
 
-.online { background-color: #4ade80; }
-.offline { background-color: #4b5563; }
+.online {
+    background-color: #4ade80;
+}
+
+.offline {
+    background-color: #4b5563;
+}
+
 .friendItem {
     display: flex;
     align-items: center;

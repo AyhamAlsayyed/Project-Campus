@@ -32,7 +32,7 @@ import {
     Languages, Home, HelpCircle, MessageSquare,
     Menu, X, Search, Check, MoreHorizontal,
     Volume2, Calendar, Heart, ChevronLeft,
-    Upload, Trash2, Mail, Phone, Ban,Edit2, Camera
+    Upload, Trash2, Mail, Phone, Ban, Edit2, Camera
 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -184,11 +184,14 @@ export default function ProfilePage() {
                 data = {
                     ...data,
                     type: 'page',
-                    username: data.name,
-                    avatar_url: data.avatar,
-                    cover_url: data.banner,
+                    username: data.page_full_name || data.page_name || data.name,  // ← was data.name
+                    avatar_url: data.profile_image || data.avatar,                  // ← was data.avatar
+                    cover_url: data.banner_image || data.banner,                    // ← was data.banner
                     bio: data.description,
                     is_verified: data.verified,
+                    is_following: data.is_followed,                                 // ← map is_followed → is_following
+                    followers_count: data.followers_count || 0,
+                    category: data.page_type,                                       // ← so category shows under name
                 };
             } else {
                 data = await res.json();
@@ -379,7 +382,14 @@ export default function ProfilePage() {
         try {
             const res = await fetch(`${API}/api/conversations/get-or-create/${userId}/`, {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${token}` }
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    target_user: userId,
+                    type: 'user' // or 'page'
+                })
             });
             const data = await res.json();
             console.log("conversation response:", data);
