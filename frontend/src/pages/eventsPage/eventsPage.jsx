@@ -76,6 +76,7 @@ export default function EventsPage() {
                     const data = await eventsRes.json();
                     const formatted = data.map(event => ({
                         id: event.id,
+                         pageId: event.page_id,
                         orgName: event.organization_name,
                         avatar: event.avatar
                             ? (event.avatar.startsWith("http") ? event.avatar : `${API}${event.avatar}`)
@@ -118,7 +119,7 @@ export default function EventsPage() {
         const year = d.getFullYear();
         return `${day}/${month}/${year}`;
     };
-    const handleFollow = async (eventId) => {
+    const handleFollow = async (eventId , pageId) => {
         const token = localStorage.getItem("access");
         const event = events.find(e => e.id === eventId);
         const wasFollowed = event.isFollowed;
@@ -131,7 +132,7 @@ export default function EventsPage() {
         ));
 
         try {
-            const res = await fetch(`${API}/api/pages/${eventId}/follow/`, {  // ← changed
+            const res = await fetch(`${API}/api/pages/${pageId}/follow/`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -189,7 +190,7 @@ export default function EventsPage() {
                                         )}
                                         <button
                                             className={event.isFollowed ? styles.followedBtn : styles.followBtn}
-                                            onClick={() => handleFollow(event.id)}
+                                            onClick={() => handleFollow(event.id , event.pageId)}
                                         >
                                             {event.isFollowed ? 'Followed' : 'Follow'}
                                         </button>
@@ -264,7 +265,7 @@ export default function EventsPage() {
                                                 </div>
                                                 <button
                                                     className={rec.isFollowed ? styles.followedBtnSmall : styles.followBtnSmall}
-                                                    onClick={() => handleFollow(rec.id)}
+                                                    onClick={() => handleFollow(rec.id , rec.pageId)}
                                                 >
                                                     {rec.isFollowed ? 'Followed' : 'Follow'}
                                                 </button>

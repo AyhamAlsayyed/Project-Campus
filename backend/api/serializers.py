@@ -480,6 +480,7 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = [
             "id",
+            "page_id",
             "organization_name",
             "page_type",
             "avatar",
