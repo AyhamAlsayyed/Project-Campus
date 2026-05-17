@@ -178,11 +178,11 @@ export default function ProfilePage() {
                 res = await fetch(`${API}/api/pages/${userId}/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                console.log("pages/ status:", res.status);
+
                 data = await res.json();
-                console.log("page raw data:", data); 
                 data = {
                     ...data,
+                    id: data.page_id,
                     type: 'page',
                     username: data.page_full_name || data.page_name || data.name,
                     avatar_url: data.profile_image

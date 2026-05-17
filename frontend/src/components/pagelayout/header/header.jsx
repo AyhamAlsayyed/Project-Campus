@@ -16,7 +16,7 @@ import Read from '../../../Assets/icons/read.png'
 
 import { createPortal } from 'react-dom';
 
-export default function Header({ theme, toggleTheme, user }) {
+export default function Header({ theme, toggleTheme, user, onOpenPost }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState(null);
@@ -240,11 +240,18 @@ export default function Header({ theme, toggleTheme, user }) {
     if (user) fetchHeaderData();
   }, [user]);
   const handleNotificationClick = (n) => {
-    const post_id = n.post_id || n.link?.post_id;
-    const comment_id = n.comment_id || n.link?.comment_id;
+    const post_id = n.link?.post_id || n.post_id;
+    const comment_id = n.link?.comment_id || n.comment_id;
+    const post = n.link?.post;
+
     if (comment_id && post_id) {
-      navigate(`/home?openPost=${post_id}&highlightComment=${comment_id}&t=${Date.now()}`);
       setShowNotifications(false);
+      if (onOpenPost) {
+        onOpenPost(post_id, comment_id, post);
+        navigate('/home');
+      } else {
+        navigate(`/home?openPost=${post_id}&highlightComment=${comment_id}&t=${Date.now()}`);
+      }
       return;
     }
     if (n.event_id) navigate(`/events/${n.event_id}`);

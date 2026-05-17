@@ -315,7 +315,29 @@ export default function Homepage() {
                 ══════════════════════════════════════ */}
             {!isMobile && (
                 <div className={`${styles.header} ${styles.page}`}>
-                    <Header theme={theme} toggleTheme={toggleTheme} user={user} />
+                    <Header
+                        theme={theme}
+                        toggleTheme={toggleTheme}
+                        user={user}
+                        onOpenPost={(postId, commentId, post) => {
+                            if (post) {
+                                const avatar = post.author?.avatar;
+                                setSelectedPost({
+                                    ...post,
+                                    id: post.post_id || post.id || postId,
+                                    highlightCommentId: commentId ? Number(commentId) : null,
+                                    author: {
+                                        ...post.author,
+                                        avatar: avatar
+                                            ? (avatar.startsWith("http") ? avatar : `${API}${avatar}`)
+                                            : "/default-avatar.png"
+                                    }
+                                });
+                            } else {
+                                setPendingOpen({ postId: Number(postId), commentId: commentId ? Number(commentId) : null });
+                            }
+                        }}
+                    />
                 </div>
             )}
 
