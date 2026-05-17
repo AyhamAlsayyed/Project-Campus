@@ -2,7 +2,7 @@ import styles from "./header.module.css";
 import ThemeToggler from "../../pagelayout/themeToggle";
 import darkModeIcon from "../../../Assets/Pictures/LogoDarkMode.png";
 import {
-  Search, Check, MoreHorizontal,
+  Search, MoreHorizontal,
   Volume2, Calendar, UserPlus, Heart,
   Users, FileText, User, BookOpen, X
 } from "lucide-react";
@@ -13,6 +13,7 @@ import Bell from '../../../Assets/icons/notifications.png';
 import BellActive from '../../../Assets/icons/notifications-active.png';
 import Home from '../../../Assets/icons/home.png'
 import Read from '../../../Assets/icons/read.png'
+
 import { createPortal } from 'react-dom';
 
 export default function Header({ theme, toggleTheme, user }) {
@@ -196,16 +197,18 @@ export default function Header({ theme, toggleTheme, user }) {
             return {
               id: item.notification_id || item.id,
               is_read: item.is_read,
-              avatar: (item.actor_avatar || item.avatar)?.startsWith("http")
-                ? (item.actor_avatar || item.avatar)
-                : `${API}${item.actor_avatar || item.avatar}` || "/default-avatar.png",
-              type: item.type || "Notification",
+              avatar: (item.actor_avatar || item.avatar)
+                ? ((item.actor_avatar || item.avatar).startsWith("http")
+                  ? (item.actor_avatar || item.avatar)
+                  : `${API}${item.actor_avatar || item.avatar}`)
+                : "/default-avatar.png",
+              type: item.type || item.iconType || "Notification",  // ← iconType fallback
               text: item.message || item.content,
               link: notifLink,
-              post_id: item.post_id || notifLink.post_id || null,
-              comment_id: item.comment_id || notifLink.comment_id || null,
-              actor_id: item.actor_id,
-              event_id: item.event_id,
+              post_id: notifLink.post_id || item.post_id || null,   // ← link first
+              comment_id: notifLink.comment_id || item.comment_id || null,  // ← link first
+              actor_id: item.actor_id || null,
+              event_id: item.event_id || null,
               time: timeAgo(item.time) || item.time,
             };
           });
@@ -236,12 +239,11 @@ export default function Header({ theme, toggleTheme, user }) {
     };
     if (user) fetchHeaderData();
   }, [user]);
-
   const handleNotificationClick = (n) => {
     const post_id = n.post_id || n.link?.post_id;
     const comment_id = n.comment_id || n.link?.comment_id;
     if (comment_id && post_id) {
-      navigate(`/home?openPost=${post_id}&highlightComment=${comment_id}`);
+      navigate(`/home?openPost=${post_id}&highlightComment=${comment_id}&t=${Date.now()}`);
       setShowNotifications(false);
       return;
     }
@@ -323,6 +325,30 @@ export default function Header({ theme, toggleTheme, user }) {
     if (!user?.id) return;
     location.pathname.startsWith(`/profile/${user.id}`) ? navigate("/home") : navigate(`/profile/${user.id}`);
   };
+  const handleMarkAllAsRead = async () => {
+    const token = localStorage.getItem("access");
+    const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
+    if (unreadIds.length === 0) return;
+
+
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+
+    try {
+      await Promise.all(unreadIds.map(id =>
+        fetch(`${API}/api/notifications/${id}/`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ is_read: true }),
+        })
+      ));
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+      // Revert on fail
+      setNotifications(prev => prev.map(n =>
+        unreadIds.includes(n.id) ? { ...n, is_read: false } : n
+      ));
+    }
+  }
 
   const isInProfileSection = location.pathname.startsWith(`/profile/${user?.id}`);
   const unreadCount = notifications.filter(n => !n.is_read).length;
@@ -634,7 +660,19 @@ export default function Header({ theme, toggleTheme, user }) {
               <div className={styles.notifHeader}>
                 <h3 className={styles.notifTitle}>Chats</h3>
                 <div className={styles.notifHeaderActions}>
-                  <Check size={18} />
+                  <img
+                    src={Read}
+                    alt="Read"
+                    onClick={handleMarkAllAsRead}
+                    style={{
+                      width: 18, height: 18,
+                      filter: 'brightness(0) invert(1)',
+                      cursor: unreadCount > 0 ? 'pointer' : 'default',
+                      opacity: unreadCount > 0 ? 1 : 0.4,
+                      transition: 'opacity 0.2s'
+                    }}
+                    title="Mark all as read"
+                  />
                   <span onClick={() => { navigate("/chats"); setShowChats(false); }} className={styles.viewAll}>view all</span>
                 </div>
               </div>
@@ -696,7 +734,20 @@ export default function Header({ theme, toggleTheme, user }) {
               <div className={styles.notifHeader}>
                 <h3 className={styles.notifTitle}>Notifications</h3>
                 <div className={styles.notifHeaderActions}>
-                  <Check size={18} />
+                  <img
+                    src={Read}
+                    alt="Read"
+                    onClick={handleMarkAllAsRead}
+                    style={{
+                      width: 18, height: 18,
+                      filter: 'brightness(0) invert(1)',
+                      marginLeft: 3,
+                      cursor: unreadCount > 0 ? 'pointer' : 'default',
+                      opacity: unreadCount > 0 ? 1 : 0.4,
+                      transition: 'opacity 0.2s'
+                    }}
+                    title="Mark all as read"
+                  />
                   <span className={styles.viewAll}>view all</span>
                 </div>
               </div>
@@ -730,7 +781,7 @@ export default function Header({ theme, toggleTheme, user }) {
                       </button>
                       {openMenuId === n.id && (
                         <div className={styles.actionMenu}>
-                          <button onClick={() => handleMarkAsRead(n.id)}><Check size={14} /> Read</button>
+                          <button onClick={() => handleMarkAsRead(n.id)}><img src={Read} alt="Read" style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', marginLeft: 3 }} /> Read</button>
                           <button onClick={() => handleManage(n.id)}>Manage</button>
                           <button className={styles.deleteAction} onClick={() => handleDelete(n.id)}>Delete</button>
                         </div>

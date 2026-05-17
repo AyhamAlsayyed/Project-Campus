@@ -50,19 +50,17 @@ export default function FollowedPages() {
                 const postsData = await postsRes.json();
 
                 // Fix pages avatars
+                console.log("raw pages data:", pagesData);
+                // In fetchData formattedPages
                 const formattedPages = pagesData.map(p => ({
                     ...p,
-                    // Map 'page_full_name' from API to 'name' for the component
+                    id: p.page_id,  // 👈
                     name: p.page_full_name || p.page_name || "Unknown Page",
-
-                    // Map 'profile_image' from API to 'avatar' for the component
                     avatar: p.profile_image
                         ? (p.profile_image.startsWith("http")
                             ? p.profile_image
                             : `http://localhost:8000${p.profile_image}`)
                         : "/default-avatar.png",
-
-                    // Map 'page_type' to category if you want it dynamic
                     category: p.page_type || "Page"
                 }));
 
@@ -113,9 +111,12 @@ export default function FollowedPages() {
                 const data = await res.json();
                 const formatted = data.map(p => ({
                     ...p,
-                    avatar: p.avatar
-                        ? (p.avatar.startsWith("http") ? p.avatar : `http://localhost:8000${p.avatar}`)
-                        : "https://i.pravatar.cc/150?img=default"
+                    id: p.page_id,  // 👈
+                    avatar: p.profile_image
+                        ? (p.profile_image.startsWith("http") ? p.profile_image : `http://localhost:8000${p.profile_image}`)
+                        : "/default-avatar.png",
+                    name: p.page_full_name || p.page_name || "Unknown Page",
+                    category: p.page_type || "Page"
                 }));
 
                 setRecommendedPages(formatted);

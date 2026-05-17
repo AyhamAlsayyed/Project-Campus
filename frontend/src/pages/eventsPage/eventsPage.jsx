@@ -2,7 +2,9 @@ import styles from './eventsPage.module.css';
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import VerifiedBadge from '../../Assets/icons/verified-mark.png';
+
 import { createPortal } from 'react-dom';
 export default function EventsPage() {
     const API = "http://localhost:8000";
@@ -15,6 +17,7 @@ export default function EventsPage() {
     const [reminders, setReminders] = useState({});
     const [popupEvent, setPopupEvent] = useState(null);
     const location = useLocation();
+    const navigate = useNavigate();
     const [highlightId, setHighlightId] = useState(location.state?.highlightId || null);
     useEffect(() => {
         if (highlightId && events.length > 0) {
@@ -76,7 +79,7 @@ export default function EventsPage() {
                     const data = await eventsRes.json();
                     const formatted = data.map(event => ({
                         id: event.id,
-                         pageId: event.page_id,
+                        pageId: event.page_id,
                         orgName: event.organization_name,
                         avatar: event.avatar
                             ? (event.avatar.startsWith("http") ? event.avatar : `${API}${event.avatar}`)
@@ -119,7 +122,7 @@ export default function EventsPage() {
         const year = d.getFullYear();
         return `${day}/${month}/${year}`;
     };
-    const handleFollow = async (eventId , pageId) => {
+    const handleFollow = async (eventId, pageId) => {
         const token = localStorage.getItem("access");
         const event = events.find(e => e.id === eventId);
         const wasFollowed = event.isFollowed;
@@ -168,12 +171,20 @@ export default function EventsPage() {
                             <div key={event.id} id={`event-${event.id}`} className={styles.eventCard}>
 
                                 <div className={styles.cardHeader}>
-                                    <div className={styles.orgInfo}>
+                                    <div
+                                        className={styles.orgInfo}
+                                        onClick={() => navigate(`/profile/${event.pageId}`)}
+                                        style={{ cursor: 'pointer' }}
+                                    >
                                         <img src={event.avatar} alt="Logo" className={styles.avatar} />
                                         <div className={styles.orgText}>
                                             <div className={styles.orgNameRow}>
                                                 <h3>{event.orgName}</h3>
-                                                <span className={styles.verifyBadge}>✓</span>
+                                                <img
+                                                    src={VerifiedBadge}
+                                                    alt="verified"
+                                                    style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', marginLeft: 3 }}
+                                                />
                                             </div>
                                             <p>{event.pageType}</p>
                                         </div>
@@ -190,7 +201,7 @@ export default function EventsPage() {
                                         )}
                                         <button
                                             className={event.isFollowed ? styles.followedBtn : styles.followBtn}
-                                            onClick={() => handleFollow(event.id , event.pageId)}
+                                            onClick={() => handleFollow(event.id, event.pageId)}
                                         >
                                             {event.isFollowed ? 'Followed' : 'Follow'}
                                         </button>
@@ -253,19 +264,26 @@ export default function EventsPage() {
                                         <img src={rec.banner} className={styles.recBanner} alt="" />
                                         <div className={styles.recOverlay}>
                                             <div className={styles.recHeader}>
-                                                <div className={styles.recOrgInfo}>
+                                                <div className={styles.recOrgInfo}
+                                                    onClick={() => navigate(`/profile/${rec.pageId}`)}
+                                                    style={{ cursor: 'pointer' }}
+                                                >
                                                     <img src={rec.avatar} className={styles.recAvatar} alt="" />
                                                     <div className={styles.recOrgText}>
                                                         <div className={styles.recNameRow}>
                                                             <h4>{rec.orgName}</h4>
-                                                            <span className={styles.verifyBadgeSmall}>✓</span>
+                                                            <img
+                                                                src={VerifiedBadge}
+                                                                alt="verified"
+                                                                style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', marginLeft: 3 }}
+                                                            />
                                                         </div>
                                                         <p>{rec.pageType}</p>
                                                     </div>
                                                 </div>
                                                 <button
                                                     className={rec.isFollowed ? styles.followedBtnSmall : styles.followBtnSmall}
-                                                    onClick={() => handleFollow(rec.id , rec.pageId)}
+                                                    onClick={() => handleFollow(rec.id, rec.pageId)}
                                                 >
                                                     {rec.isFollowed ? 'Followed' : 'Follow'}
                                                 </button>
