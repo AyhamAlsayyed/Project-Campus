@@ -272,7 +272,7 @@ export default function ProfilePage({ type }) {
 
     const loadPageEvents = async () => {
         try {
-            const res = await fetch(`${API}/api/users/${userId}/events/`, {
+            const res = await fetch(`${API}/api/events/?page=${userId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) { const data = await res.json(); setPageEvents(Array.isArray(data) ? data : []); }
@@ -342,8 +342,7 @@ export default function ProfilePage({ type }) {
 
     const loadPosts = async (id, type) => {  // ← add type here
         try {
-            const param = type === 'page' ? 'page' : 'user';  // ← use param, not user?.type
-            console.log("fetching posts:", `?${param}=${id}`); // confirm in console
+            const param = type === 'page' ? 'page' : 'user';
             const res = await fetch(`${API}/api/posts?${param}=${id}`, { headers: { Authorization: `Bearer ${token}` } });
             let data;
             try { data = await res.json(); } catch (err) { setPostsError("Invalid server response."); setPosts([]); setPostsLoading(false); return; }

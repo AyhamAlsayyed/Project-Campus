@@ -30,7 +30,7 @@ export default function ChatsPage() {
     const activeChatMenuRef = useRef(null);
     const messagesEndRef = useRef(null);
     const messagesScrollRef = useRef(null);
-    const academicGroups = chats.filter(chat => chat.is_group && chat.is_academic);
+    const academicGroups = chats.filter(chat => chat.is_group);
     const [attachmentMenuOpen, setAttachmentMenuOpen] = useState(false);
     const [pendingFiles, setPendingFiles] = useState([]); // files queued to send
     const [pollOpen, setPollOpen] = useState(false);

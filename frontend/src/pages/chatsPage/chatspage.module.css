@@ -164,7 +164,7 @@
 
 /* Individual Chat Row */
 .chatItem {
-   display: flex;
+    display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 14px 15px;
@@ -176,7 +176,7 @@
 
 .chatItem:hover {
     background-color: rgba(255, 255, 255, 0.05);
-  
+
     border-radius: 15px;
     border-bottom-color: transparent;
 }
@@ -260,8 +260,9 @@
     height: 12px;
     border-radius: 50%;
     border: 2px solid #3d3c3c;
-   
+
 }
+
 .unreadBadge {
     background: linear-gradient(135deg, #b400ff, #8b2dff);
     color: #fff;
@@ -272,6 +273,7 @@
     min-width: 20px;
     text-align: center;
 }
+
 .offline {
     background-color: #888;
 }
@@ -291,7 +293,7 @@
 }
 
 .chatStatusText {
-   font-size: 11px;
+    font-size: 11px;
     color: #888;
     margin-bottom: 2px;
 }
@@ -335,7 +337,7 @@
 }
 
 .chatPreview {
-  font-size: 13px;
+    font-size: 13px;
     color: #999;
     font-weight: 400;
     margin-top: 2px;
@@ -526,52 +528,49 @@
 .rightList {
     display: flex;
     flex-direction: column;
-    gap: 30px;
 }
 
-/* Container for the sidebar chat item */
 .academicChatItem {
     display: flex;
-    gap: 15px;
+    align-items: center;
+    padding: 16px 24px;
     position: relative;
-    padding: 12px 10px;
-    border-radius: 18px;
-    /* For the hover highlight */
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
 
-/* Hover highlight effect */
 .academicChatItem:hover {
     background-color: rgba(255, 255, 255, 0.05);
+    /* Subtle hover effect */
 }
 
+/* Avatar */
 .academicAvatarWrapper {
     flex-shrink: 0;
+    margin-right: 16px;
 }
 
-.academicAvatarPlaceholder {
-    width: 46px;
-    height: 46px;
-    background: #333;
+.academicAvatar {
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    object-fit: cover;
+    background-color: #ffffff;
+    /* White background for transparent PNG logos */
 }
 
+/* Chat Info & Typography */
 .academicChatInfo {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    flex-grow: 1;
     min-width: 0;
+    /* Crucial for allowing flex children to truncate text */
+    gap: 4px;
 }
 
-/* Header line: Teacher | Message Preview */
-.academicTopRow {
+.academicTopRow,
+.academicBottomRow {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -579,65 +578,54 @@
 }
 
 .academicTeacherName {
-    font-size: 0.65rem;
-    color: #888;
-    font-weight: 500;
+    font-size: 12px;
+    color: #9ca3af;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 50%;
 }
 
 .academicMessagePreview {
-    font-size: 0.65rem;
-    color: #666;
-    max-width: 120px;
+    font-size: 12px;
+    color: #6b7280;
+    /* Slightly darker than the teacher name */
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Title line: Group Name | Time */
-.academicBottomRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 2px;
+    max-width: 45%;
+    text-align: right;
+    /* Replicates the gradient fade-out effect from your image */
+    -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 100%);
+    mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 100%);
 }
 
 .academicGroupName {
-    font-size: 1.2rem;
-
-    color: #fff;
+    font-size: 16px;
+    color: #f3f4f6;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 65%;
+    /* Replicates the gradient fade-out effect */
+    -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 75%, rgba(0, 0, 0, 0) 100%);
+    mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 75%, rgba(0, 0, 0, 0) 100%);
 }
 
 .academicTimestamp {
-    font-size: 0.65rem;
-    color: #555;
+    font-size: 12px;
+    color: #9ca3af;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-/* Shortened, centered divider */
+/* Divider */
 .academicDivider {
     position: absolute;
-    bottom: -15px;
-    /* Centers it between the items gap */
-    left: 20%;
-    right: 20%;
+    bottom: 0;
+    left: 90px;
+    /* Accounts for padding (24) + avatar (50) + margin (16) */
+    right: 24px;
     height: 1px;
-    background: rgba(255, 255, 255, 0.05);
-    z-index: 1;
-}
-
-
-.academicChatItem:last-child {
-    margin-bottom: 0;
-}
-
-.activeChatOuter {
-    margin-top: 4%;
-    height: calc(100vh - 160px);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-
+    background-color: rgba(255, 255, 255, 0.06);
 }
 
 .innerChatContainer {
@@ -735,7 +723,7 @@
     width: 80px;
     height: 80px;
     border-radius: 50%;
-  
+
     object-fit: cover;
     border: 1px solid #333;
     /* Optional: adds a slight border like the reference */
@@ -1280,12 +1268,12 @@
     margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
-   flex-shrink: 0;
-    
+    flex-shrink: 0;
+
 }
 
 .replyTextPreview {
-   color: #333333;
+    color: #333333;
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -1313,25 +1301,34 @@
     margin: 0;
     color: #888;
 }
-.bubbleMine .replyQuoteBox .replyTextPreview{
+
+.bubbleMine .replyQuoteBox .replyTextPreview {
     color: white;
 
 }
+
 .bubbleOther .replyQuoteBox {
-    background: rgba(0, 0, 0, 0.2); /* Keep it translucent dark */
-    
+    background: rgba(0, 0, 0, 0.2);
+    /* Keep it translucent dark */
+
 }
-.bubbleOther .replyQuoteBox .replyTextPreview{
+
+.bubbleOther .replyQuoteBox .replyTextPreview {
     color: black;
 }
+
 .bubbleOther .replySender {
-    color: #a777e3; /* Lighter purple for dark background */
+    color: #a777e3;
+    /* Lighter purple for dark background */
 }
+
 .replySender::after {
     content: " :";
 }
+
 .bubbleOther .replyTextPreview {
-    color: #e0e0e0; /* Light text for dark background */
+    color: #e0e0e0;
+    /* Light text for dark background */
 }
 
 .cancelReply {
