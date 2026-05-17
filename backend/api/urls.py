@@ -32,10 +32,11 @@ from .views.conversation.conversation_action import (
 from .views.event.event_action import toggle_event_reminder
 from .views.event.events import events
 from .views.notification.notification import get_notifications, notification_delete_mark
-from .views.pages.page_update import get_page_profile, update_page_profile
+from .views.pages.page_update import update_page_profile
 from .views.pages.pages import (
     followed_pages,
     page_detail,
+    page_events,
     rate_page,
     recommended_pages,
     toggle_follow_page,
@@ -123,6 +124,7 @@ urlpatterns = [
     path("pages/<int:page_id>/", page_detail),
     path("pages/<int:page_id>/follow/", toggle_follow_page),
     path("pages/<int:page_id>/review/", rate_page),
+    path("pages/<int:page_id>/events/", page_events),
     path("events/", events),
     path("events/<int:event_id>/remind/", toggle_event_reminder),
     path("events/reminders/", get_events),
@@ -135,6 +137,5 @@ urlpatterns += [
     path("auth/page/login/", page_login),
     path("auth/page/logout/", page_logout),
     path("auth/page/me/", page_me),
-    path("pages/<int:page_id>/", get_page_profile),
     path("page/profile/update/", update_page_profile),
 ]

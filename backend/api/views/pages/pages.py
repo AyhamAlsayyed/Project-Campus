@@ -5,8 +5,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Friendship, Page, PageRating
-from ...serializers import PageSerializer
+from ...models import Event, Friendship, Page, PageRating
+from ...serializers import EventSerializer, PageSerializer
 
 User = get_user_model()
 
@@ -116,3 +116,15 @@ def rate_page(request, page_id):
 
     serializer = PageSerializer(page, context={"request": request})
     return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def page_events(request, page_id):
+    page = get_object_or_404(Page, user_id=page_id)
+
+    events = Event.objects.filter(page=page).order_by("start_date")
+
+    serializer = EventSerializer(events, many=True, context={"request": request})
+
+    return Response(serializer.data, status=status.HTTP_200_OK)

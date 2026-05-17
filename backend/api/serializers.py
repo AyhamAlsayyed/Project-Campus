@@ -9,6 +9,7 @@ from .models import (
     Friendship,
     Notification,
     Page,
+    PageRating,
     Post,
     PostMedia,
     PostReaction,
@@ -167,6 +168,7 @@ class PageSerializer(serializers.ModelSerializer):
     followers_count = serializers.SerializerMethodField()
     average_rating = serializers.ReadOnlyField()
     total_ratings = serializers.ReadOnlyField()
+    user_rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Page
@@ -189,6 +191,7 @@ class PageSerializer(serializers.ModelSerializer):
             "followers_count",
             "total_ratings",
             "average_rating",
+            "user_rating",
         ]
 
     def get_page_name(self, obj):
@@ -212,6 +215,15 @@ class PageSerializer(serializers.ModelSerializer):
             return Friendship.objects.filter(
                 user2=obj.user, status=Friendship.Status.FOLLOWING, relation_type=Friendship.RelationType.USER_TO_PAGE
             ).count()
+        return 0
+
+    def get_user_rating(self, obj):
+        request = self.context.get("request")
+
+        if request and request.user and request.user.is_authenticated:
+            rating = PageRating.objects.filter(page=obj, user=request.user).first()
+            if rating:
+                return rating.score
         return 0
 
 
