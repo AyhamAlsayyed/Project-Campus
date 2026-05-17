@@ -265,7 +265,7 @@ export default function ProfilePage({ type }) {
             const res = await fetch(`${API}/api/pages/${userId}/review/`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ rating })
+                body: JSON.stringify({ score: rating })
             });
         } catch (e) { console.error(e); }
     };
