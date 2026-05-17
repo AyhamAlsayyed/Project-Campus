@@ -51,7 +51,7 @@ def comment_list(request, post_id):
     comments = (
         Comment.objects.filter(post_id=post_id)
         .select_related(
-            "author_user",
+            "author",
             "parent_comment__author",
         )
         .order_by("-created_at")
@@ -63,18 +63,18 @@ def comment_list(request, post_id):
         all_blocked_users = users_blocked_by_me | users_who_blocked_me
 
         if all_blocked_users:
-            comments = comments.exclude(author_user_id__in=all_blocked_users)
+            comments = comments.exclude(author_id__in=all_blocked_users)
 
     data = []
     for c in comments:
         author = c.author
         avatar = get_user_avatar(request, author)
 
-        # derive replying_to from parent_comment
-        replying_to, parent = None, None
+        replying_to, parent_id = None, None
         if c.parent_comment:
             parent = c.parent_comment
             replying_to = parent.author.username
+            parent_id = parent.comment_id
 
         data.append(
             {
@@ -84,7 +84,7 @@ def comment_list(request, post_id):
                 "user_avatar": avatar,
                 "user_id": author.id,
                 "created_at": c.created_at.isoformat(),
-                "parent_comment": parent.id,
+                "parent_comment": parent_id,
                 "replying_to": replying_to,
             }
         )
@@ -119,11 +119,12 @@ def create_comment(request, post_id):
         actor=author,
     )
 
-    avatar = get_user_avatar(request, comment)
+    avatar = get_user_avatar(request, author)
 
     replying_to = None
     if parent_comment:
         replying_to = parent_comment.author.username
+        parent_comment = parent_comment.comment_id
 
     return Response(
         {
@@ -133,7 +134,7 @@ def create_comment(request, post_id):
             "user_id": author.id,
             "user_avatar": avatar,
             "created_at": comment.created_at.isoformat(),
-            "parent_comment": parent_comment.comment_id,
+            "parent_comment": parent_comment,
             "replying_to": replying_to,
         },
         status=201,

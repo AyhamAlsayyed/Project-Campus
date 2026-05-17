@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Message, Notification, Post, PostReaction, Report, SavedPost
+from ...models import Message, Notification, Post, PostReaction, SavedPost
 
 
 @api_view(["POST"])
@@ -32,7 +32,7 @@ def toggle_like(request, post_id):
         if should_notify:
             Notification.objects.create(
                 receiver=receiver,
-                actor_user=user,
+                actor=user,
                 type=Notification.Type.LIKE,
                 content=f"{user.username} liked your post",
                 content_type=ContentType.objects.get_for_model(post),
@@ -42,26 +42,6 @@ def toggle_like(request, post_id):
     likes_count = PostReaction.objects.filter(post=post, user__isnull=False).count()
 
     return Response({"liked": liked, "likes_count": likes_count}, status=200)
-
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def report_post(request, post_id):
-    try:
-        post = Post.objects.get(pk=post_id)
-    except Post.DoesNotExist:
-        return Response({"error": "Post not found"}, status=404)
-
-    reason = request.data.get("reason", "No reason provided")
-
-    Report.objects.create(
-        reporter=request.user,
-        reported_content_id=post.post_id,
-        content_type=request.data["content_type"],
-        reason=reason,
-    )
-
-    return Response({"message": "Post reported successfully"}, status=201)
 
 
 @api_view(["POST"])
@@ -89,14 +69,14 @@ def save_post(request, post_id):
 def toggle_pin_post(request, post_id):
     user = request.user
     try:
-        post = Post.objects.get(pk=post_id, author_user=user)
+        post = Post.objects.get(pk=post_id, author=user)
     except Post.DoesNotExist:
         return Response({"error": "Post not found"}, status=404)
 
     if post.is_pinned:
         post.is_pinned = False
     else:
-        Post.objects.filter(author_user=user).update(is_pinned=False)
+        Post.objects.filter(author=user).update(is_pinned=False)
         post.is_pinned = True
 
     post.save(update_fields=["is_pinned"])

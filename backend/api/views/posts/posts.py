@@ -28,18 +28,7 @@ from ...models import (
 )
 from ...serializers import PostSerializer
 from ...utils.blocked_users import get_blocked_user_sets
-
-
-def _get_user_university_page_id(user):
-    student = getattr(user, "student_profile", None)
-    if student and student.university_page_id:
-        return student.university_page_id
-
-    instructor = getattr(user, "instructor_profile", None)
-    if instructor and instructor.university_page_id:
-        return instructor.university_page_id
-
-    return None
+from ...utils.uni_page import _get_user_university
 
 
 def base_annotations(user):
@@ -149,7 +138,7 @@ def feed(request, community_id=None):
         community_ids = CommunityMember.objects.filter(user=user).values_list("community_id", flat=True)
         followed_pages = FollowPage.objects.filter(user=user).values_list("page_id", flat=True)
         accepted_users, blocked_users = get_friendship_sets(user)
-        uni_page_id = _get_user_university_page_id(user)
+        uni_page = _get_user_university(user)
 
         # exclude own and blocked users posts
         qs = qs.exclude(author_id=user.id)
@@ -162,7 +151,7 @@ def feed(request, community_id=None):
             qs = (
                 qs.annotate(
                     p_university=Case(
-                        When(author_id=uni_page_id, then=Value(50)),
+                        When(author_id=uni_page.user.id, then=Value(50)),
                         default=Value(0),
                         output_field=IntegerField(),
                     ),
@@ -204,7 +193,6 @@ def feed(request, community_id=None):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_saved_posts(request):
-    """Saved posts - hide normal posts from blocked users"""
     user = request.user
 
     users_blocked_by_me, users_who_blocked_me = get_blocked_user_sets(user)
@@ -212,7 +200,7 @@ def get_saved_posts(request):
 
     saved = SavedPost.objects.filter(user=user).order_by("-created_at")
 
-    post_ids = [s.post for s in saved]
+    post_ids = [s.post.post_id for s in saved]
 
     posts_qs = Post.objects.filter(post_id__in=post_ids).annotate(**base_annotations(user))
 
@@ -222,10 +210,7 @@ def get_saved_posts(request):
 
     posts_qs = posts_qs.select_related("author__profile").prefetch_related("media")
 
-    post_map = {p.post_id: p for p in posts_qs}
-    ordered_posts = [post_map[s.post] for s in saved if s.post in post_map]
-
-    serializer = PostSerializer(ordered_posts, many=True, context={"request": request})
+    serializer = PostSerializer(posts_qs, many=True, context={"request": request})
     return Response(serializer.data)
 
 

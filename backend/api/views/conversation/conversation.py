@@ -76,8 +76,11 @@ def get_conversations(request):
 
             if other_member_obj:
                 other_user = other_member_obj.user
-                name = other_user.username
-                avatar = get_user_avatar(request, other_user)
+                if other_user:
+                    name = other_user.username
+                    avatar = get_user_avatar(request, other_user)
+                else:
+                    name = "Deleted Account"
 
         msg_query = Message.objects.filter(conversation=conv)
         if member.last_read_at:
@@ -227,19 +230,11 @@ def send_message(request, conversation_id):
 @permission_classes([IsAuthenticated])
 def get_or_create_dm(request, user_id):
     current_user = request.user
-    target_type = request.data.get("target_type")
-
-    target_user = User.objects.get(id=user_id) if target_type == "user" else None
-
-    existing = (
-        Conversation.objects.filter(is_group=False)
-        .filter(members__user=current_user)
-        .filter(members__user=target_user)
-        .first()
-    )
+    target_user = User.objects.get(id=user_id)
+    existing = request.data.get("conversation_id")
 
     if existing:
-        return Response({"id": existing.conversation_id})
+        return Response({"id": existing})
 
     new_conv = Conversation.objects.create(is_group=False)
     ConversationMember.objects.create(conversation=new_conv, user=current_user)

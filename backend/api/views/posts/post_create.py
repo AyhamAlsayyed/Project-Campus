@@ -31,7 +31,7 @@ def create_post(request):
         except Community.DoesNotExist:
             return Response({"error": "Community not found"}, status=status.HTTP_400_BAD_REQUEST)
 
-    post = Post.objects.create(content_text=content, author_user=user, community=community)
+    post = Post.objects.create(content_text=content, author=user, community=community)
 
     i = 0
     for img in images:

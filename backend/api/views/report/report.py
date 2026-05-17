@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ...models import Report
+from ...utils.uni_page import _get_user_university
 
 
 @api_view(["POST"])
@@ -21,12 +22,18 @@ def create_report(request):
     except ContentType.DoesNotExist:
         return Response({"error": f"Invalid model type: {model_type_str}"}, status=400)
 
-    full_reason_text = f"Category: {selected_reason}\nDetails: {data.get('extra_note', 'N/A')}"
     university_page = None
-    if hasattr(user, "student_profile"):
-        university_page = user.student_profile.university_page
-    elif hasattr(user, "instructor_profile"):
-        university_page = user.instructor_profile.university_page
+
+    try:
+        model_class = content_type_obj.model_class()
+        target_content = model_class.objects.get(pk=target_object_id)
+    except (AttributeError, model_class.DoesNotExist):
+        return Response({"error": "Reported content item not found"}, status=404)
+
+    if target_content and hasattr(target_content, "author") and target_content.author:
+        university_page = _get_user_university(target_content.author)
+
+    full_reason_text = f"Category: {selected_reason}\nDetails: {data.get('extra_note', 'N/A')}"
 
     report = Report.objects.create(
         content_type_obj=content_type_obj,

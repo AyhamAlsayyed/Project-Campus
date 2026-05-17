@@ -4,6 +4,7 @@ from rest_framework import serializers
 from .models import (
     Comment,
     Community,
+    Conversation,
     Event,
     FollowPage,
     Friendship,
@@ -68,6 +69,7 @@ class UserSerializer(serializers.ModelSerializer):
     department = serializers.SerializerMethodField()
     academic_title = serializers.SerializerMethodField()
     instructor_type = serializers.SerializerMethodField()
+    convention_id = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -84,6 +86,7 @@ class UserSerializer(serializers.ModelSerializer):
             "academic_title",
             "instructor_type",
             "degrees",
+            "convention_id",
         ]
 
     def get_role(self, obj):
@@ -136,11 +139,33 @@ class UserSerializer(serializers.ModelSerializer):
         sorted_degrees = sorted(degrees_qs, key=lambda d: DEGREE_ORDER.get(d.degree_type, 99))
         return UserDegreeSerializer(sorted_degrees, many=True).data
 
+    def get_convention_id(self, obj):
+        request = self.context.get("request")
+
+        if not request or not request.user or request.user.is_anonymous:
+            return None
+
+        current_user = request.user
+        target_user = obj
+
+        if current_user == target_user:
+            return None
+
+        existing = (
+            Conversation.objects.filter(is_group=False)
+            .filter(members__user=current_user)
+            .filter(members__user=target_user)
+            .first()
+        )
+
+        return existing.conversation_id if existing else None
+
 
 class PageSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source="page_id", read_only=True)
+    id = serializers.IntegerField(read_only=True)
+    page_name = serializers.SerializerMethodField()
     is_followed = serializers.SerializerMethodField()
-    followers_count = serializers.IntegerField(source="followers.count", read_only=True)
+    followers_count = serializers.SerializerMethodField()
     average_rating = serializers.ReadOnlyField()
     total_ratings = serializers.ReadOnlyField()
 
@@ -150,6 +175,8 @@ class PageSerializer(serializers.ModelSerializer):
             "id",
             "page_full_name",
             "page_name",
+            "page_name_arabic",
+            "page_branch",
             "page_type",
             "description",
             "profile_image",
@@ -161,11 +188,21 @@ class PageSerializer(serializers.ModelSerializer):
             "average_rating",
         ]
 
+    def get_page_name(self, obj):
+        if obj.user:
+            return obj.user.username
+        return ""
+
     def get_is_followed(self, obj):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             return FollowPage.objects.filter(user=request.user, page=obj).exists()
         return False
+
+    def get_followers_count(self, obj):
+        if hasattr(obj, "followers"):
+            return obj.followers.count()
+        return 0
 
 
 class PostMediaSerializer(serializers.ModelSerializer):
