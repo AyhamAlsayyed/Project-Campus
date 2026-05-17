@@ -315,6 +315,11 @@ class Friendship(models.Model):
         ACCEPTED = "accepted", "Accepted"
         REJECTED = "rejected", "Rejected"
         BLOCKED = "blocked", "Blocked"
+        FOLLOWING = "following", "Following"
+
+    class RelationType(models.TextChoices):
+        USER_TO_USER = "user_to_user", "User To User"
+        USER_TO_PAGE = "user_to_page", "User To Page"
 
     friendship_id = models.BigAutoField(primary_key=True, db_column="friendship_id")
 
@@ -335,6 +340,12 @@ class Friendship(models.Model):
         max_length=10,
         choices=Status.choices,
         default=Status.PENDING,
+    )
+
+    relation_type = models.CharField(
+        max_length=20,
+        choices=RelationType.choices,
+        default=RelationType.USER_TO_USER,
     )
 
     class Meta:
@@ -660,24 +671,6 @@ class CommentReaction(models.Model):
                 condition=Q(user__isnull=False),
                 name="uniq_comment_reaction_user",
             ),
-        ]
-
-
-class FollowPage(models.Model):
-    id = models.BigAutoField(primary_key=True)
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="page_follows", db_column="user_id"
-    )
-
-    page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name="followers", db_column="page_id")
-
-    followed_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = "follow_page"
-        constraints = [
-            models.UniqueConstraint(fields=["user", "page"], name="uniq_user_page_follow"),
         ]
 
 

@@ -15,9 +15,9 @@ from .views.communities.communitie import (
     toggle_pick,
 )
 from .views.conversation.conversation import (
+    create_dm,
     get_conversations,
     get_messages,
-    create_dm,
     send_message,
 )
 from .views.conversation.conversation_action import (
@@ -75,8 +75,8 @@ urlpatterns = [
     path("users/<int:user_id>/", profile_view),
     path("users/<int:user_id>/block/", block_user),
     path("auth/profile/update/", update_profile),  #
-    path("posts/feed/", feed),  # what is the diff
-    path("posts/", feed),  # waht is the diff
+    path("posts/feed/", feed),
+    path("posts/", feed),
     path("posts/saved/", get_saved_posts),
     path("posts/activity/", get_activity_posts),
     path("posts/create/", create_post),

@@ -20,7 +20,6 @@ from rest_framework.response import Response
 from ...models import (
     Comment,
     CommunityMember,
-    FollowPage,
     Friendship,
     Post,
     PostReaction,
@@ -107,11 +106,13 @@ def feed(request, community_id=None):
             qs = qs.filter(author_id__in=accepted_users).order_by("-created_at")
 
     elif filter_type == "follow_page":
-        followed_page_ids = FollowPage.objects.filter(user=user).values_list("page_id", flat=True)
-        if not followed_page_ids:
+        followed_user_ids = Friendship.objects.filter(
+            user1=user, status=Friendship.Status.FOLLOWING, relation_type=Friendship.RelationType.USER_TO_PAGE
+        ).values_list("user2_id", flat=True)
+        if not followed_user_ids:
             qs = Post.objects.none()
         else:
-            qs = qs.filter(author_id__in=followed_page_ids).order_by("-created_at")
+            qs = qs.filter(author_id__in=followed_user_ids).order_by("-created_at")
 
     # community feed
     elif community_id:
@@ -136,7 +137,9 @@ def feed(request, community_id=None):
     # home feeed
     else:
         community_ids = CommunityMember.objects.filter(user=user).values_list("community_id", flat=True)
-        followed_pages = FollowPage.objects.filter(user=user).values_list("page_id", flat=True)
+        followed_user_ids = Friendship.objects.filter(
+            user1=user, status=Friendship.Status.FOLLOWING, relation_type=Friendship.RelationType.USER_TO_PAGE
+        ).values_list("user2_id", flat=True)
         accepted_users, blocked_users = get_friendship_sets(user)
         uni_page = _get_user_university(user)
 
@@ -161,7 +164,7 @@ def feed(request, community_id=None):
                         output_field=IntegerField(),
                     ),
                     p_following=Case(
-                        When(author_id__in=followed_pages, then=Value(20)),
+                        When(author_id__in=followed_user_ids, then=Value(20)),
                         default=Value(0),
                         output_field=IntegerField(),
                     ),

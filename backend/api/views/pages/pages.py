@@ -1,11 +1,14 @@
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import FollowPage, Page, PageRating
+from ...models import Friendship, Page, PageRating
 from ...serializers import PageSerializer
+
+User = get_user_model()
 
 
 @api_view(["GET"])
@@ -13,8 +16,11 @@ from ...serializers import PageSerializer
 def followed_pages(request):
     user = request.user
 
-    followed_ids = FollowPage.objects.filter(user=user).values_list("page_id", flat=True)
-    pages = Page.objects.filter(id__in=followed_ids)
+    followed_user_ids = Friendship.objects.filter(
+        user1=user, status=Friendship.Status.FOLLOWING, relation_type=Friendship.RelationType.USER_TO_PAGE
+    ).values_list("user2_id", flat=True)
+
+    pages = Page.objects.filter(user_id__in=followed_user_ids)
 
     serializer = PageSerializer(pages, many=True, context={"request": request})
     return Response(serializer.data)
@@ -24,9 +30,12 @@ def followed_pages(request):
 @permission_classes([IsAuthenticated])
 def recommended_pages(request):
     user = request.user
-    followed_page_ids = FollowPage.objects.filter(user=user).values_list("page_id", flat=True)
 
-    pages = Page.objects.exclude(id__in=followed_page_ids).order_by("-verified")[:5]
+    followed_user_ids = Friendship.objects.filter(
+        user1=user, status=Friendship.Status.FOLLOWING, relation_type=Friendship.RelationType.USER_TO_PAGE
+    ).values_list("user2_id", flat=True)
+
+    pages = Page.objects.exclude(user_id__in=followed_user_ids).order_by("-verified")[:5]
 
     serializer = PageSerializer(pages, many=True, context={"request": request})
     return Response(serializer.data)
@@ -36,22 +45,50 @@ def recommended_pages(request):
 @permission_classes([IsAuthenticated])
 def toggle_follow_page(request, page_id):
     user = request.user
-    page = get_object_or_404(Page, id=page_id)
 
-    follow_qs = FollowPage.objects.filter(user=user, page=page)
+    page_user = get_object_or_404(User, id=page_id)
 
-    if follow_qs.exists():
-        follow_qs.delete()
-        return Response({"status": "unfollowed", "is_followed": False}, status=status.HTTP_200_OK)
+    page = get_object_or_404(Page, user_id=page_id)
 
-    FollowPage.objects.create(user=user, page=page)
-    return Response({"status": "followed", "is_followed": True}, status=status.HTTP_201_CREATED)
+    friendship = Friendship.objects.filter(
+        user1=user, user2=page_user, relation_type=Friendship.RelationType.USER_TO_PAGE
+    ).first()
+
+    if friendship:
+        if friendship.status == Friendship.Status.FOLLOWING:
+            friendship.delete()
+            is_followed = False
+            response_status = status.HTTP_200_OK
+        else:
+            friendship.status = Friendship.Status.FOLLOWING
+            friendship.save()
+            is_followed = True
+            response_status = status.HTTP_200_OK
+    else:
+        Friendship.objects.create(
+            user1=user,
+            user2=page_user,
+            status=Friendship.Status.FOLLOWING,
+            relation_type=Friendship.RelationType.USER_TO_PAGE,
+        )
+        is_followed = True
+        response_status = status.HTTP_201_CREATED
+
+    serializer = PageSerializer(page, context={"request": request})
+
+    response_data = {
+        "is_followed": is_followed,
+        "status": "followed" if is_followed else "unfollowed",
+        **serializer.data,
+    }
+
+    return Response(response_data, status=response_status)
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def page_detail(request, page_id):
-    page = get_object_or_404(Page, id=page_id)
+    page = get_object_or_404(Page, user_id=page_id)
 
     serializer = PageSerializer(page, context={"request": request})
     return Response(serializer.data)
@@ -70,7 +107,7 @@ def rate_page(request, page_id):
     except (ValueError, TypeError):
         return Response({"error": "Invalid score format"}, status=status.HTTP_400_BAD_REQUEST)
 
-    page = get_object_or_404(Page, id=page_id)
+    page = get_object_or_404(Page, user_id=page_id)
 
     if page.user == user:
         return Response({"error": "You cannot rate your own page"}, status=status.HTTP_400_BAD_REQUEST)

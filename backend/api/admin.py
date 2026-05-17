@@ -11,7 +11,6 @@ from .models import (
     EmailVerification,
     Event,
     EventReminder,
-    FollowPage,
     Friendship,
     Instructor,
     Message,
@@ -50,7 +49,6 @@ admin.site.register(PostMedia)
 admin.site.register(Comment)
 admin.site.register(PostReaction)
 admin.site.register(CommentReaction)
-admin.site.register(FollowPage)
 admin.site.register(Conversation)
 admin.site.register(ConversationMember)
 admin.site.register(Message)

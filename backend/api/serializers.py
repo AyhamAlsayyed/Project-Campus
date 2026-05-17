@@ -6,7 +6,6 @@ from .models import (
     Community,
     Conversation,
     Event,
-    FollowPage,
     Friendship,
     Notification,
     Page,
@@ -195,13 +194,20 @@ class PageSerializer(serializers.ModelSerializer):
 
     def get_is_followed(self, obj):
         request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            return FollowPage.objects.filter(user=request.user, page=obj).exists()
+        if request and request.user.is_authenticated and obj.user:
+            return Friendship.objects.filter(
+                user1=request.user,
+                user2=obj.user,
+                status=Friendship.Status.FOLLOWING,
+                relation_type=Friendship.RelationType.USER_TO_PAGE,
+            ).exists()
         return False
 
     def get_followers_count(self, obj):
-        if hasattr(obj, "followers"):
-            return obj.followers.count()
+        if obj.user:
+            return Friendship.objects.filter(
+                user2=obj.user, status=Friendship.Status.FOLLOWING, relation_type=Friendship.RelationType.USER_TO_PAGE
+            ).count()
         return 0
 
 
@@ -467,7 +473,7 @@ class CommunitySerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source="event_id", read_only=True)
-
+    page_id = serializers.IntegerField(source="page.user_id", read_only=True)
     organization_name = serializers.CharField(source="page.page_full_name")
     page_type = serializers.CharField(source="page.page_type")
     avatar = serializers.SerializerMethodField()
