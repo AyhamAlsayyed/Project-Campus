@@ -262,7 +262,7 @@ export default function ProfilePage({ type }) {
     const handleReview = async (rating) => {
         setReviewRating(rating);
         try {
-            await fetch(`${API}/api/users/${userId}/review/`, {
+            const res = await fetch(`${API}/api/pages/${userId}/review/`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ rating })

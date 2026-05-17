@@ -22,6 +22,7 @@ export default function Homepage() {
     const navigate = useNavigate();
     const location = useLocation();
     const [pendingOpen, setPendingOpen] = useState(null);
+    const pendingStateRef = useRef(null);
 
     const [theme, setTheme] = useState("dark")
     const toggleTheme = () => setTheme(prev => prev === "light" ? "dark" : "light")
@@ -73,6 +74,72 @@ export default function Homepage() {
 
     const openComments = (post) => { setSelectedPost(post); };
     const closeComments = () => { setSelectedPost(null); };
+
+    useEffect(() => {
+        console.log("📍 [location.state, user] fired", {
+            hasOpenPost: !!location.state?.openPost,
+            userLoaded: !!user
+        });
+        if (!location.state?.openPost) return;
+
+        const openPost = location.state.openPost;
+        navigate('/home', { replace: true, state: {} });
+
+        const handleOpenPost = (data) => {
+            const { post, postId, commentId } = data;
+            if (post) {
+                setSelectedPost({
+                    ...post,
+                    id: post.post_id || post.id || postId,
+                    highlightCommentId: commentId ? Number(commentId) : null,
+                    author: {
+                        ...post.author,
+                        avatar: post.author?.avatar?.startsWith("http")
+                            ? post.author.avatar
+                            : `${API}${post.author?.avatar}`
+                    }
+                });
+            } else {
+                setPendingOpen({
+                    postId: Number(postId),
+                    commentId: commentId ? Number(commentId) : null
+                });
+            }
+        };
+
+        if (user) {
+            // User already loaded (navigating from another page while logged in)
+            handleOpenPost(openPost);
+        } else {
+            // User not yet loaded, store for when it arrives
+            pendingStateRef.current = openPost;
+        }
+    }, [location.state, user]);
+    useEffect(() => {
+        if (!user || !pendingStateRef.current) return;
+        const data = pendingStateRef.current;
+        pendingStateRef.current = null;
+
+        const { post, postId, commentId } = data;
+        if (post) {
+            setSelectedPost({
+                ...post,
+                id: post.post_id || post.id || postId,
+                highlightCommentId: commentId ? Number(commentId) : null,
+                author: {
+                    ...post.author,
+                    avatar: post.author?.avatar?.startsWith("http")
+                        ? post.author.avatar
+                        : `${API}${post.author?.avatar}`
+                }
+            });
+        } else {
+            setPendingOpen({
+                postId: Number(postId),
+                commentId: commentId ? Number(commentId) : null
+            });
+        }
+    }, [user]);
 
     const loadPosts = async () => {
         if (!token) { setLoading(false); setError("No token found"); return }
@@ -220,32 +287,7 @@ export default function Homepage() {
 
         fetchPostContent();
     }, [pendingOpen, user]);
-    useEffect(() => {
-        if (!user || !location.state?.openPost) return;
 
-        const { post, postId, commentId } = location.state.openPost;
-
-        if (post) {
-            setSelectedPost({
-                ...post,
-                id: post.post_id || post.id || postId,
-                highlightCommentId: commentId ? Number(commentId) : null,
-                author: {
-                    ...post.author,
-                    avatar: post.author?.avatar?.startsWith("http")
-                        ? post.author.avatar
-                        : `${API}${post.author?.avatar}`
-                }
-            });
-        } else {
-            setPendingOpen({
-                postId: Number(postId),
-                commentId: commentId ? Number(commentId) : null
-            });
-        }
-
-        navigate('/home', { replace: true, state: {} });
-    }, [user, location.state]);
 
     useEffect(() => {
 
