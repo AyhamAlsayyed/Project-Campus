@@ -231,15 +231,13 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
   };
   const confirmDelete = async () => {
     const token = localStorage.getItem("access");
+    const postId = post.id || post.post_id;  // ← add fallback
     try {
-      const res = await fetch(`http://localhost:8000/api/posts/${post.id}/`, {
+      const res = await fetch(`http://localhost:8000/api/posts/${postId}/`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) {
-        // Handle post removal from UI (e.g., refresh page or filter state)
-        window.location.reload();
-      }
+      if (res.ok) window.location.reload();
     } catch (err) {
       console.error("Delete failed", err);
     }
@@ -347,7 +345,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
               {post.tag && <span className={styles.tag}>{post.tag}</span>}
             </div>
             <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>
-            {isPinned && (
+            {isPinned && isOwnProfile && (
               <>
                 <img src={Pin} alt="pinned" width={14} height={14} style={{ filter: 'brightness(0) invert(1)' }} className={styles.pinIcon} />
                 <p style={{ color: "white" }}>Pinned</p>

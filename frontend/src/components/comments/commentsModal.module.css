@@ -67,10 +67,13 @@
 }
 
 .replyBubble {
-  background: #2a2a2a;
-  padding: 6px 10px;
-  border-radius: 12px;
-  font-size: 13px;
+    background: #2a2a2a;
+    padding: 6px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
 }
 .replyingTo {
   color: #4da6ff;
@@ -271,11 +274,14 @@
 }
 
 .commentBubble {
-    background: rgba(255, 255, 255, 0.04); 
+    background: rgba(255, 255, 255, 0.04);
     padding: 8px 12px;
     border-radius: 15px;
     max-width: fit-content;
     border: 1px solid rgba(255, 255, 255, 0.02);
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;  /* ← also add this so it can't grow past container */
 }
 
 .commentAuthor {
@@ -453,6 +459,8 @@
     margin: 12px 0;
     font-size: 14px;
     line-height: 1.45;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 .filesContainer {
     margin-top: 15px;

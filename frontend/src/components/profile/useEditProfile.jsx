@@ -38,27 +38,40 @@ export function useProfileEdit({ user, token, API, onSaved }) {
 
     const syncFromUser = (u) => {
         if (!u) return;
-        setAvatarPreview(u.avatar?.startsWith('http') ? u.avatar : u.avatar ? `${API}${u.avatar}` : null);
-        setCoverPreview(u.cover?.startsWith('http') ? u.cover : u.cover ? `${API}${u.cover}` : null);
+
+        const rawAvatar = u?.profile?.avatar || u?.avatar;
+        const rawCover = u?.profile?.cover || u?.cover;
+
+        setAvatarPreview(
+            rawAvatar
+                ? (rawAvatar.startsWith('http') ? rawAvatar : `${API}${rawAvatar}`)
+                : null
+        );
+        setCoverPreview(
+            rawCover
+                ? (rawCover.startsWith('http') ? rawCover : `${API}${rawCover}`)
+                : null
+        );
+
         setFormData({
             username: u.username || '',
-            fullName: u.full_name || '',
+            fullName: u.profile?.full_name || u.full_name || '',
             university: u.university || '',
             major: u.major || '',
-            bio: u.bio || '',
-            primaryEmail: u.academic_email || u.email || '',
+            bio: u.profile?.bio || u.bio || '',
+            primaryEmail: u.profile?.academic_email || u.academic_email || u.email || '',
             secondaryEmail: u.personal_email || '',
-            primaryPhone: u.primary_phone || '',
-            secondaryPhone: u.secondary_phone || '',
-            birthday: parseBirthday(u.birthday),
-            degrees: (u.degree || []).map(deg => ({
+            primaryPhone: u.profile?.primary_phone || u.primary_phone || '',
+            secondaryPhone: u.profile?.secondary_phone || u.secondary_phone || '',
+            birthday: parseBirthday(u.profile?.birth_date || u.birthday),
+            degrees: (u.degrees || u.degree || []).map(deg => ({
                 id: deg.id,
-                title: deg.degree_type, 
-                field: deg.major,       
+                title: deg.degree_type,
+                field: deg.major,
                 institution: deg.institution
             })),
-            educationEntries: user?.education || [],
-            teachingPositions: user?.teaching_positions || []
+            educationEntries: u?.education || [],
+            teachingPositions: u?.teaching_positions || []
         });
     };
 

@@ -106,18 +106,63 @@ export default function Homepage() {
     const handleFileUpload = (e) => { setFiles(prev => [...prev, ...Array.from(e.target.files)]); setIsModalOpen(true); };
 
     const handleCreatePost = async () => {
-        if (!content.trim() && !images.length && !files && !isPollOpen) return;
-        const formData = new FormData();
-        formData.append("content", content);
-        images.forEach((img) => formData.append("images", img));
-        files.forEach((file) => formData.append("files", file));
-        if (isPollOpen) { pollOptions.filter(opt => opt.trim()).forEach((opt, i) => formData.append(`poll_options[${i}]`, opt)); }
-        if (selectedCommunity) formData.append("community", selectedCommunity.id);
+        if (!content.trim() && !images.length && !files.length && !isPollOpen) return;
+
+        // Optimistically add to top of feed
+        const optimisticPost = {
+            id: `temp-${Date.now()}`,
+            content_text: content,
+            created_at: new Date().toISOString(),
+            author: {
+                id: user?.id,
+                username: user?.username,
+                avatar: avatarSrc,
+            },
+            likes_count: 0,
+            comments_count: 0,
+            is_liked: false,
+            is_saved: false,
+            media: images.map(img => ({
+                url: URL.createObjectURL(img),
+                type: img.type.startsWith("video/") ? "video" : "image"
+            })),
+        };
+
+        setPosts(prev => [optimisticPost, ...prev]);
+        setIsModalOpen(false);
+        resetPostState();
+
         try {
-            const res = await fetch(`${API}/api/posts/create/`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData });
-            if (!res.ok) { console.error("Failed to create post"); return; }
-            resetPostState(); setIsModalOpen(false); loadPosts();
-        } catch (err) { console.error("Error:", err); }
+            const formData = new FormData();
+            formData.append("content", content);
+            images.forEach(img => formData.append("images", img));
+            files.forEach(file => formData.append("files", file));
+            if (isPollOpen) {
+                pollOptions.filter(opt => opt.trim()).forEach((opt, i) => formData.append(`poll_options[${i}]`, opt));
+            }
+            if (selectedCommunity) formData.append("community", selectedCommunity.id);
+
+            const res = await fetch(`${API}/api/posts/create/`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData
+            });
+
+            if (!res.ok) {
+                setPosts(prev => prev.filter(p => p.id !== optimisticPost.id));
+                return;
+            }
+
+            // Replace temp post with real one from server
+            const savedPost = await res.json();
+            setPosts(prev => prev.map(p =>
+                p.id === optimisticPost.id ? savedPost : p
+            ));
+
+        } catch (err) {
+            setPosts(prev => prev.filter(p => p.id !== optimisticPost.id));
+            console.error("Error:", err);
+        }
     };
 
     useEffect(() => {

@@ -108,8 +108,8 @@ export default function CommunityPage() {
     const handleCreatePost = async () => {
         if (!content.trim() && !images.length && !files.length && !isPollOpen) return;
 
-        const communityId = selectedCommunity?.id || id; 
-         console.log("communityId being sent:", communityId); 
+        const communityId = selectedCommunity?.id || id;
+        console.log("communityId being sent:", communityId);
 
         const formData = new FormData();
         formData.append("content", content);
@@ -149,10 +149,10 @@ export default function CommunityPage() {
     const handleMediaUpload = (e) => { setImages(prev => [...prev, ...Array.from(e.target.files)]); };
     const handleFileUpload = (e) => { setFiles(prev => [...prev, ...Array.from(e.target.files)]); };
 
-    const avatarSrc = user?.avatar
-        ? user.avatar.startsWith("http") ? user.avatar : `${API}${user.avatar}`
+    const rawAvatar = user?.profile?.avatar || user?.avatar;
+    const avatarSrc = rawAvatar
+        ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
         : "/default-avatar.png";
-
     const mobileFilters = [
         { key: "recent", label: "Most Recent" },
         { key: "recommended", label: "Recommended" },
@@ -332,13 +332,23 @@ export default function CommunityPage() {
                                 </button>
                             ))}
                         </div>
-                        <div className={styles.communityPostsContainer}>
-                            <div className={styles.innerContainer}>
-                                {posts.map(post => (
-                                    <PostCard key={post.id} post={post} openComments={openComments} />
-                                ))}
+                        {posts.length > 0 ? (
+                            <div className={styles.communityPostsContainer} style={{ flex: 1, width: "100%" }}>
+                                <div className={styles.innerContainer} style={{ width: "100%" }}>
+                                    {posts.map(post => (
+                                        <PostCard key={post.id} post={post} openComments={openComments} />
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className={styles.emptyState}>
+                                <div className={styles.emptyIconWrapper}>
+                                    <span className={styles.emptyIcon}>📭</span>
+                                </div>
+                                <h2 className={styles.emptyTitle}>No posts yet</h2>
+                                <p className={styles.emptySubtitle}>This community hasn't posted anything yet. Be the first!</p>
+                            </div>
+                        )}
                     </div>
 
                     <div className={styles.rightSection}>

@@ -55,6 +55,7 @@
   width: 100%;
   top: 10px;
   z-index: 10;
+  min-height: calc(100vh - 396px);
 }
 
 

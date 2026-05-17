@@ -172,23 +172,26 @@ export default function ProfilePage() {
             let res = await fetch(`${API}/api/users/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            console.log("users/ status:", res.status); // what do you get here?
+            console.log("users/ status:", res.status); 
 
             if (res.status === 404) {
                 res = await fetch(`${API}/api/pages/${userId}/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                console.log("pages/ status:", res.status); // and here?
+                console.log("pages/ status:", res.status);
                 data = await res.json();
-                console.log("page raw data:", data); // does this print?
+                console.log("page raw data:", data); 
                 data = {
                     ...data,
                     type: 'page',
                     username: data.page_full_name || data.page_name || data.name,
-                    avatar_url: data.profile?.avatar || data.avatar_url || data.avatar || "",
-                    cover_url: data.profile?.cover || data.cover_url || data.cover || "",
-                    full_name: data.profile?.full_name || data.full_name || "",
-                    bio: data.profile?.bio || data.bio || "",
+                    avatar_url: data.profile_image
+                        ? (data.profile_image.startsWith("http") ? data.profile_image : `${API}${data.profile_image}`)
+                        : "",
+                    cover_url: data.banner_image
+                        ? (data.banner_image.startsWith("http") ? data.banner_image : `${API}${data.banner_image}`)
+                        : "",
+                    bio: data.description || "",
                     is_verified: data.verified,
                     is_following: data.is_followed,
                     followers_count: data.followers_count || 0,
@@ -196,7 +199,6 @@ export default function ProfilePage() {
                 };
             } else {
                 data = await res.json();
-                // Map nested profile fields to top level
                 data = {
                     ...data,
                     avatar_url: data.profile?.avatar

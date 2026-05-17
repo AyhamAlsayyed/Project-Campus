@@ -95,6 +95,7 @@ body {
     align-items: stretch;
     width: 100%;
     top: 10px;
+    min-height: calc(100vh - 396px);
     z-index: 10;
 }
 
