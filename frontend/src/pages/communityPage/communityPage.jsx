@@ -89,12 +89,31 @@ export default function CommunityPage() {
             setUser(data);
         } catch (err) { console.error("Failed to load user"); }
     };
+    useEffect(() => {
+        const fetchJoinedCommunities = async () => {
+            if (!token) return;
+            try {
+                const res = await fetch(`${API}/api/communities/joined/`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setJoinedCommunities(data);
+                }
+            } catch (err) { console.error("Failed to fetch joined communities:", err); }
+        };
+        fetchJoinedCommunities();
+    }, [token]);
 
     const handleCreatePost = async () => {
         if (!content.trim() && !images.length && !files.length && !isPollOpen) return;
+
+        const communityId = selectedCommunity?.id || id; 
+         console.log("communityId being sent:", communityId); 
+
         const formData = new FormData();
         formData.append("content", content);
-        formData.append("community_id", id);
+        formData.append("community", communityId);
         images.forEach(img => formData.append("images", img));
         files.forEach(file => formData.append("files", file));
         if (isPollOpen) {
@@ -338,7 +357,7 @@ export default function CommunityPage() {
                             joinedCommunities={joinedCommunities}
                             API={API}
                             defaultCommunity={community}
-                         
+
                         />
                         <WeeklyNews communityId={id} />
                     </div>

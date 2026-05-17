@@ -120,23 +120,28 @@ export default function FriendsPage() {
                     <h1 className={styles.title}>
                         <span className={styles.highlight}>Friends</span> posts
                     </h1>
-                    <div className={styles.postContainer}>
-                        <div className={styles.innerContainer}>
-                            {userLoading ? (
-                                <p style={{ color: '#888', textAlign: 'center', marginTop: '20px' }}>Loading posts...</p>
-                            ) : posts.length > 0 ? (
-                                posts.map(post => (
-                                    <Posts key={post.id} post={post} openComments={() => { }} />
-                                ))
-                            ) : (
-                                <p style={{ color: '#888', textAlign: 'center', marginTop: '20px' }}>No recent posts from friends.</p>
-                            )}
 
+                    {userLoading ? (
+                        <div className={styles.emptyState}>
+                            <p className={styles.emptySubtitle}>Loading posts...</p>
                         </div>
-
-                    </div>
-
-
+                    ) : posts.length > 0 ? (
+                        <div className={styles.postContainer}>
+                            <div className={styles.innerContainer}>
+                                {posts.map(post => (
+                                    <Posts key={post.id} post={post} openComments={() => { }} />
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className={styles.emptyState}>
+                            <div className={styles.emptyIconWrapper}>
+                                <span className={styles.emptyIcon}>🤝</span>
+                            </div>
+                            <h2 className={styles.emptyTitle}>No posts yet</h2>
+                            <p className={styles.emptySubtitle}>Your friends haven't posted anything yet.</p>
+                        </div>
+                    )}
                 </div>
                 <div className={styles.rightSection}>
                     <div className={styles.pill}>FRIENDS LIST</div>
