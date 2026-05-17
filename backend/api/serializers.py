@@ -415,6 +415,7 @@ class NotificationSerializer(serializers.ModelSerializer):
                 return {
                     "post_id": comment.post_id,
                     "comment_id": comment.comment_id,
+                    "post": PostSerializer(comment.post).data,
                 }
             except Comment.DoesNotExist:
                 return None
