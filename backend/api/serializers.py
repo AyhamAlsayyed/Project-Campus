@@ -161,7 +161,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class PageSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
+    # id = serializers.IntegerField(read_only=True)
+    page_id = serializers.IntegerField(source="user_id", read_only=True)
     page_name = serializers.SerializerMethodField()
     is_followed = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
@@ -171,7 +172,8 @@ class PageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
         fields = [
-            "id",
+            # "id",
+            "page_id",
             "page_full_name",
             "page_name",
             "page_name_arabic",
