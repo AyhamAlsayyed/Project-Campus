@@ -1,0 +1,1592 @@
+[
+{
+  "model": "api.userprofile",
+  "pk": 3,
+  "fields": {
+    "user": 7,
+    "full_name": "tree bn ayham",
+    "academic_email": "tree@students.ptuk.edu.ps",
+    "profile_image": "profiles/colored_awl.jpg",
+    "banner_image": "banners/code_bTXVDp1.jfif",
+    "bio": "hi im the tree son if ayham",
+    "birth_date": "2004-03-19",
+    "status": "online",
+    "primary_phone": "0599",
+    "secondary_phone": "0566",
+    "created_at": "2026-03-02T01:07:47.253Z"
+  }
+},
+{
+  "model": "api.userprofile",
+  "pk": 4,
+  "fields": {
+    "user": 8,
+    "full_name": "The wewe",
+    "academic_email": "wewe@students.ptuk.edu.ps",
+    "profile_image": "profiles/avatar.png",
+    "banner_image": "",
+    "bio": "",
+    "birth_date": null,
+    "status": "online",
+    "primary_phone": "059",
+    "secondary_phone": "056",
+    "created_at": "2026-03-02T15:41:10.128Z"
+  }
+},
+{
+  "model": "api.userprofile",
+  "pk": 5,
+  "fields": {
+    "user": 10,
+    "full_name": "ali ali",
+    "academic_email": "ali@students.ptuk.edu.ps",
+    "profile_image": "profiles/black_awl.jpg",
+    "banner_image": "",
+    "bio": "ali ali",
+    "birth_date": null,
+    "status": "online",
+    "primary_phone": null,
+    "secondary_phone": null,
+    "created_at": "2026-03-28T21:54:00.388Z"
+  }
+},
+{
+  "model": "api.userprofile",
+  "pk": 6,
+  "fields": {
+    "user": 9,
+    "full_name": "ahmed i hamed",
+    "academic_email": "a.i.hamed@ptuk.edu.ps",
+    "profile_image": "profiles/ahmed_avatar.jfif",
+    "banner_image": "banners/Instructor_bannar.jfif",
+    "bio": "hi there im an Instructor that works in PTUK im the head if inf tech",
+    "birth_date": "1963-05-06",
+    "status": "online",
+    "primary_phone": "056",
+    "secondary_phone": "234",
+    "created_at": "2026-03-28T21:56:06.152Z"
+  }
+},
+{
+  "model": "api.userprofile",
+  "pk": 7,
+  "fields": {
+    "user": 11,
+    "full_name": "",
+    "academic_email": "hamde@students.ptuk.edu.ps",
+    "profile_image": "",
+    "banner_image": "",
+    "bio": null,
+    "birth_date": null,
+    "status": "online",
+    "primary_phone": null,
+    "secondary_phone": null,
+    "created_at": "2026-05-04T21:44:03.344Z"
+  }
+},
+{
+  "model": "api.userdegree",
+  "pk": 1,
+  "fields": {
+    "user": 8,
+    "degree_type": "Diploma",
+    "major": "Graphic",
+    "institution": "Berzait University"
+  }
+},
+{
+  "model": "api.userdegree",
+  "pk": 2,
+  "fields": {
+    "user": 8,
+    "degree_type": "Bachelor",
+    "major": "CS",
+    "institution": "Palestinr Technical University - Kadoori"
+  }
+},
+{
+  "model": "api.userdegree",
+  "pk": 3,
+  "fields": {
+    "user": 9,
+    "degree_type": "PhD",
+    "major": "CS",
+    "institution": "Berzait University"
+  }
+},
+{
+  "model": "api.userdegree",
+  "pk": 4,
+  "fields": {
+    "user": 9,
+    "degree_type": "Master",
+    "major": "eng",
+    "institution": "Berzait University"
+  }
+},
+{
+  "model": "api.userdegree",
+  "pk": 5,
+  "fields": {
+    "user": 9,
+    "degree_type": "Bachelor",
+    "major": "Graphic",
+    "institution": "Palestinr Technical University - Kadoori"
+  }
+},
+{
+  "model": "api.userdegree",
+  "pk": 6,
+  "fields": {
+    "user": 7,
+    "degree_type": "Diploma",
+    "major": "CS",
+    "institution": "Berzait University"
+  }
+},
+{
+  "model": "api.emailverification",
+  "pk": 3,
+  "fields": {
+    "username": "dfgd",
+    "academic_email": "dfgdfg@students.ptuk.edu.ps",
+    "code": "692244",
+    "is_verified": false,
+    "expires_at": "2026-05-12T15:10:27.148Z",
+    "created_at": "2026-05-12T15:00:27.148Z"
+  }
+},
+{
+  "model": "api.page",
+  "pk": 1,
+  "fields": {
+    "user": 15,
+    "page_full_name": "ramallah lib",
+    "page_name_arabic": null,
+    "page_branch": null,
+    "page_type": "library",
+    "description": "leeeeeeeeehahahaha",
+    "profile_image": "profiles/library_avarat.jfif",
+    "banner_image": "banners/library_bannar.jfif",
+    "phone": null,
+    "email": null,
+    "location": null,
+    "link": null,
+    "verified": true,
+    "created_at": "2026-03-01T23:33:22.035Z"
+  }
+},
+{
+  "model": "api.page",
+  "pk": 2,
+  "fields": {
+    "user": 14,
+    "page_full_name": "cofelab",
+    "page_name_arabic": "┘à╪«╪¬╪¿╪▒ ╪º┘ä┘é┘ç┘ê╪⌐",
+    "page_branch": null,
+    "page_type": "cafe",
+    "description": "cofelab desc not verified",
+    "profile_image": "profiles/coffelab_avatar.jfif",
+    "banner_image": "banners/coffelab_bannar.jfif",
+    "phone": "05612345",
+    "email": "cofelab@bis.we",
+    "location": "Rammllah - altera - sky",
+    "link": "http://localhost:3000/profile/4",
+    "verified": false,
+    "created_at": "2026-03-01T23:34:23.804Z"
+  }
+},
+{
+  "model": "api.page",
+  "pk": 3,
+  "fields": {
+    "user": 13,
+    "page_full_name": "Palestinr Technical University - Kadoori",
+    "page_name_arabic": "╪¼╪º┘à╪╣╪⌐ ┘ü┘ä╪│╪╖┘è┘å ╪º┘ä╪¬┘é┘å┘è╪⌐ - ╪«╪╢┘ê╪▒┘è",
+    "page_branch": "Ramallah",
+    "page_type": "university",
+    "description": "ptuk desc hi",
+    "profile_image": "profiles/ptuk_avatar_P37iSa3.png",
+    "banner_image": "banners/ptuk_banner_AMiYnjr.png",
+    "phone": "05978675645",
+    "email": "ptuk@ptuk.uni",
+    "location": "share3 el wsarat",
+    "link": "http://localhost:3000/profile/1",
+    "verified": true,
+    "created_at": "2026-03-01T23:32:36.193Z"
+  }
+},
+{
+  "model": "api.page",
+  "pk": 4,
+  "fields": {
+    "user": 12,
+    "page_full_name": "Berzait University",
+    "page_name_arabic": "╪¼╪º┘à╪╣╪⌐ ╪¿┘è╪▒╪▓┘è╪¬",
+    "page_branch": null,
+    "page_type": "university",
+    "description": "bzu desc h!!!",
+    "profile_image": "profiles/bzu_avarat.png",
+    "banner_image": "banners/bzu_bannar.png",
+    "phone": "43567775676",
+    "email": "BZU@BZU.UZB",
+    "location": "Berzait",
+    "link": "http://localhost:3000/profile/2",
+    "verified": true,
+    "created_at": "2026-03-01T23:33:01.661Z"
+  }
+},
+{
+  "model": "api.universitydomain",
+  "pk": 1,
+  "fields": {
+    "page": 1,
+    "domain": "students.ptuk.edu.ps",
+    "is_active": true
+  }
+},
+{
+  "model": "api.universitydomain",
+  "pk": 2,
+  "fields": {
+    "page": 1,
+    "domain": "ptuk.edu.ps",
+    "is_active": true
+  }
+},
+{
+  "model": "api.instructor",
+  "pk": 9,
+  "fields": {
+    "academic_title": "dr",
+    "department": "info tec",
+    "instructor_type": "full_time",
+    "university_page": 3,
+    "community_picks": [
+      1,
+      2,
+      3
+    ]
+  }
+},
+{
+  "model": "api.student",
+  "pk": 6,
+  "fields": {
+    "university_page": 3,
+    "major": "comp",
+    "academic_level": "bachelor"
+  }
+},
+{
+  "model": "api.student",
+  "pk": 7,
+  "fields": {
+    "university_page": 3,
+    "major": "CS",
+    "academic_level": "master"
+  }
+},
+{
+  "model": "api.student",
+  "pk": 8,
+  "fields": {
+    "university_page": 4,
+    "major": "eng",
+    "academic_level": "master"
+  }
+},
+{
+  "model": "api.student",
+  "pk": 10,
+  "fields": {
+    "university_page": 3,
+    "major": "eng",
+    "academic_level": "bachelor"
+  }
+},
+{
+  "model": "api.student",
+  "pk": 11,
+  "fields": {
+    "university_page": 4,
+    "major": "",
+    "academic_level": ""
+  }
+},
+{
+  "model": "api.friendship",
+  "pk": 1,
+  "fields": {
+    "user1": 7,
+    "user2": 8,
+    "status": "accepted"
+  }
+},
+{
+  "model": "api.friendship",
+  "pk": 4,
+  "fields": {
+    "user1": 10,
+    "user2": 8,
+    "status": "accepted"
+  }
+},
+{
+  "model": "api.friendship",
+  "pk": 5,
+  "fields": {
+    "user1": 7,
+    "user2": 11,
+    "status": "accepted"
+  }
+},
+{
+  "model": "api.friendship",
+  "pk": 8,
+  "fields": {
+    "user1": 10,
+    "user2": 7,
+    "status": "accepted"
+  }
+},
+{
+  "model": "api.community",
+  "pk": 1,
+  "fields": {
+    "name": "C++",
+    "description": "this is a C++ community for the wewes",
+    "privacy": "private",
+    "created_at": "2026-03-03T21:36:20.642Z",
+    "banner_image": "banners/code_0DFjcus.jfif",
+    "verified": false
+  }
+},
+{
+  "model": "api.community",
+  "pk": 2,
+  "fields": {
+    "name": "python for noobs",
+    "description": "this is a family friendly community for learning the basics of python for the noob people like ibrahem have some mercy and llieth the animal",
+    "privacy": "public",
+    "created_at": "2026-03-27T21:20:40.686Z",
+    "banner_image": "",
+    "verified": false
+  }
+},
+{
+  "model": "api.community",
+  "pk": 3,
+  "fields": {
+    "name": "ahmad comu",
+    "description": "this is ahmed confgnbgf",
+    "privacy": "public",
+    "created_at": "2026-03-27T23:33:15.800Z",
+    "banner_image": "",
+    "verified": true
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 1,
+  "fields": {
+    "community": 1,
+    "user": 7,
+    "role": "owner",
+    "status": "approved",
+    "joined_at": "2026-03-03T21:36:34.751Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 3,
+  "fields": {
+    "community": 1,
+    "user": 6,
+    "role": "admin",
+    "status": "pending",
+    "joined_at": "2026-03-03T21:36:49.024Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 4,
+  "fields": {
+    "community": 2,
+    "user": 8,
+    "role": "owner",
+    "status": "pending",
+    "joined_at": "2026-03-27T21:21:00.932Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 5,
+  "fields": {
+    "community": 2,
+    "user": 6,
+    "role": "admin",
+    "status": "approved",
+    "joined_at": "2026-03-27T21:21:08.592Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 6,
+  "fields": {
+    "community": 2,
+    "user": 10,
+    "role": "member",
+    "status": "pending",
+    "joined_at": "2026-03-27T21:21:35.372Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 7,
+  "fields": {
+    "community": 3,
+    "user": 9,
+    "role": "owner",
+    "status": "approved",
+    "joined_at": "2026-03-27T23:33:37.408Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 8,
+  "fields": {
+    "community": 3,
+    "user": 7,
+    "role": "admin",
+    "status": "approved",
+    "joined_at": "2026-03-28T22:13:48.274Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 11,
+  "fields": {
+    "community": 3,
+    "user": 10,
+    "role": "member",
+    "status": "approved",
+    "joined_at": "2026-03-29T00:17:15.299Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 12,
+  "fields": {
+    "community": 1,
+    "user": 9,
+    "role": "member",
+    "status": "approved",
+    "joined_at": "2026-03-29T00:20:55.613Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 13,
+  "fields": {
+    "community": 1,
+    "user": 10,
+    "role": "member",
+    "status": "approved",
+    "joined_at": "2026-03-29T00:21:03.033Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 16,
+  "fields": {
+    "community": 1,
+    "user": 8,
+    "role": "member",
+    "status": "pending",
+    "joined_at": "2026-04-30T19:21:10.327Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 17,
+  "fields": {
+    "community": 3,
+    "user": 11,
+    "role": "member",
+    "status": "approved",
+    "joined_at": "2026-05-04T21:48:00.624Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 18,
+  "fields": {
+    "community": 2,
+    "user": 11,
+    "role": "member",
+    "status": "pending",
+    "joined_at": "2026-05-04T21:48:03.272Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 19,
+  "fields": {
+    "community": 1,
+    "user": 11,
+    "role": "member",
+    "status": "pending",
+    "joined_at": "2026-05-04T21:48:06.266Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 20,
+  "fields": {
+    "community": 3,
+    "user": 8,
+    "role": "member",
+    "status": "approved",
+    "joined_at": "2026-05-08T07:42:30.303Z"
+  }
+},
+{
+  "model": "api.communitymember",
+  "pk": 22,
+  "fields": {
+    "community": 2,
+    "user": 7,
+    "role": "member",
+    "status": "approved",
+    "joined_at": "2026-05-17T08:59:16.565Z"
+  }
+},
+{
+  "model": "api.event",
+  "pk": 1,
+  "fields": {
+    "page": 1,
+    "title": "National Produts Support Events",
+    "description": "lorem dasdasd asd asd asd as dasd ad a dsa adlorem dasdasd asd asd asd as dasd ad a dsa adlorem dasdasd asd asd asd as dasd ad a dsa adlorem dasdasd asd asd asd as dasd ad a dsa adlorem dasdasd asd asd asd as dasd ad a dsa adlorem dasdasd asd asd asd as dasd ad a dsa adlorem dasdasd asd asd asd as dasd ad a dsa adlorem dasdasd asd asd asd as dasd ad a dsa adlorem dasdasd asd asd asd as dasd ad a dsa adlorem dasdasd asd asd asd as dasd ad a dsa adlorem dasdasd asd asd asd as dasd ad a dsa adlorem dasdasd asd asd asd as dasd ad a dsa ad",
+    "image": "events/bzu_bannar.png",
+    "start_date": "2026-05-31T12:00:00Z",
+    "end_date": "2026-05-31T18:00:00Z",
+    "location": "Rammllah - hbob",
+    "is_verified": false
+  }
+},
+{
+  "model": "api.event",
+  "pk": 2,
+  "fields": {
+    "page": 2,
+    "title": "meet and hi",
+    "description": "this is an event to meet and hello this is an event to meet and hello this is an event to meet and hello this is an event to meet and hello this is an event to meet and hello",
+    "image": "events/coffelab_bannar.jfif",
+    "start_date": "2026-07-23T12:00:00Z",
+    "end_date": "2026-05-31T18:00:00Z",
+    "location": "Rammllah - lap",
+    "is_verified": false
+  }
+},
+{
+  "model": "api.event",
+  "pk": 3,
+  "fields": {
+    "page": 2,
+    "title": "hi the wewes",
+    "description": "this is an event to meet the wewes and learn form them",
+    "image": "events/code.jfif",
+    "start_date": "2026-05-23T12:00:00Z",
+    "end_date": "2026-07-23T18:00:00Z",
+    "location": "ras el 7lwa",
+    "is_verified": false
+  }
+},
+{
+  "model": "api.event",
+  "pk": 4,
+  "fields": {
+    "page": 1,
+    "title": "firing with people",
+    "description": "we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people we are hre to fire people",
+    "image": "events/ptuk_banner.png",
+    "start_date": "2026-05-28T12:00:00Z",
+    "end_date": "2026-05-28T18:00:00Z",
+    "location": "Rammllah - gala",
+    "is_verified": false
+  }
+},
+{
+  "model": "api.eventreminder",
+  "pk": 3,
+  "fields": {
+    "event": 3,
+    "user": 7,
+    "reminder_time": "2026-05-23T11:00:00Z"
+  }
+},
+{
+  "model": "api.eventreminder",
+  "pk": 5,
+  "fields": {
+    "event": 2,
+    "user": 7,
+    "reminder_time": "2026-07-23T11:00:00Z"
+  }
+},
+{
+  "model": "api.post",
+  "pk": 53,
+  "fields": {
+    "title": "new for ptuk",
+    "content_text": "news hi we why and how is  this the wewe's news hi we why and how is  this the wewe's news hi we why and how is  this the wewe's news hi we why and how is  this the wewe's news hi we why and how is  this the wewe's news hi we why and how is  this the wewe's news hi we why and how is  this the wewe's news hi we why and how is  this the wewe's",
+    "post_type": "announcement",
+    "created_at": "2026-05-15T08:42:05.825Z",
+    "is_pinned": false,
+    "author": 13,
+    "community": null
+  }
+},
+{
+  "model": "api.post",
+  "pk": 54,
+  "fields": {
+    "title": "tree",
+    "content_text": "tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree tree",
+    "post_type": "normal",
+    "created_at": "2026-05-15T09:12:16.717Z",
+    "is_pinned": false,
+    "author": 7,
+    "community": null
+  }
+},
+{
+  "model": "api.post",
+  "pk": 55,
+  "fields": {
+    "title": "111111",
+    "content_text": "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+    "post_type": "normal",
+    "created_at": "2026-05-15T09:12:38.793Z",
+    "is_pinned": false,
+    "author": 7,
+    "community": 3
+  }
+},
+{
+  "model": "api.post",
+  "pk": 56,
+  "fields": {
+    "title": "wewe",
+    "content_text": "wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe wewe",
+    "post_type": "normal",
+    "created_at": "2026-05-15T09:12:55.668Z",
+    "is_pinned": false,
+    "author": 8,
+    "community": null
+  }
+},
+{
+  "model": "api.post",
+  "pk": 57,
+  "fields": {
+    "title": "22222222",
+    "content_text": "22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+    "post_type": "normal",
+    "created_at": "2026-05-15T09:13:13.805Z",
+    "is_pinned": false,
+    "author": 8,
+    "community": 3
+  }
+},
+{
+  "model": "api.post",
+  "pk": 58,
+  "fields": {
+    "title": null,
+    "content_text": "f",
+    "post_type": "normal",
+    "created_at": "2026-05-17T08:54:54.589Z",
+    "is_pinned": true,
+    "author": 7,
+    "community": null
+  }
+},
+{
+  "model": "api.post",
+  "pk": 59,
+  "fields": {
+    "title": null,
+    "content_text": "hello",
+    "post_type": "normal",
+    "created_at": "2026-05-17T09:00:59.774Z",
+    "is_pinned": false,
+    "author": 9,
+    "community": null
+  }
+},
+{
+  "model": "api.savedpost",
+  "pk": 9,
+  "fields": {
+    "user": 7,
+    "post": 55,
+    "created_at": "2026-05-17T08:15:33.939Z"
+  }
+},
+{
+  "model": "api.savedpost",
+  "pk": 10,
+  "fields": {
+    "user": 7,
+    "post": 57,
+    "created_at": "2026-05-17T08:53:07.002Z"
+  }
+},
+{
+  "model": "api.postmedia",
+  "pk": 35,
+  "fields": {
+    "post": 53,
+    "media_type": "image",
+    "media_file": "messages/bzu_bannar.png",
+    "media_url": null,
+    "order_index": 0
+  }
+},
+{
+  "model": "api.comment",
+  "pk": 28,
+  "fields": {
+    "post": 57,
+    "content": "hi",
+    "created_at": "2026-05-17T07:52:27.156Z",
+    "author": 7,
+    "parent_comment": null
+  }
+},
+{
+  "model": "api.comment",
+  "pk": 29,
+  "fields": {
+    "post": 57,
+    "content": "hi",
+    "created_at": "2026-05-17T07:54:34.808Z",
+    "author": 7,
+    "parent_comment": null
+  }
+},
+{
+  "model": "api.comment",
+  "pk": 30,
+  "fields": {
+    "post": 57,
+    "content": "why",
+    "created_at": "2026-05-17T07:56:22.886Z",
+    "author": 7,
+    "parent_comment": null
+  }
+},
+{
+  "model": "api.comment",
+  "pk": 31,
+  "fields": {
+    "post": 57,
+    "content": "we",
+    "created_at": "2026-05-17T07:57:32.828Z",
+    "author": 7,
+    "parent_comment": null
+  }
+},
+{
+  "model": "api.comment",
+  "pk": 32,
+  "fields": {
+    "post": 57,
+    "content": "rt",
+    "created_at": "2026-05-17T08:02:26.729Z",
+    "author": 7,
+    "parent_comment": null
+  }
+},
+{
+  "model": "api.comment",
+  "pk": 33,
+  "fields": {
+    "post": 57,
+    "content": "wer",
+    "created_at": "2026-05-17T08:03:29.811Z",
+    "author": 7,
+    "parent_comment": null
+  }
+},
+{
+  "model": "api.comment",
+  "pk": 34,
+  "fields": {
+    "post": 57,
+    "content": "dfg",
+    "created_at": "2026-05-17T08:03:40.061Z",
+    "author": 7,
+    "parent_comment": 28
+  }
+},
+{
+  "model": "api.comment",
+  "pk": 35,
+  "fields": {
+    "post": 57,
+    "content": "dfg",
+    "created_at": "2026-05-17T08:03:50.807Z",
+    "author": 7,
+    "parent_comment": 34
+  }
+},
+{
+  "model": "api.comment",
+  "pk": 36,
+  "fields": {
+    "post": 57,
+    "content": "dfg",
+    "created_at": "2026-05-17T08:03:53.668Z",
+    "author": 7,
+    "parent_comment": 34
+  }
+},
+{
+  "model": "api.comment",
+  "pk": 37,
+  "fields": {
+    "post": 57,
+    "content": "fghf",
+    "created_at": "2026-05-17T09:03:43.155Z",
+    "author": 9,
+    "parent_comment": null
+  }
+},
+{
+  "model": "api.comment",
+  "pk": 38,
+  "fields": {
+    "post": 57,
+    "content": "jkl",
+    "created_at": "2026-05-17T09:03:52.904Z",
+    "author": 9,
+    "parent_comment": 28
+  }
+},
+{
+  "model": "api.postreaction",
+  "pk": 76,
+  "fields": {
+    "post": 54,
+    "user": 7
+  }
+},
+{
+  "model": "api.followpage",
+  "pk": 2,
+  "fields": {
+    "user": 8,
+    "page": 1,
+    "followed_at": "2026-03-03T21:38:12.310Z"
+  }
+},
+{
+  "model": "api.followpage",
+  "pk": 3,
+  "fields": {
+    "user": 7,
+    "page": 4,
+    "followed_at": "2026-03-03T21:59:26.153Z"
+  }
+},
+{
+  "model": "api.followpage",
+  "pk": 6,
+  "fields": {
+    "user": 7,
+    "page": 1,
+    "followed_at": "2026-05-17T09:39:09.637Z"
+  }
+},
+{
+  "model": "api.conversation",
+  "pk": 1,
+  "fields": {
+    "name": "C++ for pros",
+    "image": "conversation_images/Project_Campus_ERD.jpg",
+    "created_at": "2026-04-12T17:32:08.797Z",
+    "is_group": true,
+    "is_private": false,
+    "is_academic": true,
+    "created_by": null,
+    "last_message": 33
+  }
+},
+{
+  "model": "api.conversation",
+  "pk": 2,
+  "fields": {
+    "name": null,
+    "image": "",
+    "created_at": "2026-04-12T23:16:38.852Z",
+    "is_group": false,
+    "is_private": false,
+    "is_academic": false,
+    "created_by": null,
+    "last_message": 35
+  }
+},
+{
+  "model": "api.conversation",
+  "pk": 4,
+  "fields": {
+    "name": null,
+    "image": "",
+    "created_at": "2026-05-13T07:43:06.577Z",
+    "is_group": false,
+    "is_private": false,
+    "is_academic": false,
+    "created_by": null,
+    "last_message": null
+  }
+},
+{
+  "model": "api.conversation",
+  "pk": 6,
+  "fields": {
+    "name": null,
+    "image": "",
+    "created_at": "2026-05-17T09:19:32.382Z",
+    "is_group": false,
+    "is_private": false,
+    "is_academic": false,
+    "created_by": null,
+    "last_message": null
+  }
+},
+{
+  "model": "api.conversationmember",
+  "pk": 1,
+  "fields": {
+    "conversation": 1,
+    "user": 7,
+    "role": "owner",
+    "is_pinned": true,
+    "is_muted": false,
+    "last_read_at": "2026-05-17T09:30:59.175Z",
+    "cleared_at": null,
+    "joined_at": "2026-04-12T17:32:23.963Z"
+  }
+},
+{
+  "model": "api.conversationmember",
+  "pk": 2,
+  "fields": {
+    "conversation": 1,
+    "user": 9,
+    "role": "admin",
+    "is_pinned": false,
+    "is_muted": false,
+    "last_read_at": "2026-05-14T21:43:23.873Z",
+    "cleared_at": null,
+    "joined_at": "2026-04-12T17:32:36.443Z"
+  }
+},
+{
+  "model": "api.conversationmember",
+  "pk": 3,
+  "fields": {
+    "conversation": 2,
+    "user": 7,
+    "role": "member",
+    "is_pinned": false,
+    "is_muted": false,
+    "last_read_at": "2026-05-17T09:48:02.386Z",
+    "cleared_at": null,
+    "joined_at": "2026-04-12T17:32:44.230Z"
+  }
+},
+{
+  "model": "api.conversationmember",
+  "pk": 5,
+  "fields": {
+    "conversation": 2,
+    "user": 8,
+    "role": "member",
+    "is_pinned": false,
+    "is_muted": false,
+    "last_read_at": "2026-05-11T20:05:17.365Z",
+    "cleared_at": null,
+    "joined_at": "2026-04-12T23:19:09.118Z"
+  }
+},
+{
+  "model": "api.conversationmember",
+  "pk": 9,
+  "fields": {
+    "conversation": 4,
+    "user": 9,
+    "role": "member",
+    "is_pinned": false,
+    "is_muted": false,
+    "last_read_at": "2026-05-17T09:06:33.773Z",
+    "cleared_at": null,
+    "joined_at": "2026-05-13T07:43:06.604Z"
+  }
+},
+{
+  "model": "api.conversationmember",
+  "pk": 12,
+  "fields": {
+    "conversation": 6,
+    "user": 7,
+    "role": "member",
+    "is_pinned": false,
+    "is_muted": false,
+    "last_read_at": null,
+    "cleared_at": null,
+    "joined_at": "2026-05-17T09:19:32.382Z"
+  }
+},
+{
+  "model": "api.conversationmember",
+  "pk": 13,
+  "fields": {
+    "conversation": 6,
+    "user": 9,
+    "role": "member",
+    "is_pinned": false,
+    "is_muted": false,
+    "last_read_at": null,
+    "cleared_at": null,
+    "joined_at": "2026-05-17T09:19:32.382Z"
+  }
+},
+{
+  "model": "api.message",
+  "pk": 25,
+  "fields": {
+    "conversation": 1,
+    "content": "hi",
+    "shared_post": null,
+    "sender": 7,
+    "parent_message": null,
+    "sent_at": "2026-05-14T21:37:46.806Z"
+  }
+},
+{
+  "model": "api.message",
+  "pk": 26,
+  "fields": {
+    "conversation": 1,
+    "content": "hi",
+    "shared_post": null,
+    "sender": 7,
+    "parent_message": null,
+    "sent_at": "2026-05-14T21:37:47.239Z"
+  }
+},
+{
+  "model": "api.message",
+  "pk": 27,
+  "fields": {
+    "conversation": 1,
+    "content": "hi",
+    "shared_post": null,
+    "sender": 7,
+    "parent_message": null,
+    "sent_at": "2026-05-14T21:37:47.827Z"
+  }
+},
+{
+  "model": "api.message",
+  "pk": 28,
+  "fields": {
+    "conversation": 1,
+    "content": "hi",
+    "shared_post": null,
+    "sender": 7,
+    "parent_message": null,
+    "sent_at": "2026-05-14T21:37:48.155Z"
+  }
+},
+{
+  "model": "api.message",
+  "pk": 29,
+  "fields": {
+    "conversation": 1,
+    "content": "hi",
+    "shared_post": null,
+    "sender": 7,
+    "parent_message": null,
+    "sent_at": "2026-05-14T21:37:48.540Z"
+  }
+},
+{
+  "model": "api.message",
+  "pk": 30,
+  "fields": {
+    "conversation": 1,
+    "content": "hi",
+    "shared_post": null,
+    "sender": 7,
+    "parent_message": null,
+    "sent_at": "2026-05-14T21:37:49.041Z"
+  }
+},
+{
+  "model": "api.message",
+  "pk": 31,
+  "fields": {
+    "conversation": 1,
+    "content": "we",
+    "shared_post": null,
+    "sender": 9,
+    "parent_message": null,
+    "sent_at": "2026-05-14T21:41:31.495Z"
+  }
+},
+{
+  "model": "api.message",
+  "pk": 32,
+  "fields": {
+    "conversation": 1,
+    "content": "waaaaaaa",
+    "shared_post": null,
+    "sender": 9,
+    "parent_message": null,
+    "sent_at": "2026-05-14T21:43:28.462Z"
+  }
+},
+{
+  "model": "api.message",
+  "pk": 33,
+  "fields": {
+    "conversation": 1,
+    "content": "Shared a post",
+    "shared_post": 54,
+    "sender": 7,
+    "parent_message": null,
+    "sent_at": "2026-05-17T08:56:15.771Z"
+  }
+},
+{
+  "model": "api.message",
+  "pk": 34,
+  "fields": {
+    "conversation": 2,
+    "content": "Shared a post",
+    "shared_post": 58,
+    "sender": 7,
+    "parent_message": null,
+    "sent_at": "2026-05-17T08:56:25.140Z"
+  }
+},
+{
+  "model": "api.message",
+  "pk": 35,
+  "fields": {
+    "conversation": 2,
+    "content": "qwee",
+    "shared_post": null,
+    "sender": 7,
+    "parent_message": null,
+    "sent_at": "2026-05-17T09:06:54.966Z"
+  }
+},
+
+{
+  "model": "api.notification",
+  "pk": 40,
+  "fields": {
+    "receiver": 8,
+    "actor": 7,
+    "type": "comment",
+    "content": "tree commented on your post",
+    "content_type": 28,
+    "object_id": 28,
+    "is_read": false,
+    "created_at": "2026-05-17T07:52:27.167Z"
+  }
+},
+{
+  "model": "api.notification",
+  "pk": 41,
+  "fields": {
+    "receiver": 8,
+    "actor": 7,
+    "type": "comment",
+    "content": "tree commented on your post",
+    "content_type": 28,
+    "object_id": 29,
+    "is_read": false,
+    "created_at": "2026-05-17T07:54:34.816Z"
+  }
+},
+{
+  "model": "api.notification",
+  "pk": 42,
+  "fields": {
+    "receiver": 8,
+    "actor": 7,
+    "type": "comment",
+    "content": "tree commented on your post",
+    "content_type": 28,
+    "object_id": 30,
+    "is_read": false,
+    "created_at": "2026-05-17T07:56:22.904Z"
+  }
+},
+{
+  "model": "api.notification",
+  "pk": 43,
+  "fields": {
+    "receiver": 8,
+    "actor": 7,
+    "type": "comment",
+    "content": "tree commented on your post",
+    "content_type": 28,
+    "object_id": 31,
+    "is_read": false,
+    "created_at": "2026-05-17T07:57:32.833Z"
+  }
+},
+{
+  "model": "api.notification",
+  "pk": 44,
+  "fields": {
+    "receiver": 8,
+    "actor": 7,
+    "type": "comment",
+    "content": "tree commented on your post",
+    "content_type": 28,
+    "object_id": 32,
+    "is_read": false,
+    "created_at": "2026-05-17T08:02:26.737Z"
+  }
+},
+{
+  "model": "api.notification",
+  "pk": 45,
+  "fields": {
+    "receiver": 8,
+    "actor": 7,
+    "type": "comment",
+    "content": "tree commented on your post",
+    "content_type": 28,
+    "object_id": 33,
+    "is_read": false,
+    "created_at": "2026-05-17T08:03:29.816Z"
+  }
+},
+{
+  "model": "api.notification",
+  "pk": 46,
+  "fields": {
+    "receiver": 8,
+    "actor": 7,
+    "type": "post_created",
+    "content": "tree posted something new",
+    "content_type": 25,
+    "object_id": 58,
+    "is_read": false,
+    "created_at": "2026-05-17T08:54:54.600Z"
+  }
+},
+{
+  "model": "api.notification",
+  "pk": 47,
+  "fields": {
+    "receiver": 11,
+    "actor": 7,
+    "type": "post_created",
+    "content": "tree posted something new",
+    "content_type": 25,
+    "object_id": 58,
+    "is_read": false,
+    "created_at": "2026-05-17T08:54:54.600Z"
+  }
+},
+{
+  "model": "api.notification",
+  "pk": 48,
+  "fields": {
+    "receiver": 10,
+    "actor": 7,
+    "type": "post_created",
+    "content": "tree posted something new",
+    "content_type": 25,
+    "object_id": 58,
+    "is_read": false,
+    "created_at": "2026-05-17T08:54:54.600Z"
+  }
+},
+{
+  "model": "api.notification",
+  "pk": 50,
+  "fields": {
+    "receiver": 6,
+    "actor": 7,
+    "type": "system",
+    "content": "tree requested to join python for noobs",
+    "content_type": 21,
+    "object_id": 2,
+    "is_read": false,
+    "created_at": "2026-05-17T08:58:19.192Z"
+  }
+},
+{
+  "model": "api.notification",
+  "pk": 51,
+  "fields": {
+    "receiver": 6,
+    "actor": 7,
+    "type": "system",
+    "content": "tree joined python for noobs",
+    "content_type": 21,
+    "object_id": 2,
+    "is_read": false,
+    "created_at": "2026-05-17T08:59:16.570Z"
+  }
+},
+{
+  "model": "api.notification",
+  "pk": 52,
+  "fields": {
+    "receiver": 7,
+    "actor": 9,
+    "type": "post_created",
+    "content": "ahmed posted something new",
+    "content_type": 25,
+    "object_id": 59,
+    "is_read": false,
+    "created_at": "2026-05-17T09:00:59.780Z"
+  }
+},
+{
+  "model": "api.notification",
+  "pk": 53,
+  "fields": {
+    "receiver": 8,
+    "actor": 9,
+    "type": "comment",
+    "content": "ahmed commented on your post",
+    "content_type": 28,
+    "object_id": 37,
+    "is_read": false,
+    "created_at": "2026-05-17T09:03:43.163Z"
+  }
+},
+{
+  "model": "api.notification",
+  "pk": 54,
+  "fields": {
+    "receiver": 7,
+    "actor": 9,
+    "type": "comment",
+    "content": "ahmed replied to your comment",
+    "content_type": 28,
+    "object_id": 38,
+    "is_read": false,
+    "created_at": "2026-05-17T09:03:52.907Z"
+  }
+},
+{
+  "model": "api.notification",
+  "pk": 55,
+  "fields": {
+    "receiver": 8,
+    "actor": 7,
+    "type": "message",
+    "content": "tree sent a message",
+    "content_type": 34,
+    "object_id": 35,
+    "is_read": false,
+    "created_at": "2026-05-17T09:06:54.977Z"
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 6,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$a8w25nM9TLD3nXYQyCsDSm$Zbcx9HP13x1ecCV0W0jWS+biYM0eiIgAyAheBG+Z5yE=",
+    "last_login": "2026-05-14T13:17:58.912Z",
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "admin@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-02-25T02:31:57.835Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 7,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$VKeA0jjf04hevyQrCmCaAw$zjA1M8M7GwOJOpccjayFUS2afLrxiQUHyk5SuZFT7Pk=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "tree",
+    "first_name": "",
+    "last_name": "",
+    "email": "tree@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-03-02T01:07:46.505Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 8,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$L87ELFhuh7qkRVzdepeEiZ$gZcR8xsYnUft5YW3WdBSGZQBnirGobcKXAQmFjrSoTM=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "wewe",
+    "first_name": "",
+    "last_name": "",
+    "email": "wewe@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-03-02T15:41:09.343Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 9,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$wr3x8ScFkBfw4q4uXPXTE7$61bLUQooXAbka4wRFzZ12sSPKof/dVGPaOkONhx2bMw=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "ahmed",
+    "first_name": "",
+    "last_name": "",
+    "email": "ahmed@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-03-27T18:23:54Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 10,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$5lrmKqI3MSNUmouPIfnjhQ$V8upTF3kIgz2zV0x53h+6w3wwIMuJsgj8Ud6XolMYcM=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "ali",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-03-27T19:58:28.164Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 11,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$wEhLoeOnkcqoWeBbuaMoPc$hhE/u81rxmg3AMHud2SJTP+sJRQN/j5RHdAFpcYR+S4=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "hamde",
+    "first_name": "",
+    "last_name": "",
+    "email": "hamde@d.fghjk",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-04T21:44:02.791Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 12,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$QV9WxjOsEc3O4T7fASxwZT$z21Ia8HRo+LV5Bsri+QX8unwNnYlgMESeffBjJNP+ZU=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "BZU",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-14T18:21:08.015Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 13,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$9uZPbE8YNGYoz3oO8p2XcI$XZOpd5CNvWKBF+d1cUgGkXew+1cvmvELgqQiX6PC/ME=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "PTUK",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-14T18:21:19.519Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 14,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$7P3BOlf74HoYXMISkcvEsC$iza3Tslyh7YHACzLHXWXumET1o88vhka3hsZHUu/6ck=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "cofelab",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-14T18:21:31.842Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 15,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$p7JL8UvKjhdfUhkcU175zN$7W/h+rr+wS5HI1YFbGYy89f7BNKdP6/jH3GaY4ZafuI=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "rammallahlib",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-14T18:22:01.287Z",
+    "groups": [],
+    "user_permissions": []
+  }
+}
+]

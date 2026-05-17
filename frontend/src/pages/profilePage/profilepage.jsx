@@ -377,7 +377,7 @@ export default function ProfilePage() {
 
     const handleMessage = async () => {
         try {
-            const res = await fetch(`${API}/api/conversations/get-or-create/${userId}/`, {
+            const res = await fetch(`${API}/api/conversations/create/${userId}/`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
             });

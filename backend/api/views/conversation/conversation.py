@@ -228,7 +228,7 @@ def send_message(request, conversation_id):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def get_or_create_dm(request, user_id):
+def create_dm(request, user_id):
     current_user = request.user
     target_user = User.objects.get(id=user_id)
     existing = request.data.get("conversation_id")

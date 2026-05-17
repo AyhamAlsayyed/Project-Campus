@@ -17,7 +17,7 @@ from .views.communities.communitie import (
 from .views.conversation.conversation import (
     get_conversations,
     get_messages,
-    get_or_create_dm,
+    create_dm,
     send_message,
 )
 from .views.conversation.conversation_action import (
@@ -105,7 +105,7 @@ urlpatterns = [
     path("chats/", get_conversations),
     path("chats/<int:conversation_id>/messages/", get_messages),
     path("chats/<int:conversation_id>/send/", send_message),
-    path("conversations/get-or-create/<int:user_id>/", get_or_create_dm),  #
+    path("conversations/create/<int:user_id>/", create_dm),  #
     path("chats/<int:conversation_id>/pin/", toggle_pin),  #
     path("chats/<int:conversation_id>/mute/", toggle_mute),  #
     path("chats/<int:conversation_id>/mark-unread/", mark_unread),  #

@@ -197,7 +197,7 @@ export default function FollowedPages() {
                             </div>
                             <div className={styles.rightList}>
                                 {pages
-                                    .filter(page => page.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                                    .filter(page => (page.name || '').toLowerCase().includes(searchTerm.toLowerCase()))
                                     .map((page, index, arr) => (
                                         <div key={page.id} className={styles.pageWrapper}>
                                             <div className={styles.pageItem}>
