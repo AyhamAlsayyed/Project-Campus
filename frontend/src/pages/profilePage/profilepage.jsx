@@ -184,17 +184,30 @@ export default function ProfilePage() {
                 data = {
                     ...data,
                     type: 'page',
-                    username: data.page_full_name || data.page_name || data.name,  // ← was data.name
-                    avatar_url: data.profile_image || data.avatar,                  // ← was data.avatar
-                    cover_url: data.banner_image || data.banner,                    // ← was data.banner
-                    bio: data.description,
+                    username: data.page_full_name || data.page_name || data.name,
+                    avatar_url: data.profile?.avatar || data.avatar_url || data.avatar || "",
+                    cover_url: data.profile?.cover || data.cover_url || data.cover || "",
+                    full_name: data.profile?.full_name || data.full_name || "",
+                    bio: data.profile?.bio || data.bio || "",
                     is_verified: data.verified,
-                    is_following: data.is_followed,                                 // ← map is_followed → is_following
+                    is_following: data.is_followed,
                     followers_count: data.followers_count || 0,
-                    category: data.page_type,                                       // ← so category shows under name
+                    category: data.page_type,
                 };
             } else {
                 data = await res.json();
+                // Map nested profile fields to top level
+                data = {
+                    ...data,
+                    avatar_url: data.profile?.avatar
+                        ? (data.profile.avatar.startsWith("http") ? data.profile.avatar : `${API}${data.profile.avatar}`)
+                        : "",
+                    cover_url: data.profile?.cover
+                        ? (data.profile.cover.startsWith("http") ? data.profile.cover : `${API}${data.profile.cover}`)
+                        : "",
+                    full_name: data.profile?.full_name || data.full_name || "",
+                    bio: data.profile?.bio || data.bio || "",
+                };
             }
 
             console.log("final user data:", data); // is user being set?
@@ -379,6 +392,10 @@ export default function ProfilePage() {
     }, [user, currentUser, userId]);
 
     const handleMessage = async () => {
+        if (userId.convention_id) {
+            navigate(`/chats/${userId.convention_id}`);
+            return;
+        }
         try {
             const res = await fetch(`${API}/api/conversations/create/${userId}/`, {
                 method: 'POST',
@@ -388,12 +405,12 @@ export default function ProfilePage() {
                 },
                 body: JSON.stringify({
                     target_user: userId,
-                    type: 'user' // or 'page'
+                    type: 'user'
                 })
             });
             const data = await res.json();
             console.log("conversation response:", data);
-            if (data.conversation_id) navigate(`/chats/${data.conversation_id}`);
+            if (data.convention_id) navigate(`/chats/${data.convention_id}`);
         } catch (e) {
             console.error("Error opening chat:", e);
         }

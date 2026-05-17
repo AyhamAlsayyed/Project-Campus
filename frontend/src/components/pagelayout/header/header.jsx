@@ -127,7 +127,7 @@ export default function Header({ theme, toggleTheme, user }) {
         if (item.is_joined) {
           navigate(`/communities/${item.id}`);
         } else if (item.request_sent) {
-          
+
         } else if (item.is_private) {
           setRequestGate(item);
         } else {
@@ -314,8 +314,9 @@ export default function Header({ theme, toggleTheme, user }) {
 
   const handleManage = (id) => { navigate("/settings/notifications"); setOpenMenuId(null); };
 
-  const avatarSrc = user?.avatar
-    ? user.avatar.startsWith("http") ? user.avatar : `${API}${user.avatar}`
+  const rawAvatar = user?.profile?.avatar || user?.avatar;
+  const avatarSrc = rawAvatar
+    ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
     : "/default-avatar.png";
 
   const handleAvatarClick = () => {

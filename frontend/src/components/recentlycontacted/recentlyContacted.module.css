@@ -78,8 +78,31 @@
 .contactList {
   display: flex;
   flex-direction: column;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 4px;
+
+  /* Match header scrollbar style */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
+.contactList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.contactList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.contactList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+}
+
+.contactList::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
 .contactCard {
   display: flex;
   justify-content: space-between;
