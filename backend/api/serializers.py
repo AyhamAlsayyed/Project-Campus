@@ -161,7 +161,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class PageSerializer(serializers.ModelSerializer):
-    # id = serializers.IntegerField(read_only=True)
     page_id = serializers.IntegerField(source="user_id", read_only=True)
     page_name = serializers.SerializerMethodField()
     is_followed = serializers.SerializerMethodField()
@@ -172,7 +171,6 @@ class PageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
         fields = [
-            # "id",
             "page_id",
             "page_full_name",
             "page_name",
@@ -182,6 +180,10 @@ class PageSerializer(serializers.ModelSerializer):
             "description",
             "profile_image",
             "banner_image",
+            "phone",
+            "email",
+            "location",
+            "link",
             "verified",
             "is_followed",
             "followers_count",

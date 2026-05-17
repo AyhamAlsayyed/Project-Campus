@@ -36,6 +36,7 @@ from .views.pages.page_update import get_page_profile, update_page_profile
 from .views.pages.pages import (
     followed_pages,
     page_detail,
+    rate_page,
     recommended_pages,
     toggle_follow_page,
 )
@@ -84,14 +85,14 @@ urlpatterns = [
     path("posts/<int:post_id>/block/", block_user),
     path("posts/<int:post_id>/save/", save_post),
     path("posts/<int:post_id>/pin/", toggle_pin_post),
-    path("posts/<int:post_id>/", delete_post),  #
+    path("posts/<int:post_id>/", delete_post),
     path("messages/send/", send_post),
     path("communities/", communities),
     path("communities/<int:community_id>/join/", join_community),
     path("communities/<int:community_id>/request/", request_join_community),
     path("communities/<int:community_id>/", community_detail),
     path("users/<int:instructor_id>/community-picks/", instructor_community_picks),
-    path("<int:instructor_id>/toggle_picks/", toggle_pick),  #
+    path("<int:instructor_id>/toggle_picks/", toggle_pick),
     path("communities/<int:community_id>/posts/", feed),
     path("posts/<int:post_id>/comments/", comment_list),
     path("posts/<int:post_id>/comments/create/", create_comment),
@@ -105,23 +106,23 @@ urlpatterns = [
     path("chats/", get_conversations),
     path("chats/<int:conversation_id>/messages/", get_messages),
     path("chats/<int:conversation_id>/send/", send_message),
-    path("conversations/create/<int:user_id>/", create_dm),  #
-    path("chats/<int:conversation_id>/pin/", toggle_pin),  #
-    path("chats/<int:conversation_id>/mute/", toggle_mute),  #
-    path("chats/<int:conversation_id>/mark-unread/", mark_unread),  #
-    path("chats/<int:conversation_id>/", delete_or_leave_chat),  #
-    path("chats/<int:conversation_id>/clear/", clear_chat),  #
-    path("chats/<int:conversation_id>/block/", block_user_from_chat),  #
+    path("conversations/create/<int:user_id>/", create_dm),
+    path("chats/<int:conversation_id>/pin/", toggle_pin),
+    path("chats/<int:conversation_id>/mute/", toggle_mute),
+    path("chats/<int:conversation_id>/mark-unread/", mark_unread),
+    path("chats/<int:conversation_id>/", delete_or_leave_chat),
+    path("chats/<int:conversation_id>/clear/", clear_chat),
+    path("chats/<int:conversation_id>/block/", block_user_from_chat),
     path("chat-requests/", chat_requests),  #
     path("university/news/", university_news),
     path("university/events/", university_events),
     path("university/doctors/", university_doctors),
     path("university/", university_info),
-    path("pages/followed/", followed_pages),  #
-    path("pages/recommended/", recommended_pages),  #
-    path("pages/<int:page_id>/", page_detail),  #
-    path("pages/<int:page_id>/follow/", toggle_follow_page),  #
-    path("users/<int:page_id>/review/", profile_view),  #
+    path("pages/followed/", followed_pages),
+    path("pages/recommended/", recommended_pages),
+    path("pages/<int:page_id>/", page_detail),
+    path("pages/<int:page_id>/follow/", toggle_follow_page),
+    path("pages/<int:page_id>/review", rate_page),
     path("events/", events),
     path("events/<int:event_id>/remind/", toggle_event_reminder),
     path("events/reminders/", get_events),
