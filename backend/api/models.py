@@ -543,6 +543,7 @@ class PostMedia(models.Model):
     class MediaType(models.TextChoices):
         IMAGE = "image", "Image"
         VIDEO = "video", "Video"
+        AUDIO = "audio", "Audio"
         FILE = "file", "File"
         URL = "url", "URL"
 
@@ -749,7 +750,7 @@ class ConversationMember(models.Model):
 
     def clean(self):
         if self.conversation.is_group and hasattr(self.user, "page"):
-            raise ValidationError("Users associated with a Page cannot join group conversations.")
+            raise ValidationError("Pages cannot join group conversations.")
 
         qs = ConversationMember.objects.filter(conversation_id=self.conversation_id)
 
@@ -763,9 +764,7 @@ class ConversationMember(models.Model):
             raise ValidationError("Duplicate member.")
 
     def save(self, *args, **kwargs):
-        """if self.conversation.is_group and self.page_id is not None:
-            raise ValidationError("Pages cannot join group conversations.")
-        self.full_clean()"""
+        self.full_clean()
         super().save(*args, **kwargs)
 
     class Meta:
@@ -837,6 +836,7 @@ class MessageMedia(models.Model):
     class MediaType(models.TextChoices):
         IMAGE = "image", "Image"
         VIDEO = "video", "Video"
+        AUDIO = "audio", "Audio"
         FILE = "file", "File"
         URL = "url", "URL"
 

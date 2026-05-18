@@ -100,13 +100,13 @@ export default function CommunityCard({ community, variant = "large", setCommuni
             </div>
 
 
-            {variant === "small" && community.friends_joined?.length > 0 && (
+            {variant === "small" && community.sample_members?.length > 0 && (
                 <div style={{ padding: '6px 4px 0' }}>
                     <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
                         <span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Joined by: </span>
-                        {community.friends_joined.map(f => f.username).join(', ')}
-                        {community.friends_count > community.friends_joined.length
-                            ? ` and ${community.friends_count - community.friends_joined.length} others.`
+                        {community.sample_members.map(f => f.username).join(', ')}
+                        {community.members_count > community.sample_members.length
+                            ? ` and ${community.members_count - community.sample_members.length} others.`
                             : '.'}
                     </span>
                 </div>

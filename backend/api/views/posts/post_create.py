@@ -21,7 +21,7 @@ from ...serializers import PostSerializer
 def create_post(request):
     user = request.user
     content = request.data.get("content", "")
-    images = request.FILES.getlist("images")
+    medias = request.FILES.getlist("images")
     files = request.FILES.getlist("files")
     community_id = request.data.get("community")
     community = None
@@ -33,15 +33,27 @@ def create_post(request):
 
     post = Post.objects.create(content_text=content, author=user, community=community)
 
-    i = 0
-    for img in images:
-        PostMedia.objects.create(post=post, media_type=PostMedia.MediaType.IMAGE, media_file=img, order_index=i)
-        i += 1
+    media_index = 0
+    for media in medias:
+        content_type = media.content_type
 
-    z = 0
+        media_type = PostMedia.MediaType.FILE
+
+        if content_type.startswith("image/"):
+            media_type = PostMedia.MediaType.IMAGE
+        elif content_type.startswith("video/"):
+            media_type = PostMedia.MediaType.VIDEO
+        elif content_type.startswith("audio/") or media.name.endswith((".mp3", ".wav")):
+            media_type = PostMedia.MediaType.AUDIO
+
+        PostMedia.objects.create(post=post, media_type=media_type, media_file=media, order_index=media_index)
+        media_index += 1
+
     for file in files:
-        PostMedia.objects.create(post=post, media_type=PostMedia.MediaType.FILE, media_file=file, order_index=z)
-        z += 1
+        PostMedia.objects.create(
+            post=post, media_type=PostMedia.MediaType.FILE, media_file=file, order_index=media_index
+        )
+        media_index += 1
 
     # ---- notification ----
     if community:

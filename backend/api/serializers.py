@@ -1,9 +1,11 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Case, F, IntegerField, Q, When
 from rest_framework import serializers
 
 from .models import (
     Comment,
     Community,
+    CommunityMember,
     Conversation,
     Event,
     Friendship,
@@ -159,6 +161,21 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
         return existing.conversation_id if existing else None
+
+
+class UserMinimalSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source="profile.full_name", read_only=True)
+    avatar = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "full_name", "avatar"]
+
+    def get_avatar(self, obj):
+        request = self.context.get("request")
+        if hasattr(obj, "profile") and obj.profile.profile_image and request:
+            return request.build_absolute_uri(obj.profile.profile_image.url)
+        return None
 
 
 class PageSerializer(serializers.ModelSerializer):
@@ -427,7 +444,7 @@ class NotificationSerializer(serializers.ModelSerializer):
             try:
                 comment = Comment.objects.select_related("post").get(pk=obj.object_id)
                 return {
-                    "post_id": comment.post_id,
+                    "post_id": comment.post.post_id,
                     "comment_id": comment.comment_id,
                     "post": PostSerializer(comment.post).data,
                 }
@@ -457,6 +474,7 @@ class CommunitySerializer(serializers.ModelSerializer):
     request_sent = serializers.BooleanField(read_only=True)
     members_count = serializers.IntegerField(read_only=True)
     friends_count = serializers.IntegerField(read_only=True)
+    sample_members = serializers.SerializerMethodField()
 
     class Meta:
         model = Community
@@ -471,6 +489,7 @@ class CommunitySerializer(serializers.ModelSerializer):
             "request_sent",
             "members_count",
             "friends_count",
+            "sample_members",
         ]
 
     def get_image(self, obj):
@@ -486,6 +505,58 @@ class CommunitySerializer(serializers.ModelSerializer):
 
     def get_is_private(self, obj):
         return obj.privacy == "private"
+
+    def get_sample_members(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
+            return []
+
+        user = request.user
+
+        friends_ids = (
+            Friendship.objects.filter(Q(user1=user) | Q(user2=user), status=Friendship.Status.ACCEPTED)
+            .annotate(
+                friend_id=Case(
+                    When(user1=user, then=F("user2_id")),
+                    When(user2=user, then=F("user1_id")),
+                    output_field=IntegerField(),
+                )
+            )
+            .values_list("friend_id", flat=True)
+        )
+
+        final_users = []
+
+        friend_memberships = CommunityMember.objects.filter(
+            community=obj, status="approved", user_id__in=friends_ids
+        ).select_related("user", "user__profile")[:3]
+
+        for rel in friend_memberships:
+            if rel.user:
+                final_users.append(rel.user)
+
+        needed_slots = 3 - len(final_users)
+        if needed_slots > 0:
+            already_included_ids = [u.id for u in final_users]
+
+            general_memberships = (
+                CommunityMember.objects.filter(community=obj, status="approved")
+                .exclude(user_id__in=already_included_ids)
+                .select_related("user", "user__profile")[:needed_slots]
+            )
+
+            for rel in general_memberships:
+                if rel.user:
+                    final_users.append(rel.user)
+
+        return UserMinimalSerializer(final_users, many=True, context={"request": request}).data
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if ret.get("members_count") is None:
+            ret["members_count"] = CommunityMember.objects.filter(community=instance, status="approved").count()
+
+        return ret
 
 
 class EventSerializer(serializers.ModelSerializer):

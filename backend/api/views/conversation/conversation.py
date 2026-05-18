@@ -2,11 +2,18 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Conversation, ConversationMember, Message, Notification
+from ...models import (
+    Conversation,
+    ConversationMember,
+    Message,
+    MessageMedia,
+    Notification,
+)
 from ...serializers import PostSerializer
 from ...utils.user_type import get_user_avatar
 
@@ -123,7 +130,11 @@ def get_messages(request, conversation_id):
     if member.cleared_at:
         query = query.filter(sent_at__gt=member.cleared_at)
 
-    messages = query.select_related("sender", "parent_message", "parent_message__sender").order_by("sent_at")
+    messages = (
+        query.select_related("sender", "parent_message", "parent_message__sender")
+        .prefetch_related("media")
+        .order_by("sent_at")
+    )
 
     data = []
 
@@ -147,15 +158,28 @@ def get_messages(request, conversation_id):
                 "sender_name": parent_sender_name,
             }
 
+        media_list = []
+        for item in msg.media.all():
+            file_url = None
+            if item.media_file:
+                file_url = request.build_absolute_uri(item.media_file.url)
+            elif item.media_url:
+                file_url = item.media_url
+
+            media_list.append(
+                {"id": item.media_id, "type": item.media_type, "url": file_url, "order_index": item.order_index}
+            )
+
         message_data = {
             "id": msg.message_id,
             "text": msg.content,
-            "type": "text",
+            "type": "text" if not media_list else "media",
             "time": msg.sent_at.strftime("%H:%M"),
             "sender": sender_name,
             "senderId": sender_id,
             "avatar": avatar,
             "reply_to_details": reply_to,
+            "media": media_list,
         }
 
         if msg.shared_post:
@@ -173,9 +197,14 @@ def get_messages(request, conversation_id):
 @permission_classes([IsAuthenticated])
 def send_message(request, conversation_id):
     user = request.user
-    text = request.data.get("text")
+    text = request.data.get("text", "").strip()
     reply_to_id = request.data.get("reply_to")
     parent_message = None
+
+    uploaded_files = request.FILES.getlist("images")
+
+    if not text and not uploaded_files:
+        return Response({"error": "Cannot send an empty message"}, status=status.HTTP_400_BAD_REQUEST)
 
     if reply_to_id:
         try:
@@ -183,21 +212,46 @@ def send_message(request, conversation_id):
         except Message.DoesNotExist:
             parent_message = None
 
-    if not text:
-        return Response({"error": "Empty"}, status=400)
-
     try:
-        if user:
-            ConversationMember.objects.get(conversation_id=conversation_id, user=user)
+        ConversationMember.objects.get(conversation_id=conversation_id, user=user)
     except ConversationMember.DoesNotExist:
-        return Response({"error": "You are not a member!"}, status=403)
+        return Response({"error": "You are not a member!"}, status=status.HTTP_403_FORBIDDEN)
 
     msg = Message.objects.create(
         conversation_id=conversation_id,
-        content=text,
+        content=text if text else None,
         sender=user,
         parent_message=parent_message,
     )
+
+    media_data_response = []
+    media_index = 0
+
+    for file_obj in uploaded_files:
+        content_type = getattr(file_obj, "content_type", "")
+
+        media_type = MessageMedia.MediaType.FILE
+
+        if content_type.startswith("image/"):
+            media_type = MessageMedia.MediaType.IMAGE
+        elif content_type.startswith("video/"):
+            media_type = MessageMedia.MediaType.VIDEO
+        elif content_type.startswith("audio/"):
+            media_type = MessageMedia.MediaType.AUDIO
+
+        media_instance = MessageMedia.objects.create(
+            message=msg, media_type=media_type, media_file=file_obj, order_index=media_index
+        )
+
+        media_data_response.append(
+            {
+                "id": media_instance.media_id,
+                "type": media_instance.media_type,
+                "url": request.build_absolute_uri(media_instance.media_file.url),
+                "order_index": media_index,
+            }
+        )
+        media_index += 1
 
     # ---- notification ----
     conversation = Conversation.objects.get(conversation_id=conversation_id)
@@ -211,8 +265,10 @@ def send_message(request, conversation_id):
         {
             "id": msg.message_id,
             "text": msg.content,
+            "type": "text" if not media_data_response else "media",
             "time": msg.sent_at.strftime("%H:%M"),
             "senderId": "me",
+            "media": media_data_response,
             "reply_to_details": (
                 {
                     "id": parent_message.message_id,
@@ -222,7 +278,8 @@ def send_message(request, conversation_id):
                 if parent_message
                 else None
             ),
-        }
+        },
+        status=status.HTTP_201_CREATED,
     )
 
 

@@ -61,7 +61,7 @@ def notify_community_admins(community, actor, notif_type, text):
 @permission_classes([IsAuthenticated])
 def communities(request):
     user = request.user
-    filter = request.query_params.get("filter", "recommended")
+    filter_type = request.query_params.get("filter", "recommended")
 
     membership_qs = CommunityMember.objects.filter(
         user=user,
@@ -86,30 +86,52 @@ def communities(request):
     qs = Community.objects.all().annotate(
         is_joined=Exists(membership_qs.filter(status="approved")),
         request_sent=Exists(membership_qs.filter(status="pending")),
-        members_count=Count("memberships", distinct=True),
+        members_count=Count(
+            "memberships",
+            filter=Q(memberships__status="approved"),
+            distinct=True,
+        ),
         friends_count=Count(
             "memberships",
-            filter=Q(memberships__user__id__in=friends_id),
+            filter=Q(memberships__user__id__in=friends_id, memberships__status="approved"),
             distinct=True,
         ),
     )
 
-    if filter == "joined":
+    if filter_type == "joined":
         qs = qs.filter(is_joined=True).order_by("-created_at")
 
-    elif filter == "popular":
+    elif filter_type == "popular":
         qs = qs.order_by("-members_count", "-created_at")
 
-    elif filter == "trending":
+    elif filter_type == "trending":
         qs = qs.annotate(
             recent_members=Count(
                 "memberships",
-                filter=Q(memberships__joined_at__gte=Now() - timedelta(days=3)),
+                filter=Q(memberships__joined_at__gte=Now() - timedelta(days=3), memberships__status="approved"),
                 distinct=True,
             )
         ).order_by("-recent_members", "-members_count")
-    elif filter == "friends_related":
-        qs = qs.filter(friends_count__gt=0).order_by("-friends_count", "-members_count")
+
+    elif filter_type == "friends_related":
+        final_communities = []
+        priority_1_qs = qs.filter(friends_count__gt=0, is_joined=False).order_by("-friends_count", "-members_count")[:5]
+
+        final_communities.extend(list(priority_1_qs))
+        needed_slots = 5 - len(final_communities)
+        if needed_slots > 0:
+            already_included_ids = [c.community_id for c in final_communities]
+
+            priority_2_qs = (
+                qs.filter(is_joined=False)
+                .exclude(community_id__in=already_included_ids)
+                .order_by("-members_count")[:needed_slots]
+            )
+
+            final_communities.extend(list(priority_2_qs))
+
+        serializer = CommunitySerializer(final_communities, many=True, context={"request": request})
+        return Response(serializer.data)
 
     else:  # default
         community_ids = CommunityMember.objects.filter(user=user).values("community_id")
