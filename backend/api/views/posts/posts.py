@@ -85,6 +85,7 @@ def feed(request, community_id=None):
 
     community_id = community_id or request.GET.get("community_id")
     user_id = request.GET.get("user")
+    page_id = request.GET.get("page")
     filter_type = request.GET.get("filter", "recommended")
 
     qs = Post.objects.all().annotate(**base_annotations(user))
@@ -96,6 +97,9 @@ def feed(request, community_id=None):
     # user profile feed
     if user_id:
         qs = qs.filter(author_id=user_id).order_by("-is_pinned", "-created_at")
+
+    if page_id:
+        qs = qs.filter(author_id=page_id).order_by("-created_at")
 
     # friends feed
     elif filter_type == "friends":

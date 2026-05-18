@@ -1,19 +1,16 @@
 import random
 import re
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
-
-# from django.core.mail import send_mail
+from django.core.mail import send_mail
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from ....models import EmailVerification
-
-# if we want to add another uni we can just add the domain here:
-ALLOWED_DOMAINS = ["students.ptuk.edu.ps"]
+from ....models import EmailVerification, UniversityDomain
 
 
 def is_valid_academic_email_domain(email):
@@ -21,7 +18,7 @@ def is_valid_academic_email_domain(email):
     if "@" not in email:
         return False
     domain = email.split("@", 1)[1]
-    return domain in ALLOWED_DOMAINS
+    return UniversityDomain.objects.filter(domain=domain, is_active=True).exists()
 
 
 User = get_user_model()
@@ -30,6 +27,7 @@ User = get_user_model()
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def send_code(request):
+    # delete the expired EmailVerification if any
     EmailVerification.objects.filter(expires_at__lt=timezone.now()).delete()
 
     username = (request.data.get("username") or "").strip()
@@ -50,7 +48,9 @@ def send_code(request):
 
     # Enform domain
     if not is_valid_academic_email_domain(academic_email):
-        return Response({"message": "academicEmail is invalid"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"message": "academicEmail is invalid or domain not supported"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     # prevent spam
     last = EmailVerification.objects.filter(academic_email=academic_email).order_by("-created_at").first()
@@ -67,14 +67,15 @@ def send_code(request):
     v.set_expiry(minutes=10)
     v.save()
 
-    # the email will be just printed for testing
-    print(f"[send-code] academic_email: {academic_email} code: {code}")
-    """send_mail(
-        subject="Your PTUK verification code",
-        message=f"Your verification code is: {code}",
-        from_email=None,
-        recipient_list=[academic_email],
-        fail_silently=False,
-    )"""
+    try:
+        send_mail(
+            subject="ProjectCampus - verification code",
+            message=f"Welcome to Project Campus! Your verification code is: {code}",
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[academic_email],
+            fail_silently=False,
+        )
+        return Response({"message": "Verification code sent"}, status=status.HTTP_200_OK)
 
-    return Response({"message": "Verification code sent"}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"message": f"Failed to send email: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
