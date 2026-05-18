@@ -98,7 +98,7 @@ def feed(request, community_id=None):
     if user_id:
         qs = qs.filter(author_id=user_id).order_by("-is_pinned", "-created_at")
 
-    if page_id:
+    elif page_id:
         qs = qs.filter(author_id=page_id).order_by("-created_at")
 
     # friends feed

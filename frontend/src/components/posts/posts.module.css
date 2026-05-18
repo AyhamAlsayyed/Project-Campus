@@ -1,7 +1,7 @@
 .card {
   width: 90%;
   border-radius: 20px;
-  padding: 16px 16px 14px;
+  padding: 16px 16px 18px;
   margin: 2% auto 0 auto;
   background: #262626;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -82,17 +82,19 @@
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: break-word;
-  /* ← forces wrap even on single long "words" */
   word-wrap: break-word;
-  /* ← fallback for older browsers */
-  line-height: 1.6;
+  
+  /* 1. Change this to limit the horizontal width */
+  width: 100%;
+  max-width: 85%; /* Takes up a bit more than half the space */
+  
+  /* 2. UI Tip: Lower the line-height slightly for better look */
+  line-height: 1.6; /* Changed from 2 to make paragraphs look tighter */
+  
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.88);
   margin: 10px 0 14px 0;
   letter-spacing: 0.01em;
-  max-width: 100%;
-  /* ← never exceeds card width */
-  width: 100%;
 }
 
 /* Media block */

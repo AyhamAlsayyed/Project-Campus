@@ -80,7 +80,6 @@ export default function CommunityCard({ community, variant = "large", setCommuni
                                 </svg>
                             )}
                         </h3>
-
                         <p className={`${styles.descriptionText} ${variant === "small" ? styles.truncated : ""}`}>
                             {displayedText}
                             {shouldTruncate && (
@@ -90,24 +89,29 @@ export default function CommunityCard({ community, variant = "large", setCommuni
                             )}
                         </p>
                     </div>
-
                     <button
-                        className={`
-                             ${styles.actionBtn} 
-                             ${community.is_joined || community.request_sent ? styles.viewBtn : styles.joinBtn}
-                            ${community.request_sent ? styles.requestedDisabled : ''}
-                         `}
+                        className={`${styles.actionBtn} ${community.is_joined || community.request_sent ? styles.viewBtn : styles.joinBtn} ${community.request_sent ? styles.requestedDisabled : ''}`}
                         disabled={community.is_requested}
                         onClick={() => !community.is_requested && handleAction(community)}
-                         >
-                        {community.is_joined
-                            ? "View"
-                            : community.request_sent
-                                ? "Requested"
-                                : "Join"}
+                    >
+                        {community.is_joined ? "View" : community.request_sent ? "Requested" : "Join"}
                     </button>
                 </div>
             </div>
+
+
+            {variant === "small" && community.friends_joined?.length > 0 && (
+                <div style={{ padding: '6px 4px 0' }}>
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
+                        <span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Joined by: </span>
+                        {community.friends_joined.map(f => f.username).join(', ')}
+                        {community.friends_count > community.friends_joined.length
+                            ? ` and ${community.friends_count - community.friends_joined.length} others.`
+                            : '.'}
+                    </span>
+                </div>
+            )}
+
             {isPopupOpen && createPortal(
                 <div className={styles.popupOverlay} onClick={closePopup}>
                     <div className={styles.popupContent} onClick={(e) => e.stopPropagation()}>
@@ -119,6 +123,5 @@ export default function CommunityCard({ community, variant = "large", setCommuni
                 document.body
             )}
         </>
-
     );
 }

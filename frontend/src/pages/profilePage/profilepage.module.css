@@ -1596,8 +1596,72 @@ body {
     background: #e03e3e;
 }
 
-/* A tiny bit of animation so it doesn't just awkwardly snap onto the screen */
+
 @keyframes popIn {
     0% { transform: scale(0.95); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
+}
+.popupScrollContainer {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+
+.popupScrollContainer::-webkit-scrollbar-button {
+  display: none;
+}
+
+
+.popupScrollContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+
+.popupScrollContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.popupScrollContainer::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+.titleMarqueeWrapper {
+    overflow: hidden;
+    position: relative;
+    max-width: 100%;
+}
+
+.titleMarqueeWrapper::before,
+.titleMarqueeWrapper::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.titleMarqueeWrapper::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(0,0,0,0.8), transparent);
+}
+
+.titleMarqueeWrapper::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(0,0,0,0.8), transparent);
+}
+
+.titleMarquee {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee 8s linear infinite;
+    color: white;
+    font-size: 2.2rem;
+    font-weight: 800;
+}
+
+@keyframes marquee {
+    0%   { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
 }

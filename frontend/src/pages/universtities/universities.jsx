@@ -8,6 +8,8 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import Events from '../../Assets/icons/event.png';
+import ArrowRight from '../../Assets/icons/arrow-right.png';
+import ArrowLeft from '../../Assets/icons/arrow-left.png';
 export default function Universities() {
     const [theme, setTheme] = useState("dark");
     const [user, setUser] = useState(null);
@@ -45,6 +47,7 @@ export default function Universities() {
                 // 1. Set University Info (New)
                 if (univRes.ok) {
                     const univData = await univRes.json();
+                    console.log("univData:", univData);
                     setUnivData(univData);
                 }
 
@@ -113,6 +116,8 @@ export default function Universities() {
                             src={univData?.logo || PtukLogo}
                             alt="University Logo"
                             className={styles.univLogo}
+                            onClick={() => navigate(`/page/${univData?.page_id}`)}
+                            style={{ cursor: 'pointer' }}
                         />
                         <div className={styles.univTextContainer}>
                             <h2 className={styles.univEnglish}>{univData?.name || "Loading..."}</h2>
@@ -152,29 +157,29 @@ export default function Universities() {
                                             style={{ cursor: "pointer" }}>read more</a>
                                     </div>
                                 )}
-
-                                {news.length > 1 && (
-                                    <div className={styles.sliderControls}>
-                                        <button className={styles.arrowBtn} onClick={() => setNewsIndex(p => p === 0 ? news.length - 1 : p - 1)}>
-                                            <ChevronLeft size={18} />
-                                        </button>
-                                        <div className={styles.dots}>
-                                            {news.map((_, idx) => (
-                                                <span
-                                                    key={idx}
-                                                    className={`${styles.dot} ${idx === newsIndex ? styles.activeDot : ''}`}
-                                                    onClick={() => setNewsIndex(idx)}
-                                                />
-                                            ))}
-                                        </div>
-                                        <button className={styles.arrowBtn} onClick={() => setNewsIndex(p => (p + 1) % news.length)}>
-                                            <ChevronRight size={18} />
-                                        </button>
-                                    </div>
-                                )}
                             </div>
+
+
+
                         </div>
+
                     </div>
+                    {news.length > 1 && (
+                        <div className={styles.sliderControls} style={{ marginTop: "-50px" }}>
+                            <button className={styles.arrowBtn} onClick={() => setNewsIndex(p => p === 0 ? news.length - 1 : p - 1)}>
+                                <img src={ArrowLeft} alt="prev" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} />
+                            </button>
+                            <div className={styles.dots}>
+                                {news.map((_, idx) => (
+                                    <span key={idx} className={`${styles.dot} ${idx === newsIndex ? styles.activeDot : ''}`} onClick={() => setNewsIndex(idx)} />
+                                ))}
+                            </div>
+                            <button className={styles.arrowBtn} onClick={() => setNewsIndex(p => (p + 1) % news.length)}>
+                                <img src={ArrowRight} alt="next" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} />
+                            </button>
+                        </div>
+                    )}
+
                 </div>
 
                 {/* ── RIGHT COLUMN ── */}
@@ -279,26 +284,27 @@ export default function Universities() {
                                 </div>
                             </div>
 
-                            {events.length > 1 && (
-                                <div className={styles.eventSliderControls}>
-                                    <button className={styles.arrowBtn} onClick={() => setEventIndex(p => p === 0 ? events.length - 1 : p - 1)}>
-                                        <ChevronLeft size={16} />
-                                    </button>
-                                    <div className={styles.dots}>
-                                        {events.map((_, idx) => (
-                                            <span
-                                                key={idx}
-                                                className={`${styles.dot} ${idx === eventIndex ? styles.activeDot : ''}`}
-                                                onClick={() => setEventIndex(idx)}
-                                            />
-                                        ))}
-                                    </div>
-                                    <button className={styles.arrowBtn} onClick={() => setEventIndex(p => (p + 1) % events.length)}>
-                                        <ChevronRight size={16} />
-                                    </button>
-                                </div>
-                            )}
+
                         </div>
+                        {events.length > 1 && (
+                            <div className={styles.eventSliderControls}>
+                                <button className={styles.arrowBtn} onClick={() => setEventIndex(p => p === 0 ? events.length - 1 : p - 1)}>
+                                    <img src={ArrowLeft} alt="prev" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} />
+                                </button>
+                                <div className={styles.dots}>
+                                    {events.map((_, idx) => (
+                                        <span
+                                            key={idx}
+                                            className={`${styles.dot} ${idx === eventIndex ? styles.activeDot : ''}`}
+                                            onClick={() => setEventIndex(idx)}
+                                        />
+                                    ))}
+                                </div>
+                                <button className={styles.arrowBtn} onClick={() => setEventIndex(p => (p + 1) % events.length)}>
+                                    <img src={ArrowRight} alt="next" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} />
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                 </div>

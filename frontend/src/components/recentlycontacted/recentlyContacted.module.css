@@ -193,36 +193,43 @@
 
 .contactRight {
   display: flex;
+  flex-direction: row;       
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.contactTextCol {
+  display: flex;
   flex-direction: column;
   align-items: flex-end;
-  justify-content: center;
-  gap: 8px;
-  min-width: 120px;
+  gap: 4px;
 }
 
+ 
 .contactMessage {
   margin: 0;
   font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.6);
   text-align: right;
-  max-width: 150px;
-  line-height: 1.2rem;
+  max-width: 130px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-
 .contactBottomRow {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
+ 
 .contactTime {
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
 }
 
-.contactMessageIcon {
-  color: rgba(255, 255, 255, 0.7);
-}
 .divider {
   width: 50%;
   height: 1px;

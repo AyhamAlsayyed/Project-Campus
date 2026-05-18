@@ -9,7 +9,7 @@ import { createPortal } from "react-dom";
 import postStyles from '../posts/posts.module.css';
 import Share from '../../Assets/icons/share.png';
 export default function CommentModal({ post, onClose, currentUser }) {
-    const highlightCommentId = post.highlightCommentId || null;
+    const highlightCommentId = post.highlightCommentId || {};
     const [highlightedId, setHighlightedId] = useState(highlightCommentId);
     const commentRefs = useRef({});
     const commentsSectionRef = useRef(null);
@@ -375,43 +375,30 @@ export default function CommentModal({ post, onClose, currentUser }) {
                         </div>
                     )}
 
-                    <div className={styles.stats}>
-                        <button
-                            className={`${styles.iconBtn} ${isLiked ? styles.liked : ""}`}
-                            onClick={handleLikePost}
-                            type="button"
-                        >
-                            <span className={styles.heart}>
-                                <img
-                                    src={isLiked ? LikeActive : Like}
-                                    alt="Like Icon"
-                                    className={isLiked ? styles.likeActive : styles.like}
-                                    width={22}
-                                    height={22}
-                                />
-                            </span>
-                            <span className={styles.count}>{likesCount}</span>
-                        </button>
-                        <span>{post.comments_count || comments.length} comments</span>
-                    </div>
+
 
                     <div className={styles.actions}>
                         <div
                             className={`${styles.actionBtn} ${isLiked ? styles.liked : ""}`}
                             onClick={handleLikePost}
                         >
+                           
                             <img src={isLiked ? LikeActive : Like} width={20} alt="" />
-                            <span>Like</span>
+                             {likesCount > 0 && <span style={{ fontSize: "0.85rem", marginLeft: 4, opacity: 0.8 }}>{likesCount}</span>}
+                            
+                            
                         </div>
 
-                        {/* Share button */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, color: "rgba(255,255,255,0.6)", fontSize: "0.9rem" }}>
+                            <span>{post.comments_count || comments.length}</span>
+                            <span>comments</span>
+                        </div>
+
                         <div ref={shareMenuRef}>
                             <div className={styles.actionBtn} onClick={() => setShowShareMenu(!showShareMenu)}>
                                 <img src={Share} width={20} alt="Share" />
                                 <span>Share</span>
                             </div>
-
-
                         </div>
                     </div>
                     {showShareMenu && createPortal(

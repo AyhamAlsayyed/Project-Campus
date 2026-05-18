@@ -48,6 +48,7 @@ def university_info(request):
     return Response(
         {
             "id": university_page.id if hasattr(university_page, "id") else getattr(university_page, "page_id", None),
+            "page_id": university_page.user_id,
             "university_handle": university_page.user.username if university_page.user else None,
             "name": university_page.page_full_name,
             "name_arabic": university_page.page_name_arabic or "",

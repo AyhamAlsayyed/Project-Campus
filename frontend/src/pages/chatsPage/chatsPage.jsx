@@ -277,7 +277,25 @@ export default function ChatsPage() {
                 });
 
                 const data = await res.json();
-                setChats(data);
+
+                const unique = data.reduce((acc, chat) => {
+                    const key = chat.name + chat.avatar;
+                    const existing = acc.find(c => c.name + c.avatar === key);
+                    if (!existing) {
+                        acc.push(chat);
+                    } else if (
+                        // Always prefer the chat we're trying to open
+                        chat.id.toString() === chatId ||
+                        (chat.last_message_time && (!existing.last_message_time ||
+                            new Date(chat.last_message_time) > new Date(existing.last_message_time)))
+                    ) {
+                        const idx = acc.indexOf(existing);
+                        acc[idx] = chat;
+                    }
+                    return acc;
+                }, []);
+                setChats(unique);
+              
             } catch (err) {
                 console.error(err);
             } finally {
@@ -428,7 +446,7 @@ export default function ChatsPage() {
                                                     <div className={styles.chatItemLeft}>
                                                         <div className={styles.avatarWrapper}>
                                                             <img
-                                                                src={chat.avatar.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`}
+                                                                src={chat.avatar?.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`}
                                                                 alt={chat.name}
                                                                 className={styles.chatAvatar}
                                                             />

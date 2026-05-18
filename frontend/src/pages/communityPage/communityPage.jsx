@@ -5,12 +5,16 @@ import DesktopCreatePost from '../../components/DesktopCreatePost/desktopCreateP
 import MobileCreatePost from '../../components/MobileCreatePost/mobileCreatePost'
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import { useState, useEffect, useRef } from 'react'
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { X, Menu } from "lucide-react";
+import { Navigate } from 'react-router-dom';
 import CommentModal from '../../components/comments/commentsModal';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
 import PostCard from '../../components/posts/postCard'
 import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
+import NotificationInactive from '../../Assets/icons/notifications.png'
+import NotificationActive from '../../Assets/icons/notifications-active.png'
+import Leave from '../../Assets/icons/leave.png'
 
 export default function CommunityPage() {
     const [user, setUser] = useState(null)
@@ -19,6 +23,7 @@ export default function CommunityPage() {
     const [filter, setFilter] = useState("recent");
     const [community, setCommunity] = useState(null);
     const { id } = useParams();
+    const navigate = useNavigate();
     const [content, setContent] = useState("");
     const [images, setImages] = useState([]);
     const [files, setFiles] = useState([]);
@@ -34,9 +39,33 @@ export default function CommunityPage() {
     const [joinedCommunities, setJoinedCommunities] = useState([]);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [isNotified, setIsNotified] = useState(false);
+    const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
     const mobileMenuRef = useRef(null);
 
     const API = "http://localhost:8000"
+    const handleToggleNotification = async () => {
+        const prev = isNotified;
+        setIsNotified(!prev);
+        try {
+            const res = await fetch(`${API}/api/communities/${id}/notify/`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) setIsNotified(prev);
+        } catch { setIsNotified(prev); }
+    };
+
+    const handleLeave = async () => {
+        try {
+            const res = await fetch(`${API}/api/communities/${id}/leave/`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) navigate('/communities');
+        } catch (err) { console.error("Leave failed", err); }
+        setShowLeaveConfirm(false);
+    };
 
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 1024);
@@ -318,9 +347,33 @@ export default function CommunityPage() {
                 <div className={`${styles.content} ${styles.page}`}>
                     <SideBarNav theme={theme} toggleTheme={toggleTheme} user={user} />
                     <div className={styles.mainContent}>
-                        <h1 className={styles.title}>
-                            <span className={styles.highlight}>{community?.name}</span> community
-                        </h1>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <h1 className={styles.title}>
+                                <span className={styles.highlight}>{community?.name}</span> community
+                            </h1>
+                            <div style={{ display: "flex", alignItems: "center", gap: 30 }}>
+                                <button
+                                    onClick={handleToggleNotification}
+                                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                                >
+                                    <img
+                                        src={isNotified ? NotificationActive : NotificationInactive}
+                                        alt="notifications"
+                                        style={{ width: 28, height: 28, filter: "brightness(0) invert(1)" }}
+                                    />
+                                </button>
+                                <button
+                                    onClick={() => setShowLeaveConfirm(true)}
+                                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                                >
+                                    <img
+                                        src={Leave}
+                                        alt="leave"
+                                        style={{ width: 28, height: 28, filter: "brightness(0) invert(1)" }}
+                                    />
+                                </button>
+                            </div>
+                        </div>
                         <div className={styles.filters}>
                             {mobileFilters.map(f => (
                                 <button
@@ -464,6 +517,82 @@ export default function CommunityPage() {
                     onClose={() => setIsCommentModalOpen(false)}
                     currentUser={user}
                 />
+            )}
+            {showLeaveConfirm && (
+                <div
+                    style={{
+                        position: "fixed", inset: 0, zIndex: 9999,
+                        background: "rgba(0,0,0,0.45)", backdropFilter: "blur(5px)",
+                        WebkitBackdropFilter: "blur(5px)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        animation: "fadeIn 0.2s ease-out"
+                    }}
+                    onClick={() => setShowLeaveConfirm(false)}
+                >
+                    <div
+                        style={{
+                            background: "#1c1c1e",
+                            width: 290,
+                            borderRadius: 18,
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            boxShadow: "0 24px 48px rgba(0,0,0,0.6)",
+                            display: "flex", flexDirection: "column",
+                            overflow: "hidden",
+                            animation: "popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)"
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Text area */}
+                        <div style={{ padding: "24px 20px 20px", textAlign: "center" }}>
+                            <h3 style={{
+                                color: "#ffffff", fontSize: "1.05rem", fontWeight: 600,
+                                margin: "0 0 6px", letterSpacing: "-0.01em"
+                            }}>
+                                Leave this community?
+                            </h3>
+                            <p style={{
+                                color: "rgba(255,255,255,0.6)", fontSize: "0.85rem",
+                                lineHeight: 1.4, margin: 0
+                            }}>
+                                You'll need to rejoin to see <strong style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>{community?.name}</strong>'s content again.
+                            </p>
+                        </div>
+
+                        {/* Stacked buttons */}
+                        <div style={{
+                            display: "flex", flexDirection: "column",
+                            borderTop: "1px solid rgba(255,255,255,0.08)"
+                        }}>
+                            <button
+                                onClick={() => setShowLeaveConfirm(false)}
+                                style={{
+                                    background: "transparent", border: "none",
+                                    borderBottom: "1px solid rgba(255,255,255,0.08)",
+                                    padding: 16, fontSize: "1rem", cursor: "pointer",
+                                    fontFamily: "inherit", color: "#ffffff", fontWeight: 400,
+                                    transition: "background 0.15s ease"
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleLeave}
+                                style={{
+                                    background: "transparent", border: "none",
+                                    padding: 16, fontSize: "1rem", cursor: "pointer",
+                                    fontFamily: "inherit", color: "#ff453a", fontWeight: 600,
+                                    transition: "background 0.15s ease"
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,69,58,0.1)"}
+                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                            >
+                                Leave
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

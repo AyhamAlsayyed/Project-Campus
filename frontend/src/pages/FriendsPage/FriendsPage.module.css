@@ -86,16 +86,13 @@ body {
 }
 
 .innerContainer {
-    background-color: rgba(61, 60, 60);
+    background-color: #333333;
     border-radius: 30px 30px 0 0;
-    padding-top: 30px;
-    gap: 40px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     width: 100%;
-    top: 10px;
-    min-height: calc(100vh - 396px);
+    min-height: calc(100vh - 283px);
     z-index: 10;
 }
 
@@ -186,6 +183,8 @@ body {
     padding: 16px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(10px);
+    min-height: 500px;
+    max-height: 500px;
 }
 
 .rightList {
@@ -229,6 +228,11 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+.friendItemRow:hover {
+    background: rgba(255, 255, 255, 0.05);
+
 }
 
 .friendItem {
@@ -339,4 +343,253 @@ body {
     color: #888;
     font-size: 11px;
     margin-top: 2px;
+}
+
+/* Container Headers */
+.friendsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.viewAllBtn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.55);
+    margin-right: 0%;
+    width: 16%;
+    margin-left: 85%;
+    margin-bottom: 1%;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.viewAllBtn:hover {
+    color: rgba(255, 255, 255, 0.85);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Row Adjustment for items */
+.friendItemRow {
+    display: flex;
+    border-radius: 25px;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.friendItemLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    cursor: pointer;
+}
+
+/* Action Buttons Style */
+.friendActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.actionBtn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 50%;
+    transition: background 0.2s, color 0.2s;
+}
+
+.actionBtn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* Forces PNG to be pure White */
+.messageIcon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+/* Dropdown Menu styling */
+.dropdownContainer {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 6px;
+
+    background: #222222;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    min-width: 130px;
+    overflow: hidden;
+}
+
+
+.rightList,
+.popupList {
+    max-height: 340px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-right: 4px;
+
+    padding-bottom: 110px;
+}
+
+.dropdownMenu button {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.85rem;
+    cursor: pointer;
+    width: 100%;
+}
+
+.dropdownMenu button:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.dropdownMenu .blockBtn {
+    color: #ff4d4d;
+}
+
+.dropdownMenu .blockBtn:hover {
+    background: rgba(255, 77, 77, 0.15);
+}
+
+/* Recently Contacted Search Bar Ported Over */
+.searchContactWrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 999px;
+    padding: 12px 16px;
+    margin-bottom: 22px;
+}
+
+.searchIcon {
+    flex: 0 0 auto;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.searchInput {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    color: #fff;
+    /* adjust variable fallback if needed */
+    font-size: 0.95rem;
+}
+
+.searchInput::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* Popup / Modal Windows */
+.popupOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.popupContent {
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 450px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+.popupHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    color: #fff;
+}
+
+.popupHeader h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.closePopupBtn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.closePopupBtn:hover {
+    color: #fff;
+}
+
+.popupList {
+    max-height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 4px;
+}
+
+.popupFriendItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.popupFriendItem:hover {
+    background: rgba(255, 255, 255, 0.05);
 }

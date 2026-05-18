@@ -32,8 +32,42 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
   const [isBlocked, setIsBlocked] = useState(post?.author?.is_blocked || false);
   const [adReaction, setAdReaction] = useState(post?.ad_reaction || null);
   const [showReport, setShowReport] = useState(false);
+  const [commenterAvatars, setCommenterAvatars] = useState([]);
 
   const CHAR_LIMIT = 150;
+  useEffect(() => {
+    const fetchCommenters = async () => {
+      const token = localStorage.getItem("access");
+      const postId = post.id || post.post_id;
+      console.log("fetching comments for post:", postId);
+      if (!postId || !token) return;
+      try {
+        const res = await fetch(`http://localhost:8000/api/posts/${postId}/comments/`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          console.log("comments data:", data);
+          const comments = Array.isArray(data) ? data : (data.results || []);
+          console.log("first comment:", comments[0]);
+          const seen = new Set();
+          const avatars = [];
+          for (const comment of comments) {
+            const authorId = comment.user_id;
+            const avatar = comment.user_avatar;
+            if (authorId && !seen.has(authorId) && avatar) {
+              seen.add(authorId);
+              avatars.push(avatar.startsWith("http") ? avatar : `http://localhost:8000${avatar}`);
+            }
+            if (avatars.length === 3) break;
+          }
+          console.log("final avatars:", avatars);
+          setCommenterAvatars(avatars);
+        }
+      } catch (e) { console.error(e); }
+    };
+    fetchCommenters();
+  }, [post.id, post.post_id]);
 
   const formatTimeAgo = (dateString) => {
     const now = new Date();
@@ -496,7 +530,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
       )}
 
       <div className={styles.actions}>
-        {/* Left — like button */}
+       
         <button
           className={`${styles.iconBtn} ${isLiked ? styles.liked : ""}`}
           onClick={handleLike}
@@ -554,10 +588,32 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
             </div>) : (
             <div
               className={styles.commentInputPill}
-              style={{ maxWidth: "200px" }}
+              style={{ maxWidth: "200px", display: "flex", alignItems: "center", padding: "0 8px 0 16px" }}
               onClick={() => openComments(post)}
             >
               <span className={styles.placeholderText}>Add a comment ...</span>
+
+              {commenterAvatars.length > 0 && (
+                <div style={{ display: "flex", alignItems: "center", marginLeft: "auto", width: 20 }}>
+                  {commenterAvatars.map((avatar, i) => (
+                    <img
+                      key={i}
+                      src={avatar}
+                      alt=""
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        border: "2px solid #262626",
+                        marginLeft: i === 0 ? 0 : -10,
+                        zIndex: 3 - i,
+                        position: "relative"
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

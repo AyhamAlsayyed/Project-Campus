@@ -340,14 +340,27 @@ export default function ProfilePage({ type }) {
         if (res.ok) setFriendStatus("none");
     };
 
-    const loadPosts = async (id, type) => {  // ← add type here
+    const loadPosts = async (id, type) => {
         try {
             const param = type === 'page' ? 'page' : 'user';
-            const res = await fetch(`${API}/api/posts?${param}=${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            const res = await fetch(`${API}/api/posts?${param}=${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             let data;
-            try { data = await res.json(); } catch (err) { setPostsError("Invalid server response."); setPosts([]); setPostsLoading(false); return; }
+            try { data = await res.json(); } catch (err) {
+                setPostsError("Invalid server response.");
+                setPosts([]);
+                setPostsLoading(false);
+                return;
+            }
             if (!res.ok) { setPostsError(data?.message || "Failed to load posts"); setPosts([]); return; }
-            setPosts(Array.isArray(data) ? data : []);
+
+            // ← normalize post_id → id
+            const normalized = (Array.isArray(data) ? data : []).map(p => ({
+                ...p,
+                id: p.id || p.post_id,
+            }));
+            setPosts(normalized);
         } catch (e) { setPostsError(e?.message || "Something went wrong"); setPosts([]); }
         finally { setPostsLoading(false); }
     };
@@ -383,25 +396,38 @@ export default function ProfilePage({ type }) {
     }, [user, currentUser, userId]);
 
     const handleMessage = async () => {
-        if (userId.convention_id) {
-            navigate(`/chats/${userId.convention_id}`);
-            return;
-        }
         try {
+            // First check if a conversation already exists
+            const chatsRes = await fetch(`${API}/api/chats/`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const chats = await chatsRes.json();
+
+            // Find existing conversation with this user
+            const existing = chats.find(c =>
+                !c.is_group && c.name === username
+            );
+
+
+
+            if (existing) {
+                console.log("existing chat found:", existing?.id, existing?.name);
+                navigate(`/chats/${existing.id}`);
+                return;
+            }
+
+            // No existing conversation, create one
             const res = await fetch(`${API}/api/conversations/create/${userId}/`, {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    target_user: userId,
-                    type: 'user'
-                })
+                body: JSON.stringify({ target_user: userId, type: 'user' })
             });
             const data = await res.json();
-            console.log("conversation response:", data);
             if (data.convention_id) navigate(`/chats/${data.convention_id}`);
+
         } catch (e) {
             console.error("Error opening chat:", e);
         }
@@ -827,7 +853,7 @@ export default function ProfilePage({ type }) {
                                 )}
                                 {activeTab === 'About' && (
                                     <div className={styles.postsSection}>
-                                        <UserDetails user={user} hidePill />
+                                        <UserDetails user={user} hidePill darker />
                                     </div>
                                 )}
                                 {activeTab === 'Events' && (
@@ -923,12 +949,26 @@ export default function ProfilePage({ type }) {
                                                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                                                         <button
                                                             onClick={() => setRemindersMonth(new Date(year - 1, month, 1))}
-                                                            style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "1.2rem", cursor: "pointer", width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                                            disabled={year <= 2026}
+                                                            style={{
+                                                                background: "transparent", border: "none",
+                                                                color: year <= 2026 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)",
+                                                                fontSize: "1.2rem", cursor: year <= 2026 ? "not-allowed" : "pointer",
+                                                                width: 28, height: 28, borderRadius: "50%",
+                                                                display: "flex", alignItems: "center", justifyContent: "center"
+                                                            }}
                                                         >‹</button>
                                                         <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem" }}>{year}</span>
                                                         <button
                                                             onClick={() => setRemindersMonth(new Date(year + 1, month, 1))}
-                                                            style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "1.2rem", cursor: "pointer", width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                                            disabled={year >= new Date().getFullYear() + 2}
+                                                            style={{
+                                                                background: "transparent", border: "none",
+                                                                color: year >= new Date().getFullYear() + 2 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)",
+                                                                fontSize: "1.2rem", cursor: year >= new Date().getFullYear() + 2 ? "not-allowed" : "pointer",
+                                                                width: 28, height: 28, borderRadius: "50%",
+                                                                display: "flex", alignItems: "center", justifyContent: "center"
+                                                            }}
                                                         >›</button>
                                                     </div>
 
@@ -1202,6 +1242,7 @@ export default function ProfilePage({ type }) {
                     onClick={() => { setRemindersPopup(null); setEventMenuOpen(null); }}
                 >
                     <div
+                        className={styles.popupScrollContainer}
                         style={{ background: "#383838", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 24, padding: "24px 20px", width: "92%", maxWidth: 480, maxHeight: "85vh", overflowY: "auto", position: "relative", boxShadow: "0 10px 40px rgba(0,0,0,0.7)" }}
                         onClick={e => e.stopPropagation()}
                     >
@@ -1218,12 +1259,13 @@ export default function ProfilePage({ type }) {
                                 Cancel
                             </button>
                         </div>
+                        <div style={{ height: "1px", background: "rgba(255, 255, 255, 0.1)", marginBottom: 20 }} />
 
-                        {/* Events list */}
+
                         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                             {remindersPopup.events.map((event, index) => (
                                 <div key={event.id}>
-                                    {/* Separator between events */}
+
                                     {index > 0 && (
                                         <div style={{ width: "40%", height: 1, background: "rgba(255,255,255,0.1)", margin: "0 auto 20px auto" }} />
                                     )}
@@ -1258,9 +1300,9 @@ export default function ProfilePage({ type }) {
                                         </button>
                                     </div>
 
-                                    {/* Event card */}
+
                                     <div style={{ borderRadius: 24, overflow: "hidden", position: "relative", minHeight: 160 }}>
-                                        {/* Banner background */}
+
                                         {event.banner
                                             ? <img src={event.banner.startsWith("http") ? event.banner : `${API}${event.banner}`} alt=""
                                                 style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
@@ -1304,8 +1346,22 @@ export default function ProfilePage({ type }) {
                                         {/* Content at the bottom */}
                                         <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "flex-end", gap: 16, padding: "20px 16px 16px 16px", minHeight: 160 }}>
                                             {/* Left: title + desc + read more */}
-                                            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-                                                <span style={{ color: "white", fontWeight: 800, fontSize: "1.05rem" }}>{event.title}</span>
+                                            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, minWidth: 0, overflow: "hidden" }}>
+
+                                                {/* New Marquee Logic for Title */}
+                                                {event.title?.length > 20 ? (
+                                                    <div className={styles.titleMarqueeWrapper}>
+                                                        {/* Overriding the 2.2rem from your CSS to fit this card's 1.05rem scale */}
+                                                        <span className={styles.titleMarquee} style={{ fontSize: "1.05rem" }}>
+                                                            {event.title}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <span style={{ color: "white", fontWeight: 800, fontSize: "1.05rem" }}>
+                                                        {event.title}
+                                                    </span>
+                                                )}
+
                                                 {event.description && (
                                                     <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.8rem", margin: 0, lineHeight: 1.4, fontStyle: "italic", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                                                         {event.description}
@@ -1318,7 +1374,6 @@ export default function ProfilePage({ type }) {
                                                 )}
                                             </div>
 
-                                            {/* Right: Information panel */}
                                             {(event.start_date || event.location) && (
                                                 <div style={{ width: 140, flexShrink: 0, padding: "12px", background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", borderRadius: 14, display: "flex", flexDirection: "column", gap: 10 }}>
                                                     <span style={{ color: "white", fontSize: "0.6rem", fontWeight: 600 }}>Information</span>

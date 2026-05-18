@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import styles from './recentlyContacted.module.css';
 import { Search, MessageSquare } from "lucide-react"
 import { useNavigate } from 'react-router-dom';
+import Messages from '../../Assets/icons/messages.png'
 
 export default function FriendsSuggestion() {
     const [contacts, setContacts] = useState([]);
@@ -28,14 +29,22 @@ export default function FriendsSuggestion() {
                 setContacts([]);
                 return;
             }
-            setContacts(
-                (Array.isArray(data) ? data : []).map(contact => ({
-                    ...contact,
-                    name: contact.is_group
-                        ? contact.group_name || contact.name
-                        : contact.name
-                }))
-            );
+            const unique = (Array.isArray(data) ? data : [])
+                .reduce((acc, contact) => {
+                    const key = contact.name + contact.avatar;
+                    const existing = acc.find(c => c.name + c.avatar === key);
+                    if (!existing) {
+                        acc.push(contact);
+                    } else if (contact.time && (!existing.time || new Date(contact.time) > new Date(existing.time))) {
+                        const idx = acc.indexOf(existing);
+                        acc[idx] = contact;
+                    }
+                    return acc;
+                }, []);
+            setContacts(unique.map(contact => ({
+                ...contact,
+                name: contact.is_group ? contact.group_name || contact.name : contact.name
+            })));
         } catch (err) {
             setError("Failed to load contacts");
         } finally {
@@ -122,13 +131,19 @@ export default function FriendsSuggestion() {
                                     </div>
 
                                     <div className={styles.contactRight}>
-                                        <p className={styles.contactMessage}>{contact.message}</p>
-                                        <div className={styles.contactBottomRow}>
+                                        <div className={styles.contactTextCol}>
+                                            <p className={styles.contactMessage}>{contact.message}</p>
                                             <span className={styles.contactTime}>
                                                 {formatTime(contact.time)}
                                             </span>
-                                            <MessageSquare size={16} className={styles.contactMessageIcon} />
                                         </div>
+                                        <img
+                                            src={Messages}
+                                            alt="message"
+                                            width={20}
+                                            height={20}
+                                            style={{ filter: 'brightness(0) invert(1)', flexShrink: 0 }}
+                                        />
                                     </div>
                                 </div>
 

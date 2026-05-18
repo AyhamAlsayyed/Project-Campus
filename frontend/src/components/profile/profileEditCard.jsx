@@ -289,17 +289,32 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user }) {
                     </div>
 
                     <div className={styles.detailFieldItem}>
-                        <span><Mail size={16} /> Email</span>
+                        <span><Mail size={16} /> Primary Email</span>
                         <span className={styles.fieldValueText}>{formData.primaryEmail || 'username@gmail.com'}</span>
                         <Edit2 size={16} className={styles.fieldEditIcon} onClick={() => setEditView("email")} />
                     </div>
 
+                    {formData.secondaryEmail && (
+                        <div className={styles.detailFieldItem}>
+                            <span><Mail size={16} /> Personal Email</span>
+                            <span className={styles.fieldValueText}>{formData.secondaryEmail}</span>
+                            <Edit2 size={16} className={styles.fieldEditIcon} onClick={() => setEditView("email")} />
+                        </div>
+                    )}
+
                     <div className={styles.detailFieldItem}>
-                        <span><Phone size={16} /> Phone</span>
+                        <span><Phone size={16} /> Primary Phone</span>
                         <span className={styles.fieldValueText}>{formData.primaryPhone || '—'}</span>
                         <Edit2 size={16} className={styles.fieldEditIcon} onClick={() => setEditView("phone")} />
                     </div>
 
+                    {formData.secondaryPhone && (
+                        <div className={styles.detailFieldItem}>
+                            <span><Phone size={16} /> Secondary Phone</span>
+                            <span className={styles.fieldValueText}>{formData.secondaryPhone}</span>
+                            <Edit2 size={16} className={styles.fieldEditIcon} onClick={() => setEditView("phone")} />
+                        </div>
+                    )}
                     {/* ── Personal Details ── */}
                     <div className={styles.sectionLabelDivider}>
                         <span>Personal Details</span>

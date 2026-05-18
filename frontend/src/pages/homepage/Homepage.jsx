@@ -23,6 +23,7 @@ export default function Homepage() {
     const location = useLocation();
     const [pendingOpen, setPendingOpen] = useState(null);
     const pendingStateRef = useRef(null);
+    const [modalCommunityDropdownOpen, setModalCommunityDropdownOpen] = useState(false);
 
     const [theme, setTheme] = useState("dark")
     const toggleTheme = () => setTheme(prev => prev === "light" ? "dark" : "light")
@@ -196,7 +197,10 @@ export default function Homepage() {
         };
 
         setPosts(prev => [optimisticPost, ...prev]);
+        
         setIsModalOpen(false);
+        setModalCommunityDropdownOpen(false);
+        
         resetPostState();
 
         try {
@@ -519,7 +523,7 @@ export default function Homepage() {
                     CREATE POST MODAL (shared)
                 ══════════════════════════════════════ */}
             {isModalOpen && (
-                <div className={styles.modalOverlay} onClick={() => { setIsModalOpen(false); resetPostState(); }}>
+                <div className={styles.modalOverlay} onClick={() => { setIsModalOpen(false); resetPostState(); setModalCommunityDropdownOpen(false);}}>
                     <div
                         className={styles.modal}
                         onClick={e => e.stopPropagation()}
@@ -527,7 +531,7 @@ export default function Homepage() {
                     >
                         <div className={styles.modalHeader}>
                             <h3>Create post</h3>
-                            <button className={styles.closeButton} onClick={() => { setIsModalOpen(false); resetPostState(); }}>✕</button>
+                            <button className={styles.closeButton} onClick={() => { setIsModalOpen(false); resetPostState(); setModalCommunityDropdownOpen(false);}}>✕</button>
                         </div>
                         <div className={styles.leftSide}>
                             <img src={avatarSrc} alt="" className={styles.userProfilePicture} />
@@ -584,6 +588,78 @@ export default function Homepage() {
                                 onClick={() => { if (isPollOpen) { setIsPollOpen(false); setPollOptions(["", ""]); } else setIsPollOpen(true); }}>
                                 📊 Poll
                             </button>
+                            <div style={{ position: "relative", display: "flex", justifyContent: "flex-end" }} onClick={e => e.stopPropagation()}>
+                                <button
+                                    style={{
+                                        display: "flex", alignItems: "center",
+                                        background: "transparent", border: "none",
+                                        padding: "2px 8px", cursor: "pointer"
+                                    }}
+                                    onClick={e => { e.stopPropagation(); setModalCommunityDropdownOpen(prev => !prev); }}
+                                >
+                                    <span style={{
+                                        position: "relative", zIndex: 0,
+                                        marginRight: "-15px",
+                                        background: "#262626", borderRadius: 20,
+                                        padding: "1px 30px 1px 15px",
+                                        color: "rgba(255,255,255,0.45)", fontSize: 12,
+                                        whiteSpace: "nowrap"
+                                    }}>
+                                        {selectedCommunity ? selectedCommunity.name : "Community"}
+                                    </span>
+                                    <span style={{
+                                        position: "relative", zIndex: 1,
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        width: 25, height: 25,
+                                        background: "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))",
+                                        borderRadius: "50%", fontSize: 20, color: "white", flexShrink: 0
+                                    }}>▾</span>
+                                </button>
+
+                                {modalCommunityDropdownOpen && (
+                                    <div style={{
+                                        position: "absolute", top: "calc(100% + 6px)", right: 0,
+                                        minWidth: 200, background: "#2a2a2a",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                        borderRadius: 14, padding: 6, zIndex: 100,
+                                        display: "flex", flexDirection: "column", gap: 2,
+                                        boxShadow: "0 10px 30px rgba(0,0,0,0.4)"
+                                    }} onClick={e => e.stopPropagation()}>
+                                        <div
+                                            style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, fontSize: 13, color: "rgba(255,255,255,0.75)", cursor: "pointer" }}
+                                            onClick={() => { setSelectedCommunity(null); setModalCommunityDropdownOpen(false); }}
+                                            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
+                                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                        >
+                                            None
+                                        </div>
+                                        {joinedCommunities.map(c => (
+                                            <div
+                                                key={c.id}
+                                                style={{
+                                                    display: "flex", alignItems: "center", gap: 10,
+                                                    padding: "9px 12px", borderRadius: 10, fontSize: 13,
+                                                    color: selectedCommunity?.id === c.id ? "#c084fc" : "rgba(255,255,255,0.75)",
+                                                    background: selectedCommunity?.id === c.id ? "rgba(168,85,247,0.15)" : "transparent",
+                                                    cursor: "pointer"
+                                                }}
+                                                onClick={() => { setSelectedCommunity(c); setModalCommunityDropdownOpen(false); }}
+                                                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
+                                                onMouseLeave={e => e.currentTarget.style.background = selectedCommunity?.id === c.id ? "rgba(168,85,247,0.15)" : "transparent"}
+                                            >
+                                                {c.avatar && (
+                                                    <img
+                                                        src={c.avatar.startsWith("http") ? c.avatar : `${API}${c.avatar}`}
+                                                        alt=""
+                                                        style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                                                    />
+                                                )}
+                                                {c.name}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         {isPollOpen && (
                             <div className={styles.pollContainer}>

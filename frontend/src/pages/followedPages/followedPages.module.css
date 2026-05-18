@@ -54,6 +54,7 @@ body {
     font-weight: lighter;
     color: rgba(255, 255, 255, 0.85);
 }
+
 .highlight {
     font-size: 40px;
     font-weight: 600;
@@ -61,13 +62,15 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
-.followedPagesPosts{
+
+.followedPagesPosts {
     display: flex;
     flex-direction: column;
     flex: 1;
     min-width: 0;
 
 }
+
 .postContainer {
     background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
     width: 100%;
@@ -80,68 +83,74 @@ body {
     position: relative;
     margin: 2% 0 0 0;
 }
+
 .innerContainer {
-  background-color: rgba(61, 60, 60);
-  border-radius: 30px 30px 0 0;
-  padding-top: 30px;
-  gap: 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  min-height: calc(100vh - 396px);
-  top: 10px;
-  z-index: 10;
+    background-color: #333333;
+    border-radius: 30px 30px 0 0;
+
+
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    min-height: calc(100vh - 396px);
+    top: 10px;
+    z-index: 10;
 }
+
 .rightSection {
-  position: relative;
-  flex: 0 0 450px;
-  width: 25%;
-  margin: 5% 0 0 0;
-  gap: 70px;
-  display: flex;
-  flex-direction: column;
+    position: relative;
+    flex: 0 0 450px;
+    width: 25%;
+    margin: 5% 0 0 0;
+    gap: 70px;
+    display: flex;
+    flex-direction: column;
 }
-.rightCard{
-  position: relative;
-  z-index: 2;
 
-
-}
-.pill {
-   position: absolute;
-  top: -45px;
-  left: 10px;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  padding: 12px 20px;
-  border-radius: 18px 18px 0 0;
-  font-weight: 800  ;
-  height: 25px;
-  width: 45%;
-  letter-spacing: 0.6px;
-  font-size: 0.95rem;
-  color: rgba(255,255,255,0.92);
-  background-color: rgba(61, 60, 60, 0.95);
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow: 0 0 0 10px rgba(0,0,0,0);
-}
 .rightCard {
-  display: flex;
-  flex-direction: column;
+    position: relative;
+    z-index: 2;
 
-  background: rgba(61, 60, 60, 0.45);
-  border-radius: 24px;
-  padding: 16px;
 
-  border: 1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(10px);
 }
-.rightList{
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
+
+.pill {
+    position: absolute;
+    top: -45px;
+    left: 10px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 18px 18px 0 0;
+    font-weight: 800;
+    height: 25px;
+    width: 45%;
+    letter-spacing: 0.6px;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.92);
+    background-color: rgba(61, 60, 60, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+}
+
+.rightCard {
+    display: flex;
+    flex-direction: column;
+
+    background: rgba(61, 60, 60, 0.45);
+    border-radius: 24px;
+    padding: 16px;
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+}
+
+.rightList {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
 }
 
 .searchContainer {
@@ -151,54 +160,63 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.searchBar {
-    width: 100%;
-    padding: 10px 15px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 25px;
-    color: white;
-    font-size: 14px;
-    outline: none;
-    transition: all 0.2s ease;
+.searchContainer {
+    display: flex;
+    justify-content: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
+
+
 .searchWrapper {
-    position: relative;
     display: flex;
     align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 999px;
+    padding: 12px 16px;
     width: 100%;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
 }
+
 
 .searchIcon {
-    position: absolute;
-    left: 10px;
-    width: 20px;
-    height: 20px;
-    opacity: 0.35;
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    opacity: 0.65;
+    filter: invert();
     pointer-events: none;
-     filter: invert();
 }
+
 
 .searchBar {
-    padding-left: 32px;
-}
-.searchBar:focus {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(166, 39, 156, 0.5); /* Matching your theme purple */
-    box-shadow: 0 0 10px rgba(166, 39, 156, 0.1);
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: white;
+    font-size: 0.95rem;
+    padding: 0;
+
 }
 
+
 .searchBar::placeholder {
-    color: #666;
+    color: rgba(255, 255, 255, 0.45);
+
 }
+
+
 
 .pageWrapper {
     display: flex;
     flex-direction: column;
-    
+
 }
 
-/* Each page item (same as friendItem) */
+
 .pageItem {
     display: flex;
     align-items: center;
@@ -266,26 +284,26 @@ body {
     width: 50%;
     height: 1px;
     margin: 0 auto 0 auto;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.1),
-        transparent
-    );
-    
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.1),
+            transparent);
+
 }
+
 /* --- RECOMMENDED PAGES SECTION --- */
 
 /* Main dark container */
 .recommendedContainer {
-    background-color: #2b2b2d; /* Adjust to match your exact dark grey */
+    background-color: #2b2b2d;
+    /* Adjust to match your exact dark grey */
     border-radius: 16px;
     padding: 20px;
     margin-top: 20px;
     width: 100%;
     box-sizing: border-box;
     /* Optional: add a subtle border if your design uses one */
-    border: 1px solid rgba(255, 255, 255, 0.05); 
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Header inside the box */
@@ -297,7 +315,8 @@ body {
 }
 
 .recommendedIcon {
-    color: #b400ff; /* The purple from your screenshot */
+    color: #b400ff;
+    /* The purple from your screenshot */
     font-size: 1.5rem;
 }
 
@@ -312,7 +331,8 @@ body {
 .recommendedSliderWindow {
     width: 100%;
     overflow: hidden;
-    margin-bottom: 20px; /* Space between the slide and the bottom controls */
+    margin-bottom: 20px;
+    /* Space between the slide and the bottom controls */
 }
 
 .recommendedTrack {
@@ -335,7 +355,8 @@ body {
     border-radius: 50%;
     object-fit: cover;
     margin-bottom: 10px;
-    border: 2px solid #b400ff; /* Optional purple border like your screenshot */
+    border: 2px solid #b400ff;
+    /* Optional purple border like your screenshot */
 }
 
 .recommendedName {
@@ -352,7 +373,7 @@ body {
 }
 
 .recommendedFollowBtn {
-    background-color: #a64aff; 
+    background-color: #a64aff;
     color: #ffffff;
     border: none;
     border-radius: 20px;
@@ -371,7 +392,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 15px; 
+    gap: 15px;
 }
 
 .recommendedArrow {
@@ -410,10 +431,11 @@ body {
 }
 
 .recommendedActiveDot {
-    background-color: #a64aff; 
-    width: 16px; 
+    background-color: #a64aff;
+    width: 16px;
     border-radius: 4px;
 }
+
 .emptyState {
     display: flex;
     flex-direction: column;
@@ -443,7 +465,318 @@ body {
     color: #666;
     margin: 0;
 }
-.recommendedHeader{
+
+.recommendedHeader {
     color: white;
     font-size: 1.2rem;
+}
+.viewAllBtn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.55);
+    margin-right: 0%;
+    width: 16%;
+    margin-left: 85%;
+    margin-bottom: 1%;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.viewAllBtn:hover {
+    color: rgba(255, 255, 255, 0.85);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.pageItemRow {
+    display: flex;
+    border-radius: 25px;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.pageItemRow:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.pageItemLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    cursor: pointer;
+}
+
+.pageActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.actionBtn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 50%;
+    transition: background 0.2s, color 0.2s;
+}
+
+.actionBtn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.dropdownContainer {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dropdownMenu {
+    position: fixed; 
+    background: #222222;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    
+
+   
+    z-index: 99999; 
+    
+    display: flex;
+    flex-direction: column;
+    min-width: 140px;
+    overflow: hidden;
+}
+.dropdownMenu button {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.85rem;
+    cursor: pointer;
+    width: 100%;
+}
+
+.dropdownMenu button:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.blockBtn {
+    color: #ff4d4d !important;
+}
+
+.blockBtn:hover {
+    background: rgba(255, 77, 77, 0.15) !important;
+}
+
+.searchContactWrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 999px;
+    padding: 12px 16px;
+    margin-bottom: 22px;
+}
+
+.searchInput {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    color: #fff;
+    font-size: 0.95rem;
+}
+
+.searchInput::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* Popup / Modal Windows */
+.popupOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.popupContent {
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+.popupHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    color: #fff;
+}
+
+.popupHeader h3 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.closePopupBtn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.8rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: 0.2s ease;
+}
+
+.closePopupBtn:hover {
+    color: #fff;
+}
+
+.popupSearchWrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 999px;
+    padding: 12px 16px;
+    margin-bottom: 22px;
+}
+
+.popupSearchIcon {
+    width: 18px;
+    height: 18px;
+    opacity: 0.65;
+    filter: invert(1);
+}
+
+.popupSearchInput {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    color: #fff;
+    font-size: 0.95rem;
+}
+
+.popupSearchInput::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.popupList {
+    max-height: 340px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+    padding-right: 4px;
+}
+
+.popupList::-webkit-scrollbar {
+    width: 6px;
+}
+
+.popupList::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 999px;
+}
+
+.popupPageItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 14px;
+    transition: background 0.2s ease;
+}
+
+.popupPageItem:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.popupPageLeft {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    cursor: pointer;
+}
+
+.popupPageAvatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #444;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.popupPageInfo {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.popupPageName {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.popupPageCategory {
+    color: #888;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.popupPageActions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.popupActionBtn {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    transition: 0.2s ease;
+}
+
+.popupActionBtn:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
 }

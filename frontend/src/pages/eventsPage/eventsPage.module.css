@@ -27,12 +27,13 @@
 
 .content {
   display: flex;
-   width: min(1800px, 100%);
+  width: min(1800px, 100%);
   margin: 20px auto 0 auto;
   gap: var(--col-gap);
   margin-top: 20px;
   align-items: flex-start;
 }
+
 .title {
   font-size: 42px;
   font-weight: lighter;
@@ -45,15 +46,15 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
 .mainContent {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-width: 0;
 }
-/* ... keep your existing CSS ... */
 
-/* ... Keep your existing .darkContainer, .page, .header, .title styles ... */
+
 
 .eventsContainer {
   display: flex;
@@ -63,14 +64,53 @@
 }
 
 .eventCard {
-  background: rgba(35, 35, 35, 0.9); /* Matching the dark grey card background */
+  background: #333333;
   border-radius: 40px;
   padding: 24px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
 
-/* Header within the card */
+.titleMarqueeWrapper {
+    overflow: hidden;
+    position: relative;
+    max-width: 100%;
+}
+
+.titleMarqueeWrapper::before,
+.titleMarqueeWrapper::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.titleMarqueeWrapper::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(0,0,0,0.8), transparent);
+}
+
+.titleMarqueeWrapper::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(0,0,0,0.8), transparent);
+}
+
+.titleMarquee {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee 8s linear infinite;
+    color: white;
+    font-size: 2.2rem;
+    font-weight: 800;
+}
+
+@keyframes marquee {
+    0%   { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
 .cardHeader {
   display: flex;
   justify-content: space-between;
@@ -145,37 +185,41 @@
 
 
 .followBtn {
-    background: linear-gradient(135deg, #5B2598, #962892);
-    color: white;
-    border: none;
-    border-radius: 20px;
-    padding: 8px 20px;        /* match the same padding as .followedBtn */
-    font-size: 0.85rem;       /* match font size */
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: opacity 0.2s;
+  background: linear-gradient(135deg, #5B2598, #962892);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  /* match the same padding as .followedBtn */
+  font-size: 0.85rem;
+  /* match font size */
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s;
 }
+
 .followBtn:hover {
-    opacity: 0.85;
+  opacity: 0.85;
 }
+
 .followedBtn {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border: none;
-    border-radius: 20px;
-    padding: 8px 20px;       
-    font-size: 0.85rem;       
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.2s;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
 }
 
 .bannerContainer {
   position: relative;
   width: 100%;
- 
+
   border-radius: 30px;
   overflow: hidden;
 }
@@ -188,14 +232,15 @@
 }
 
 .bannerOverlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end; /* push everything to bottom */
-    padding: 16px;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.75));
-    pointer-events: none;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  /* push everything to bottom */
+  padding: 16px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.75));
+  pointer-events: none;
 }
 
 .bannerContent h2 {
@@ -246,7 +291,7 @@
 }
 
 .reminderBtn {
- background: linear-gradient(135deg, #5B2598, #962892);
+  background: linear-gradient(135deg, #5B2598, #962892);
   color: white;
   border: none;
   padding: 8px 18px;
@@ -254,8 +299,9 @@
   font-weight: 800;
   font-size: 0.75rem;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
+
 .rightSection {
   position: relative;
   flex: 0 0 380px;
@@ -266,211 +312,242 @@
   display: flex;
   flex-direction: column;
 }
-.rightCard{
-  position: relative;
-  z-index: 2;
-  
 
 
+
+.rightCard::-webkit-scrollbar {
+  width: 6px;
 }
+
+.rightCard::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.rightCard::-webkit-scrollbar-track {
+  background: transparent;
+}
+.rightCard::-webkit-scrollbar-button {
+    display: none;
+}
+
 .pill {
-   position: absolute;
-  top: -45px;
+  position: absolute;
+  top: -40px;
   left: 70px;
   z-index: 1;
   display: flex;
   align-items: center;
   padding: 12px 20px;
   border-radius: 18px 18px 0 0;
-  font-weight: 600    ;
+  font-weight: 600;
   height: 25px;
-  width: 45%;
+  width: 35%;
   letter-spacing: 0.6px;
   font-size: 0.95rem;
-  color: rgba(255,255,255,0.92);
+  color: rgba(255, 255, 255, 0.92);
   background-color: rgba(61, 60, 60, 0.95);
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow: 0 0 0 10px rgba(0,0,0,0);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
 }
+
 .rightCard {
   display: flex;
   flex-direction: column;
- 
   width: 100%;
-  background: rgba(61, 60, 60, 0.45);
+  background: #333333;
   border-radius: 24px;
-  
+  z-index: 4;
   padding: 16px;
- 
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(10px);
+  max-height: 70vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
-.rightList{
+
+.rightList {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
+  
 }
+
 .recItemWrapper {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .recCard {
-    position: relative;
-    width: 100%;
-    height: 150px;
-    border-radius: 28px;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  width: 100%;
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .recBanner {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }
 
 .recOverlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.85) 100%);
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.85) 100%);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 /* Recommended Header */
 .recHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .recOrgInfo {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    min-width: 0;      /* ← lets flex shrink it properly */
-    flex: 1;           /* ← takes available space, leaves room for button */
-    overflow: hidden;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  /* ← lets flex shrink it properly */
+  flex: 1;
+  /* ← takes available space, leaves room for button */
+  overflow: hidden;
 }
+
 .recOrgText {
-    min-width: 0;      /* ← needed for children to truncate */
-    overflow: hidden;
+  min-width: 0;
+  /* ← needed for children to truncate */
+  overflow: hidden;
 }
 
 .recAvatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .recNameRow {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    flex-wrap: nowrap; /* ← badge stays on same line as name */
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: nowrap;
+  /* ← badge stays on same line as name */
 }
 
 .recNameRow h4 {
-    margin: 0;
-    font-size: 0.85rem;
-    color: white;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis; /* ← long names truncate instead of wrap */
+  margin: 0;
+  font-size: 0.85rem;
+  color: white;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* ← long names truncate instead of wrap */
 }
+
 .verifyBadgeSmall {
-    background: #fff;
-    color: #000;
-    font-size: 8px;
-    width: 12px;
-    height: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
+  background: #fff;
+  color: #000;
+  font-size: 8px;
+  width: 12px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
 }
 
 .recOrgText p {
-    margin: 0;
-    font-size: 0.65rem;
-    color: rgba(255,255,255,0.6);
+  margin: 0;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 
 .followBtnSmall {
-    background: linear-gradient(30deg, #c72cff, #8b2dff);
-    color: white;
-    border: none;
-    padding: 6px 16px;
-    border-radius: 14px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
+  background: linear-gradient(30deg, #c72cff, #8b2dff);
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .followedBtnSmall {
-    background: rgba(255, 255, 255, 0.15);
-    color: #ccc;
-    border: none;
-    padding: 6px 16px;
-    border-radius: 14px;
-    font-size: 0.75rem;
-    cursor: pointer;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ccc;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 14px;
+  font-size: 0.75rem;
+  cursor: pointer;
 }
 
 
 .recBody {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
 }
 
 .recBody h5 {
-    margin: 0;
-    color: white;
-    font-size: 1.1rem;
-    font-weight: 700;
+  margin: 0;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
 .recBody p {
-    margin: 4px 0 0 0;
-    font-size: 0.75rem;
-    color: rgba(255,255,255,0.8);
-    max-width: 80%;
-    line-height: 1.2;
+  margin: 4px 0 0 0;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 80%;
+  line-height: 1.2;
 }
 
 .readMoreSmall {
-    font-size: 0.7rem;
-    color: rgba(255,255,255,0.5);
-    text-decoration: underline;
-    cursor: pointer;
-    white-space: nowrap;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: underline;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 /* Separator Line */
 .separator {
-    width: 40%;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.1);
-    margin: 10px 0;
+  width: 40%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 12px 0;
 }
+
 @keyframes highlightPulse {
-    0%   { box-shadow: 0 0 0 0 rgba(158, 39, 157, 0.7); }
-    50%  { box-shadow: 0 0 0 12px rgba(158, 39, 157, 0.2); }
-    100% { box-shadow: 0 0 0 0 rgba(158, 39, 157, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(158, 39, 157, 0.7);
+  }
+
+  50% {
+    box-shadow: 0 0 0 12px rgba(158, 39, 157, 0.2);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(158, 39, 157, 0);
+  }
 }
 
 .highlighted {
-    animation: highlightPulse 1.5s ease-out;
-    border-color: rgba(158, 39, 157, 0.6) !important;
+  animation: highlightPulse 1.5s ease-out;
+  border-color: rgba(158, 39, 157, 0.6) !important;
 }

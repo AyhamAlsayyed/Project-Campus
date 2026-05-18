@@ -91,17 +91,16 @@
   opacity: 0.9;
 }
 
-/* Right arrow button inside banner */
+
 .bannerArrow {
   position: absolute;
   right: 12px;
   top: 50%;
   transform: translateY(110%);
   width: 34px;
+  border: none;
   height: 34px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(0, 0, 0, 0.25);
+  background: transparent;
   color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
 }

@@ -1,27 +1,74 @@
 import styles from './followedPages.module.css'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Header from '../../components/pagelayout/header/header'
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
 import PostCard from '../../components/posts/postCard'
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import CommentsModal from '../../components/comments/commentsModal'
 import Search from '../../Assets/icons/search.png';
+
 export default function FollowedPages() {
     const navigate = useNavigate();
     const [theme, setTheme] = useState('dark');
     const [currentUser, setCurrentUser] = useState(null);
+    const [selectedPostId, setSelectedPostId] = useState(null)
+    const [showAllPopup, setShowAllPopup] = useState(false);
+    const [popupSearchTerm, setPopupSearchTerm] = useState("");
+    const [activeMenuId, setActiveMenuId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+    const [selectedPost, setSelectedPost] = useState(null);
     const [userError, setUserError] = useState("");
     const [userLoading, setUserLoading] = useState(true);
     const token = localStorage.getItem("access");
     const [posts, setPosts] = useState([]);
+    
+    // ✅ CHANGED: We removed the old dotsRef and added dynamic coordinate tracking
+    const [menuCoords, setMenuCoords] = useState({ top: 0, left: 0 });
+    
     const [pages, setPages] = useState([]);
     const [recommendedPages, setRecommendedPages] = useState([]);
     const [currentSlide, setCurrentSlide] = useState(0);
 
+    const handleOpenComments = (postObject) => {
+        setSelectedPost(postObject);
+        setIsCommentsOpen(true);
+    };
+
+    // ✅ FIXED: Takes the active target element directly from the click event
+    const handleToggleMenu = (e, menuId) => {
+        e.stopPropagation(); 
+
+        if (activeMenuId === menuId) {
+            setActiveMenuId(null);
+        } else {
+            // Grab the dimensions of the exact 3-dot button that was clicked
+            const rect = e.currentTarget.getBoundingClientRect();
+            
+            setMenuCoords({
+                top: rect.bottom + window.scrollY + 4, // Handles modal/page scrolling offsets
+                left: rect.right + window.scrollX - 140 // Aligns cleanly with a 140px dropdown width
+            });
+            setActiveMenuId(menuId);
+        }
+    };
+
     const toggleTheme = () => {
         setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
     }
+
+    useEffect(() => {
+        const handleGlobalClick = () => {
+            setActiveMenuId(null);
+        };
+        window.addEventListener('click', handleGlobalClick);
+        return () => {
+            window.removeEventListener('click', handleGlobalClick);
+        };
+    }, []);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -34,7 +81,6 @@ export default function FollowedPages() {
                 });
                 const userData = await userRes.json();
                 setCurrentUser(userData);
-
 
                 // 2. Fetch followed pages + posts
                 const [pagesRes, postsRes] = await Promise.all([
@@ -49,12 +95,9 @@ export default function FollowedPages() {
                 const pagesData = await pagesRes.json();
                 const postsData = await postsRes.json();
 
-                // Fix pages avatars
-                console.log("raw pages data:", pagesData);
-                // In fetchData formattedPages
                 const formattedPages = pagesData.map(p => ({
                     ...p,
-                    id: p.page_id,  // 👈
+                    id: p.page_id,
                     name: p.page_full_name || p.page_name || "Unknown Page",
                     avatar: p.profile_image
                         ? (p.profile_image.startsWith("http")
@@ -66,19 +109,17 @@ export default function FollowedPages() {
 
                 setPages(formattedPages);
 
-                // Filter posts → ONLY pages posts
-                const pageIds = pagesData.map(p => p.id);
+                const pageIds = formattedPages.map(p => p.id);
 
                 const pagePosts = postsData.filter(post =>
-                    post.page_id && pageIds.includes(post.page_id)
+                    post.author &&
+                    post.author.type === "page" &&
+                    pageIds.includes(post.author.id)
                 );
-
 
                 const fixedPosts = pagePosts.map(post => ({
                     ...post,
-                    author_avatar: post.author_avatar?.startsWith("http")
-                        ? post.author_avatar
-                        : `http://localhost:8000${post.author_avatar}`,
+                    author_avatar: post.author?.profile_image || post.author_avatar,
                     media: post.media?.map(m => ({
                         ...m,
                         url: m.url?.startsWith("http")
@@ -96,6 +137,7 @@ export default function FollowedPages() {
 
         fetchData();
     }, []);
+
     useEffect(() => {
         const fetchRecommended = async () => {
             try {
@@ -111,7 +153,7 @@ export default function FollowedPages() {
                 const data = await res.json();
                 const formatted = data.map(p => ({
                     ...p,
-                    id: p.page_id,  // 👈
+                    id: p.page_id,
                     avatar: p.profile_image
                         ? (p.profile_image.startsWith("http") ? p.profile_image : `http://localhost:8000${p.profile_image}`)
                         : "/default-avatar.png",
@@ -155,6 +197,7 @@ export default function FollowedPages() {
 
         fetchUser();
     }, []);
+
     const handleNextSlide = () => {
         setCurrentSlide((prev) => (prev + 1) % recommendedPages.length);
     };
@@ -162,6 +205,7 @@ export default function FollowedPages() {
     const handlePrevSlide = () => {
         setCurrentSlide((prev) => (prev === 0 ? recommendedPages.length - 1 : prev - 1));
     };
+
     return (
         <div className={styles.darkContainer}>
             <div className={`${styles.header} ${styles.page}`}>
@@ -180,7 +224,12 @@ export default function FollowedPages() {
                         <div className={styles.postContainer}>
                             <div className={styles.innerContainer}>
                                 {posts.map(post => (
-                                    <PostCard key={post.id} post={post} />
+                                    <PostCard
+                                        key={post.id}
+                                        post={post}
+                                        isOwnProfile={false}
+                                        openComments={() => handleOpenComments(post)}
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -199,45 +248,83 @@ export default function FollowedPages() {
                     {/* Block 1 - Followed Pages */}
                     <div className={styles.rightSectionWrapper}>
                         <div className={styles.pill}>FOLLOWED PAGES</div>
+
                         <div className={styles.rightCard}>
-                            <div className={styles.searchContainer}>
-                                <div className={styles.searchWrapper}>
-                                    <img src={Search} alt="Search" className={styles.searchIcon} />
-                                    <input
-                                        type="text"
-                                        placeholder="Search followed pages..."
-                                        className={styles.searchBar}
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </div>
+
+                            <button
+                                className={styles.viewAllBtn}
+                                onClick={() => setShowAllPopup(true)}
+                            >
+                                View All
+                            </button>
+
+                            <div className={styles.searchContactWrap}>
+                                <img src={Search} alt="Search" className={styles.searchIcon} />
+
+                                <input
+                                    type="text"
+                                    placeholder="Search followed pages..."
+                                    className={styles.searchInput}
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
                             </div>
+
                             <div className={styles.rightList}>
                                 {pages
-                                    .filter(page => (page.name || "").toLowerCase().includes(searchTerm.toLowerCase()))
-                                    .map((page, index, arr) => (
+                                    .filter(page =>
+                                        (page.name || "")
+                                            .toLowerCase()
+                                            .includes(searchTerm.toLowerCase())
+                                    )
+                                    .map((page, index) => (
                                         <div key={page.id} className={styles.pageWrapper}>
-                                            <div
-                                                className={styles.pageItem}
-                                                onClick={() => navigate(`/page/${page.id}`)}
-                                                style={{ cursor: 'pointer' }}
-                                            >
-                                                <div className={styles.pageAvatarWrapper}>
-                                                    <img src={page.avatar} alt={page.name} className={styles.pageAvatar} />
+                                            <div className={styles.pageItemRow}>
+                                                <div
+                                                    className={styles.pageItemLeft}
+                                                    onClick={() => navigate(`/page/${page.id}`)}
+                                                >
+                                                    <div className={styles.pageAvatarWrapper}>
+                                                        <img
+                                                            src={page.avatar}
+                                                            alt={page.name}
+                                                            className={styles.pageAvatar}
+                                                        />
+                                                    </div>
+
+                                                    <div className={styles.pageInfo}>
+                                                        <div className={styles.pageName}>
+                                                            {page.name}
+                                                        </div>
+                                                        <div className={styles.pageCategory}>
+                                                            {page.category || "Page"}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className={styles.pageInfo}>
-                                                    <span className={styles.pageName}>{page.name}</span>
-                                                    <span className={styles.pageCategory}>{page.page_type || "Page"}</span>
+
+                                                <div className={styles.pageActions}>
+                                                    <div className={styles.dropdownContainer}>
+                                                        {/* ✅ FIXED: Pass the raw event handler down */}
+                                                        <button
+                                                            className={styles.actionBtn}
+                                                            onClick={(e) => handleToggleMenu(e, page.id)}
+                                                        >
+                                                            •••
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            {index !== arr.length - 1 && <div className={styles.divider} />}
+
+                                            {index !== pages.length - 1 && (
+                                                <div className={styles.divider}></div>
+                                            )}
                                         </div>
                                     ))}
                             </div>
                         </div>
                     </div>
 
-                    {/* Block 2 - Recommended Pages (separate, no pill, title inside card) */}
+                    {/* Block 2 - Recommended Pages */}
                     {recommendedPages.length > 0 && (
                         <div className={styles.rightSectionWrapper}>
                             <div className={styles.rightCard}>
@@ -268,6 +355,120 @@ export default function FollowedPages() {
 
                 </div>
             </div>
+
+            {/* VIEW ALL POPUP MODAL */}
+            {showAllPopup && (
+                <div
+                    className={styles.popupOverlay}
+                    onClick={() => setShowAllPopup(false)}
+                >
+                    <div
+                        className={styles.popupContent}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className={styles.popupHeader}>
+                            <h3>All Followed Pages</h3>
+                            <button
+                                className={styles.closePopupBtn}
+                                onClick={() => setShowAllPopup(false)}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div className={styles.searchContactWrap}>
+                            <img src={Search} alt="Search" className={styles.searchIcon} />
+                            <input
+                                type="text"
+                                placeholder="Searching for a page?"
+                                className={styles.searchInput}
+                                value={popupSearchTerm}
+                                onChange={(e) => setPopupSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        <div className={styles.popupList}>
+                            {pages
+                                .filter(page =>
+                                    page.name.toLowerCase().includes(popupSearchTerm.toLowerCase())
+                                )
+                                .map(page => (
+                                    <div
+                                        key={`popup-${page.id}`}
+                                        className={styles.popupPageWrapper}
+                                    >
+                                        <div className={styles.pageItemRow}>
+                                            <div
+                                                className={styles.pageItemLeft}
+                                                onClick={() => {
+                                                    navigate(`/page/${page.id}`);
+                                                    setShowAllPopup(false);
+                                                }}
+                                            >
+                                                <div className={styles.pageAvatarWrapper}>
+                                                    <img
+                                                        src={page.avatar}
+                                                        alt={page.name}
+                                                        className={styles.pageAvatar}
+                                                    />
+                                                </div>
+
+                                                <div className={styles.pageInfo}>
+                                                    <div className={styles.pageName}>
+                                                        {page.name}
+                                                    </div>
+                                                    <div className={styles.pageCategory}>
+                                                        {page.category || "Page"}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className={styles.pageActions}>
+                                                <div className={styles.dropdownContainer}>
+                                                    {/* ✅ FIXED: Pass custom unique ID string to avoid conflicts with background list */}
+                                                    <button
+                                                        className={styles.actionBtn}
+                                                        onClick={(e) => handleToggleMenu(e, `popup-${page.id}`)}
+                                                    >
+                                                        •••
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+          
+            {activeMenuId && createPortal(
+                <div
+                    className={styles.dropdownMenu}
+                    style={{
+                        top: `${menuCoords.top}px`,
+                        left: `${menuCoords.left}px`
+                    }}
+                    onClick={(e) => e.stopPropagation()} 
+                >
+                    <button onClick={() => setActiveMenuId(null)}>Unfollow</button>
+                    <button onClick={() => setActiveMenuId(null)}>Report</button>
+                    <button className={styles.blockBtn} onClick={() => setActiveMenuId(null)}>Block</button>
+                </div>,
+                document.body
+            )}
+
+            {isCommentsOpen && selectedPost && (
+                <CommentsModal
+                    post={selectedPost}
+                    currentUser={currentUser}
+                    onClose={() => {
+                        setIsCommentsOpen(false);
+                        setSelectedPost(null);
+                    }}
+                />
+            )}
         </div>
     )
 }

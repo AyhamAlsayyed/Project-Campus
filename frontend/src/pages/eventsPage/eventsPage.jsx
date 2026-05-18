@@ -192,8 +192,15 @@ export default function EventsPage() {
                                     <div className={styles.headerActions}>
                                         {/* Bell only shows when followed */}
                                         {event.isFollowed && (
-                                            <button className={styles.bellBtn}>
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <button
+                                                className={styles.bellBtn}
+                                                onClick={() => handleReminder(event.id)}
+                                                style={{
+                                                    background: reminders[event.id] ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)",
+                                                    transition: "background 0.2s"
+                                                }}
+                                            >
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill={reminders[event.id] ? "white" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                                                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                                                 </svg>
@@ -235,9 +242,15 @@ export default function EventsPage() {
                                                 {reminders[event.id] ? "✓ Reminder set" : "Set reminder"}
                                             </button>
                                         </div>
-                                        <div className={styles.bannerOverlay}>
-                                            <div className={styles.bannerContent}>
-                                                <h2>{event.title}</h2>
+                                        <div className={styles.bannerOverlay} style={{ pointerEvents: "none" }}>
+                                            <div className={styles.bannerContent} style={{ pointerEvents: "auto" }}>
+                                                {event.title?.length > 20 ? (
+                                                    <div className={styles.titleMarqueeWrapper}>
+                                                        <span className={styles.titleMarquee}>{event.title}</span>
+                                                    </div>
+                                                ) : (
+                                                    <h2>{event.title}</h2>
+                                                )}
                                                 <p>
                                                     {event.description?.length > 40
                                                         ? <>{event.description.substring(0, 80)}... <span className={styles.readMore} onClick={(e) => { e.stopPropagation(); setPopupEvent(event); }} style={{ cursor: "pointer" }}>read more</span></>
@@ -245,7 +258,6 @@ export default function EventsPage() {
                                                     }
                                                 </p>
                                             </div>
-
                                         </div>
                                     </div>
                                 )}
@@ -281,17 +293,50 @@ export default function EventsPage() {
                                                         <p>{rec.pageType}</p>
                                                     </div>
                                                 </div>
-                                                <button
-                                                    className={rec.isFollowed ? styles.followedBtnSmall : styles.followBtnSmall}
-                                                    onClick={() => handleFollow(rec.id, rec.pageId)}
-                                                >
-                                                    {rec.isFollowed ? 'Followed' : 'Follow'}
-                                                </button>
+
+                                                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                                                    {rec.isFollowed && (
+                                                        <button
+                                                            className={styles.bellBtn}
+                                                            onClick={() => handleReminder(rec.id)}
+                                                            style={{
+                                                                background: reminders[rec.id] ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)",
+                                                                transition: "background 0.2s",
+                                                                width: 28,
+                                                                height: 28,
+                                                            }}
+                                                        >
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill={reminders[rec.id] ? "white" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                                            </svg>
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        className={rec.isFollowed ? styles.followedBtnSmall : styles.followBtnSmall}
+                                                        onClick={() => handleFollow(rec.id, rec.pageId)}
+                                                    >
+                                                        {rec.isFollowed ? 'Followed' : 'Follow'}
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <div className={styles.recBody}>
-                                                <div>
-                                                    <h5>{rec.title}</h5>
+                                                <div style={{ overflow: "hidden", width: "100%" }}>
+                                                    {rec.title?.length > 15 ? (
+                                                        <div className={styles.titleMarqueeWrapper}>
+                                                            <span style={{
+                                                                display: "inline-block",
+                                                                whiteSpace: "nowrap",
+                                                                animation: "marquee 8s linear infinite",
+                                                                color: "white",
+                                                                fontSize: "1.1rem",
+                                                                fontWeight: 700
+                                                            }}>{rec.title}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <h5>{rec.title}</h5>
+                                                    )}
                                                     <p>
                                                         {rec.description?.length > 30
                                                             ? <>{rec.description.substring(0, 60)}... <span className={styles.readMoreSmall} onClick={(e) => { e.stopPropagation(); setPopupEvent(rec); }} style={{ cursor: "pointer" }}>read more</span></>
@@ -299,7 +344,6 @@ export default function EventsPage() {
                                                         }
                                                     </p>
                                                 </div>
-
                                             </div>
                                         </div>
                                     </div>

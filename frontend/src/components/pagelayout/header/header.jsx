@@ -219,7 +219,18 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
         const chatRes = await fetch(`${API}/api/chats/`, { headers });
         if (chatRes.ok) {
           const chatData = await chatRes.json();
-          setChats(chatData.map(chat => ({
+          const unique = chatData.reduce((acc, chat) => {
+            const key = chat.name + chat.avatar;
+            const existing = acc.find(c => c.name + c.avatar === key);
+            if (!existing) {
+              acc.push(chat);
+            } else if (chat.last_message_time && (!existing.last_message_time || new Date(chat.last_message_time) > new Date(existing.last_message_time))) {
+              const idx = acc.indexOf(existing);
+              acc[idx] = chat;
+            }
+            return acc;
+          }, []);
+          setChats(unique.map(chat => ({
             id: chat.id,
             name: chat.name || chat.user_name || "Unknown User",
             avatar: chat.avatar?.startsWith("http") ? chat.avatar : `${API}${chat.avatar}` || "/default-avatar.png",
