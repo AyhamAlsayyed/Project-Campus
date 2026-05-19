@@ -197,10 +197,10 @@ export default function Homepage() {
         };
 
         setPosts(prev => [optimisticPost, ...prev]);
-        
+
         setIsModalOpen(false);
         setModalCommunityDropdownOpen(false);
-        
+
         resetPostState();
 
         try {
@@ -260,31 +260,37 @@ export default function Homepage() {
 
         const fetchPostContent = async () => {
             try {
-                const res = await fetch(`${API}/api/posts/activity/`, {
+                // Search feed first, then fall back to activity
+                const res = await fetch(`${API}/api/posts/feed/?limit=50`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    console.log("Activity data:", data);
-
-                    // feed returns a direct array
-                    const posts = Array.isArray(data) ? data : (data.results || data.posts || []);
-                    const matchedPost = posts.find(p => p.id === pendingOpen.postId) || {};
-
-                    console.log("Matched post:", matchedPost);
+                    const posts = Array.isArray(data) ? data : (data.results || []);
+                    const matchedPost = posts.find(
+                        p => (p.id || p.post_id) === pendingOpen.postId
+                    );
 
                     setSelectedPost({
-                        ...matchedPost,
+                        ...(matchedPost || {}),
                         id: pendingOpen.postId,
                         highlightCommentId: pendingOpen.commentId,
-                        author_username: matchedPost.author_username || user.username,
-                        author_avatar: user.avatar?.startsWith('http') ? user.avatar : `${API}${user.avatar}`,
-                        author_id: user.id,
-                        created_at: matchedPost.created_at || null,
+                        author: matchedPost?.author || {
+                            id: matchedPost?.author_user,
+                            username: matchedPost?.author_username || "",
+                            avatar: matchedPost?.author_avatar
+                                ? (matchedPost.author_avatar.startsWith('http')
+                                    ? matchedPost.author_avatar
+                                    : `${API}${matchedPost.author_avatar}`)
+                                : "/default-avatar.png"
+                        },
+                        created_at: matchedPost?.created_at || null,
                     });
                 }
             } catch (err) {
                 console.error(err);
+    
+                setSelectedPost({ id: pendingOpen.postId, highlightCommentId: pendingOpen.commentId });
             }
             setPendingOpen(null);
         };
@@ -523,7 +529,7 @@ export default function Homepage() {
                     CREATE POST MODAL (shared)
                 ══════════════════════════════════════ */}
             {isModalOpen && (
-                <div className={styles.modalOverlay} onClick={() => { setIsModalOpen(false); resetPostState(); setModalCommunityDropdownOpen(false);}}>
+                <div className={styles.modalOverlay} onClick={() => { setIsModalOpen(false); resetPostState(); setModalCommunityDropdownOpen(false); }}>
                     <div
                         className={styles.modal}
                         onClick={e => e.stopPropagation()}
@@ -531,7 +537,7 @@ export default function Homepage() {
                     >
                         <div className={styles.modalHeader}>
                             <h3>Create post</h3>
-                            <button className={styles.closeButton} onClick={() => { setIsModalOpen(false); resetPostState(); setModalCommunityDropdownOpen(false);}}>✕</button>
+                            <button className={styles.closeButton} onClick={() => { setIsModalOpen(false); resetPostState(); setModalCommunityDropdownOpen(false); }}>✕</button>
                         </div>
                         <div className={styles.leftSide}>
                             <img src={avatarSrc} alt="" className={styles.userProfilePicture} />

@@ -9,7 +9,28 @@ import {
     Paperclip, Send, FileText
 } from 'lucide-react';
 import CommentModal from '../../components/comments/commentsModal';
+function MarqueeText({ text, className }) {
+    const wrapperRef = useRef(null);
+    const textRef = useRef(null);
+    const [isOverflowing, setIsOverflowing] = useState(false);
 
+    useEffect(() => {
+        if (wrapperRef.current && textRef.current) {
+            setIsOverflowing(textRef.current.scrollWidth > wrapperRef.current.clientWidth);
+        }
+    }, [text]);
+
+    return (
+        <div ref={wrapperRef} className={`${className} ${isOverflowing ? styles.marqueeWrapper : ''}`}>
+            <span
+                ref={textRef}
+                className={isOverflowing ? styles.marqueeText : styles.marqueeStatic}
+            >
+                {text}
+            </span>
+        </div>
+    );
+}
 export default function ChatsPage() {
     const [theme, setTheme] = useState("dark");
     const [user, setUser] = useState(null);
@@ -87,6 +108,9 @@ export default function ChatsPage() {
                 setMessages(prev => [...prev, newMessage]);
                 setInputText("");
                 setReplyingTo(null);
+                setChats(prev => prev.map(c =>
+                    c.id === selectedChat.id ? { ...c, unread_count: 0 } : c
+                ));
             }
         }
 
@@ -217,15 +241,17 @@ export default function ChatsPage() {
             ));
         }
     };
-
     const markUnread = async (id) => {
-        const res = await fetch(`${API}/api/chats/${id}/mark-unread/`, {
+        const chat = chats.find(c => c.id === id);
+        const isUnread = chat?.unread_count > 0;
+
+        const res = await fetch(`${API}/api/chats/${id}/${isUnread ? 'mark-read' : 'mark-unread'}/`, {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
             setChats(prev => prev.map(c =>
-                c.id === id ? { ...c, unread_count: (c.unread_count || 0) + 1 } : c
+                c.id === id ? { ...c, unread_count: isUnread ? 0 : (c.unread_count || 0) + 1 } : c
             ));
         }
     };
@@ -235,8 +261,11 @@ export default function ChatsPage() {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` },
         });
-        if (res.ok && selectedChat?.id === id) {
-            setMessages([]);
+        if (res.ok) {
+            if (selectedChat?.id === id) setMessages([]);
+            setChats(prev => prev.map(c =>
+                c.id === id ? { ...c, preview: null, last_message_time: null, time: null } : c
+            ));
         }
     };
 
@@ -295,7 +324,7 @@ export default function ChatsPage() {
                     return acc;
                 }, []);
                 setChats(unique);
-              
+
             } catch (err) {
                 console.error(err);
             } finally {
@@ -496,26 +525,28 @@ export default function ChatsPage() {
 
                                                                 {openMenuId === chat.id && (
                                                                     <div className={styles.dropdownMenu}>
-                                                                        <button className={styles.menuItem} onClick={() => { togglePin(chat.id); setOpenMenuId(null); }}>
+                                                                        <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); togglePin(chat.id); setOpenMenuId(null); }}>
                                                                             <Pin size={14} /> {chat.is_pinned ? 'Unpin chat' : 'Pin chat'}
                                                                         </button>
-                                                                        <button className={styles.menuItem} onClick={() => { toggleMute(chat.id); setOpenMenuId(null); }}>
+                                                                        <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); toggleMute(chat.id); setOpenMenuId(null); }}>
                                                                             <BellOff size={14} /> Mute notifications
                                                                         </button>
-                                                                        <button className={styles.menuItem} onClick={() => { markUnread(chat.id); setOpenMenuId(null); }}>
-                                                                            <Mail size={14} /> Mark as unread
-                                                                        </button>
-                                                                        <button className={styles.menuItem} onClick={() => { clearChat(chat.id); setOpenMenuId(null); }}>
+                                                                        {chat.preview && (
+                                                                            <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); markUnread(chat.id); setOpenMenuId(null); }}>
+                                                                                <Mail size={14} /> {chat.unread_count > 0 ? 'Mark as read' : 'Mark as unread'}
+                                                                            </button>
+                                                                        )}
+                                                                        <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); clearChat(chat.id); setOpenMenuId(null); }}>
                                                                             <Trash2 size={14} /> Clear chat
                                                                         </button>
-                                                                        <button className={styles.menuItem} onClick={() => { deleteChat(chat.id); setOpenMenuId(null); }}>
+                                                                        <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); deleteChat(chat.id); setOpenMenuId(null); }}>
                                                                             <Trash2 size={14} /> Delete chat
                                                                         </button>
                                                                         <div className={styles.menuDivider} />
-                                                                        <button className={`${styles.menuItem} ${styles.destructive}`} onClick={() => { blockUser(chat.id); setOpenMenuId(null); }}>
-                                                                            <Ban size={14} /> Block user
+                                                                        <button className={`${styles.menuItem} ${styles.destructive}`} onClick={(e) => { e.stopPropagation(); blockUser(chat.id); setOpenMenuId(null); }}>
+                                                                            <Ban size={14} /> {chat.is_blocked ? 'Unblock user' : 'Block user'}
                                                                         </button>
-                                                                        <button className={`${styles.menuItem} ${styles.destructive}`} onClick={() => { reportUser(chat.id); setOpenMenuId(null); }}>
+                                                                        <button className={`${styles.menuItem} ${styles.destructive}`} onClick={(e) => { e.stopPropagation(); reportUser(chat.id); setOpenMenuId(null); }}>
                                                                             <AlertCircle size={14} /> Report user
                                                                         </button>
                                                                     </div>
@@ -877,7 +908,7 @@ export default function ChatsPage() {
                                             <span className={styles.academicMessagePreview}>{chat.preview}</span>
                                         </div>
                                         <div className={styles.academicBottomRow}>
-                                            <div className={styles.academicGroupName}>{chat.name}</div>
+                                            <MarqueeText text={chat.name} className={styles.academicGroupName} />
                                             <span className={styles.academicTimestamp}>{chat.time}</span>
                                         </div>
                                     </div>

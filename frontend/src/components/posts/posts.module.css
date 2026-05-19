@@ -220,25 +220,17 @@
 
   width: 36px;
   height: 36px;
-
-  border-radius: 50%;
   border: none;
-
-  background: rgba(0, 0, 0, 0.4);
-  color: white;
-
+  background-color: transparent;
   cursor: pointer;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   transition: background 0.2s ease, transform 0.15s ease;
 }
 
 .leftArrow:hover,
 .rightArrow:hover {
-  background: rgba(0, 0, 0, 0.65);
   transform: translateY(-50%) scale(1.05);
 }
 

@@ -135,7 +135,7 @@ export default function SearchResults() {
                                                     onClick={() => navigate(`/profile/${person.id}`)}
                                                 >
                                                     <img src={(() => {
-                                                        const av = person.profile?.profile_image || person.avatar_url || person.avatar;
+                                                        const av = person.profile?.avatar || person.profile?.profile_image || person.avatar_url || person.avatar;
                                                         if (!av) return "/default-avatar.png";
                                                         return av.startsWith("http") ? av : `${API}${av}`;
                                                     })()} alt="" className={styles.personAvatar} />

@@ -117,6 +117,12 @@ export default function ProfilePage({ type }) {
     const { userId } = useParams();
     const navigate = useNavigate();
     useEffect(() => { if (user) edit.syncFromUser(user); }, [user]);
+    const handlePinChange = (pinnedPostId) => {
+        setPosts(prev => prev.map(p => ({
+            ...p,
+            is_pinned: (p.id || p.post_id) === pinnedPostId
+        })));
+    };
 
 
 
@@ -820,7 +826,16 @@ export default function ProfilePage({ type }) {
 
                                 {activeTab === 'Posts' && (
                                     <div className={styles.postsSection}>
-                                        {postsLoading ? <div className={styles.notice}>Loading...</div> : posts.map(post => <PostCard key={post.id} post={post} openComments={openComments} isOwnProfile={isOwnProfile} />)}
+                                        {postsLoading ? <div className={styles.notice}>Loading...</div> : posts.map(post => (
+                                            <PostCard
+                                                key={post.id}
+                                                post={post}
+                                                openComments={openComments}
+                                                isOwnProfile={isOwnProfile}
+                                                hasPinnedPost={posts.some(p => p.is_pinned)}
+                                                onPinChange={handlePinChange}
+                                            />
+                                        ))}
                                     </div>
                                 )}
                                 {activeTab === 'Photos' && (
@@ -842,7 +857,14 @@ export default function ProfilePage({ type }) {
                                                     : filteredActivityPosts;
                                                 return postsToShow.length > 0
                                                     ? postsToShow.map(post => (
-                                                        <PostCard key={post.id} post={post} openComments={openComments} isOwnProfile={isOwnProfile} />
+                                                        <PostCard
+                                                            key={post.id}
+                                                            post={post}
+                                                            openComments={openComments}
+                                                            isOwnProfile={
+                                                                currentUser?.id === (post.author?.id || post.author_id)
+                                                            } // ← only true if current user actually authored this post
+                                                        />
                                                     ))
                                                     : <div className={styles.notice}>
                                                         No {activitiesFilter === 'saves' ? 'saved posts' : activitiesFilter === 'likes' ? 'liked posts' : 'commented posts'} yet.

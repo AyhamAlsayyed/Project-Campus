@@ -36,8 +36,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
   const [requestGate, setRequestGate] = useState(null);
   const searchDropdownRef = useRef(null);
 
-  // ── Community join gate ──
-  const [joinGate, setJoinGate] = useState(null); // { id, name, avatar }
+  const [joinGate, setJoinGate] = useState(null);
   const [joinLoading, setJoinLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -80,7 +79,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
   const filteredChats = chats.filter((chat) =>
     chat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
 
   const handleSearchChange = (e) => {
     const val = e.target.value;
@@ -128,7 +126,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
         if (item.is_joined) {
           navigate(`/communities/${item.id}`);
         } else if (item.request_sent) {
-
+          // already requested, do nothing
         } else if (item.is_private) {
           setRequestGate(item);
         } else {
@@ -149,9 +147,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
-      if (res.ok) {
-        navigate(`/communities/${joinGate.id}`);
-      }
+      if (res.ok) navigate(`/communities/${joinGate.id}`);
     } catch (e) {
       console.error("Join failed", e);
     } finally {
@@ -159,6 +155,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
       setJoinGate(null);
     }
   };
+
   const handleRequestJoin = async () => {
     if (!requestGate) return;
     setJoinLoading(true);
@@ -182,7 +179,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
     setShowSearchDropdown(false);
   };
 
-  // ── Header data fetch ──
   useEffect(() => {
     const fetchHeaderData = async () => {
       try {
@@ -194,6 +190,12 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
           const notifData = await notifRes.json();
           const formattedNotifs = notifData.map(item => {
             const notifLink = item.link || {};
+
+            // link can be a raw post_id number OR an object
+            const resolvedPostId = typeof item.link === 'number'
+              ? item.link
+              : (notifLink.post_id || item.post_id || null);
+
             return {
               id: item.notification_id || item.id,
               is_read: item.is_read,
@@ -202,11 +204,11 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                   ? (item.actor_avatar || item.avatar)
                   : `${API}${item.actor_avatar || item.avatar}`)
                 : "/default-avatar.png",
-              type: item.type || item.iconType || "Notification",  // ← iconType fallback
+              type: item.type || item.iconType || "Notification",
               text: item.message || item.content,
               link: notifLink,
-              post_id: notifLink.post_id || item.post_id || null,   // ← link first
-              comment_id: notifLink.comment_id || item.comment_id || null,  // ← link first
+              post_id: resolvedPostId,   // ← now correctly set for likes
+              comment_id: notifLink.comment_id || item.comment_id || null,
               actor_id: item.actor_id || null,
               event_id: item.event_id || null,
               time: timeAgo(item.time) || item.time,
@@ -214,7 +216,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
           });
           setNotifications(formattedNotifs);
         }
-
 
         const chatRes = await fetch(`${API}/api/chats/`, { headers });
         if (chatRes.ok) {
@@ -250,25 +251,28 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
     };
     if (user) fetchHeaderData();
   }, [user]);
-  const handleNotificationClick = (n) => {
-    const post_id = n.link?.post_id || n.post_id;
-    const comment_id = n.link?.comment_id || n.comment_id;
-    const post = n.link?.post;
 
-    if (comment_id && post_id) {
-      setShowNotifications(false);
+  const handleNotificationClick = (n) => {
+    console.log("RAW notification:", n);
+
+    const post_id = typeof n.link === 'number' ? n.link : (n.link?.post_id || n.post_id);
+    const comment_id = typeof n.link === 'object' ? (n.link?.comment_id || n.comment_id) : null;
+    const post = n.link?.post || null;
+
+    console.log("RESOLVED → post_id:", post_id, "comment_id:", comment_id, "onOpenPost:", !!onOpenPost);
+
+    setShowNotifications(false);
+
+    if (post_id) {
       if (onOpenPost) {
         onOpenPost(post_id, comment_id, post);
-        navigate('/home');
       } else {
-        navigate(`/home?openPost=${post_id}&highlightComment=${comment_id}&t=${Date.now()}`);
+        navigate('/home', {
+          state: { openPost: { post, postId: post_id, commentId: comment_id } }
+        });
       }
       return;
     }
-    if (n.event_id) navigate(`/events/${n.event_id}`);
-    else if (post_id) navigate(`/posts/${post_id}`);
-    else if (n.actor_id) navigate(`/profile/${n.actor_id}`);
-    setShowNotifications(false);
   };
   useEffect(() => {
     const updateRect = () => {
@@ -289,7 +293,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
       if (chatRef.current && !chatRef.current.contains(event.target)) {
         setShowChats(false);
       }
-      // ← only close search if click is outside BOTH the input AND the portal dropdown
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         const portal = document.getElementById('search-results-portal');
         if (!portal || !portal.contains(event.target)) {
@@ -303,19 +306,72 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
 
   const unreadChatsCount = chats.reduce((sum, chat) => sum + chat.unread, 0);
 
-  const handleMarkAsRead = async (id) => {
+  // ── Mark all NOTIFICATIONS as read ──
+  const handleMarkAllAsRead = async () => {
+    const token = localStorage.getItem("access");
+    const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
+    if (unreadIds.length === 0) return;
+
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+
+    try {
+      await Promise.all(unreadIds.map(id =>
+        fetch(`${API}/api/notifications/${id}/`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ is_read: true }),
+        })
+      ));
+    } catch (error) {
+      console.error("Error marking notifications as read:", error);
+      setNotifications(prev => prev.map(n =>
+        unreadIds.includes(n.id) ? { ...n, is_read: false } : n
+      ));
+    }
+  };
+
+  // ── Mark all CHATS as read (separate from notifications) ──
+  const handleMarkAllChatsAsRead = async () => {
+    const token = localStorage.getItem("access");
+    const unreadChatIds = chats.filter(c => c.unread > 0).map(c => c.id);
+    if (unreadChatIds.length === 0) return;
+
+    // Optimistic update
+    setChats(prev => prev.map(c => ({ ...c, unread: 0 })));
+
+    try {
+      await Promise.all(unreadChatIds.map(id =>
+        fetch(`${API}/api/chats/${id}/read/`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        })
+      ));
+    } catch (error) {
+      console.error("Error marking chats as read:", error);
+      // Revert on failure — restore original unread counts
+      setChats(prev => prev.map(c =>
+        unreadChatIds.includes(c.id)
+          ? { ...c, unread: chats.find(orig => orig.id === c.id)?.unread ?? 0 }
+          : c
+      ));
+    }
+  };
+
+  const handleMarkAsRead = async (id, currentlyRead) => {
     try {
       const token = localStorage.getItem("access");
       const response = await fetch(`${API}/api/notifications/${id}/`, {
         method: "PATCH",
         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ is_read: true }),
+        body: JSON.stringify({ is_read: !currentlyRead }),
       });
       if (response.ok) {
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+        setNotifications(prev => prev.map(n =>
+          n.id === id ? { ...n, is_read: !currentlyRead } : n
+        ));
         setOpenMenuId(null);
       }
-    } catch (error) { console.error("Error marking as read:", error); }
+    } catch (error) { console.error("Error toggling read status:", error); }
   };
 
   const handleDelete = async (id) => {
@@ -343,43 +399,17 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
     if (!user?.id) return;
     location.pathname.startsWith(`/profile/${user.id}`) ? navigate("/home") : navigate(`/profile/${user.id}`);
   };
-  const handleMarkAllAsRead = async () => {
-    const token = localStorage.getItem("access");
-    const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
-    if (unreadIds.length === 0) return;
-
-
-    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-
-    try {
-      await Promise.all(unreadIds.map(id =>
-        fetch(`${API}/api/notifications/${id}/`, {
-          method: "PATCH",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ is_read: true }),
-        })
-      ));
-    } catch (error) {
-      console.error("Error marking all as read:", error);
-      // Revert on fail
-      setNotifications(prev => prev.map(n =>
-        unreadIds.includes(n.id) ? { ...n, is_read: false } : n
-      ));
-    }
-  }
 
   const isInProfileSection = location.pathname.startsWith(`/profile/${user?.id}`);
   const unreadCount = notifications.filter(n => !n.is_read).length;
   const displayCount = notifications.length;
 
-  // ── Count total results (no posts) ──
   const totalResults = searchResults
     ? (searchResults.people?.length || 0) +
     (searchResults.communities?.length || 0) +
     (searchResults.pages?.length || 0)
     : 0;
 
-  // ── Shared section label style ──
   const sectionLabel = {
     padding: "10px 18px 4px",
     color: "rgba(255,255,255,0.35)",
@@ -448,8 +478,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
               maxHeight: "70vh",
               overflowY: "auto"
             }}>
-
-              {/* See all results */}
               <div
                 onMouseDown={() => handleResultClick("all")}
                 style={{
@@ -487,7 +515,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                 </div>
               ) : searchResults ? (
                 <>
-                  {/* ── People (max 3) ── */}
                   {searchResults.people?.length > 0 && (
                     <div>
                       <div style={sectionLabel}>People</div>
@@ -531,7 +558,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                     </div>
                   )}
 
-                  {/* ── Communities (max 3) — locked if not member ── */}
                   {searchResults.communities?.length > 0 && (
                     <div>
                       <div style={sectionLabel}>Communities</div>
@@ -561,7 +587,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                                   <Users size={18} color="#c084fc" />
                                 </div>
                               )}
-                              {/* Lock badge for non-members */}
                               {!isMember && community.is_private && (
                                 <div style={{
                                   position: "absolute", bottom: -3, right: -3,
@@ -596,7 +621,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                     </div>
                   )}
 
-                  {/* ── Pages (max 3) ── */}
                   {searchResults.pages?.length > 0 && (
                     <div>
                       <div style={sectionLabel}>Pages</div>
@@ -609,7 +633,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                           onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                         >
                           <div style={{ flexShrink: 0 }}>
-                            {/* Updated to use profile_image from your backend */}
                             {page.profile_image ? (
                               <img
                                 src={page.profile_image.startsWith("http") ? page.profile_image : `${API}${page.profile_image}`}
@@ -626,13 +649,10 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                               </div>
                             )}
                           </div>
-
                           <div style={{ minWidth: 0 }}>
                             <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.875rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                              {/* Priority: Full Name > Short Name > fallback */}
                               {page.page_full_name || page.page_name || page.name}
                             </div>
-                            {/* Display the Page Type (University, Library, etc.) as the subtitle */}
                             <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>
                               {page.page_type ? page.page_type : "Page"}
                             </div>
@@ -642,7 +662,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                     </div>
                   )}
 
-                  {/* No results */}
                   {totalResults === 0 && !searchLoading && (
                     <div style={{ padding: "20px 18px", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "0.875rem" }}>
                       No results found for "<span style={{ color: "rgba(255,255,255,0.6)" }}>{searchQuery}</span>"
@@ -654,9 +673,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
             document.body
           )}
         </div>
-
-        {/* ── Search dropdown ── */}
-
       </div>
 
       <div className={styles.headerRight}>
@@ -678,18 +694,19 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
               <div className={styles.notifHeader}>
                 <h3 className={styles.notifTitle}>Chats</h3>
                 <div className={styles.notifHeaderActions}>
+                  {/* ✅ FIX 1: uses handleMarkAllChatsAsRead — only clears chat unread counts */}
                   <img
                     src={Read}
                     alt="Read"
-                    onClick={handleMarkAllAsRead}
+                    onClick={handleMarkAllChatsAsRead}
                     style={{
                       width: 18, height: 18,
                       filter: 'brightness(0) invert(1)',
-                      cursor: unreadCount > 0 ? 'pointer' : 'default',
-                      opacity: unreadCount > 0 ? 1 : 0.4,
+                      cursor: unreadChatsCount > 0 ? 'pointer' : 'default',
+                      opacity: unreadChatsCount > 0 ? 1 : 0.4,
                       transition: 'opacity 0.2s'
                     }}
-                    title="Mark all as read"
+                    title="Mark all chats as read"
                   />
                   <span onClick={() => { navigate("/chats"); setShowChats(false); }} className={styles.viewAll}>view all</span>
                 </div>
@@ -764,7 +781,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                       opacity: unreadCount > 0 ? 1 : 0.4,
                       transition: 'opacity 0.2s'
                     }}
-                    title="Mark all as read"
+                    title="Mark all notifications as read"
                   />
                   <span className={styles.viewAll}>view all</span>
                 </div>
@@ -790,18 +807,33 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                       </div>
                       <p className={styles.notifText}>{n.text}</p>
                     </div>
-                    <div className={styles.notifMenuWrapper}>
+
+                    {/* ✅ FIX 2: onMouseDown stopPropagation prevents the document mousedown
+                        listener from firing and closing the whole notification dropdown */}
+                    <div
+                      className={styles.notifMenuWrapper}
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
                       <button
                         className={styles.notifMenuBtn}
-                        onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === n.id ? null : n.id); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(openMenuId === n.id ? null : n.id);
+                        }}
                       >
                         <MoreHorizontal size={18} />
                       </button>
                       {openMenuId === n.id && (
-                        <div className={styles.actionMenu}>
-                          <button onClick={() => handleMarkAsRead(n.id)}><img src={Read} alt="Read" style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', marginLeft: 3 }} /> Read</button>
-                          <button onClick={() => handleManage(n.id)}>Manage</button>
-                          <button className={styles.deleteAction} onClick={() => handleDelete(n.id)}>Delete</button>
+                        <div
+                          className={styles.actionMenu}
+                          onMouseDown={(e) => e.stopPropagation()}
+                        >
+                          <button onClick={(e) => { e.stopPropagation(); handleMarkAsRead(n.id, n.is_read); }}>
+                            <img src={Read} alt="Read" style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', marginLeft: 3 }} />
+                            {n.is_read ? 'Mark as unread' : 'Mark as read'}
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); handleManage(n.id); }}>Manage</button>
+                          <button className={styles.deleteAction} onClick={(e) => { e.stopPropagation(); handleDelete(n.id); }}>Delete</button>
                         </div>
                       )}
                     </div>
@@ -814,41 +846,29 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
 
         <button className={styles.iconButton} type="button" onClick={handleAvatarClick}>
           {isInProfileSection
-            ? <img
-              src={Home}
-              alt="home"
-              style={{ filter: "invert(1)", width: 24, height: 24 }}
-            />
+            ? <img src={Home} alt="home" style={{ filter: "invert(1)", width: 24, height: 24 }} />
             : <img src={avatarSrc} alt="Profile" className={styles.userProfilePicture} />
           }
         </button>
       </div>
 
-      {/* ══════════════════════════════════════
-          COMMUNITY JOIN GATE POPUP
-      ══════════════════════════════════════ */}
+      {/* ── COMMUNITY JOIN GATE POPUP ── */}
       {joinGate && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 10000,
           display: "flex", alignItems: "center", justifyContent: "center"
         }}>
-          {/* Backdrop */}
           <div
             style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
             onClick={() => setJoinGate(null)}
           />
-
-          {/* Card */}
           <div style={{
             position: "relative",
             background: "linear-gradient(145deg, #1e1e2e, #252535)",
             border: "1px solid rgba(255,255,255,0.09)",
-            borderRadius: 20,
-            padding: "28px 28px 24px",
-            width: 380,
-            boxShadow: "0 24px 60px rgba(0,0,0,0.7)"
+            borderRadius: 20, padding: "28px 28px 24px",
+            width: 380, boxShadow: "0 24px 60px rgba(0,0,0,0.7)"
           }}>
-            {/* Close */}
             <button
               onClick={() => setJoinGate(null)}
               style={{
@@ -861,8 +881,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
             >
               <X size={15} />
             </button>
-
-            {/* Community avatar + name */}
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
               {joinGate.avatar ? (
                 <img
@@ -886,8 +904,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                 </div>
               </div>
             </div>
-
-            {/* Lock icon + message */}
             <div style={{
               display: "flex", gap: 12, alignItems: "flex-start",
               background: "rgba(245,158,11,0.07)",
@@ -896,12 +912,9 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
             }}>
               <span style={{ fontSize: 20, flexShrink: 0, lineHeight: 1 }}>🔒</span>
               <p style={{ margin: 0, color: "rgba(255,255,255,0.75)", fontSize: "0.875rem", lineHeight: 1.5 }}>
-                You have to join <strong style={{ color: "#fff" }}>{joinGate.name}</strong> to see what's inside it.
-                Would you like to join?
+                You have to join <strong style={{ color: "#fff" }}>{joinGate.name}</strong> to see what's inside it. Would you like to join?
               </p>
             </div>
-
-            {/* Actions */}
             <div style={{ display: "flex", gap: 10 }}>
               <button
                 onClick={() => setJoinGate(null)}
@@ -935,6 +948,8 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
           </div>
         </div>
       )}
+
+      {/* ── REQUEST GATE POPUP ── */}
       {requestGate && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 10000,
@@ -963,7 +978,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
             >
               <X size={15} />
             </button>
-
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
               {requestGate.avatar ? (
                 <img
@@ -982,12 +996,9 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
               )}
               <div>
                 <div style={{ color: "#fff", fontWeight: 700, fontSize: "1rem" }}>{requestGate.name}</div>
-                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.78rem", marginTop: 2 }}>
-                  🔒 Private Community
-                </div>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.78rem", marginTop: 2 }}>🔒 Private Community</div>
               </div>
             </div>
-
             <div style={{
               display: "flex", gap: 12, alignItems: "flex-start",
               background: "rgba(99,102,241,0.07)",
@@ -996,11 +1007,9 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
             }}>
               <span style={{ fontSize: 20, flexShrink: 0, lineHeight: 1 }}>🔒</span>
               <p style={{ margin: 0, color: "rgba(255,255,255,0.75)", fontSize: "0.875rem", lineHeight: 1.5 }}>
-                <strong style={{ color: "#fff" }}>{requestGate.name}</strong> is a private community.
-                You need to request access to join.
+                <strong style={{ color: "#fff" }}>{requestGate.name}</strong> is a private community. You need to request access to join.
               </p>
             </div>
-
             <div style={{ display: "flex", gap: 10 }}>
               <button
                 onClick={() => setRequestGate(null)}

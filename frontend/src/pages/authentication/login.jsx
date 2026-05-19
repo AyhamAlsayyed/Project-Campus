@@ -41,7 +41,7 @@ export default function Login() {
                 return;
 
             }
-            // ayham
+           
             if (data.access && data.refresh) {
                 localStorage.setItem("access", data.access);
                 localStorage.setItem("refresh", data.refresh);
@@ -51,7 +51,7 @@ export default function Login() {
             }
 
             navigate('/home');
-            // ayham
+           
         }
         catch (error) {
             setError('An error occurred. Please try again later.');

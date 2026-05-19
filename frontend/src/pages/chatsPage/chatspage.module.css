@@ -160,6 +160,24 @@
     display: flex;
     flex-direction: column;
     padding: 0 20px 30px 20px;
+
+    overflow-y: auto;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.chatItemsContainer::-webkit-scrollbar {
+    width: 4px;
+}
+
+.chatItemsContainer::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chatItemsContainer::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
 }
 
 /* Individual Chat Row */
@@ -450,8 +468,8 @@
     flex-direction: column;
 
     height: 100%;
-    /* 🔥 CHANGE THIS */
-    /* REMOVE height: auto */
+
+
 
     border-radius: 30px;
     z-index: 1;
@@ -469,8 +487,11 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    max-height: 600px;
     width: 100%;
     top: 10px;
+    min-height: 0;
+    overflow: hidden;
     z-index: 10;
 }
 
@@ -528,6 +549,11 @@
 .rightList {
     display: flex;
     flex-direction: column;
+    max-height: 500px;
+    min-height: 400px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 .academicChatItem {
@@ -1336,4 +1362,55 @@
     border: none;
     color: #ff4d4d;
     cursor: pointer;
+}
+
+.marqueeWrapper {
+    overflow: hidden;
+    position: relative;
+    max-width: 100%;
+}
+
+.marqueeWrapper::before,
+.marqueeWrapper::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 24px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.marqueeWrapper::before {
+    left: 0;
+    background: linear-gradient(to right, #1a1a1a, transparent);
+}
+
+.marqueeWrapper::after {
+    right: 0;
+    background: linear-gradient(to left, #1a1a1a, transparent);
+}
+
+.marqueeText {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marqueeSlide 6s linear infinite;
+}
+
+.marqueeStatic {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+@keyframes marqueeSlide {
+    0% {
+        transform: translateX(100%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
 }

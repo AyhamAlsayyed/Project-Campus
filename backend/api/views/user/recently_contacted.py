@@ -51,7 +51,7 @@ def recently_contacted(request):
             name = other.username
 
             avatar = None
-            status = profile.status
+            status = None
 
             if profile:
                 if profile.profile_image:

@@ -11,12 +11,16 @@ import BadReview from '../../Assets/icons/bad-review.png';
 import NatrualReview from '../../Assets/icons/neutral-review.png';
 import ReportModal from "./ReportModal";
 import { createPortal } from "react-dom";
+import ArrowRight from '../../Assets/icons/arrow-right.png';
+import ArrowLeft from '../../Assets/icons/arrow-left.png';
 
-export default function PostCard({ post, openComments, isOwnProfile }) {
+
+export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPost, onPinChange }) {
   const [current, setCurrent] = useState(0);
   const [isLiked, setIsLiked] = useState(post?.is_liked || post?.has_liked || false);
   const [isSaved, setIsSaved] = useState(post?.is_saved || false);
   const [likesCount, setLikesCount] = useState(post?.likes_count || 0);
+  const [showPinConfirm, setShowPinConfirm] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isPinned, setIsPinned] = useState(!!post?.is_pinned);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -35,11 +39,11 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
   const [commenterAvatars, setCommenterAvatars] = useState([]);
 
   const CHAR_LIMIT = 150;
+
   useEffect(() => {
     const fetchCommenters = async () => {
       const token = localStorage.getItem("access");
       const postId = post.id || post.post_id;
-      console.log("fetching comments for post:", postId);
       if (!postId || !token) return;
       try {
         const res = await fetch(`http://localhost:8000/api/posts/${postId}/comments/`, {
@@ -47,9 +51,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
         });
         if (res.ok) {
           const data = await res.json();
-          console.log("comments data:", data);
           const comments = Array.isArray(data) ? data : (data.results || []);
-          console.log("first comment:", comments[0]);
           const seen = new Set();
           const avatars = [];
           for (const comment of comments) {
@@ -61,7 +63,6 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
             }
             if (avatars.length === 3) break;
           }
-          console.log("final avatars:", avatars);
           setCommenterAvatars(avatars);
         }
       } catch (e) { console.error(e); }
@@ -82,12 +83,10 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
     if (days < 7) return `${days} d ago`;
     return past.toLocaleDateString();
   };
+
   const formatText = (text) => {
     return text.split('\n').map((line, i, arr) => {
-      // Empty line = paragraph break
-      if (line.trim() === '') {
-        return <br key={i} />;
-      }
+      if (line.trim() === '') return <br key={i} />;
       return (
         <span key={i}>
           {line}
@@ -96,26 +95,23 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
       );
     });
   };
+
   const handleAdReaction = async (reaction) => {
     const token = localStorage.getItem("access");
     const postId = post.id || post.post_id;
     const prev = adReaction;
-
-    // Toggle off if same reaction clicked again
     const newReaction = adReaction === reaction ? null : reaction;
     setAdReaction(newReaction);
-
     try {
       const res = await fetch(`http://localhost:8000/api/posts/${postId}/react/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ reaction: newReaction }),
       });
-      if (!res.ok) setAdReaction(prev); // revert on fail
+      if (!res.ok) setAdReaction(prev);
     } catch { setAdReaction(prev); }
   };
 
-  // Close menus on clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) setShowMenu(false);
@@ -124,14 +120,15 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
   useEffect(() => {
     if (!showMenu) return;
     const handleScroll = () => setShowMenu(false);
-    window.addEventListener("scroll", handleScroll, true); // true = capture phase catches all scroll events
+    window.addEventListener("scroll", handleScroll, true);
     return () => window.removeEventListener("scroll", handleScroll, true);
   }, [showMenu]);
 
-  // Fetch actual chats dynamically when the share dropdown is opened
+  // Fetch chats for share modal — deduplicated to one entry per person
   useEffect(() => {
     if (!showShareMenu) return;
 
@@ -141,7 +138,6 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
 
       setIsLoadingChats(true);
       try {
-        // Replace this URL endpoint with your exact backend endpoint for fetching recent chat/room threads
         const res = await fetch("http://localhost:8000/api/chats/", {
           method: "GET",
           headers: {
@@ -149,9 +145,36 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
             "Content-Type": "application/json"
           },
         });
+
         if (res.ok) {
           const data = await res.json();
-          const formatted = data.map(chat => ({
+
+          // ── Deduplicate: one entry per unique person/group name,
+          //    keeping whichever conversation has the most recent message ──
+          const deduped = data.reduce((acc, chat) => {
+            const key = (chat.name || chat.username || "").toLowerCase().trim();
+            const existingIndex = acc.findIndex(
+              c => (c.name || c.username || "").toLowerCase().trim() === key
+            );
+
+            if (existingIndex === -1) {
+              // First time we've seen this person — add them
+              acc.push(chat);
+            } else {
+              // Already have this person — keep the more recent conversation
+              const existing = acc[existingIndex];
+              if (
+                chat.last_message_time &&
+                (!existing.last_message_time ||
+                  new Date(chat.last_message_time) > new Date(existing.last_message_time))
+              ) {
+                acc[existingIndex] = chat;
+              }
+            }
+            return acc;
+          }, []);
+
+          const formatted = deduped.map(chat => ({
             ...chat,
             avatar: chat.avatar
               ? chat.avatar.startsWith("http")
@@ -159,6 +182,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
                 : `http://localhost:8000${chat.avatar}`
               : "/default-avatar.png"
           }));
+
           setShareTargets(formatted);
         } else {
           console.error("Failed to retrieve chat target threads.");
@@ -189,57 +213,45 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
     } catch (err) { setIsLiked(originalLiked); }
   };
 
-  if (!post || !post.author) {
-    return null;
-  }
+  if (!post || !post.author) return null;
 
   const handleMenuAction = async (actionType) => {
     const token = localStorage.getItem("access");
     if (actionType === 'block') {
       const postId = post.id || post.post_id;
       const newBlocked = !isBlocked;
-      setIsBlocked(newBlocked);  // update state FIRST
-      setShowMenu(false);        // THEN close
+      setIsBlocked(newBlocked);
+      setShowMenu(false);
       try {
         await fetch(`http://localhost:8000/api/posts/${postId}/block/`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` }
         });
-      } catch (err) { setIsBlocked(!newBlocked); } // revert on fail
+      } catch (err) { setIsBlocked(!newBlocked); }
       return;
     }
     setShowMenu(false);
 
-
-    if (actionType === 'delete') {
-      setShowDeleteConfirm(true);
-      return;
-    }
-
+    if (actionType === 'delete') { setShowDeleteConfirm(true); return; }
 
     if (actionType === 'pin') {
+      if (!isPinned && hasPinnedPost) {
+        setShowMenu(false);
+        setShowPinConfirm(true);
+        return;
+      }
       try {
         const postId = post.id || post.post_id;
-
-        const res = await fetch(
-          `http://localhost:8000/api/posts/${postId}/pin/`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
+        const res = await fetch(`http://localhost:8000/api/posts/${postId}/pin/`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (res.ok) {
           const data = await res.json();
-
           setIsPinned(Boolean(data.is_pinned));
+          if (data.is_pinned) onPinChange?.(postId);
         }
-      } catch (err) {
-        console.error("Failed to pin post");
-      }
-
+      } catch (err) { console.error("Failed to pin post"); }
       return;
     }
 
@@ -251,31 +263,40 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (res.ok && actionType === 'pin') {
-
-      } else if (!res.ok) {
-
+      if (!res.ok) {
         if (actionType === 'pin') setIsPinned(prev => !prev);
         if (actionType === 'save') setIsSaved(prev => !prev);
       }
-    } catch (err) {
-      console.error(`Failed to ${actionType} post`);
-    }
+    } catch (err) { console.error(`Failed to ${actionType} post`); }
   };
+
   const confirmDelete = async () => {
     const token = localStorage.getItem("access");
-    const postId = post.id || post.post_id;  // ← add fallback
+    const postId = post.id || post.post_id;
     try {
       const res = await fetch(`http://localhost:8000/api/posts/${postId}/`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) window.location.reload();
-    } catch (err) {
-      console.error("Delete failed", err);
-    }
+    } catch (err) { console.error("Delete failed", err); }
     setShowDeleteConfirm(false);
+  };
+  const confirmPin = async () => {
+    const token = localStorage.getItem("access");
+    const postId = post.id || post.post_id;
+    try {
+      const res = await fetch(`http://localhost:8000/api/posts/${postId}/pin/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setIsPinned(Boolean(data.is_pinned));
+        onPinChange?.(postId); // tell parent this post is now the pinned one
+      }
+    } catch (err) { console.error("Failed to pin post"); }
+    setShowPinConfirm(false);
   };
 
   const validMedia = post?.media?.map((item) => {
@@ -297,15 +318,11 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
   const handleShareToTarget = async (targetId) => {
     const token = localStorage.getItem("access");
     if (!token) return;
-
     setIsSharing(true);
     try {
       const res = await fetch(`http://localhost:8000/api/messages/send/`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           recipient_id: targetId,
           post_id: post.id || post.post_id,
@@ -324,7 +341,6 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
           }
         }),
       });
-
       if (res.ok) {
         setShowShareMenu(false);
       } else {
@@ -337,8 +353,6 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
     }
   };
 
-
-
   return (
     <article className={styles.card}>
       {showDeleteConfirm && (
@@ -346,32 +360,34 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
           <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalContent}>
               <h3 className={styles.modalTitle}>Delete this post?</h3>
-              <p className={styles.modalText}>
-                Once you delete this post, it can't be restored.
-              </p>
+              <p className={styles.modalText}>Once you delete this post, it can't be restored.</p>
             </div>
-
             <div className={styles.modalActions}>
-              <button
-                className={styles.cancelBtn}
-                onClick={() => setShowDeleteConfirm(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className={styles.deleteConfirmBtn}
-                onClick={confirmDelete}
-              >
-                Delete
-              </button>
+              <button className={styles.cancelBtn} onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+              <button className={styles.deleteConfirmBtn} onClick={confirmDelete}>Delete</button>
             </div>
           </div>
         </div>
       )}
+      {showPinConfirm && (
+        <div className={styles.modalOverlay} onClick={() => setShowPinConfirm(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalContent}>
+              <h3 className={styles.modalTitle}>Replace pinned post?</h3>
+              <p className={styles.modalText}>You already have a pinned post. Pinning this will unpin the other one.</p>
+            </div>
+            <div className={styles.modalActions}>
+              <button className={styles.cancelBtn} onClick={() => setShowPinConfirm(false)}>Cancel</button>
+              <button className={styles.deleteConfirmBtn} onClick={confirmPin}>Pin anyway</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={styles.topRow}>
         <div className={styles.user}>
-          <Link to={(post.author?.id || post.author_id) ?
-            post.author?.type === 'page'
+          <Link to={(post.author?.id || post.author_id)
+            ? post.author?.type === 'page'
               ? `/page/${post.author?.id || post.author_id}`
               : `/profile/${post.author?.id || post.author_id}`
             : "#"
@@ -398,10 +414,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
             className={styles.menuBtn}
             onClick={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
-              setMenuPosition({
-                top: rect.bottom + 6,
-                right: window.innerWidth - rect.right
-              });
+              setMenuPosition({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
               setShowMenu(prev => !prev);
             }}
             aria-label="menu"
@@ -425,7 +438,6 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
               }}
               ref={menuRef}
             >
-              {/* WHITE ACTIONS */}
               <div className={styles.menuSection}>
                 {isOwnProfile && (
                   <button className={styles.menuItem} onClick={() => handleMenuAction('pin')}>
@@ -441,7 +453,6 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
 
               <div className={styles.menuDivider} />
 
-              {/* RED ACTIONS */}
               <div className={styles.menuSection}>
                 {isOwnProfile ? (
                   <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('delete')}>
@@ -452,10 +463,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
                     <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => { setShowMenu(false); setShowReport(true); }}>
                       <Flag size={16} /> Report
                     </button>
-                    <button
-                      className={`${styles.menuItem} ${styles.danger}`}
-                      onClick={() => handleMenuAction('block')}
-                    >
+                    <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('block')}>
                       <Ban size={16} />
                       {isBlocked ? "Unblock" : "Block"}
                     </button>
@@ -473,16 +481,12 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
           {post.content_text.length > CHAR_LIMIT && !isExpanded
             ? <>
               {formatText(post.content_text.substring(0, CHAR_LIMIT))}...{' '}
-              <span className={styles.readMore} onClick={() => setIsExpanded(true)}>
-                read more
-              </span>
+              <span className={styles.readMore} onClick={() => setIsExpanded(true)}>read more</span>
             </>
             : <>
               {formatText(post.content_text)}
               {post.content_text.length > CHAR_LIMIT && (
-                <span className={styles.readMore} onClick={() => setIsExpanded(false)} style={{ marginLeft: 6 }}>
-                  show less
-                </span>
+                <span className={styles.readMore} onClick={() => setIsExpanded(false)} style={{ marginLeft: 6 }}>show less</span>
               )}
             </>
           }
@@ -491,16 +495,14 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
 
       {validMedia.length > 0 && validMedia[current]?.type !== "file" && (
         <div className={styles.media}>
-          {validMedia.length > 1 && <button className={styles.leftArrow} onClick={prevSlide}>◀</button>}
-          {validMedia[current]?.type === "image" && (
-            <img src={validMedia[current].url} alt="" className={styles.mediaItem} />
-          )}
+          {validMedia.length > 1 && <button className={styles.leftArrow} onClick={prevSlide}><img src={ArrowLeft} alt="prev" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} /></button>}
+          {validMedia[current]?.type === "image" && <img src={validMedia[current].url} alt="" className={styles.mediaItem} />}
           {validMedia[current]?.type === "video" && (
             <video controls className={styles.mediaItem}>
               <source src={validMedia[current].url} type="video/mp4" />
             </video>
           )}
-          {validMedia.length > 1 && <button className={styles.rightArrow} onClick={nextSlide}>▶</button>}
+          {validMedia.length > 1 && <button className={styles.rightArrow} onClick={nextSlide}><img src={ArrowRight} alt="next" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} /></button>}
           {validMedia.length > 1 && (
             <div className={styles.dots}>
               {validMedia.map((_, index) => (
@@ -530,12 +532,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
       )}
 
       <div className={styles.actions}>
-       
-        <button
-          className={`${styles.iconBtn} ${isLiked ? styles.liked : ""}`}
-          onClick={handleLike}
-          type="button"
-        >
+        <button className={`${styles.iconBtn} ${isLiked ? styles.liked : ""}`} onClick={handleLike} type="button">
           <span className={styles.heart}>
             {isLiked
               ? <img src={LikeActive} alt="liked" className={styles.likeActive} width={22} height={22} />
@@ -545,54 +542,38 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
           {likesCount > 0 && <span className={styles.count}>{likesCount}</span>}
         </button>
 
-
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           {post.post_type === "advertisement" ? (
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span className={styles.prompt}>how do you feel about this ad?</span>
               <div className={styles.reactions}>
-                <button
-                  className={styles.reactionBtn}
-                  onClick={() => handleAdReaction('good')}
-                  style={{
-                    transform: adReaction === 'good' ? 'scale(1.25)' : 'scale(1)',
-                    filter: adReaction && adReaction !== 'good' ? 'grayscale(1) opacity(0.4)' : 'none',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <img src={GoodReview} alt="good" width={28} height={28} />
-                </button>
-                <button
-                  className={styles.reactionBtn}
-                  onClick={() => handleAdReaction('neutral')}
-                  style={{
-                    transform: adReaction === 'neutral' ? 'scale(1.25)' : 'scale(1)',
-                    filter: adReaction && adReaction !== 'neutral' ? 'grayscale(1) opacity(0.4)' : 'none',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <img src={NatrualReview} alt="neutral" width={28} height={28} />
-                </button>
-                <button
-                  className={styles.reactionBtn}
-                  onClick={() => handleAdReaction('bad')}
-                  style={{
-                    transform: adReaction === 'bad' ? 'scale(1.25)' : 'scale(1)',
-                    filter: adReaction && adReaction !== 'bad' ? 'grayscale(1) opacity(0.4)' : 'none',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <img src={BadReview} alt="bad" width={28} height={28} />
-                </button>
+                {[
+                  { key: 'good', src: GoodReview },
+                  { key: 'neutral', src: NatrualReview },
+                  { key: 'bad', src: BadReview },
+                ].map(({ key, src }) => (
+                  <button
+                    key={key}
+                    className={styles.reactionBtn}
+                    onClick={() => handleAdReaction(key)}
+                    style={{
+                      transform: adReaction === key ? 'scale(1.25)' : 'scale(1)',
+                      filter: adReaction && adReaction !== key ? 'grayscale(1) opacity(0.4)' : 'none',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <img src={src} alt={key} width={28} height={28} />
+                  </button>
+                ))}
               </div>
-            </div>) : (
+            </div>
+          ) : (
             <div
               className={styles.commentInputPill}
               style={{ maxWidth: "200px", display: "flex", alignItems: "center", padding: "0 8px 0 16px" }}
               onClick={() => openComments(post)}
             >
               <span className={styles.placeholderText}>Add a comment ...</span>
-
               {commenterAvatars.length > 0 && (
                 <div style={{ display: "flex", alignItems: "center", marginLeft: "auto", width: 20 }}>
                   {commenterAvatars.map((avatar, i) => (
@@ -601,14 +582,10 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
                       src={avatar}
                       alt=""
                       style={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: "50%",
-                        objectFit: "cover",
+                        width: 34, height: 34, borderRadius: "50%", objectFit: "cover",
                         border: "2px solid #262626",
                         marginLeft: i === 0 ? 0 : -10,
-                        zIndex: 3 - i,
-                        position: "relative"
+                        zIndex: 3 - i, position: "relative"
                       }}
                     />
                   ))}
@@ -618,13 +595,8 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
           )}
         </div>
 
-        {/* Right — share button */}
         <div className={styles.shareContainer} ref={shareMenuRef} style={{ position: 'relative' }}>
-          <button
-            className={styles.shareBtn}
-            type="button"
-            onClick={() => setShowShareMenu(!showShareMenu)}
-          >
+          <button className={styles.shareBtn} type="button" onClick={() => setShowShareMenu(!showShareMenu)}>
             <img src={Share} alt="share" width={18} height={18} className={styles.shareIcon} />
             <span className={styles.shareText}>Share</span>
           </button>
@@ -632,13 +604,9 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
           {showShareMenu && createPortal(
             <div className={styles.shareOverlay} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
               <div className={styles.shareModal} onClick={e => e.stopPropagation()} ref={shareMenuRef}>
-
                 <div className={styles.shareHeader}>
                   <h3 className={styles.shareTitle}>Share Post</h3>
-                  <button
-                    className={styles.closeBtn}
-                    onClick={() => { setShowShareMenu(false); setShareSearch(""); }}
-                  >
+                  <button className={styles.closeBtn} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                       <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
@@ -670,9 +638,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
                     const groups = filtered.filter(t => t.is_group || t.isGroup);
                     const directs = filtered.filter(t => !t.is_group && !t.isGroup);
 
-                    if (filtered.length === 0) return (
-                      <div className={styles.shareStatus}>No chats found</div>
-                    );
+                    if (filtered.length === 0) return <div className={styles.shareStatus}>No chats found</div>;
 
                     const renderItem = (target) => (
                       <button
@@ -682,15 +648,12 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
                         className={styles.shareItem}
                       >
                         <div className={styles.shareAvatarWrapper}>
-                          {target.is_group || target.isGroup ? (
-                            <div className={styles.groupIconPlaceholder}>👥</div>
-                          ) : (
-                            <img src={target.avatar || "/default-avatar.png"} alt="" className={styles.shareAvatarImg} />
-                          )}
+                          {target.is_group || target.isGroup
+                            ? <div className={styles.groupIconPlaceholder}>👥</div>
+                            : <img src={target.avatar || "/default-avatar.png"} alt="" className={styles.shareAvatarImg} />
+                          }
                         </div>
-                        <span className={styles.targetName}>
-                          {target.name || target.username}
-                        </span>
+                        <span className={styles.targetName}>{target.name || target.username}</span>
                         <div className={styles.sendLabel}>{isSharing ? "..." : "Send"}</div>
                       </button>
                     );
@@ -718,6 +681,7 @@ export default function PostCard({ post, openComments, isOwnProfile }) {
             document.body
           )}
         </div>
+
         {showReport && (
           <ReportModal
             contentId={post.id || post.post_id}

@@ -8,6 +8,7 @@ import { useRef } from "react";
 import { createPortal } from "react-dom";
 import postStyles from '../posts/posts.module.css';
 import Share from '../../Assets/icons/share.png';
+
 export default function CommentModal({ post, onClose, currentUser }) {
     const highlightCommentId = post.highlightCommentId || {};
     const [highlightedId, setHighlightedId] = useState(highlightCommentId);
@@ -18,9 +19,9 @@ export default function CommentModal({ post, onClose, currentUser }) {
     const [isLiked, setIsLiked] = useState(post.is_liked || false);
     const [likesCount, setLikesCount] = useState(post.likes_count || 0);
     const [currentSlide, setCurrentSlide] = useState(0);
-    const [expandedReplies, setExpandedReplies] = useState({})
+    const [expandedReplies, setExpandedReplies] = useState({});
     const [loading, setLoading] = useState(true);
-    const [parentComment, setParentComment] = useState(null)
+    const [parentComment, setParentComment] = useState(null);
     const visualMedia = post.media?.filter(item => item.type === "image" || item.type === "video") || [];
     const files = post.media?.filter(item => item.type === "file") || [];
     const parentComments = comments.filter(c => !c.parent_comment);
@@ -33,6 +34,8 @@ export default function CommentModal({ post, onClose, currentUser }) {
     const shareMenuRef = useRef(null);
     const [isExpanded, setIsExpanded] = useState(false);
     const CHAR_LIMIT = 150;
+
+    // Fetch share targets — deduplicated to one entry per person
     useEffect(() => {
         if (!showShareMenu) return;
         const fetchActiveChats = async () => {
@@ -46,7 +49,30 @@ export default function CommentModal({ post, onClose, currentUser }) {
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    setShareTargets(data.map(chat => ({
+
+                    // Deduplicate: one entry per unique person/group name,
+                    // keeping whichever conversation has the most recent message
+                    const deduped = data.reduce((acc, chat) => {
+                        const key = (chat.name || chat.username || "").toLowerCase().trim();
+                        const existingIndex = acc.findIndex(
+                            c => (c.name || c.username || "").toLowerCase().trim() === key
+                        );
+                        if (existingIndex === -1) {
+                            acc.push(chat);
+                        } else {
+                            const existing = acc[existingIndex];
+                            if (
+                                chat.last_message_time &&
+                                (!existing.last_message_time ||
+                                    new Date(chat.last_message_time) > new Date(existing.last_message_time))
+                            ) {
+                                acc[existingIndex] = chat;
+                            }
+                        }
+                        return acc;
+                    }, []);
+
+                    setShareTargets(deduped.map(chat => ({
                         ...chat,
                         avatar: chat.avatar
                             ? chat.avatar.startsWith("http") ? chat.avatar : `http://localhost:8000${chat.avatar}`
@@ -58,6 +84,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
         };
         fetchActiveChats();
     }, [showShareMenu]);
+
     const handleShareToTarget = async (targetId) => {
         const token = localStorage.getItem("access");
         if (!token) return;
@@ -76,20 +103,15 @@ export default function CommentModal({ post, onClose, currentUser }) {
         } catch (err) { console.error("Error sharing:", err); }
         finally { setIsSharing(false); }
     };
+
     useEffect(() => {
         if (!highlightedId || comments.length === 0) return;
-        console.log("highlightedId:", highlightedId);
-        console.log("all comment ids:", comments.map(c => c.id));
-        console.log("ref exists?", !!commentRefs.current[highlightedId]);
 
-
-        // expand first if it's a reply
         const reply = comments.find(c => c.id === highlightedId && c.parent_comment);
         if (reply) {
             setExpandedReplies(prev => ({ ...prev, [reply.parent_comment]: true }));
         }
 
-        // scroll after re-render has happened
         const scrollTimer = setTimeout(() => {
             const el = commentRefs.current[highlightedId];
             const container = commentsSectionRef.current;
@@ -100,26 +122,19 @@ export default function CommentModal({ post, onClose, currentUser }) {
         }, 300);
 
         const clearTimer = setTimeout(() => setHighlightedId(null), 2400);
-
         return () => { clearTimeout(scrollTimer); clearTimeout(clearTimer); };
     }, [comments, highlightedId]);
+
     const toggleReplies = (commentId) => {
-        setExpandedReplies((prev) => ({
-            ...prev,
-            [commentId]: !prev[commentId]
-        }));
+        setExpandedReplies((prev) => ({ ...prev, [commentId]: !prev[commentId] }));
     };
+
     const getReplies = (commentId) => {
         let allReplies = [];
-
         const findReplies = (id) => {
             const directReplies = replies.filter(r => r.parent_comment === id);
-            directReplies.forEach(r => {
-                allReplies.push(r);
-                findReplies(r.id);
-            });
+            directReplies.forEach(r => { allReplies.push(r); findReplies(r.id); });
         };
-
         findReplies(commentId);
         return allReplies;
     };
@@ -145,47 +160,31 @@ export default function CommentModal({ post, onClose, currentUser }) {
 
     const deleteComment = async (commentId) => {
         const token = localStorage.getItem("access");
-
         try {
-            const res = await fetch(
-                `http://localhost:8000/api/comments/${commentId}/delete/`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-
+            const res = await fetch(`http://localhost:8000/api/comments/${commentId}/delete/`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
             if (res.ok) {
-                setComments(prev =>
-                    prev.filter(c => c.id !== commentId && c.parent_comment !== commentId)
-                );
+                setComments(prev => prev.filter(c => c.id !== commentId && c.parent_comment !== commentId));
             }
-        } catch (err) {
-            console.error("Delete failed:", err);
-        }
+        } catch (err) { console.error("Delete failed:", err); }
     };
 
     const addComment = async () => {
         if (!newComment.trim()) return;
         const token = localStorage.getItem("access");
-
         try {
             const postId = post.id || post.post_id;
             const res = await fetch(`http://localhost:8000/api/posts/${postId}/comments/create/`, {
                 method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
                     text: newComment,
                     parent_comment: parentComment ? parentComment.id : null,
                     replying_to: parentComment ? parentComment.user : null,
                 }),
             });
-
             if (res.ok) {
                 const savedComment = await res.json();
                 setComments([...comments, savedComment]);
@@ -195,36 +194,23 @@ export default function CommentModal({ post, onClose, currentUser }) {
                 const err = await res.json();
                 console.error("Server error:", err);
             }
-
-        } catch (err) {
-            console.error("Error saving comment:", err);
-        }
+        } catch (err) { console.error("Error saving comment:", err); }
     };
 
     const handleLikePost = async () => {
         const token = localStorage.getItem("access");
         const postId = post?.id || post?.post_id;
-
         if (!token || !postId) return;
-
         const originalLiked = isLiked;
         const originalCount = likesCount;
-
         setIsLiked(!isLiked);
         setLikesCount(prev => (isLiked ? prev - 1 : prev + 1));
-
         try {
             const res = await fetch(`http://localhost:8000/api/posts/${postId}/like/`, {
                 method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
             });
-
-            if (!res.ok) {
-                throw new Error("Failed to like");
-            }
+            if (!res.ok) throw new Error("Failed to like");
         } catch (err) {
             setIsLiked(originalLiked);
             setLikesCount(originalCount);
@@ -235,41 +221,24 @@ export default function CommentModal({ post, onClose, currentUser }) {
     const formatTimeAgo = (dateString) => {
         const now = new Date();
         const past = new Date(dateString);
-
         const diffInSeconds = Math.floor((now - past) / 1000);
-
         const minutes = Math.floor(diffInSeconds / 60);
         const hours = Math.floor(diffInSeconds / 3600);
         const days = Math.floor(diffInSeconds / 86400);
-
         if (diffInSeconds < 60) return "just now";
         if (minutes < 60) return `${minutes} min ago`;
         if (hours < 24) return `${hours} hr ago`;
         if (days < 7) return `${days} d ago`;
-
         return past.toLocaleDateString();
     };
 
-    const nextSlide = (e) => {
-        e.stopPropagation();
-        setCurrentSlide((prev) => (prev + 1) % visualMedia.length);
-    };
-
-    const prevSlide = (e) => {
-        e.stopPropagation();
-        setCurrentSlide((prev) => (prev === 0 ? visualMedia.length - 1 : prev - 1));
-    };
+    const nextSlide = (e) => { e.stopPropagation(); setCurrentSlide((prev) => (prev + 1) % visualMedia.length); };
+    const prevSlide = (e) => { e.stopPropagation(); setCurrentSlide((prev) => (prev === 0 ? visualMedia.length - 1 : prev - 1)); };
 
     const toggleLike = (id) => {
         setComments((prev) =>
             prev.map((c) =>
-                c.id === id
-                    ? {
-                        ...c,
-                        likes: c.isLiked ? c.likes - 1 : c.likes + 1,
-                        isLiked: !c.isLiked,
-                    }
-                    : c
+                c.id === id ? { ...c, likes: c.isLiked ? c.likes - 1 : c.likes + 1, isLiked: !c.isLiked } : c
             )
         );
     };
@@ -303,28 +272,18 @@ export default function CommentModal({ post, onClose, currentUser }) {
                             {(post.content || post.content_text).length > CHAR_LIMIT && !isExpanded
                                 ? <>
                                     {(post.content || post.content_text).substring(0, CHAR_LIMIT)}...{' '}
-                                    <span
-                                        className={styles.readMore}
-                                        onClick={() => setIsExpanded(true)}
-                                    >
-                                        read more
-                                    </span>
+                                    <span className={styles.readMore} onClick={() => setIsExpanded(true)}>read more</span>
                                 </>
                                 : <>
                                     {post.content || post.content_text}
                                     {(post.content || post.content_text).length > CHAR_LIMIT && (
-                                        <span
-                                            className={styles.readMore}
-                                            onClick={() => setIsExpanded(false)}
-                                            style={{ marginLeft: 6 }}
-                                        >
-                                            show less
-                                        </span>
+                                        <span className={styles.readMore} onClick={() => setIsExpanded(false)} style={{ marginLeft: 6 }}>show less</span>
                                     )}
                                 </>
                             }
                         </p>
                     )}
+
                     {visualMedia.length > 0 && (
                         <div className={styles.media}>
                             {visualMedia.length > 1 && (
@@ -333,26 +292,14 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                     <button className={styles.rightArrow} onClick={nextSlide}>▶</button>
                                 </>
                             )}
-
-                            {visualMedia[currentSlide]?.type === "image" ? (
-                                <img
-                                    src={visualMedia[currentSlide].url}
-                                    className={styles.mediaItem}
-                                    alt=""
-                                />
-                            ) : (
-                                <video controls className={styles.mediaItem}>
-                                    <source src={visualMedia[currentSlide].url} />
-                                </video>
-                            )}
-
+                            {visualMedia[currentSlide]?.type === "image"
+                                ? <img src={visualMedia[currentSlide].url} className={styles.mediaItem} alt="" />
+                                : <video controls className={styles.mediaItem}><source src={visualMedia[currentSlide].url} /></video>
+                            }
                             {visualMedia.length > 1 && (
                                 <div className={styles.dots}>
                                     {visualMedia.map((_, index) => (
-                                        <span
-                                            key={index}
-                                            className={`${styles.dot} ${index === currentSlide ? styles.activeDot : ""}`}
-                                        />
+                                        <span key={index} className={`${styles.dot} ${index === currentSlide ? styles.activeDot : ""}`} />
                                     ))}
                                 </div>
                             )}
@@ -362,31 +309,17 @@ export default function CommentModal({ post, onClose, currentUser }) {
                     {files.length > 0 && (
                         <div className={styles.filesContainer}>
                             {files.map((file, i) => (
-                                <a
-                                    key={i}
-                                    href={file.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={styles.fileItem}
-                                >
+                                <a key={i} href={file.url} target="_blank" rel="noopener noreferrer" className={styles.fileItem}>
                                     📁 {file.url.split("/").pop()}
                                 </a>
                             ))}
                         </div>
                     )}
 
-
-
                     <div className={styles.actions}>
-                        <div
-                            className={`${styles.actionBtn} ${isLiked ? styles.liked : ""}`}
-                            onClick={handleLikePost}
-                        >
-                           
+                        <div className={`${styles.actionBtn} ${isLiked ? styles.liked : ""}`} onClick={handleLikePost}>
                             <img src={isLiked ? LikeActive : Like} width={20} alt="" />
-                             {likesCount > 0 && <span style={{ fontSize: "0.85rem", marginLeft: 4, opacity: 0.8 }}>{likesCount}</span>}
-                            
-                            
+                            {likesCount > 0 && <span style={{ fontSize: "0.85rem", marginLeft: 4, opacity: 0.8 }}>{likesCount}</span>}
                         </div>
 
                         <div style={{ display: "flex", alignItems: "center", gap: 4, color: "rgba(255,255,255,0.6)", fontSize: "0.9rem" }}>
@@ -401,6 +334,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
                             </div>
                         </div>
                     </div>
+
                     {showShareMenu && createPortal(
                         <div className={postStyles.shareOverlay} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
                             <div className={postStyles.shareModal} onClick={e => e.stopPropagation()}>
@@ -450,8 +384,18 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                         );
                                         return (
                                             <>
-                                                {groups.length > 0 && <div><div className={postStyles.sectionHeader}>Group Chats</div>{groups.map(renderItem)}</div>}
-                                                {directs.length > 0 && <div><div className={postStyles.sectionHeader}>Direct Messages</div>{directs.map(renderItem)}</div>}
+                                                {groups.length > 0 && (
+                                                    <div className={postStyles.sectionSection}>
+                                                        <div className={postStyles.sectionHeader}>Group Chats</div>
+                                                        {groups.map(renderItem)}
+                                                    </div>
+                                                )}
+                                                {directs.length > 0 && (
+                                                    <div className={postStyles.sectionSection}>
+                                                        <div className={postStyles.sectionHeader}>Direct Messages</div>
+                                                        {directs.map(renderItem)}
+                                                    </div>
+                                                )}
                                             </>
                                         );
                                     })()}
@@ -472,34 +416,23 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                         <Link to={`/profile/${c.user_id}`}>
                                             <img src={c.user_avatar || "/default-avatar.png"} className={styles.commentAvatar} alt="" />
                                         </Link>
-
                                         <div className={styles.commentContent}>
                                             <div className={`${styles.commentBubble} ${highlightedId === c.id ? styles.highlighted : ''}`}>
                                                 <div className={styles.commentAuthor}>{c.user}</div>
                                                 <p>{c.text}</p>
                                             </div>
-
                                             <div className={styles.commentActions}>
                                                 <span onClick={() => toggleLike(c.id)}>Like</span>
                                                 <span onClick={() => setParentComment(c)}>Reply</span>
-
                                                 {c.user === currentUser?.username && (
-                                                    <span
-                                                        className={styles.deleteBtn}
-                                                        onClick={() => deleteComment(c.id)}
-                                                    >
-                                                        Delete
-                                                    </span>
+                                                    <span className={styles.deleteBtn} onClick={() => deleteComment(c.id)}>Delete</span>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
 
                                     {replies.length > 0 && (
-                                        <div
-                                            className={styles.viewRepliesToggle}
-                                            onClick={() => toggleReplies(c.id)}
-                                        >
+                                        <div className={styles.viewRepliesToggle} onClick={() => toggleReplies(c.id)}>
                                             <span className={styles.toggleLine}></span>
                                             <span>{isExpanded ? "Hide replies" : `View replies (${replies.length})`}</span>
                                         </div>
@@ -510,32 +443,20 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                             <Link to={`/profile/${reply.user_id}`}>
                                                 <img src={reply.user_avatar || "/default-avatar.png"} className={styles.replyAvatar} alt="" />
                                             </Link>
-
                                             <div className={styles.replyContent}>
                                                 <div className={`${styles.replyBubble} ${highlightedId === reply.id ? styles.highlighted : ''}`}>
                                                     <b>{reply.user}</b>
                                                     <p>
-                                                        <span className={styles.replyingTo}>
-                                                            @{reply.replying_to || c.user}
-                                                        </span>{" "}
+                                                        <span className={styles.replyingTo}>@{reply.replying_to || c.user}</span>{" "}
                                                         {reply.text}
                                                     </p>
                                                 </div>
-
                                                 <div className={styles.commentActions}>
-                                                    <div className={styles.commentActions}>
-                                                        <span onClick={() => toggleLike(reply.id)}>Like</span>
-                                                        <span onClick={() => setParentComment(reply || c)}>Reply</span>
-
-                                                        {reply.user === currentUser?.username && (
-                                                            <span
-                                                                className={styles.deleteBtn}
-                                                                onClick={() => deleteComment(reply.id)}
-                                                            >
-                                                                Delete
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                                    <span onClick={() => toggleLike(reply.id)}>Like</span>
+                                                    <span onClick={() => setParentComment(reply || c)}>Reply</span>
+                                                    {reply.user === currentUser?.username && (
+                                                        <span className={styles.deleteBtn} onClick={() => deleteComment(reply.id)}>Delete</span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -548,15 +469,8 @@ export default function CommentModal({ post, onClose, currentUser }) {
 
                 {parentComment && (
                     <div className={styles.replyBar}>
-                        <span>
-                            Replying to <b>{parentComment.user}</b>
-                        </span>
-                        <button
-                            className={styles.closeReplyBtn}
-                            onClick={() => setParentComment(null)}
-                        >
-                            ✕
-                        </button>
+                        <span>Replying to <b>{parentComment.user}</b></span>
+                        <button className={styles.closeReplyBtn} onClick={() => setParentComment(null)}>✕</button>
                     </div>
                 )}
 
