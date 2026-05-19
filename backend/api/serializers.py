@@ -69,6 +69,7 @@ class UserSerializer(serializers.ModelSerializer):
     convention_id = serializers.SerializerMethodField()
     is_restricted = serializers.SerializerMethodField()
     friends_count = serializers.SerializerMethodField()
+    is_friend = serializers.SerializerMethodField()
     email = serializers.SerializerMethodField()
 
     class Meta:
@@ -89,6 +90,7 @@ class UserSerializer(serializers.ModelSerializer):
             "convention_id",
             "is_restricted",
             "friends_count",
+            "is_friend",
         ]
 
     def _should_restrict_data(self, obj):
@@ -115,6 +117,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_restricted(self, obj):
         return self._should_restrict_data(obj)
+
+    def get_is_friend(self, obj):
+        return Friendship.objects.filter(Q(user1=obj) | Q(user2=obj)).exists()
 
     def get_friends_count(self, obj):
         if self._should_restrict_data(obj):
@@ -334,7 +339,7 @@ class PostMediaSerializer(serializers.ModelSerializer):
             return None
         try:
             return request.build_absolute_uri(f.url) if hasattr(f, "url") else f
-        except Exception():
+        except Exception:
             return None
 
 
@@ -512,7 +517,14 @@ class NotificationSerializer(serializers.ModelSerializer):
         model_class = obj.content_type.model_class()
 
         if model_class == Post:
-            return obj.object_id
+            try:
+                post = Post.objects.get(pk=obj.object_id)
+                return {
+                    "post_id": post.post_id,
+                    "post": PostSerializer(post, context=self.context).data,
+                }
+            except Post.DoesNotExist:
+                return None
 
         if model_class == Comment:
             # find which post the comment belongs to
@@ -521,7 +533,7 @@ class NotificationSerializer(serializers.ModelSerializer):
                 return {
                     "post_id": comment.post.post_id,
                     "comment_id": comment.comment_id,
-                    "post": PostSerializer(comment.post).data,
+                    "post": PostSerializer(comment.post, context=self.context).data,
                 }
             except Comment.DoesNotExist:
                 return None
