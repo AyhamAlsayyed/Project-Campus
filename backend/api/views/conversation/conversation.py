@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
@@ -7,49 +7,43 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import (
-    Conversation,
-    ConversationMember,
-    Message,
-    MessageMedia,
-    Notification,
-)
+from ...models import Conversation, ConversationMember, Message, MessageMedia
 from ...serializers import PostSerializer
+from ...utils.notifications import send_global_notification
 from ...utils.user_type import get_user_avatar
 
 User = get_user_model()
 
 
 def notify_other_members(conversation, sent_message, actor):
-    """Notify all other members in the conversation that a new message was sent."""
-    actor_name = actor.username
-
-    # get all members except the sender
     other_members = (
         ConversationMember.objects.filter(conversation=conversation).select_related("user").exclude(user=actor)
     )
 
-    notifications = []
     for member in other_members:
-        if not member:
+        if not member or not member.user:
             continue
 
-        # skip if muted
         if member.is_muted:
             continue
 
-        notifications.append(
-            Notification(
-                receiver=member.user,
-                actor=actor,
-                type=Notification.Type.MESSAGE,
-                content=f"{actor_name} sent a message",
-                content_type=ContentType.objects.get_for_model(sent_message),
-                object_id=sent_message.message_id,
-            )
-        )
+        if conversation.is_group:
+            notification_type = "group_chat"
+            preview_content = sent_message.content or "Sent a media attachment"
+            custom_text = f"New message in group '{conversation.name or 'Group'}'. {actor.username}: {preview_content}"
+        else:
+            has_replied = Message.objects.filter(conversation=conversation, sender=member.user).exists()
+            notification_type = "dm_existing" if has_replied else "dm_request"
+            preview_content = sent_message.content or "Sent a media attachment"
+            custom_text = f"{actor.username}: {preview_content}"
 
-    Notification.objects.bulk_create(notifications)
+        send_global_notification(
+            sender=actor,
+            receiver=member.user,
+            notification_type=notification_type,
+            target_object=sent_message,
+            custom_text=custom_text,
+        )
 
 
 @api_view(["GET"])
@@ -59,6 +53,7 @@ def get_conversations(request):
 
     memberships = (
         ConversationMember.objects.filter(user=user)
+        .filter(Q(conversation__status="accepted") | Q(conversation__created_by=user))
         .select_related("conversation", "conversation__last_message", "conversation__created_by")
         .prefetch_related("conversation__members__user__profile")
     )
@@ -253,7 +248,6 @@ def send_message(request, conversation_id):
         )
         media_index += 1
 
-    # ---- notification ----
     conversation = Conversation.objects.get(conversation_id=conversation_id)
     notify_other_members(
         conversation=conversation,
@@ -293,8 +287,15 @@ def create_dm(request, user_id):
     if existing:
         return Response({"id": existing})
 
-    new_conv = Conversation.objects.create(is_group=False)
+    new_conv = Conversation.objects.create(is_group=False, created_by=current_user)
     ConversationMember.objects.create(conversation=new_conv, user=current_user)
     ConversationMember.objects.create(conversation=new_conv, user=target_user)
 
+    send_global_notification(
+        sender=current_user,
+        receiver=target_user,
+        notification_type="dm-request",
+        target_object=new_conv,
+        custom_text=f"{current_user.username} wants to start a conversation with you.",
+    )
     return Response({"id": new_conv.conversation_id}, status=201)

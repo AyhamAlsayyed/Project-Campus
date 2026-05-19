@@ -10,6 +10,7 @@ from .models import (
     Event,
     Friendship,
     Notification,
+    NotificationSetting,
     Page,
     PageRating,
     Post,
@@ -41,6 +42,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "avatar",
             "cover",
             "privacy",
+            "friends_list_privacy",
         ]
 
     def get_avatar(self, obj):
@@ -121,8 +123,44 @@ class UserSerializer(serializers.ModelSerializer):
     def get_is_friend(self, obj):
         return Friendship.objects.filter(Q(user1=obj) | Q(user2=obj)).exists()
 
+    def _can_see_friends_list(self, target_user):
+        request = self.context.get("request")
+        if not request or not request.user:
+            return False
+
+        current_user = request.user
+
+        if current_user == target_user:
+            return True
+
+        profile = getattr(target_user, "profile", None)
+        if not profile:
+            return False
+
+        privacy_setting = profile.friends_list_privacy
+
+        if privacy_setting == UserProfile.FriendsListPrivacy.EVERYONE:
+            return True
+
+        if privacy_setting == UserProfile.FriendsListPrivacy.ONLY_ME:
+            return False
+
+        if privacy_setting == UserProfile.FriendsListPrivacy.FRIENDS_ONLY:
+            if current_user.is_anonymous:
+                return False
+
+            return Friendship.objects.filter(
+                Q(user1=current_user, user2=target_user) | Q(user1=target_user, user2=current_user),
+                status=Friendship.Status.ACCEPTED,
+            ).exists()
+
+        return False
+
     def get_friends_count(self, obj):
         if self._should_restrict_data(obj):
+            return None
+
+        if not self._can_see_friends_list(obj):
             return None
 
         return Friendship.objects.filter(Q(user1=obj) | Q(user2=obj), status=Friendship.Status.ACCEPTED).count()
@@ -256,6 +294,32 @@ class UserDegreeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserDegree
         fields = ["id", "degree_type", "major", "institution"]
+
+
+class BlockedUserListSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+    university = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "avatar", "university"]
+
+    def get_avatar(self, obj):
+        request = self.context.get("request")
+        if hasattr(obj, "profile") and obj.profile.profile_image and request:
+            return request.build_absolute_uri(obj.profile.profile_image.url)
+        return None
+
+    def get_university(self, obj):
+        student = getattr(obj, "student_profile", None)
+        if student and student.university_page and student.university_page.user:
+            return student.university_page.user.username
+
+        instructor = getattr(obj, "instructor_profile", None)
+        if instructor and instructor.university_page and instructor.university_page.user:
+            return instructor.university_page.user.username
+
+        return None
 
 
 class PageSerializer(serializers.ModelSerializer):
@@ -463,93 +527,6 @@ class PostSerializer(serializers.ModelSerializer):
         ]
 
 
-class NotificationSerializer(serializers.ModelSerializer):
-    avatar = serializers.SerializerMethodField()
-    time = serializers.SerializerMethodField()
-    iconType = serializers.SerializerMethodField()
-    link = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Notification
-        fields = [
-            "notification_id",
-            "type",
-            "content",
-            "is_read",
-            "avatar",
-            "time",
-            "iconType",
-            "link",
-        ]
-
-    def get_avatar(self, obj):
-        request = self.context.get("request")
-        actor = obj.actor
-
-        if not actor:
-            return "/default-avatar.png"
-
-        avatar_url = None
-
-        if hasattr(actor, "page"):
-            if actor.page.profile_image:
-                avatar_url = actor.page.profile_image.url
-
-        elif hasattr(actor, "profile"):
-            if actor.profile.profile_image:
-                avatar_url = actor.profile.profile_image.url
-
-        if avatar_url:
-            return request.build_absolute_uri(avatar_url) if request else avatar_url
-
-        return "/default-avatar.png"
-
-    def get_time(self, obj):
-        return obj.created_at.strftime("%H:%M")
-
-    def get_iconType(self, obj):
-        return obj.type
-
-    def get_link(self, obj):
-        if not obj.content_type or not obj.object_id:
-            return None
-
-        model_class = obj.content_type.model_class()
-
-        if model_class == Post:
-            try:
-                post = Post.objects.get(pk=obj.object_id)
-                return {
-                    "post_id": post.post_id,
-                    "post": PostSerializer(post, context=self.context).data,
-                }
-            except Post.DoesNotExist:
-                return None
-
-        if model_class == Comment:
-            # find which post the comment belongs to
-            try:
-                comment = Comment.objects.select_related("post").get(pk=obj.object_id)
-                return {
-                    "post_id": comment.post.post_id,
-                    "comment_id": comment.comment_id,
-                    "post": PostSerializer(comment.post, context=self.context).data,
-                }
-            except Comment.DoesNotExist:
-                return None
-
-        if model_class == Community:
-            return obj.object_id
-
-        if model_class == Friendship or obj.type in ["friend_request", "follow"]:
-            if obj.actor:
-                if hasattr(obj.actor, "page"):
-                    return obj.actor.page.page_id
-                return obj.actor.id
-
-        return None
-
-
 class CommunitySerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source="community_id", read_only=True)
 
@@ -709,3 +686,128 @@ class EventSerializer(serializers.ModelSerializer):
             except Exception:
                 return None
         return None
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+    time = serializers.SerializerMethodField()
+    iconType = serializers.SerializerMethodField()
+    link = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Notification
+        fields = [
+            "notification_id",
+            "type",
+            "content",
+            "is_read",
+            "avatar",
+            "time",
+            "iconType",
+            "link",
+        ]
+
+    def get_avatar(self, obj):
+        request = self.context.get("request")
+        actor = obj.actor
+
+        if not actor:
+            return "/default-avatar.png"
+
+        avatar_url = None
+
+        if hasattr(actor, "page"):
+            if actor.page.profile_image:
+                avatar_url = actor.page.profile_image.url
+
+        elif hasattr(actor, "profile"):
+            if actor.profile.profile_image:
+                avatar_url = actor.profile.profile_image.url
+
+        if avatar_url:
+            return request.build_absolute_uri(avatar_url) if request else avatar_url
+
+        return "/default-avatar.png"
+
+    def get_time(self, obj):
+        return obj.created_at.strftime("%H:%M")
+
+    def get_iconType(self, obj):
+        return obj.type
+
+    def get_link(self, obj):
+        if not obj.content_type or not obj.object_id:
+            return None
+
+        model_class = obj.content_type.model_class()
+
+        if model_class == Post:
+            try:
+                post = Post.objects.get(pk=obj.object_id)
+                return {
+                    "post": PostSerializer(post, context=self.context).data,
+                }
+            except Post.DoesNotExist:
+                return None
+
+        if model_class == Comment:
+            # find which post the comment belongs to
+            try:
+                comment = Comment.objects.select_related("post").get(pk=obj.object_id)
+                return {
+                    "post_id": comment.post.post_id,
+                    "comment_id": comment.comment_id,
+                    "post": PostSerializer(comment.post, context=self.context).data,
+                }
+            except Comment.DoesNotExist:
+                return None
+
+        if model_class == Community:
+            return obj.object_id
+
+        if model_class == Friendship or obj.type in ["friend_request", "follow"]:
+            if obj.actor:
+                if hasattr(obj.actor, "page"):
+                    return obj.actor.page.page_id
+                return obj.actor.id
+
+        return None
+
+
+class NotificationSettingSerializer(serializers.ModelSerializer):
+    disabled_by_master = serializers.SerializerMethodField()
+
+    class Meta:
+        model = NotificationSetting
+        fields = [
+            "enable_all",
+            "disabled_by_master",
+            "friend_request_received",
+            "friend_request_accepted",
+            "post_reacted",
+            "post_commented",
+            "comment_replied",
+            "page_announcement",
+            "community_new_post",
+            "community_join_request_status",
+            "new_event",
+            "event_updated_cancelled",
+            "dm_existing_chat",
+            "dm_new_request",
+            "group_chat",
+            "password_changed",
+            "email_updated",
+        ]
+
+    def get_disabled_by_master(self, obj):
+        # Tells the frontend whether to visually lock/gray out the UI sub-toggles
+        return not obj.enable_all
+
+    def validate(self, data):
+        # Enforce that reminder days must remain bounded between 1 and 7
+        days = data.get("event_reminder_days")
+        if days is not None and (days < 1 or days > 7):
+            raise serializers.ValidationError(
+                {"event_reminder_days": "Reminder buffer range must be between 1 and 7 days."}
+            )
+        return data

@@ -88,4 +88,52 @@ def block_user_from_chat(request, conversation_id):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def chat_requests(request):
-    return Response("")
+    user = request.user
+
+    pending_memberships = (
+        ConversationMember.objects.filter(user=user, conversation__status=Conversation.Status.PENDING)
+        .exclude(conversation__created_by=user)
+        .select_related("conversation", "conversation__last_message")
+    )
+
+    data = []
+    for member in pending_memberships:
+        conv = member.conversation
+        last_msg = conv.last_message
+
+        sender_member = conv.members.exclude(user=user).first()
+        if not sender_member or not sender_member.user:
+            continue
+
+        sender_user = sender_member.user
+
+        data.append(
+            {
+                "conversation_id": conv.conversation_id,
+                "sender_username": sender_user.username,
+                "sender_id": sender_user.id,
+                "message_preview": last_msg.content if last_msg else "Sent an invite request.",
+                "time": last_msg.sent_at.strftime("%H:%M") if last_msg else "",
+                "date": last_msg.sent_at.isoformat() if last_msg else None,
+            }
+        )
+
+    return Response(data, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def accept_chat_request(request, conversation_id):
+    user = request.user
+
+    member = get_object_or_404(ConversationMember, conversation_id=conversation_id, user=user)
+
+    convo = member.conversation
+
+    if convo.status == Conversation.Status.ACCEPTED:
+        return Response({"message": "Conversation is already active."}, status=400)
+
+    convo.status = Conversation.Status.ACCEPTED
+    convo.save(update_fields=["status"])
+
+    return Response({"message": "Chat request accepted successfully!"}, status=200)

@@ -6,7 +6,7 @@ from .views.auth.signup.send_code import send_code
 from .views.auth.signup.signup import signup
 from .views.auth.signup.verify_code import verify_code
 from .views.comment.comments import comment_list, create_comment
-from .views.communities.communitie import (
+from .views.communities.communitie import (  # process_join_request,
     communities,
     community_detail,
     instructor_community_picks,
@@ -20,7 +20,7 @@ from .views.conversation.conversation import (
     get_messages,
     send_message,
 )
-from .views.conversation.conversation_action import (
+from .views.conversation.conversation_action import (  # accept_chat_request,
     block_user_from_chat,
     chat_requests,
     clear_chat,
@@ -30,7 +30,7 @@ from .views.conversation.conversation_action import (
     toggle_pin,
 )
 from .views.event.event_action import toggle_event_reminder
-from .views.event.events import events
+from .views.event.events import events  # , cancel_event, create_event, edit_event
 from .views.notification.notification import get_notifications, notification_delete_mark
 from .views.pages.page_update import update_page_profile
 from .views.pages.pages import (
@@ -58,9 +58,9 @@ from .views.university.university import (
     university_info,
     university_news,
 )
+from .views.user.block import toggle_block_user  # ,blocked_accounts_view
 from .views.user.friends import (
     accept_friend_request,
-    block_user,
     decline_friend_request,
     send_friend_request,
     user_friends_list,
@@ -75,7 +75,7 @@ urlpatterns = [
     path("auth/login/", login),
     path("auth/me/", me),
     path("users/<int:user_id>/", profile_view),
-    path("users/<int:user_id>/block/", block_user),
+    path("users/<int:user_id>/block/", toggle_block_user),
     path("auth/profile/update/", update_profile),  #
     path("posts/feed/", feed),
     path("posts/", feed),
@@ -83,7 +83,7 @@ urlpatterns = [
     path("posts/activity/", get_activity_posts),
     path("posts/create/", create_post),
     path("posts/<int:post_id>/like/", toggle_like),
-    path("posts/<int:post_id>/block/", block_user),
+    path("posts/<int:post_id>/block/", toggle_block_user),
     path("posts/<int:post_id>/save/", save_post),
     path("posts/<int:post_id>/pin/", toggle_pin_post),
     path("posts/<int:post_id>/", delete_post),
@@ -131,7 +131,24 @@ urlpatterns = [
     path("search/", search),
     path("reports/", create_report),
 ]
+# not yet used urls
+"""
+urlpatterns += [
+    path("", blocked_accounts_view),
+    path("", process_join_request),
+    path("", accept_chat_request),
+    path("", create_event),
+    path("", edit_event),
+    path("", cancel_event),
+    path("", ),
+    path("", ),
+    path("", ),
+    path("", ),
 
+]
+"""
+
+# not yet used urls but for the page
 urlpatterns += [
     path("auth/page/register/", page_register),
     path("auth/page/login/", page_login),

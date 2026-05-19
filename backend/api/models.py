@@ -64,12 +64,19 @@ class UserProfile(models.Model):
         PUBLIC = "public", "Public"
         PRIVATE = "private", "Private"
 
+    class FriendsListPrivacy(models.TextChoices):
+        EVERYONE = "EVERYONE", "Everyone"
+        FRIENDS_ONLY = "FRIENDS_ONLY", "Friends Only"
+        ONLY_ME = "ONLY_ME", "Only Me"
+
     privacy = models.CharField(
         max_length=10,
         choices=Privacy.choices,
         default=Privacy.PUBLIC,
     )
-
+    friends_list_privacy = models.CharField(
+        max_length=15, choices=FriendsListPrivacy.choices, default=FriendsListPrivacy.EVERYONE
+    )
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.ONLINE)
     primary_phone = models.CharField(max_length=11, blank=True, null=True)
     secondary_phone = models.CharField(max_length=11, blank=True, null=True)
@@ -688,12 +695,22 @@ class CommentReaction(models.Model):
 class Conversation(models.Model):
     conversation_id = models.BigAutoField(primary_key=True, db_column="conversation_id")
 
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending Request"
+        ACCEPTED = "accepted", "Accepted"
+
     name = models.CharField("conversation name", max_length=100, blank=True, null=True)
     image = models.ImageField("conversation image", upload_to="conversation_images", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_group = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)
     is_academic = models.BooleanField(default=False)
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -715,7 +732,7 @@ class Conversation(models.Model):
 
     def clean(self):
         if not self.created_by:
-            raise ValidationError("Group must have a creator.")
+            raise ValidationError("Conversation must have a creator.")
 
     class Meta:
         db_table = "conversation"
@@ -1042,3 +1059,39 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.receiver} - {self.type}"
+
+
+class NotificationSetting(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notification_settings",
+        db_column="user_id",
+    )
+
+    enable_all = models.BooleanField(default=True)
+    friend_request = models.BooleanField(default=True)
+    post_reacted = models.BooleanField(default=True)
+    post_commented = models.BooleanField(default=True)
+    comment_replied = models.BooleanField(default=True)
+
+    community_new_post = models.BooleanField(default=True)
+    community_join_request_status = models.BooleanField(default=True)
+
+    new_event = models.BooleanField(default=True)
+    event_updated_cancelled = models.BooleanField(default=True)
+
+    page_announcement = models.BooleanField(default=True)
+
+    dm_existing_chat = models.BooleanField(default=True)
+    dm_new_request = models.BooleanField(default=True)
+    group_chat = models.BooleanField(default=True)
+
+    password_changed = models.BooleanField(default=True)
+    email_updated = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "user_notification_setting"
+
+    def __str__(self):
+        return f"Notification Settings for {self.user.username}"

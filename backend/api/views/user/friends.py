@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Friendship, Notification, Post
+from ...models import Friendship, Notification
 
 User = get_user_model()
 
@@ -132,46 +132,6 @@ def decline_friend_request(request):
     return Response({"message": "Friend request rejected"}, status=200)
 
 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def block_user(request, post_id=None, user_id=None):
-    current_user = request.user
-    target_user = ""
-    if post_id:
-        try:
-            post = Post.objects.get(pk=post_id)
-            target_user = post.author
-        except Post.DoesNotExist:
-            return Response({"error": "Post not found"}, status=404)
-
-    elif user_id:
-        try:
-            target_user = User.objects.get(pk=user_id)
-        except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=404)
-
-    if not target_user:
-        return Response({"error": "Cannot block page authors yet"}, status=400)
-
-    if current_user == target_user:
-        return Response({"error": "You cannot block yourself"}, status=400)
-
-    friendship = Friendship.objects.filter(
-        Q(user1=current_user, user2=target_user) | Q(user1=target_user, user2=current_user)
-    ).first()
-
-    if friendship:
-        if friendship.status == Friendship.Status.BLOCKED:
-            friendship.status = Friendship.Status.REJECTED
-        else:
-            friendship.status = Friendship.Status.BLOCKED
-        friendship.save()
-    else:
-        Friendship.objects.create(user1=current_user, user2=target_user, status=Friendship.Status.BLOCKED)
-
-    return Response({"message": "User blocked successfully"}, status=200)
-
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def user_friends_list(request, user_id):
@@ -181,6 +141,25 @@ def user_friends_list(request, user_id):
         return Response({"error": "User not found"}, status=404)
 
     current_user = request.user
+
+    if current_user != target_user:
+        profile = getattr(target_user, "profile", None)
+        if profile:
+            privacy_setting = getattr(profile, "friends_list_privacy", "EVERYONE")
+
+            if privacy_setting == "ONLY_ME":
+                return Response({"message": "This user's friends list is private."}, status=200)
+
+            elif privacy_setting == "FRIENDS_ONLY":
+                is_friend = Friendship.objects.filter(
+                    Q(user1=current_user, user2=target_user) | Q(user1=target_user, user2=current_user),
+                    status=Friendship.Status.ACCEPTED,
+                ).exists()
+
+                if not is_friend:
+                    return Response(
+                        {"message": "You must be friends with this user to view their friends list."}, status=200
+                    )
 
     # all friends of target user
     target_friendships = Friendship.objects.filter(

@@ -1,41 +1,11 @@
-from django.contrib.contenttypes.models import ContentType
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Comment, Notification, Post
+from ...models import Comment, Post
 from ...utils.blocked_users import get_blocked_user_sets, is_normal_post
+from ...utils.notifications import send_global_notification
 from ...utils.user_type import get_user_avatar
-
-
-def handle_comment_notification(comment, parent_comment, actor):
-    post = comment.post
-
-    # if parent_comment then its a replay to a comment if not it a comment on a post
-    if parent_comment:
-        receiver = parent_comment.author
-    else:
-        receiver = post.author
-
-    # dont send if the user commented on his own post or comment
-    if actor and receiver and actor == receiver:
-        return
-
-    actor_name = actor.username
-
-    if parent_comment:
-        text = f"{actor_name} replied to your comment"
-    else:
-        text = f"{actor_name} commented on your post"
-
-    Notification.objects.create(
-        receiver=receiver,
-        actor=actor,
-        type=Notification.Type.COMMENT,
-        content=text,
-        content_type=ContentType.objects.get_for_model(comment),
-        object_id=comment.comment_id,
-    )
 
 
 @api_view(["GET"])
@@ -102,6 +72,11 @@ def create_comment(request, post_id):
     if not text:
         return Response({"error": "Text is required"}, status=400)
 
+    try:
+        post = Post.objects.get(post_id=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=404)
+
     parent_comment = None
     if parent_id:
         parent_comment = Comment.objects.filter(comment_id=parent_id, post_id=post_id).first()
@@ -113,10 +88,11 @@ def create_comment(request, post_id):
         parent_comment=parent_comment,
     )
 
-    handle_comment_notification(
-        comment=comment,
-        parent_comment=parent_comment,
-        actor=author,
+    send_global_notification(
+        sender=author,
+        receiver=parent_comment.author if parent_comment else post.author,
+        notification_type="comment_reply" if parent_comment else "post_comment",
+        target_object=comment,
     )
 
     avatar = get_user_avatar(request, author)

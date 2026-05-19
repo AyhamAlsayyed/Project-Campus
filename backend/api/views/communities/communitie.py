@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-from django.contrib.contenttypes.models import ContentType
 from django.db.models import (
     Case,
     Count,
@@ -18,8 +17,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Community, CommunityMember, Friendship, Instructor, Notification
+from ...models import Community, CommunityMember, Friendship, Instructor
 from ...serializers import CommunitySerializer
+from ...utils.notifications import send_global_notification
 
 
 def file_url(request, f):
@@ -33,28 +33,22 @@ def file_url(request, f):
         return None
 
 
-def notify_community_admins(community, actor, notif_type, text):
-    # send notification to owner and admins
+def notify_community_admins(community, actor, text):
+
     admins = CommunityMember.objects.filter(
         community=community,
         role__in=[CommunityMember.Role.OWNER, CommunityMember.Role.ADMIN],
-        status="approved",
+        status=CommunityMember.Status.APPROVED,
     ).select_related("user")
 
-    notifications = [
-        Notification(
+    for member in admins:
+        send_global_notification(
+            sender=actor,
             receiver=member.user,
-            actor=actor,
-            type=notif_type,
-            content=text,
-            content_type=ContentType.objects.get_for_model(community),
-            object_id=community.community_id,
+            notification_type="community_admin_alert",
+            target_object=community,
+            custom_text=text,
         )
-        for member in admins
-        if member.user != actor  # don't notify yourself
-    ]
-
-    Notification.objects.bulk_create(notifications)
 
 
 @api_view(["GET"])
@@ -190,14 +184,13 @@ def join_community(request, community_id):
     _, created = CommunityMember.objects.get_or_create(
         user=user,
         community=community,
-        defaults={"status": "approved"},
+        defaults={"status": CommunityMember.Status.APPROVED, "role": CommunityMember.Role.MEMBER},
     )
 
     if created:
         notify_community_admins(
             community=community,
             actor=user,
-            notif_type=Notification.Type.SYSTEM,
             text=f"{user.username} joined {community.name}",
         )
 
@@ -217,18 +210,77 @@ def request_join_community(request, community_id):
     _, created = CommunityMember.objects.get_or_create(
         user=user,
         community=community,
-        defaults={"status": "pending"},
+        defaults={"status": CommunityMember.Status.PENDING, "role": CommunityMember.Role.MEMBER},
     )
 
     if created:
         notify_community_admins(
             community=community,
             actor=user,
-            notif_type=Notification.Type.SYSTEM,
             text=f"{user.username} requested to join {community.name}",
         )
 
     return Response({"message": "Request sent"})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def process_join_request(request, community_id):
+    admin_user = request.user
+    student_id = request.data.get("user_id")
+    action = request.data.get("action")
+
+    if action not in ["approve", "reject"]:
+        return Response({"error": "Invalid action. Use 'approve' or 'reject'."}, status=400)
+
+    try:
+        community = Community.objects.get(community_id=community_id)
+    except Community.DoesNotExist:
+        return Response({"error": "Community not found"}, status=404)
+
+    is_authorized = CommunityMember.objects.filter(
+        community=community,
+        user=admin_user,
+        role__in=[CommunityMember.Role.OWNER, CommunityMember.Role.ADMIN],
+        status="approved",
+    ).exists()
+
+    if not is_authorized:
+        return Response({"error": "You do not have permission to manage this community."}, status=403)
+
+    membership = (
+        CommunityMember.objects.filter(community=community, user_id=student_id, status="pending")
+        .select_related("user")
+        .first()
+    )
+
+    if not membership:
+        return Response({"error": "No pending join request found for this user."}, status=404)
+
+    if action == "approve":
+        membership.status = "approved"
+        membership.save()
+
+        send_global_notification(
+            sender=admin_user,
+            receiver=membership.user,
+            notification_type="community_join_status",
+            target_object=community,
+            custom_text=f"Your request to join {community.name} was approved!",
+        )
+        return Response({"message": "User approved successfully."})
+
+    else:  # action == "reject"
+        membership.delete()
+
+        send_global_notification(
+            sender=admin_user,
+            receiver=membership.user,
+            notification_type="community_join_status",
+            target_object=community,
+            custom_text=f"Your request to join {community.name} was rejected.",
+        )
+        return Response({"message": "User request rejected."})
 
 
 @api_view(["GET"])
