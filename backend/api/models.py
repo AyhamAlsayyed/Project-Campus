@@ -60,6 +60,16 @@ class UserProfile(models.Model):
         OFFLINE = "offline", "Offline"
         SUSPENDED = "suspended", "Suspended"
 
+    class Privacy(models.TextChoices):
+        PUBLIC = "public", "Public"
+        PRIVATE = "private", "Private"
+
+    privacy = models.CharField(
+        max_length=10,
+        choices=Privacy.choices,
+        default=Privacy.PUBLIC,
+    )
+
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.ONLINE)
     primary_phone = models.CharField(max_length=11, blank=True, null=True)
     secondary_phone = models.CharField(max_length=11, blank=True, null=True)

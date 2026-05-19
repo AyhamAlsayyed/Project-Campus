@@ -40,6 +40,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "birth_date",
             "avatar",
             "cover",
+            "privacy",
         ]
 
     def get_avatar(self, obj):
@@ -55,14 +56,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return None
 
 
-class UserDegreeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserDegree
-        fields = ["id", "degree_type", "major", "institution"]
-
-
 class UserSerializer(serializers.ModelSerializer):
-    profile = UserProfileSerializer(read_only=True)
+    profile = serializers.SerializerMethodField()
     degrees = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
     university = serializers.SerializerMethodField()
@@ -72,6 +67,9 @@ class UserSerializer(serializers.ModelSerializer):
     academic_title = serializers.SerializerMethodField()
     instructor_type = serializers.SerializerMethodField()
     convention_id = serializers.SerializerMethodField()
+    is_restricted = serializers.SerializerMethodField()
+    friends_count = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -89,7 +87,100 @@ class UserSerializer(serializers.ModelSerializer):
             "instructor_type",
             "degrees",
             "convention_id",
+            "is_restricted",
+            "friends_count",
         ]
+
+    def _should_restrict_data(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
+            return True
+
+        current_user = request.user
+        target_user = obj
+
+        if current_user == target_user:
+            return False
+
+        profile = getattr(target_user, "profile", None)
+        if not profile or profile.privacy == UserProfile.Privacy.PUBLIC:
+            return False
+
+        is_friend = Friendship.objects.filter(
+            Q(user1=current_user, user2=target_user) | Q(user1=target_user, user2=current_user),
+            status=Friendship.Status.ACCEPTED,
+        ).exists()
+
+        return not is_friend
+
+    def get_is_restricted(self, obj):
+        return self._should_restrict_data(obj)
+
+    def get_friends_count(self, obj):
+        if self._should_restrict_data(obj):
+            return None
+
+        return Friendship.objects.filter(Q(user1=obj) | Q(user2=obj), status=Friendship.Status.ACCEPTED).count()
+
+    def get_profile(self, obj):
+        profile = getattr(obj, "profile", None)
+        if not profile:
+            return None
+
+        serializer = UserProfileSerializer(profile, context=self.context)
+        data = serializer.data
+
+        if self._should_restrict_data(obj):
+            return {
+                "username": obj.username,
+                "avatar": data.get("avatar"),
+                "privacy": data.get("privacy"),
+                #
+                "academic_email": None,
+                "bio": None,
+                "status": "offline",
+                "primary_phone": None,
+                "secondary_phone": None,
+                "birth_date": None,
+                "cover": None,
+            }
+        return data
+
+    def get_degrees(self, obj):
+        if self._should_restrict_data(obj):
+            return []
+
+        DEGREE_ORDER = {"PhD": 1, "Master": 2, "Bachelor": 3, "Diploma": 4}
+        degrees_qs = obj.degrees.all()
+        sorted_degrees = sorted(degrees_qs, key=lambda d: DEGREE_ORDER.get(d.degree_type, 99))
+        return UserDegreeSerializer(sorted_degrees, many=True).data
+
+    def get_email(self, obj):
+        if self._should_restrict_data(obj):
+            return None
+        return obj.email
+
+    def get_convention_id(self, obj):
+        if self._should_restrict_data(obj):
+            return None
+
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
+            return None
+
+        current_user = request.user
+        target_user = obj
+
+        if current_user == target_user:
+            return None
+
+        existing = (
+            Conversation.objects.filter(is_group=False)
+            .filter(members__user=current_user)
+            .filter(members__user=target_user)
+            .first()
+        )
+        return existing.conversation_id if existing else None
 
     def get_role(self, obj):
         if hasattr(obj, "page") and obj.page:
@@ -124,58 +215,42 @@ class UserSerializer(serializers.ModelSerializer):
         return student.major if student else ""
 
     def get_department(self, obj):
+        if self._should_restrict_data(obj):
+            return ""
         instructor = getattr(obj, "instructor_profile", None)
         return instructor.department if instructor else ""
 
     def get_academic_title(self, obj):
+        if self._should_restrict_data(obj):
+            return ""
         instructor = getattr(obj, "instructor_profile", None)
         return instructor.get_academic_title_display() if instructor and instructor.academic_title else ""
 
     def get_instructor_type(self, obj):
+        if self._should_restrict_data(obj):
+            return ""
         instructor = getattr(obj, "instructor_profile", None)
         return instructor.get_instructor_type_display() if instructor and instructor.instructor_type else ""
 
-    def get_degrees(self, obj):
-        DEGREE_ORDER = {"PhD": 1, "Master": 2, "Bachelor": 3, "Diploma": 4}
-        degrees_qs = obj.degrees.all()
-        sorted_degrees = sorted(degrees_qs, key=lambda d: DEGREE_ORDER.get(d.degree_type, 99))
-        return UserDegreeSerializer(sorted_degrees, many=True).data
-
-    def get_convention_id(self, obj):
-        request = self.context.get("request")
-
-        if not request or not request.user or request.user.is_anonymous:
-            return None
-
-        current_user = request.user
-        target_user = obj
-
-        if current_user == target_user:
-            return None
-
-        existing = (
-            Conversation.objects.filter(is_group=False)
-            .filter(members__user=current_user)
-            .filter(members__user=target_user)
-            .first()
-        )
-
-        return existing.conversation_id if existing else None
-
 
 class UserMinimalSerializer(serializers.ModelSerializer):
-    full_name = serializers.CharField(source="profile.full_name", read_only=True)
     avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "full_name", "avatar"]
+        fields = ["id", "username", "avatar"]
 
     def get_avatar(self, obj):
         request = self.context.get("request")
         if hasattr(obj, "profile") and obj.profile.profile_image and request:
             return request.build_absolute_uri(obj.profile.profile_image.url)
         return None
+
+
+class UserDegreeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserDegree
+        fields = ["id", "degree_type", "major", "institution"]
 
 
 class PageSerializer(serializers.ModelSerializer):
