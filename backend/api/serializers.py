@@ -805,6 +805,16 @@ class ConversationMemberSerializer(serializers.ModelSerializer):
     unread_count = serializers.SerializerMethodField()
     is_group = serializers.BooleanField(source="conversation.is_group", read_only=True)
     conversations_owner = serializers.SerializerMethodField()
+    other_member_id = serializers.SerializerMethodField()
+    allow_members_to_edit_settings = serializers.BooleanField(
+        source="conversation.allow_members_to_edit_settings", read_only=True
+    )
+    allow_members_to_send_messages = serializers.BooleanField(
+        source="conversation.allow_members_to_send_messages", read_only=True
+    )
+    allow_members_to_add_others = serializers.BooleanField(
+        source="conversation.allow_members_to_add_others", read_only=True
+    )
 
     class Meta:
         model = ConversationMember
@@ -820,6 +830,10 @@ class ConversationMemberSerializer(serializers.ModelSerializer):
             "is_muted",
             "is_group",
             "conversations_owner",
+            "other_member_id",
+            "allow_members_to_edit_settings",
+            "allow_members_to_send_messages",
+            "allow_members_to_add_others",
         ]
 
     def _get_other_member(self, obj):
@@ -883,3 +897,12 @@ class ConversationMemberSerializer(serializers.ModelSerializer):
         if conv.is_group and conv.created_by:
             return conv.created_by.username
         return ""
+
+    def get_other_member_id(self, obj):
+        conv = obj.conversation
+        if conv.is_group:
+            return None
+        other_member_obj = self._get_other_member(obj)
+        if other_member_obj and other_member_obj.user:
+            return other_member_obj.user.id
+        return None

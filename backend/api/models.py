@@ -82,6 +82,7 @@ class UserProfile(models.Model):
     friends_list_privacy = models.CharField(
         max_length=15, choices=FriendsListPrivacy.choices, default=FriendsListPrivacy.EVERYONE
     )
+    message_privacy = models.CharField(max_length=15, choices=MessagePrivacy.choices, default=MessagePrivacy.EVERYONE)
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.ONLINE)
     primary_phone = models.CharField(max_length=11, blank=True, null=True)
     secondary_phone = models.CharField(max_length=11, blank=True, null=True)
@@ -736,6 +737,18 @@ class Conversation(models.Model):
         blank=True,
         related_name="+",
         db_column="last_message_id",
+    )
+
+    allow_members_to_edit_settings = models.BooleanField(
+        default=True,
+    )
+
+    allow_members_to_send_messages = models.BooleanField(
+        default=True,
+    )
+
+    allow_members_to_add_others = models.BooleanField(
+        default=True,
     )
 
     def clean(self):
