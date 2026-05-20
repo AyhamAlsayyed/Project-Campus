@@ -6,13 +6,17 @@ from .views.auth.signup.send_code import send_code
 from .views.auth.signup.signup import signup
 from .views.auth.signup.verify_code import verify_code
 from .views.comment.comments import comment_list, create_comment
-from .views.communities.communitie import (  # process_join_request,
+from .views.communities.community import (  # process_join_request,
     communities,
     community_detail,
     instructor_community_picks,
     join_community,
     request_join_community,
     toggle_pick,
+)
+from .views.communities.community_action import (
+    leave_community,
+    toggle_community_notifications,
 )
 from .views.conversation.conversation import (
     create_dm,
@@ -113,6 +117,8 @@ urlpatterns = [
     path("communities/<int:community_id>/join/", join_community),
     path("communities/<int:community_id>/request/", request_join_community),
     path("communities/<int:community_id>/", community_detail),
+    path("communities/<int:pk>/notify/", toggle_community_notifications),
+    path("communities/<int:pk>/leave/", leave_community),
     path("users/<int:instructor_id>/community-picks/", instructor_community_picks),
     path("<int:instructor_id>/toggle_picks/", toggle_pick),
     path("communities/<int:community_id>/posts/", feed),

@@ -13,6 +13,7 @@ from django.db.models import (
 )
 from django.db.models.functions import Now
 from django.shortcuts import get_object_or_404
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -159,7 +160,13 @@ def community_detail(request, community_id):
     try:
         c = Community.objects.get(community_id=community_id)
     except Community.DoesNotExist:
-        return Response({"error": "Not found"}, status=404)
+        return Response({"error": "Community not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    is_muted = False
+    user = request.user
+
+    if user and user.is_authenticated:
+        is_muted = CommunityMember.objects.filter(community=c, user=user, is_muted=True).exists()
 
     return Response(
         {
@@ -167,7 +174,9 @@ def community_detail(request, community_id):
             "name": c.name,
             "description": c.description,
             "is_private": c.privacy == "private",
-        }
+            "is_muted": is_muted,
+        },
+        status=status.HTTP_200_OK,
     )
 
 

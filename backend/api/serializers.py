@@ -538,6 +538,7 @@ class CommunitySerializer(serializers.ModelSerializer):
     is_private = serializers.SerializerMethodField()
     is_verified = serializers.BooleanField(source="verified")
 
+    is_muted = serializers.SerializerMethodField()
     is_joined = serializers.BooleanField(read_only=True)
     request_sent = serializers.BooleanField(read_only=True)
     members_count = serializers.IntegerField(read_only=True)
@@ -554,6 +555,7 @@ class CommunitySerializer(serializers.ModelSerializer):
             "is_private",
             "is_verified",
             "is_joined",
+            "is_muted",
             "request_sent",
             "members_count",
             "friends_count",
@@ -571,6 +573,16 @@ class CommunitySerializer(serializers.ModelSerializer):
 
     def get_is_private(self, obj):
         return obj.privacy == "private"
+
+    def get_is_muted(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
+            return False
+
+        if hasattr(obj, "user_membership_is_muted"):
+            return getattr(obj, "user_membership_is_muted")
+
+        return CommunityMember.objects.filter(community=obj, user=request.user, is_muted=True).exists()
 
     def get_sample_members(self, obj):
         request = self.context.get("request")
