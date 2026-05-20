@@ -25,6 +25,7 @@ from .views.conversation.conversation_action import (  # accept_chat_request,
     chat_requests,
     clear_chat,
     delete_or_leave_chat,
+    mark_read,
     mark_unread,
     toggle_mute,
     toggle_pin,
@@ -58,7 +59,7 @@ from .views.university.university import (
     university_info,
     university_news,
 )
-from .views.user.block import toggle_block_user  # ,blocked_accounts_view
+from .views.user.block import toggle_block_user  # ,blocked_accounts_list
 from .views.user.friends import (
     accept_friend_request,
     decline_friend_request,
@@ -66,7 +67,13 @@ from .views.user.friends import (
     user_friends_list,
 )
 from .views.user.recently_contacted import recently_contacted
-from .views.user.user import get_events, me, profile_view, update_profile
+from .views.user.user import (
+    check_username,
+    get_events,
+    me,
+    profile_view,
+    update_profile,
+)
 
 urlpatterns = [
     path("auth/send_code/", send_code),
@@ -76,6 +83,7 @@ urlpatterns = [
     path("auth/me/", me),
     path("users/<int:user_id>/", profile_view),
     path("users/<int:user_id>/block/", toggle_block_user),
+    path("auth/check-username/", check_username),  #
     path("auth/profile/update/", update_profile),  #
     path("posts/feed/", feed),
     path("posts/", feed),
@@ -110,11 +118,12 @@ urlpatterns = [
     path("conversations/create/<int:user_id>/", create_dm),
     path("chats/<int:conversation_id>/pin/", toggle_pin),
     path("chats/<int:conversation_id>/mute/", toggle_mute),
+    path("chats/<int:conversation_id>/mark-read/", mark_read),
     path("chats/<int:conversation_id>/mark-unread/", mark_unread),
     path("chats/<int:conversation_id>/", delete_or_leave_chat),
     path("chats/<int:conversation_id>/clear/", clear_chat),
     path("chats/<int:conversation_id>/block/", block_user_from_chat),
-    path("chat-requests/", chat_requests),  #
+    path("chat-requests/", chat_requests),
     path("university/news/", university_news),
     path("university/events/", university_events),
     path("university/doctors/", university_doctors),
@@ -134,7 +143,7 @@ urlpatterns = [
 # not yet used urls
 """
 urlpatterns += [
-    path("", blocked_accounts_view),
+    path("", blocked_accounts_list),
     path("", process_join_request),
     path("", accept_chat_request),
     path("", create_event),

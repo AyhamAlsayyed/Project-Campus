@@ -365,6 +365,8 @@ class Friendship(models.Model):
         default=RelationType.USER_TO_USER,
     )
 
+    is_muted = models.BooleanField(default=False)
+
     class Meta:
         db_table = "friendship"
         constraints = [
@@ -430,6 +432,7 @@ class CommunityMember(models.Model):
     )
 
     joined_at = models.DateTimeField(auto_now_add=True)
+    is_muted = models.BooleanField(default=False)
 
     class Meta:
         db_table = "community_member"

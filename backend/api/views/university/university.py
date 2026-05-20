@@ -15,10 +15,6 @@ def file_url(request, f):
 
 
 def get_user_university(user):
-    """
-    Helper to look up the university page linked to a student or instructor.
-    Uses select_related where appropriate to keep queries efficient.
-    """
     student = getattr(user, "student_profile", None)
     if student and student.university_page:
         return student.university_page
@@ -135,7 +131,6 @@ def university_doctors(request):
     if not university_page:
         return Response([])
 
-    # Reaching through Instructor -> User -> UserProfile matching your new models
     instructors = (
         Instructor.objects.filter(university_page=university_page)
         .select_related("user", "user__profile")
@@ -149,8 +144,8 @@ def university_doctors(request):
 
         raw_name = profile.full_name if profile and profile.full_name else user_obj.username
 
-        # Uses your model's AcademicTitle choices safely
-        title_display = instructor.get_academic_title_display() if instructor.academic_title else ""
+        display_method = getattr(instructor, "get_academic_title_display", None)
+        title_display = display_method() if display_method and instructor.academic_title else ""
         full_name = f"{title_display} {raw_name}".strip()
 
         doctors_data.append(
@@ -159,7 +154,7 @@ def university_doctors(request):
                 "username": user_obj.username,
                 "name": full_name,
                 "desc": instructor.department or "Faculty Member",
-                "tag": instructor.get_instructor_type_display() if instructor.instructor_type else None,
+                "tag": title_display,
                 "avatar": file_url(request, profile.profile_image) if profile and profile.profile_image else None,
             }
         )

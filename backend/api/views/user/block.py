@@ -13,28 +13,23 @@ User = get_user_model()
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def blocked_accounts_view(request):
+def blocked_accounts_list(request):
     user = request.user
     search_query = request.query_params.get("search", "").strip()
 
-    # 1. Fetch all rows where the current user initiated a block (user1 is the actor)
     block_queryset = Friendship.objects.filter(user1=user, status=Friendship.Status.BLOCKED).select_related(
         "user2__profile",
         "user2__student_profile__university_page__user",
         "user2__instructor_profile__university_page__user",
     )
 
-    # Total count of all blocked accounts before filtering by a search query string
     total_blocked_count = block_queryset.count()
 
-    # 2. Extract the actual target User objects (which will always be user2 in this direction)
     blocked_users_list = [relation.user2 for relation in block_queryset if relation.user2]
 
-    # 3. Handle search bar query matching if a user types in the search bar
     if search_query:
         blocked_users_list = [u for u in blocked_users_list if search_query.lower() in u.username.lower()]
 
-    # 4. Serialize and return data
     serializer = BlockedUserListSerializer(blocked_users_list, many=True, context={"request": request})
 
     return Response({"blocked_count": total_blocked_count, "results": serializer.data}, status=status.HTTP_200_OK)

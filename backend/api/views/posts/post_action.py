@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ...models import Message, Notification, Post, PostReaction, SavedPost
+from ...utils.notifications import send_global_notification
 
 
 @api_view(["POST"])
@@ -21,23 +22,23 @@ def toggle_like(request, post_id):
     if existing:
         existing.delete()
         liked = False
+
+        post_content_type = ContentType.objects.get_for_model(post)
+        Notification.objects.filter(
+            receiver=post.author,
+            actor=user,
+            content_type=post_content_type,
+            object_id=post.post_id,
+            type=Notification.Type.COMMENT,
+        ).delete()
+
     else:
         PostReaction.objects.create(post=post, user=user)
         liked = True
 
-        receiver = post.author
-
-        should_notify = not (receiver == user)
-
-        if should_notify:
-            Notification.objects.create(
-                receiver=receiver,
-                actor=user,
-                type=Notification.Type.LIKE,
-                content=f"{user.username} liked your post",
-                content_type=ContentType.objects.get_for_model(post),
-                object_id=post.post_id,
-            )
+        send_global_notification(
+            sender=user, receiver=post.author, notification_type="post_reaction", target_object=post
+        )
 
     likes_count = PostReaction.objects.filter(post=post, user__isnull=False).count()
 

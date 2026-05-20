@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from rest_framework import status
@@ -9,11 +10,17 @@ from ...models import (
     Community,
     CommunityMember,
     Friendship,
+    Instructor,
     Notification,
+    NotificationSetting,
+    Page,
     Post,
     PostMedia,
+    Student,
 )
 from ...serializers import PostSerializer
+
+User = get_user_model()
 
 
 @api_view(["POST"])
@@ -24,6 +31,13 @@ def create_post(request):
     medias = request.FILES.getlist("images")
     files = request.FILES.getlist("files")
     community_id = request.data.get("community")
+
+    post_type_input = request.data.get("post_type", Post.PostType.NORMAL)
+    is_announcement = post_type_input == Post.PostType.ANNOUNCEMENT
+
+    if is_announcement and not medias:
+        return Response({"error": "An image is required for the announcement."}, status=status.HTTP_400_BAD_REQUEST)
+
     community = None
     if community_id:
         try:
@@ -31,12 +45,11 @@ def create_post(request):
         except Community.DoesNotExist:
             return Response({"error": "Community not found"}, status=status.HTTP_400_BAD_REQUEST)
 
-    post = Post.objects.create(content_text=content, author=user, community=community)
+    post = Post.objects.create(content_text=content, author=user, community=community, post_type=post_type_input)
 
     media_index = 0
     for media in medias:
         content_type = media.content_type
-
         media_type = PostMedia.MediaType.FILE
 
         if content_type.startswith("image/"):
@@ -55,55 +68,120 @@ def create_post(request):
         )
         media_index += 1
 
-    # ---- notification ----
-    if community:
-        # notify all community members except the post author
-        members = (
-            CommunityMember.objects.filter(community=community, status="approved")
-            .exclude(user=user)
-            .select_related("user")
-        )
+        # notification
+        recipient_users = set()
+        notification_content_text = f"{user.username} posted something new"
+        db_enum_type = Notification.Type.POST_CREATED
 
-        notifications = [
-            Notification(
-                receiver=member.user,
-                actor=user,
-                type=Notification.Type.ANNOUNCEMENTS,
-                content=f"{user.username} posted in {community.name}",
-                content_type=ContentType.objects.get_for_model(post),
-                object_id=post.post_id,
+        has_page = Page.objects.filter(user=user).first()
+
+        if is_announcement:
+            db_enum_type = Notification.Type.ANNOUNCEMENTS
+            page_name = has_page.page_full_name if has_page else user.username
+
+            if has_page and has_page.page_type == Page.PageType.UNIVERSITY:
+                notification_type_key = "university_official"
+                notification_content_text = f"Official University Announcement: {page_name} posted an update."
+
+                student_recipients = Student.objects.filter(university_page=has_page).values_list("user_id", flat=True)
+                instructor_recipients = Instructor.objects.filter(university_page=has_page).values_list(
+                    "user_id", flat=True
+                )
+
+                combined_ids = set(student_recipients).union(set(instructor_recipients))
+                recipient_users.update(User.objects.filter(id__in=combined_ids).exclude(id=user.id))
+            else:
+                notification_type_key = "page_announcement"
+                notification_content_text = f"New announcement from {page_name}"
+
+                if has_page:
+                    page_followers = (
+                        Friendship.objects.filter(
+                            user2=user,
+                            relation_type=Friendship.RelationType.USER_TO_PAGE,
+                            status=Friendship.Status.FOLLOWING,
+                        )
+                        .exclude(is_muted=True)
+                        .select_related("user1")
+                    )
+                    recipient_users.update([f.user1 for f in page_followers if f.user1])
+                else:
+                    recipient_users.update(User.objects.exclude(id=user.id))
+
+        elif has_page:
+            notification_type_key = "page_announcement"
+            db_enum_type = Notification.Type.ANNOUNCEMENTS
+            notification_content_text = f"New post from {has_page.page_full_name}"
+
+            page_followers = (
+                Friendship.objects.filter(
+                    user2=user, relation_type=Friendship.RelationType.USER_TO_PAGE, status=Friendship.Status.FOLLOWING
+                )
+                .exclude(is_muted=True)
+                .select_related("user1")
             )
-            for member in members
-            if member.user
-        ]
+            recipient_users.update([f.user1 for f in page_followers if f.user1])
 
-        Notification.objects.bulk_create(notifications)
-    else:
-        # notify all friends
-        friendships = Friendship.objects.filter(
-            Q(user1=user) | Q(user2=user), status=Friendship.Status.ACCEPTED
-        ).select_related("user1", "user2")
+        elif community:
+            notification_type_key = "community_post"
+            notification_content_text = f"{user.username} posted in {community.name}"
+            db_enum_type = Notification.Type.ANNOUNCEMENTS
 
-        friends = []
-        for friendship in friendships:
-            friend = friendship.user2 if friendship.user1 == user else friendship.user1
-            if friend:
-                friends.append(friend)
-
-        notifications = [
-            Notification(
-                receiver=friend,
-                actor=user,
-                type=Notification.Type.POST_CREATED,
-                content=f"{user.username} posted something new",
-                content_type=ContentType.objects.get_for_model(post),
-                object_id=post.post_id,
+            members = (
+                CommunityMember.objects.filter(community=community, status=CommunityMember.Status.APPROVED)
+                .exclude(user=user)
+                .exclude(is_muted=True)
+                .select_related("user")
             )
-            for friend in friends
-        ]
+            recipient_users.update([m.user for m in members if m.user])
 
-        if notifications:
-            Notification.objects.bulk_create(notifications)
+        else:
+            notification_type_key = "community_post"
+
+            friendships = Friendship.objects.filter(
+                Q(user1=user) | Q(user2=user), status=Friendship.Status.ACCEPTED
+            ).select_related("user1", "user2")
+
+            for friendship in friendships:
+                friend = friendship.user2 if friendship.user1 == user else friendship.user1
+                if friend:
+                    recipient_users.add(friend)
+
+        if recipient_users:
+            recipient_ids = [u.id for u in recipient_users]
+            settings_lookup = {
+                setting.user_id: setting for setting in NotificationSetting.objects.filter(user_id__in=recipient_ids)
+            }
+
+            notifications_to_create = []
+            post_content_type = ContentType.objects.get_for_model(post)
+
+            for recipient in recipient_users:
+                profile = settings_lookup.get(recipient.id)
+
+                if profile:
+                    if notification_type_key != "university_official":
+                        if not profile.enable_all:
+                            continue
+
+                        if notification_type_key == "page_announcement" and not profile.page_announcement:
+                            continue
+                        elif notification_type_key == "community_post" and not profile.community_new_post:
+                            continue
+
+                notifications_to_create.append(
+                    Notification(
+                        receiver=recipient,
+                        actor=user,
+                        type=db_enum_type,
+                        content=notification_content_text,
+                        content_type=post_content_type,
+                        object_id=post.post_id,
+                    )
+                )
+
+            if notifications_to_create:
+                Notification.objects.bulk_create(notifications_to_create)
 
     serializer = PostSerializer(post, context={"request": request})
     return Response(serializer.data, status=status.HTTP_201_CREATED)

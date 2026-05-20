@@ -46,6 +46,15 @@ def clear_chat(request, conversation_id):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+def mark_read(request, conversation_id):
+    member = get_object_or_404(ConversationMember, conversation_id=conversation_id, user=request.user)
+    member.last_read_at = timezone.now()
+    member.save(update_fields=["last_read_at"])
+    return Response({"status": "marked unread"})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def mark_unread(request, conversation_id):
     member = get_object_or_404(ConversationMember, conversation_id=conversation_id, user=request.user)
     member.last_read_at = timezone.now() - timezone.timedelta(days=1)
@@ -91,7 +100,11 @@ def chat_requests(request):
     user = request.user
 
     pending_memberships = (
-        ConversationMember.objects.filter(user=user, conversation__status=Conversation.Status.PENDING)
+        ConversationMember.objects.filter(
+            user=user,
+            conversation__status=Conversation.Status.PENDING,
+            conversation__is_group=False,
+        )
         .exclude(conversation__created_by=user)
         .select_related("conversation", "conversation__last_message")
     )

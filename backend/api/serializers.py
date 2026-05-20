@@ -7,8 +7,10 @@ from .models import (
     Community,
     CommunityMember,
     Conversation,
+    ConversationMember,
     Event,
     Friendship,
+    Message,
     Notification,
     NotificationSetting,
     Page,
@@ -21,6 +23,7 @@ from .models import (
     UserProfile,
 )
 from .utils.blocked_users import get_all_blocked_relationships, is_normal_post
+from .utils.user_type import get_user_avatar
 
 User = get_user_model()
 
@@ -72,14 +75,14 @@ class UserSerializer(serializers.ModelSerializer):
     is_restricted = serializers.SerializerMethodField()
     friends_count = serializers.SerializerMethodField()
     friendship_status = serializers.SerializerMethodField()
-    email = serializers.SerializerMethodField()
+    personal_email = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             "id",
             "username",
-            "email",
+            "personal_email",
             "profile",
             "role",
             "university",
@@ -208,7 +211,7 @@ class UserSerializer(serializers.ModelSerializer):
         sorted_degrees = sorted(degrees_qs, key=lambda d: DEGREE_ORDER.get(d.degree_type, 99))
         return UserDegreeSerializer(sorted_degrees, many=True).data
 
-    def get_email(self, obj):
+    def get_personal_email(self, obj):
         if self._should_restrict_data(obj):
             return None
         return obj.email
@@ -445,11 +448,6 @@ class PostSerializer(serializers.ModelSerializer):
         return False
 
     def get_likes_count(self, obj):
-        """
-        For normal posts: exclude likes from blocked users
-        For community posts: show all likes
-        """
-
         if not is_normal_post(obj):
             # Community post - show all likes
             return obj.reactions.count()
@@ -465,10 +463,6 @@ class PostSerializer(serializers.ModelSerializer):
         return obj.reactions.count()
 
     def get_comments_count(self, obj):
-        """
-        For normal posts: exclude comments from blocked users
-        For community posts: show all comments
-        """
         if not is_normal_post(obj):
             return obj.comments.count()
 
@@ -568,10 +562,8 @@ class CommunitySerializer(serializers.ModelSerializer):
 
     def get_image(self, obj):
         request = self.context.get("request")
-
         if not obj.banner_image:
             return None
-
         try:
             return request.build_absolute_uri(obj.banner_image.url)
         except Exception:
@@ -600,7 +592,6 @@ class CommunitySerializer(serializers.ModelSerializer):
         )
 
         final_users = []
-
         friend_memberships = CommunityMember.objects.filter(
             community=obj, status="approved", user_id__in=friends_ids
         ).select_related("user", "user__profile")[:3]
@@ -612,13 +603,11 @@ class CommunitySerializer(serializers.ModelSerializer):
         needed_slots = 3 - len(final_users)
         if needed_slots > 0:
             already_included_ids = [u.id for u in final_users]
-
             general_memberships = (
                 CommunityMember.objects.filter(community=obj, status="approved")
                 .exclude(user_id__in=already_included_ids)
                 .select_related("user", "user__profile")[:needed_slots]
             )
-
             for rel in general_memberships:
                 if rel.user:
                     final_users.append(rel.user)
@@ -629,7 +618,6 @@ class CommunitySerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
         if ret.get("members_count") is None:
             ret["members_count"] = CommunityMember.objects.filter(community=instance, status="approved").count()
-
         return ret
 
 
@@ -664,7 +652,6 @@ class EventSerializer(serializers.ModelSerializer):
 
     def get_avatar(self, obj):
         request = self.context.get("request")
-
         if obj.page and obj.page.profile_image:
             try:
                 return request.build_absolute_uri(obj.page.profile_image.url)
@@ -674,7 +661,6 @@ class EventSerializer(serializers.ModelSerializer):
 
     def get_banner(self, obj):
         request = self.context.get("request")
-
         if obj.page and obj.page.banner_image:
             try:
                 return request.build_absolute_uri(obj.page.banner_image.url)
@@ -687,15 +673,6 @@ class EventSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.reminders.filter(user=request.user).exists()
         return False
-
-    def image(self, obj):
-        request = self.context.get("request")
-        if obj.image:
-            try:
-                return request.build_absolute_uri(obj.image.url)
-            except Exception:
-                return None
-        return None
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -725,14 +702,10 @@ class NotificationSerializer(serializers.ModelSerializer):
             return "/default-avatar.png"
 
         avatar_url = None
-
-        if hasattr(actor, "page"):
-            if actor.page.profile_image:
-                avatar_url = actor.page.profile_image.url
-
-        elif hasattr(actor, "profile"):
-            if actor.profile.profile_image:
-                avatar_url = actor.profile.profile_image.url
+        if hasattr(actor, "page") and actor.page.profile_image:
+            avatar_url = actor.page.profile_image.url
+        elif hasattr(actor, "profile") and actor.profile.profile_image:
+            avatar_url = actor.profile.profile_image.url
 
         if avatar_url:
             return request.build_absolute_uri(avatar_url) if request else avatar_url
@@ -740,7 +713,7 @@ class NotificationSerializer(serializers.ModelSerializer):
         return "/default-avatar.png"
 
     def get_time(self, obj):
-        return obj.created_at.strftime("%H:%M")
+        return obj.created_at.strftime("%H:%M") if obj.created_at else ""
 
     def get_iconType(self, obj):
         return obj.type
@@ -780,7 +753,6 @@ class NotificationSerializer(serializers.ModelSerializer):
                 if hasattr(obj.actor, "page"):
                     return obj.actor.page.page_id
                 return obj.actor.id
-
         return None
 
 
@@ -792,8 +764,7 @@ class NotificationSettingSerializer(serializers.ModelSerializer):
         fields = [
             "enable_all",
             "disabled_by_master",
-            "friend_request_received",
-            "friend_request_accepted",
+            "friend_request",
             "post_reacted",
             "post_commented",
             "comment_replied",
@@ -813,11 +784,102 @@ class NotificationSettingSerializer(serializers.ModelSerializer):
         # Tells the frontend whether to visually lock/gray out the UI sub-toggles
         return not obj.enable_all
 
+    """
     def validate(self, data):
-        # Enforce that reminder days must remain bounded between 1 and 7
         days = data.get("event_reminder_days")
         if days is not None and (days < 1 or days > 7):
             raise serializers.ValidationError(
                 {"event_reminder_days": "Reminder buffer range must be between 1 and 7 days."}
             )
         return data
+    """
+
+
+class ConversationMemberSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source="conversation.conversation_id", read_only=True)
+    name = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
+    preview = serializers.SerializerMethodField()
+    time = serializers.SerializerMethodField()
+    last_message_time = serializers.SerializerMethodField()
+    unread_count = serializers.SerializerMethodField()
+    is_group = serializers.BooleanField(source="conversation.is_group", read_only=True)
+    conversations_owner = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ConversationMember
+        fields = [
+            "id",
+            "name",
+            "avatar",
+            "preview",
+            "time",
+            "last_message_time",
+            "unread_count",
+            "is_pinned",
+            "is_muted",
+            "is_group",
+            "conversations_owner",
+        ]
+
+    def _get_other_member(self, obj):
+        request = self.context.get("request")
+        if not request:
+            return None
+
+        conv = obj.conversation
+        all_members = conv.members.all()
+        return next((m for m in all_members if m.user != request.user), None)
+
+    def get_name(self, obj):
+        conv = obj.conversation
+        if conv.is_group:
+            return conv.name or "Group"
+
+        other_member_obj = self._get_other_member(obj)
+        if other_member_obj:
+            other_user = other_member_obj.user
+            return other_user.username if other_user else "Deleted Account"
+        return "Unknown"
+
+    def get_avatar(self, obj):
+        request = self.context.get("request")
+        conv = obj.conversation
+        if conv.is_group:
+            return request.build_absolute_uri(conv.image.url) if conv.image else ""
+
+        other_member_obj = self._get_other_member(obj)
+        if other_member_obj and other_member_obj.user:
+            return get_user_avatar(request, other_member_obj.user)
+        return ""
+
+    def get_preview(self, obj):
+        last_msg = obj.conversation.last_message
+        return last_msg.content if last_msg else ""
+
+    def get_time(self, obj):
+        last_msg = obj.conversation.last_message
+        if last_msg and last_msg.sent_at:
+            return last_msg.sent_at.strftime("%H:%M")
+        return ""
+
+    def get_last_message_time(self, obj):
+        last_msg = obj.conversation.last_message
+        return last_msg.sent_at if last_msg else None
+
+    def get_unread_count(self, obj):
+        conv = obj.conversation
+        msg_query = Message.objects.filter(conversation=conv)
+
+        if obj.last_read_at:
+            msg_query = msg_query.filter(sent_at__gt=obj.last_read_at)
+        if obj.cleared_at:
+            msg_query = msg_query.filter(sent_at__gt=obj.cleared_at)
+
+        return msg_query.count()
+
+    def get_conversations_owner(self, obj):
+        conv = obj.conversation
+        if conv.is_group and conv.created_by:
+            return conv.created_by.username
+        return ""

@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ...models import Conversation, ConversationMember, Message, MessageMedia
-from ...serializers import PostSerializer
+from ...serializers import ConversationMemberSerializer, PostSerializer
 from ...utils.notifications import send_global_notification
 from ...utils.user_type import get_user_avatar
 
@@ -58,55 +58,17 @@ def get_conversations(request):
         .prefetch_related("conversation__members__user__profile")
     )
 
-    data = []
+    sorted_memberships = sorted(
+        memberships,
+        key=lambda m: (
+            m.conversation.last_message.sent_at if m.conversation.last_message else m.conversation.created_at
+        ),
+        reverse=True,
+    )
 
-    for member in memberships:
-        conv = member.conversation
-        last_msg = conv.last_message
-        conversation_owner = ""
-        avatar = ""
+    serializer = ConversationMemberSerializer(sorted_memberships, many=True, context={"request": request})
 
-        if conv.is_group:
-            name = conv.name or "Group"
-            if conv.image:
-                avatar = request.build_absolute_uri(conv.image.url)
-            if conv.created_by:
-                conversation_owner = conv.created_by.username
-        else:
-            other_member_obj = conv.members.exclude(user=user).first()
-            name = "Unknown"
-
-            if other_member_obj:
-                other_user = other_member_obj.user
-                if other_user:
-                    name = other_user.username
-                    avatar = get_user_avatar(request, other_user)
-                else:
-                    name = "Deleted Account"
-
-        msg_query = Message.objects.filter(conversation=conv)
-        if member.last_read_at:
-            msg_query = msg_query.filter(sent_at__gt=member.last_read_at)
-        if member.cleared_at:
-            msg_query = msg_query.filter(sent_at__gt=member.cleared_at)
-
-        unread_count = msg_query.count()
-
-        data.append(
-            {
-                "id": conv.conversation_id,
-                "name": name,
-                "avatar": avatar,
-                "preview": last_msg.content if last_msg else "",
-                "time": last_msg.sent_at.strftime("%H:%M") if last_msg else "",
-                "last_message_time": last_msg.sent_at if last_msg else None,
-                "unread_count": unread_count,
-                "is_pinned": member.is_pinned,
-                "is_group": conv.is_group,
-                "conversations_owner": conversation_owner,
-            }
-        )
-    return Response(data)
+    return Response(serializer.data)
 
 
 @api_view(["GET"])
