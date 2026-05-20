@@ -190,11 +190,11 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
           const notifData = await notifRes.json();
           const formattedNotifs = notifData.map(item => {
             const notifLink = item.link || {};
+            const linkPost = notifLink.post || null;
 
-            // link can be a raw post_id number OR an object
             const resolvedPostId = typeof item.link === 'number'
               ? item.link
-              : (notifLink.post_id || item.post_id || null);
+              : (linkPost?.post_id || notifLink.post_id || item.post_id || null);
 
             return {
               id: item.notification_id || item.id,
@@ -207,8 +207,9 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
               type: item.type || item.iconType || "Notification",
               text: item.message || item.content,
               link: notifLink,
-              post_id: resolvedPostId,   // ← now correctly set for likes
-              comment_id: notifLink.comment_id || item.comment_id || null,
+              post_id: resolvedPostId,
+              post: linkPost,   // ← pass full post object through
+              comment_id: typeof item.link === 'object' ? (notifLink.comment_id || item.comment_id || null) : null,
               actor_id: item.actor_id || null,
               event_id: item.event_id || null,
               time: timeAgo(item.time) || item.time,
@@ -253,27 +254,26 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
   }, [user]);
 
   const handleNotificationClick = (n) => {
-    console.log("RAW notification:", n);
-
-    const post_id = typeof n.link === 'number' ? n.link : (n.link?.post_id || n.post_id);
-    const comment_id = typeof n.link === 'object' ? (n.link?.comment_id || n.comment_id) : null;
-    const post = n.link?.post || null;
-
-    console.log("RESOLVED → post_id:", post_id, "comment_id:", comment_id, "onOpenPost:", !!onOpenPost);
+    const post_id = n.post_id || (typeof n.link === 'number' ? n.link : n.link?.post_id);
+    const comment_id = n.comment_id || null;
+    const post = n.post || n.link?.post || null;
 
     setShowNotifications(false);
 
     if (post_id) {
-      if (onOpenPost) {
-        onOpenPost(post_id, comment_id, post);
-      } else {
-        navigate('/home', {
-          state: { openPost: { post, postId: post_id, commentId: comment_id } }
-        });
-      }
-      return;
+        if (onOpenPost) {
+            onOpenPost(post_id, comment_id, post);
+        } else {
+            navigate('/home', {
+                state: { openPost: { post, postId: post_id, commentId: comment_id } }
+            });
+        }
+        return;
     }
-  };
+
+    if (n.event_id) navigate(`/events/${n.event_id}`);
+    else if (n.actor_id) navigate(`/profile/${n.actor_id}`);
+};
   useEffect(() => {
     const updateRect = () => {
       if (showSearchDropdown && searchInputRef.current) {

@@ -1,5 +1,6 @@
 import styles from './chatspage.module.css'
 import Header from '../../components/pagelayout/header/header';
+import { Navigate, useNavigate } from 'react-router-dom';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import { useParams } from "react-router-dom";
 import { useState, useEffect, useRef } from 'react';
@@ -8,7 +9,9 @@ import {
     Trash2, Ban, Reply, AlertCircle, ChevronLeft, Info, CheckSquare,
     Paperclip, Send, FileText
 } from 'lucide-react';
+import BackButton from '../../Assets/icons/arrow-left.png'
 import CommentModal from '../../components/comments/commentsModal';
+import GroupInfoPanel from '../../components/chatPageComponents/groupInfoPanel';
 function MarqueeText({ text, className }) {
     const wrapperRef = useRef(null);
     const textRef = useRef(null);
@@ -65,6 +68,9 @@ export default function ChatsPage() {
     const fileInputRef = useRef(null);
     const menuRef = useRef(null);
     const messageRefs = useRef({});
+    const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+    const [showGroupInfo, setShowGroupInfo] = useState(false);
+    const navigate = useNavigate()
 
 
     const { chatId } = useParams();
@@ -133,7 +139,7 @@ export default function ChatsPage() {
                 setAttachmentMenuOpen(false);
             }
 
-            // ... rest of your existing checks
+
             if (activeChatMenuOpen &&
                 activeChatMenuRef.current &&
                 !activeChatMenuRef.current.contains(event.target)) {
@@ -462,6 +468,7 @@ export default function ChatsPage() {
 
                                                 <div className={styles.chatItem} onClick={async () => {
                                                     setSelectedChat(chat);
+                                                    navigate(`/chats/${chat.id}`);
 
                                                     const res = await fetch(`http://localhost:8000/api/chats/${chat.id}/messages/`, {
                                                         headers: {
@@ -511,12 +518,21 @@ export default function ChatsPage() {
                                                                 <span className={styles.unreadBadge}>{chat.unread_count}</span>
                                                             )}
 
-                                                            {/* Per-chat 3-dot menu */}
+                                                           
                                                             <div className={styles.menuWrapper} ref={openMenuId === chat.id ? menuRef : null}>
                                                                 <button
                                                                     className={styles.moreButton}
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
+                                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                                        const dropdownHeight = 280; 
+                                                                        const spaceBelow = window.innerHeight - rect.bottom;
+
+                                                                        const top = spaceBelow < dropdownHeight
+                                                                            ? rect.top - dropdownHeight + 35
+                                                                            : rect.bottom + 8;
+
+                                                                        setMenuPosition({ top, right: window.innerWidth - rect.right });
                                                                         setOpenMenuId(openMenuId === chat.id ? null : chat.id);
                                                                     }}
                                                                 >
@@ -524,7 +540,7 @@ export default function ChatsPage() {
                                                                 </button>
 
                                                                 {openMenuId === chat.id && (
-                                                                    <div className={styles.dropdownMenu}>
+                                                                    <div className={styles.dropdownMenu} style={{ top: menuPosition.top, right: menuPosition.right }}>
                                                                         <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); togglePin(chat.id); setOpenMenuId(null); }}>
                                                                             <Pin size={14} /> {chat.is_pinned ? 'Unpin chat' : 'Pin chat'}
                                                                         </button>
@@ -565,327 +581,353 @@ export default function ChatsPage() {
                     ) : (
 
                         <div className={`${styles.chatList} ${styles.activeChatOuter}`}>
-                            <div className={styles.innerChatContainer}>
+                            {showGroupInfo ? (
+                                <GroupInfoPanel
+                                    group={selectedChat}
+                                    members={[]}
+                                    onBack={() => setShowGroupInfo(false)}
+                                    onClearChat={() => clearChat(selectedChat.id)}
+                                    onDeleteGroup={() => deleteChat(selectedChat.id)}
+                                    API={API}
+                                />
+                            ) : (
+                                <div className={styles.innerChatContainer}>
 
-                                <div className={styles.activeChatHeader}>
-                                    <div className={styles.headerLeftWrapper}>
-                                        <button className={styles.iconBtn} onClick={() => setSelectedChat(null)}>
-                                            <ChevronLeft size={24} />
-                                        </button>
-                                        <img
-
-                                            src={selectedChat.avatar?.startsWith('http') ? selectedChat.avatar : `${API}${selectedChat.avatar}`}
-                                            alt={selectedChat.name}
-                                            className={styles.activeChatAvatar}
-                                        />
-                                        <div className={styles.headerTitleInfo}>
-                                            {selectedChat.is_group && (
-                                                <span className={styles.professorName}>
-                                                    {selectedChat.conversations_owner}
-                                                </span>
-                                            )}
-                                            <h2 className={styles.groupName}>{selectedChat.name}</h2>
-                                            <p className={styles.memberSubtitle}>{selectedChat.members}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className={styles.headerRightWrapper}>
-                                        <button className={styles.iconBtn}><Search size={30} /></button>
-                                        <div className={styles.menuWrapper} ref={activeChatMenuRef}>
-                                            <button className={styles.iconBtn} onClick={() => setActiveChatMenuOpen(!activeChatMenuOpen)}>
-                                                <MoreHorizontal size={30} />
+                                    <div className={styles.activeChatHeader}>
+                                        <div className={styles.headerLeftWrapper}>
+                                            <button className={styles.iconBtn} onClick={() => {
+                                                setSelectedChat(null);
+                                                navigate('/chats');
+                                            }}>
+                                                <img
+                                                    src={BackButton}
+                                                    alt=""
+                                                    style={{
+                                                        width: 22,
+                                                        height: 22,
+                                                        filter: "brightness(0) invert(1) opacity(0.9)"
+                                                    }}
+                                                />
                                             </button>
-                                            {activeChatMenuOpen && (
-                                                <div className={styles.dropdownMenu}>
-                                                    <button className={styles.menuItem}>
-                                                        <Info size={14} /> {selectedChat.is_group ? 'Group Info' : 'User Info'}
-                                                    </button>
-                                                    <button className={styles.menuItem}>
-                                                        <BellOff size={14} /> Mute notifications
-                                                    </button>
-                                                    <button className={styles.menuItem}>
-                                                        <CheckSquare size={14} /> Select messages
-                                                    </button>
-                                                    <div className={styles.menuDivider}></div>
-                                                    <button className={`${styles.menuItem} ${styles.destructive}`}>
-                                                        <AlertCircle size={14} /> {selectedChat.is_group ? 'Report group' : 'Report user'}
-                                                    </button>
-                                                </div>
-                                            )}
+                                            <img
+
+                                                src={selectedChat.avatar?.startsWith('http') ? selectedChat.avatar : `${API}${selectedChat.avatar}`}
+                                                alt={selectedChat.name}
+                                                className={styles.activeChatAvatar}
+                                            />
+                                            <div className={styles.headerTitleInfo}>
+                                                {selectedChat.is_group && (
+                                                    <span className={styles.professorName}>
+                                                        {selectedChat.conversations_owner}
+                                                    </span>
+                                                )}
+                                                <h2 className={styles.groupName}>{selectedChat.name}</h2>
+                                                <p className={styles.memberSubtitle}>{selectedChat.members}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className={styles.headerRightWrapper}>
+                                            <button className={styles.iconBtn}><Search size={30} /></button>
+                                            <div className={styles.menuWrapper} ref={activeChatMenuRef}>
+                                                <button className={styles.iconBtn} onClick={() => setActiveChatMenuOpen(!activeChatMenuOpen)}>
+                                                    <MoreHorizontal size={30} />
+                                                </button>
+                                                {activeChatMenuOpen && (
+                                                    <div className={styles.dropdownMenu}>
+                                                   
+                                                        <button className={styles.menuItem} onClick={() => setActiveChatMenuOpen(false) || setShowGroupInfo(true)}>
+                                                            <Info size={14} /> {selectedChat.is_group ? 'Group Info' : 'User Info'}
+                                                        </button>
+
+                                                        <button className={styles.menuItem}>
+                                                            <BellOff size={14} /> Mute notifications
+                                                        </button>
+                                                        <button className={styles.menuItem}>
+                                                            <CheckSquare size={14} /> Select messages
+                                                        </button>
+                                                        <div className={styles.menuDivider}></div>
+                                                        <button className={`${styles.menuItem} ${styles.destructive}`}>
+                                                            <AlertCircle size={14} /> {selectedChat.is_group ? 'Report group' : 'Report user'}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
 
-                                <div className={styles.activeChatInnerContainer}>
+                                    <div className={styles.activeChatInnerContainer}>
 
-                                    <div className={styles.chatArea}>
-                                        <div className={styles.messagesScrollArea} ref={messagesScrollRef}>
-                                            {(() => {
-                                                let lastDate = null;
-                                                return messages.map((msg) => {
-                                                    const msgDate = msg.date ? new Date(msg.date) : null;
-                                                    let dateLabel = null;
-                                                    if (msgDate) {
-                                                        const today = new Date();
-                                                        const yesterday = new Date();
-                                                        yesterday.setDate(today.getDate() - 1);
+                                        <div className={styles.chatArea}>
+                                            <div className={styles.messagesScrollArea} ref={messagesScrollRef}>
+                                                {(() => {
+                                                    let lastDate = null;
+                                                    return messages.map((msg) => {
+                                                        const msgDate = msg.date ? new Date(msg.date) : null;
+                                                        let dateLabel = null;
+                                                        if (msgDate) {
+                                                            const today = new Date();
+                                                            const yesterday = new Date();
+                                                            yesterday.setDate(today.getDate() - 1);
 
-                                                        const isToday = msgDate.toDateString() === today.toDateString();
-                                                        const isYesterday = msgDate.toDateString() === yesterday.toDateString();
+                                                            const isToday = msgDate.toDateString() === today.toDateString();
+                                                            const isYesterday = msgDate.toDateString() === yesterday.toDateString();
 
-                                                        const dateStr = msgDate.toDateString();
+                                                            const dateStr = msgDate.toDateString();
 
-                                                        if (dateStr !== lastDate) {
-                                                            lastDate = dateStr;
-                                                            if (isToday) dateLabel = "Today";
-                                                            else if (isYesterday) dateLabel = "Yesterday";
-                                                            else dateLabel = msgDate.toLocaleDateString(undefined, {
-                                                                weekday: 'long', month: 'short', day: 'numeric'
-                                                            });
+                                                            if (dateStr !== lastDate) {
+                                                                lastDate = dateStr;
+                                                                if (isToday) dateLabel = "Today";
+                                                                else if (isYesterday) dateLabel = "Yesterday";
+                                                                else dateLabel = msgDate.toLocaleDateString(undefined, {
+                                                                    weekday: 'long', month: 'short', day: 'numeric'
+                                                                });
+                                                            }
                                                         }
-                                                    }
 
-                                                    return (
-                                                        <div key={msg.id} ref={(el) => (messageRefs.current[msg.id] = el)}>
-                                                            {dateLabel && (
-                                                                <div className={styles.dateSeparator}>
-                                                                    <span>{dateLabel}</span>
-                                                                </div>
-                                                            )}
-                                                            <div className={`${styles.messageWrapper} ${msg.senderId === 'me' ? styles.messageMineWrapper : styles.messageOtherWrapper}`}>
-                                                                {msg.senderId === 'other' && (
-                                                                    <img
-                                                                        src={msg.avatar?.startsWith('http') ? msg.avatar : `${API}${msg.avatar}`}
-                                                                        alt="Sender"
-                                                                        className={styles.messageAvatar}
-                                                                    />
-                                                                )}
-                                                                <div className={styles.messageContentBlock}>
-                                                                    <div className={`${styles.messageMeta} ${msg.senderId === 'me' ? styles.metaRight : styles.metaLeft}`}>
-                                                                        <span className={styles.msgSenderName}>{msg.senderId === 'me' ? 'You' : msg.sender}</span>
-                                                                        <span className={styles.msgTime}>{msg.time}</span>
+                                                        return (
+                                                            <div key={msg.id} ref={(el) => (messageRefs.current[msg.id] = el)}>
+                                                                {dateLabel && (
+                                                                    <div className={styles.dateSeparator}>
+                                                                        <span>{dateLabel}</span>
                                                                     </div>
-                                                                    <div className={styles.messageRow}>
-                                                                        <div className={`${styles.messageBubble} ${msg.senderId === 'me' ? styles.bubbleMine : styles.bubbleOther}`}>
-                                                                            {msg.reply_to_details && (
-                                                                                <div className={styles.replyQuoteBox} onClick={() => scrollToMessage(msg.reply_to_details.id)}>
+                                                                )}
+                                                                <div className={`${styles.messageWrapper} ${msg.senderId === 'me' ? styles.messageMineWrapper : styles.messageOtherWrapper}`}>
+                                                                    {msg.senderId === 'other' && (
+                                                                        <img
+                                                                            src={msg.avatar?.startsWith('http') ? msg.avatar : `${API}${msg.avatar}`}
+                                                                            alt="Sender"
+                                                                            className={styles.messageAvatar}
+                                                                        />
+                                                                    )}
+                                                                    <div className={styles.messageContentBlock}>
+                                                                        <div className={`${styles.messageMeta} ${msg.senderId === 'me' ? styles.metaRight : styles.metaLeft}`}>
+                                                                            <span className={styles.msgSenderName}>{msg.senderId === 'me' ? 'You' : msg.sender}</span>
+                                                                            <span className={styles.msgTime}>{msg.time}</span>
+                                                                        </div>
+                                                                        <div className={styles.messageRow}>
+                                                                            <div className={`${styles.messageBubble} ${msg.senderId === 'me' ? styles.bubbleMine : styles.bubbleOther}`}>
+                                                                                {msg.reply_to_details && (
+                                                                                    <div className={styles.replyQuoteBox} onClick={() => scrollToMessage(msg.reply_to_details.id)}>
 
-                                                                                    <span className={styles.replySender}>
-                                                                                        {(msg.reply_to_details.senderId === 'me' || msg.reply_to_details.sender_name === user?.username)
-                                                                                            ? 'You '
-                                                                                            : msg.reply_to_details.sender_name}
-                                                                                    </span>
-                                                                                    <p className={styles.replyTextPreview}>{msg.reply_to_details.text}</p>
-                                                                                </div>
-                                                                            )}
-                                                                            {msg.post ? (
-                                                                                <div
-                                                                                    onClick={() => setOpenPost(msg.post)}
-                                                                                    style={{
-                                                                                        cursor: "pointer",
-                                                                                        background: "rgba(255,255,255,0.06)",
-                                                                                        border: "1px solid rgba(255,255,255,0.1)",
-                                                                                        borderRadius: 14,
-                                                                                        overflow: "hidden",
-                                                                                        maxWidth: 280,
-                                                                                        transition: "background 0.2s"
-                                                                                    }}
-                                                                                    onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
-                                                                                    onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                                                                                >
-                                                                                    {/* Banner/image */}
-                                                                                    {(msg.post.media?.[0]?.url || msg.post.image) && (
-                                                                                        <img
-                                                                                            src={msg.post.media?.[0]?.url || msg.post.image}
-                                                                                            alt=""
-                                                                                            style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }}
-                                                                                        />
-                                                                                    )}
-                                                                                    <div style={{ padding: "10px 12px" }}>
-                                                                                        {/* Author row */}
-                                                                                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                                                                                        <span className={styles.replySender}>
+                                                                                            {(msg.reply_to_details.senderId === 'me' || msg.reply_to_details.sender_name === user?.username)
+                                                                                                ? 'You '
+                                                                                                : msg.reply_to_details.sender_name}
+                                                                                        </span>
+                                                                                        <p className={styles.replyTextPreview}>{msg.reply_to_details.text}</p>
+                                                                                    </div>
+                                                                                )}
+                                                                                {msg.post ? (
+                                                                                    <div
+                                                                                        onClick={() => setOpenPost(msg.post)}
+                                                                                        style={{
+                                                                                            cursor: "pointer",
+                                                                                            background: "rgba(255,255,255,0.06)",
+                                                                                            border: "1px solid rgba(255,255,255,0.1)",
+                                                                                            borderRadius: 14,
+                                                                                            overflow: "hidden",
+                                                                                            maxWidth: 280,
+                                                                                            transition: "background 0.2s"
+                                                                                        }}
+                                                                                        onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
+                                                                                        onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                                                                                    >
+                                                                                        {/* Banner/image */}
+                                                                                        {(msg.post.media?.[0]?.url || msg.post.image) && (
                                                                                             <img
-                                                                                                src={msg.post.author?.avatar || "/default-avatar.png"}
+                                                                                                src={msg.post.media?.[0]?.url || msg.post.image}
                                                                                                 alt=""
-                                                                                                style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }}
+                                                                                                style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }}
                                                                                             />
-                                                                                            <span style={{ color: "white", fontWeight: 600, fontSize: "0.82rem" }}>
-                                                                                                {msg.post.author?.username || "User"}
+                                                                                        )}
+                                                                                        <div style={{ padding: "10px 12px" }}>
+                                                                                            {/* Author row */}
+                                                                                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                                                                                                <img
+                                                                                                    src={msg.post.author?.avatar || "/default-avatar.png"}
+                                                                                                    alt=""
+                                                                                                    style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }}
+                                                                                                />
+                                                                                                <span style={{ color: "white", fontWeight: 600, fontSize: "0.82rem" }}>
+                                                                                                    {msg.post.author?.username || "User"}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                            {/* Post text preview */}
+                                                                                            {msg.post.content_text && (
+                                                                                                <p style={{
+                                                                                                    color: "rgba(255,255,255,0.75)",
+                                                                                                    fontSize: "0.78rem",
+                                                                                                    margin: 0,
+                                                                                                    lineHeight: 1.4,
+                                                                                                    display: "-webkit-box",
+                                                                                                    WebkitLineClamp: 3,
+                                                                                                    WebkitBoxOrient: "vertical",
+                                                                                                    overflow: "hidden"
+                                                                                                }}>
+                                                                                                    {msg.post.content_text}
+                                                                                                </p>
+                                                                                            )}
+                                                                                            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", marginTop: 6, display: "block" }}>
+                                                                                                Tap to view post
                                                                                             </span>
                                                                                         </div>
-                                                                                        {/* Post text preview */}
-                                                                                        {msg.post.content_text && (
-                                                                                            <p style={{
-                                                                                                color: "rgba(255,255,255,0.75)",
-                                                                                                fontSize: "0.78rem",
-                                                                                                margin: 0,
-                                                                                                lineHeight: 1.4,
-                                                                                                display: "-webkit-box",
-                                                                                                WebkitLineClamp: 3,
-                                                                                                WebkitBoxOrient: "vertical",
-                                                                                                overflow: "hidden"
-                                                                                            }}>
-                                                                                                {msg.post.content_text}
-                                                                                            </p>
-                                                                                        )}
-                                                                                        <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", marginTop: 6, display: "block" }}>
-                                                                                            Tap to view post
-                                                                                        </span>
                                                                                     </div>
-                                                                                </div>
-                                                                            ) : msg.type === 'file' ? (
-                                                                                <div className={styles.fileAttachment}>
-                                                                                    <div className={styles.fileIcon}><FileText size={24} /></div>
-                                                                                    <div className={styles.fileDetails}>
-                                                                                        <strong>{msg.text}</strong>
-                                                                                        <p>{msg.subtext}</p>
+                                                                                ) : msg.type === 'file' ? (
+                                                                                    <div className={styles.fileAttachment}>
+                                                                                        <div className={styles.fileIcon}><FileText size={24} /></div>
+                                                                                        <div className={styles.fileDetails}>
+                                                                                            <strong>{msg.text}</strong>
+                                                                                            <p>{msg.subtext}</p>
+                                                                                        </div>
                                                                                     </div>
-                                                                                </div>
-                                                                            ) : (
-                                                                                <span style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</span>
-                                                                            )}
+                                                                                ) : (
+                                                                                    <span style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</span>
+                                                                                )}
+                                                                            </div>
+                                                                            <button
+                                                                                className={styles.replyIconButton}
+                                                                                onClick={() => setReplyingTo(msg)}
+                                                                            >
+                                                                                <Reply size={16} />
+                                                                            </button>
                                                                         </div>
-                                                                        <button
-                                                                            className={styles.replyIconButton}
-                                                                            onClick={() => setReplyingTo(msg)}
-                                                                        >
-                                                                            <Reply size={16} />
-                                                                        </button>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    );
-                                                });
-                                            })()}
-                                            <div ref={messagesEndRef} />
-                                        </div>
-
-
-                                        {pendingFiles.length > 0 && (
-                                            <div className={styles.pendingFilesBar}>
-                                                {pendingFiles.map(pf => (
-                                                    <div key={pf.id} className={styles.pendingFileItem}>
-                                                        {pf.type === 'image' ? (
-                                                            <img src={pf.previewUrl} alt={pf.name} className={styles.pendingImageThumb} />
-                                                        ) : (
-                                                            <div className={styles.pendingFileThumb}>
-                                                                <FileText size={20} />
-                                                            </div>
-                                                        )}
-                                                        <div className={styles.pendingFileInfo}>
-                                                            <span className={styles.pendingFileName}>{pf.name}</span>
-                                                            <span className={styles.pendingFileSize}>{pf.size}</span>
-                                                        </div>
-                                                        <button className={styles.removePendingFile} onClick={() => removePendingFile(pf.id)}>
-                                                            <MinusCircle size={14} />
-                                                        </button>
-                                                    </div>
-                                                ))}
+                                                        );
+                                                    });
+                                                })()}
+                                                <div ref={messagesEndRef} />
                                             </div>
-                                        )}
 
 
-                                        {pollOpen && (
-                                            <div className={styles.pollCreator}>
-                                                <div className={styles.pollHeader}>
-                                                    <span>Create a Poll</span>
-                                                    <button className={styles.cancelReply} onClick={() => { setPollOpen(false); setPollQuestion(''); setPollOptions(['', '']); }}>
-                                                        <MinusCircle size={16} />
-                                                    </button>
-                                                </div>
-                                                <input
-                                                    className={styles.pollQuestionInput}
-                                                    placeholder="Ask a question..."
-                                                    value={pollQuestion}
-                                                    onChange={e => setPollQuestion(e.target.value)}
-                                                />
-                                                {pollOptions.map((opt, i) => (
-                                                    <div key={i} className={styles.pollOptionRow}>
-                                                        <input
-                                                            className={styles.pollOptionInput}
-                                                            placeholder={`Option ${i + 1}`}
-                                                            value={opt}
-                                                            onChange={e => {
-                                                                const updated = [...pollOptions];
-                                                                updated[i] = e.target.value;
-                                                                setPollOptions(updated);
-                                                            }}
-                                                        />
-                                                        {pollOptions.length > 2 && (
-                                                            <button className={styles.cancelReply} onClick={() => removePollOption(i)}>
+                                            {pendingFiles.length > 0 && (
+                                                <div className={styles.pendingFilesBar}>
+                                                    {pendingFiles.map(pf => (
+                                                        <div key={pf.id} className={styles.pendingFileItem}>
+                                                            {pf.type === 'image' ? (
+                                                                <img src={pf.previewUrl} alt={pf.name} className={styles.pendingImageThumb} />
+                                                            ) : (
+                                                                <div className={styles.pendingFileThumb}>
+                                                                    <FileText size={20} />
+                                                                </div>
+                                                            )}
+                                                            <div className={styles.pendingFileInfo}>
+                                                                <span className={styles.pendingFileName}>{pf.name}</span>
+                                                                <span className={styles.pendingFileSize}>{pf.size}</span>
+                                                            </div>
+                                                            <button className={styles.removePendingFile} onClick={() => removePendingFile(pf.id)}>
                                                                 <MinusCircle size={14} />
                                                             </button>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                                {pollOptions.length < 6 && (
-                                                    <button className={styles.addPollOption} onClick={addPollOption}>+ Add option</button>
-                                                )}
-                                                <button className={styles.sendPollBtn} onClick={() => {
-                                                    console.log('Poll:', pollQuestion, pollOptions);
-                                                    setPollOpen(false); setPollQuestion(''); setPollOptions(['', '']);
-                                                }}>
-                                                    Send Poll
-                                                </button>
-                                            </div>
-                                        )}
-
-                                        {/* Reply preview - keep exactly as before */}
-                                        {replyingTo && (
-                                            <div className={styles.replyPreviewBar}>
-                                                <div className={styles.replyPreviewContent}>
-                                                    <span>Replying to <strong>{replyingTo.sender}</strong></span>
-                                                    <p>{replyingTo.text}</p>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                                <button onClick={() => setReplyingTo(null)} className={styles.cancelReply}>
-                                                    <MinusCircle size={18} />
-                                                </button>
-                                            </div>
-                                        )}
+                                            )}
 
 
-                                        <div className={styles.messageInputArea}>
-
-                                            <input ref={imageInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'image')} />
-                                            <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.zip" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'file')} />
-
-                                            <div className={styles.attachmentWrapper} ref={attachmentRef}>
-                                                <button className={styles.iconBtn} onClick={() => setAttachmentMenuOpen(!attachmentMenuOpen)}>
-                                                    <Paperclip size={20} />
-                                                </button>
-                                                {attachmentMenuOpen && (
-                                                    <div className={styles.attachmentMenu} ref={attachmentMenuRef}>
-                                                        <button className={styles.attachmentMenuItem} onClick={() => imageInputRef.current.click()}>
-                                                            🖼️ Image
-                                                        </button>
-                                                        <button className={styles.attachmentMenuItem} onClick={() => fileInputRef.current.click()}>
-                                                            📄 File / PDF
-                                                        </button>
-                                                        <button className={styles.attachmentMenuItem} onClick={() => { setPollOpen(true); setAttachmentMenuOpen(false); }}>
-                                                            📊 Poll
+                                            {pollOpen && (
+                                                <div className={styles.pollCreator}>
+                                                    <div className={styles.pollHeader}>
+                                                        <span>Create a Poll</span>
+                                                        <button className={styles.cancelReply} onClick={() => { setPollOpen(false); setPollQuestion(''); setPollOptions(['', '']); }}>
+                                                            <MinusCircle size={16} />
                                                         </button>
                                                     </div>
-                                                )}
+                                                    <input
+                                                        className={styles.pollQuestionInput}
+                                                        placeholder="Ask a question..."
+                                                        value={pollQuestion}
+                                                        onChange={e => setPollQuestion(e.target.value)}
+                                                    />
+                                                    {pollOptions.map((opt, i) => (
+                                                        <div key={i} className={styles.pollOptionRow}>
+                                                            <input
+                                                                className={styles.pollOptionInput}
+                                                                placeholder={`Option ${i + 1}`}
+                                                                value={opt}
+                                                                onChange={e => {
+                                                                    const updated = [...pollOptions];
+                                                                    updated[i] = e.target.value;
+                                                                    setPollOptions(updated);
+                                                                }}
+                                                            />
+                                                            {pollOptions.length > 2 && (
+                                                                <button className={styles.cancelReply} onClick={() => removePollOption(i)}>
+                                                                    <MinusCircle size={14} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                    {pollOptions.length < 6 && (
+                                                        <button className={styles.addPollOption} onClick={addPollOption}>+ Add option</button>
+                                                    )}
+                                                    <button className={styles.sendPollBtn} onClick={() => {
+                                                        console.log('Poll:', pollQuestion, pollOptions);
+                                                        setPollOpen(false); setPollQuestion(''); setPollOptions(['', '']);
+                                                    }}>
+                                                        Send Poll
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            {/* Reply preview - keep exactly as before */}
+                                            {replyingTo && (
+                                                <div className={styles.replyPreviewBar}>
+                                                    <div className={styles.replyPreviewContent}>
+                                                        <span>Replying to <strong>{replyingTo.sender}</strong></span>
+                                                        <p>{replyingTo.text}</p>
+                                                    </div>
+                                                    <button onClick={() => setReplyingTo(null)} className={styles.cancelReply}>
+                                                        <MinusCircle size={18} />
+                                                    </button>
+                                                </div>
+                                            )}
+
+
+                                            <div className={styles.messageInputArea}>
+
+                                                <input ref={imageInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'image')} />
+                                                <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.zip" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'file')} />
+
+                                                <div className={styles.attachmentWrapper} ref={attachmentRef}>
+                                                    <button className={styles.iconBtn} onClick={() => setAttachmentMenuOpen(!attachmentMenuOpen)}>
+                                                        <Paperclip size={20} />
+                                                    </button>
+                                                    {attachmentMenuOpen && (
+                                                        <div className={styles.attachmentMenu} ref={attachmentMenuRef}>
+                                                            <button className={styles.attachmentMenuItem} onClick={() => imageInputRef.current.click()}>
+                                                                🖼️ Image
+                                                            </button>
+                                                            <button className={styles.attachmentMenuItem} onClick={() => fileInputRef.current.click()}>
+                                                                📄 File / PDF
+                                                            </button>
+                                                            <button className={styles.attachmentMenuItem} onClick={() => { setPollOpen(true); setAttachmentMenuOpen(false); }}>
+                                                                📊 Poll
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+
+                                                <input
+                                                    type="text"
+                                                    placeholder="Type a message..."
+                                                    className={styles.messageInput}
+                                                    value={inputText}
+                                                    onChange={(e) => setInputText(e.target.value)}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') handleSendMessage(); }}
+                                                />
+                                                <button className={styles.sendBtn} onClick={handleSendMessage}>
+                                                    <Send size={18} />
+                                                </button>
                                             </div>
-
-
-                                            <input
-                                                type="text"
-                                                placeholder="Type a message..."
-                                                className={styles.messageInput}
-                                                value={inputText}
-                                                onChange={(e) => setInputText(e.target.value)}
-                                                onKeyDown={(e) => { if (e.key === 'Enter') handleSendMessage(); }}
-                                            />
-                                            <button className={styles.sendBtn} onClick={handleSendMessage}>
-                                                <Send size={18} />
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+
+                            )}
+
                         </div>
                     )}
                 </div>

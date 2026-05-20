@@ -211,7 +211,13 @@ export default function ProfilePage({ type }) {
             }
 
             setUser(data);
-            setFriendStatus(data.friend_status);
+            if (type !== 'page') {
+                if (raw.is_friend) {
+                    setFriendStatus("friends");
+                } else {
+                    setFriendStatus("none");
+                }
+            }
             if (data?.id) loadPosts(data.id, data.type);
         } catch (e) {
             console.error(e);

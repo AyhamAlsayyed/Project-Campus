@@ -1,5 +1,5 @@
 .darkContainer {
-    height: 100vh;
+    min-height: 100vh;
     box-sizing: border-box;
     font-family: "Aktiv Grotesk", sans-serif;
     display: flex;
@@ -33,6 +33,7 @@
     gap: var(--col-gap);
     margin-top: 20px;
     align-items: stretch;
+
     flex: 1;
     min-height: 0;
 
@@ -40,12 +41,13 @@
 
 .mainContent {
     flex: 1;
-    max-width: calc(100% - 380px - var(--col-gap));
+    
     align-items: flex-start;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     min-height: 0;
+    min-width: 0;
 
 
 }
@@ -406,10 +408,10 @@
 }
 
 .dropdownMenu {
-    position: absolute;
-    right: 0;
-    top: 100%;
-    margin-top: 5px;
+    position: fixed;
+
+
+
     background-color: #2a2a2a;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
@@ -462,24 +464,18 @@
     background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
     width: 100%;
     padding-top: 6px;
-
     flex: 1;
     display: flex;
     flex-direction: column;
-
     height: 100%;
-
-
-
     border-radius: 30px;
     z-index: 1;
-    min-width: 900px;
     position: relative;
     margin: 2% 0 0 0;
 }
 
 .innerContainer {
-    background-color: rgba(61, 60, 60);
+    background-color: #333333;
     border-radius: 30px;
     flex: 1;
     padding-top: 30px;
@@ -487,21 +483,21 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    max-height: 600px;
     width: 100%;
     top: 10px;
     min-height: 0;
-    overflow: hidden;
     z-index: 10;
 }
 
 
 
 .rightSection {
-    position: relative;
-    flex: 0 0 425px;
+    position: sticky;
+    flex: 0 0 435px;
+    top: 100px;
     width: 25%;
     margin: 5% 0 0 0;
+    align-self: flex-start;
     gap: 70px;
     display: flex;
     flex-direction: column;
@@ -1263,12 +1259,20 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    transition: 0.2s;
+    transition: all 0.25s ease;
+    padding: 8px;
 }
 
 .iconBtn:hover {
-    background: #333;
     color: #fff;
+    background: linear-gradient(-90deg, rgba(166, 39, 156, 0.3), rgba(49, 32, 169, 0.3));
+    box-shadow: 0 0 12px rgba(166, 39, 156, 0.4), 0 0 24px rgba(49, 32, 169, 0.2);
+    transform: scale(1.12);
+}
+
+.iconBtn:active {
+    transform: scale(0.95);
+    box-shadow: 0 0 6px rgba(166, 39, 156, 0.3);
 }
 
 .replyQuoteBox {

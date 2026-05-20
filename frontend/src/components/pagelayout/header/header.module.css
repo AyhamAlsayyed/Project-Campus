@@ -39,8 +39,8 @@
 .searchWrap {
   border-radius: 999px;
   height: 44px;
-  width: 82%;
-  transform: translateX(10%);
+  width: 80%;
+  transform: translateX(12%);
   display: flex;
   align-items: center;
   padding: 0 16px;
