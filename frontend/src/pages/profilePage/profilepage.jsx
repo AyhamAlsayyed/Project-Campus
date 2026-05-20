@@ -73,8 +73,15 @@ export default function ProfilePage({ type }) {
     const [showRemindersMonthPicker, setShowRemindersMonthPicker] = useState(false);
     const [isBlocked, setIsBlocked] = useState(false);
     useEffect(() => {
-        if (user) setIsBlocked(user?.is_blocked || false);
-    }, [user]);
+        if (!user) return;
+
+        const blockedStatuses = ["blocked", "blocked_by_user"];
+
+        setIsBlocked(
+            user?.is_blocked ||
+            blockedStatuses.includes(friendStatus)
+        );
+    }, [user, friendStatus]);
 
 
     const resolveUrl = (url) => {
@@ -212,11 +219,17 @@ export default function ProfilePage({ type }) {
 
             setUser(data);
             if (type !== 'page') {
-                if (raw.is_friend) {
-                    setFriendStatus("friends");
-                } else {
-                    setFriendStatus("none");
-                }
+                const statusMap = {
+                    accepted: "friends",
+                    pending_sent: "sent",
+                    pending_received: "received",
+                };
+
+                setFriendStatus(
+                    statusMap[raw.friendship_status] ||
+                    raw.friendship_status ||
+                    "none"
+                );
             }
             if (data?.id) loadPosts(data.id, data.type);
         } catch (e) {
