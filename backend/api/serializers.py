@@ -71,7 +71,7 @@ class UserSerializer(serializers.ModelSerializer):
     convention_id = serializers.SerializerMethodField()
     is_restricted = serializers.SerializerMethodField()
     friends_count = serializers.SerializerMethodField()
-    is_friend = serializers.SerializerMethodField()
+    friendship_status = serializers.SerializerMethodField()
     email = serializers.SerializerMethodField()
 
     class Meta:
@@ -92,7 +92,7 @@ class UserSerializer(serializers.ModelSerializer):
             "convention_id",
             "is_restricted",
             "friends_count",
-            "is_friend",
+            "friendship_status",
         ]
 
     def _should_restrict_data(self, obj):
@@ -120,8 +120,18 @@ class UserSerializer(serializers.ModelSerializer):
     def get_is_restricted(self, obj):
         return self._should_restrict_data(obj)
 
-    def get_is_friend(self, obj):
-        return Friendship.objects.filter(Q(user1=obj) | Q(user2=obj)).exists()
+    def get_friendship_status(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+
+        current_user = request.user
+
+        friendship = Friendship.objects.filter(
+            Q(user1=current_user, user2=obj) | Q(user1=obj, user2=current_user)
+        ).first()
+
+        return friendship.status if friendship else None
 
     def _can_see_friends_list(self, target_user):
         request = self.context.get("request")
