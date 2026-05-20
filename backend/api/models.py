@@ -67,7 +67,12 @@ class UserProfile(models.Model):
     class FriendsListPrivacy(models.TextChoices):
         EVERYONE = "EVERYONE", "Everyone"
         FRIENDS_ONLY = "FRIENDS_ONLY", "Friends Only"
-        ONLY_ME = "ONLY_ME", "Only Me"
+        NOBODY = "NOBODY", "Nobody"
+
+    class MessagePrivacy(models.TextChoices):
+        EVERYONE = "EVERYONE", "Everyone"
+        FRIENDS_ONLY = "FRIENDS_ONLY", "Friends Only"
+        NOBODY = "NOBODY", "Nobody"
 
     privacy = models.CharField(
         max_length=10,

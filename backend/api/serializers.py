@@ -155,7 +155,7 @@ class UserSerializer(serializers.ModelSerializer):
         if privacy_setting == UserProfile.FriendsListPrivacy.EVERYONE:
             return True
 
-        if privacy_setting == UserProfile.FriendsListPrivacy.ONLY_ME:
+        if privacy_setting == UserProfile.FriendsListPrivacy.NOBODY:
             return False
 
         if privacy_setting == UserProfile.FriendsListPrivacy.FRIENDS_ONLY:

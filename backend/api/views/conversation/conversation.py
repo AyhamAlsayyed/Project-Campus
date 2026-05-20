@@ -4,46 +4,22 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Conversation, ConversationMember, Message, MessageMedia
+from ...models import (
+    Conversation,
+    ConversationMember,
+    Friendship,
+    Message,
+    MessageMedia,
+)
 from ...serializers import ConversationMemberSerializer, PostSerializer
 from ...utils.notifications import send_global_notification
 from ...utils.user_type import get_user_avatar
 
 User = get_user_model()
-
-
-def notify_other_members(conversation, sent_message, actor):
-    other_members = (
-        ConversationMember.objects.filter(conversation=conversation).select_related("user").exclude(user=actor)
-    )
-
-    for member in other_members:
-        if not member or not member.user:
-            continue
-
-        if member.is_muted:
-            continue
-
-        if conversation.is_group:
-            notification_type = "group_chat"
-            preview_content = sent_message.content or "Sent a media attachment"
-            custom_text = f"New message in group '{conversation.name or 'Group'}'. {actor.username}: {preview_content}"
-        else:
-            has_replied = Message.objects.filter(conversation=conversation, sender=member.user).exists()
-            notification_type = "dm_existing" if has_replied else "dm_request"
-            preview_content = sent_message.content or "Sent a media attachment"
-            custom_text = f"{actor.username}: {preview_content}"
-
-        send_global_notification(
-            sender=actor,
-            receiver=member.user,
-            notification_type=notification_type,
-            target_object=sent_message,
-            custom_text=custom_text,
-        )
 
 
 @api_view(["GET"])
@@ -210,13 +186,6 @@ def send_message(request, conversation_id):
         )
         media_index += 1
 
-    conversation = Conversation.objects.get(conversation_id=conversation_id)
-    notify_other_members(
-        conversation=conversation,
-        sent_message=msg,
-        actor=user,
-    )
-
     return Response(
         {
             "id": msg.message_id,
@@ -248,6 +217,42 @@ def create_dm(request, user_id):
 
     if existing:
         return Response({"id": existing})
+
+    profile = getattr(target_user, "profile", None)
+    if not profile:
+        return Response({"error": "User dont have a profile!"}, status=status.HTTP_400_BAD_REQUEST)
+    privacy_setting = profile.message_privacy
+
+    if privacy_setting == "FRIENDS_ONLY":
+        raise PermissionDenied("This user does not allow new conversations.")
+
+    elif privacy_setting == "contacts":
+        is_target_a_page = getattr(target_user, "is_page", False)
+
+        if is_target_a_page:
+            is_mutual = Friendship.objects.filter(
+                user1=current_user,
+                user2_id=target_user.id,
+                status=Friendship.Status.FOLLOWING,
+                relation_type=Friendship.RelationType.USER_TO_PAGE,
+            ).exists()
+        else:
+            current_follows_target = Friendship.objects.filter(
+                user1=current_user,
+                user2_id=target_user.id,
+                status=Friendship.Status.ACCEPTED,
+                relation_type=Friendship.RelationType.USER_TO_USER,
+            ).exists()
+            target_follows_current = Friendship.objects.filter(
+                user1_id=target_user.id,
+                user2=current_user,
+                status=Friendship.Status.ACCEPTED,
+                relation_type=Friendship.RelationType.USER_TO_USER,
+            ).exists()
+
+            is_mutual = current_follows_target and target_follows_current
+        if not is_mutual:
+            raise PermissionDenied("You do not have permission to message this profile.")
 
     new_conv = Conversation.objects.create(is_group=False, created_by=current_user)
     ConversationMember.objects.create(conversation=new_conv, user=current_user)

@@ -136,7 +136,7 @@ def user_friends_list(request, user_id):
         if profile:
             privacy_setting = getattr(profile, "friends_list_privacy", "EVERYONE")
 
-            if privacy_setting == "ONLY_ME":
+            if privacy_setting == "NOBODY":
                 return Response({"message": "This user's friends list is private."}, status=200)
 
             elif privacy_setting == "FRIENDS_ONLY":

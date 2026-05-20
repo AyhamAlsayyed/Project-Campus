@@ -1,6 +1,10 @@
+import datetime
+
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Exists, OuterRef
+from django.db.models import Case, Count, Exists, IntegerField, OuterRef, Value, When
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -48,6 +52,8 @@ def notify_page_and_event_followers(event, custom_text):
 @permission_classes([IsAuthenticated])
 def events(request):
     user = request.user
+    now = timezone.now()
+    one_week_ago = now - datetime.timedelta(days=7)
 
     follow_qs = Friendship.objects.filter(
         user1=user,
@@ -56,10 +62,33 @@ def events(request):
         relation_type=Friendship.RelationType.USER_TO_PAGE,
     )
 
-    qs = Event.objects.select_related("page").annotate(is_followed=Exists(follow_qs)).order_by("-start_date")
+    recommended_qs = (
+        Event.objects.filter(start_date__gte=one_week_ago)
+        .annotate(is_followed=Exists(follow_qs), attendees_count=Count("reminders"))
+        .order_by("-attendees_count", "-start_date")[:5]
+    )
 
-    serializer = EventSerializer(qs, many=True, context={"request": request})
-    return Response(serializer.data)
+    body_qs = (
+        Event.objects.select_related("page")
+        .annotate(
+            is_followed=Exists(follow_qs),
+            attendees_count=Count("reminders"),
+            relevance_score=Case(
+                When(page__page_type=Page.PageType.UNIVERSITY, then=Value(3)),
+                When(is_followed=True, then=Value(2)),
+                default=Value(1),
+                output_field=IntegerField(),
+            ),
+        )
+        .order_by("-relevance_score", "-start_date")
+    )
+
+    recommended_serializer = EventSerializer(recommended_qs, many=True, context={"request": request})
+    body_serializer = EventSerializer(body_qs, many=True, context={"request": request})
+
+    return Response(
+        {"recommended": recommended_serializer.data, "body": body_serializer.data}, status=status.HTTP_200_OK
+    )
 
 
 @api_view(["POST"])
@@ -110,7 +139,6 @@ def create_event(request):
                 setting.user_id: setting for setting in NotificationSetting.objects.filter(user_id__in=follower_ids)
             }
 
-            # 4. Filter against user privacy preferences
             eligible_notifications = []
             content_type = ContentType.objects.get_for_model(event)
             notification_text = f"New Event: '{page.page_full_name}' posted a new event: '{event.title}'."
@@ -118,8 +146,6 @@ def create_event(request):
             for follower in follower_users:
                 profile = settings_lookup.get(follower.id)
 
-                # Check your community_new_post or event preference map
-                # (using community_new_post here as per requirements layout)
                 if profile:
                     if not profile.enable_all or not profile.new_event:
                         continue
@@ -164,7 +190,6 @@ def edit_event(request, event_id):
 
     event.save()
 
-    # Generate localized text mapping
     change_msg = f"The event '{event.title}' hosted by {event.page.page_full_name} has updated details."
     if title_changed:
         change_msg = f"Event '{event.title}' has been changed to '{event.title}'."
