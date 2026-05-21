@@ -711,3 +711,221 @@
 .destructiveBtn:hover {
     background: rgba(248, 113, 113, 0.07);
 }
+/* ── Search Popup Configurations (Provided Classes) ── */
+.searchContactWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
+  padding: 12px 16px;
+  margin-bottom: 22px;
+}
+
+.contactWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.searchIcon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.searchInput {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  color: #ffffff; /* Fallback for var(--text-accent) to maintain clarity */
+  font-size: 0.95rem;
+}
+
+.searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ── Popup Overlay Styles ── */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modalContent {
+  background: #232323;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  width: min(440px, 90%);
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.modalTitle {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.modalCloseBtn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 50%;
+  transition: background 0.2s, color 0.2s;
+}
+
+.modalCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+/* ── Clipboard Widget Styles ── */
+.copyWidgetContainer {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.copyWidgetInput {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.copyWidgetBtn {
+  background: #ffffff;
+  color: #1a1a1a;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.copyWidgetBtn:hover {
+  opacity: 0.9;
+}
+
+/* ── Row items within Popups ── */
+.popupScrollList {
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 4px;
+}
+
+.popupScrollList::-webkit-scrollbar {
+  width: 5px;
+}
+
+.popupScrollList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.popupItemRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+
+.popupItemRow:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.popupItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.popupItemAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.popupItemAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.popupItemName {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.popupActionButton {
+  background: linear-gradient(90deg, #612886, #892A82);
+  color: white;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 25px;
+  cursor: pointer;
+}
+
+.popupActionButton:hover {
+  filter: brightness(1.08);
+}
+
+.popupEmptyState {
+  text-align: center;
+  padding: 30px 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.35);
+}

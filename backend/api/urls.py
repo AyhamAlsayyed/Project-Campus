@@ -25,7 +25,7 @@ from .views.conversation.conversation import (
     send_message,
 )
 
-"""
+
 from .views.conversation.edit_conversation import (
     edit_group_details,
     edit_group_image,
@@ -36,7 +36,7 @@ from .views.conversation.conversation_info import (
     add_member_to_group,
     get_sorted_group_members,
 )
-"""
+
 from .views.conversation.conversation_action import (
     accept_chat_request,
     block_user_from_chat,
@@ -162,6 +162,10 @@ urlpatterns = [
     path("events/reminders/", get_events),
     path("search/", search),
     path("reports/", create_report),
+    path("groups/<int:conv_id>/invite-friends/", get_friends_to_invite),
+    path("groups/<int:conv_id>/members/", get_sorted_group_members),
+    path("groups/<int:conv_id>/edit-details/", edit_group_details),
+    path("groups/<int:conv_id>/edit-image/", edit_group_image),
 ]
 # not yet used urls
 """
@@ -171,12 +175,11 @@ urlpatterns += [
     path("", create_event),
     path("", edit_event),
     path("", cancel_event),
-    path("", edit_group_details),
-    path("", edit_group_image),
+   
     path("", update_group_privacy_settings),
     path("", get_friends_to_invite),
     path("", add_member_to_group),
-    path("", get_sorted_group_members),
+    
     path("", ),
     path("", ),
     path("", ),

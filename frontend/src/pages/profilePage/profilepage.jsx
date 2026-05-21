@@ -240,19 +240,19 @@ export default function ProfilePage({ type }) {
 
             setUser(data);
             if (type !== 'page') {
+                const fs = raw.friendship_status;
+                const rawStatus = typeof fs === 'object' ? fs?.status : fs;
+                const sentByMe = typeof fs === 'object' ? fs?.sent_by_me : null;
+
                 const statusMap = {
                     accepted: "friends",
+                    pending: sentByMe ? "sent" : "received",
                     pending_sent: "sent",
                     pending_received: "received",
-                    pending: "sent",
                     rejected: "none"
                 };
 
-                setFriendStatus(
-                    statusMap[raw.friendship_status] ||
-                    raw.friendship_status ||
-                    "none"
-                );
+                setFriendStatus(statusMap[rawStatus] || rawStatus || "none");
             }
             if (data?.id) loadPosts(data.id, data.type);
         } catch (e) {
@@ -361,10 +361,13 @@ export default function ProfilePage({ type }) {
     const loadFriends = async (userId) => {
         try {
             setFriendsLoading(true);
-            const res = await fetch(`${API}/api/users/${userId}/friends/`, { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } });
-            if (!res.ok) { setFriends([]); return; } // add this
+            const res = await fetch(`${API}/api/users/${userId}/friends/`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem("access")}` }
+            });
+            if (!res.ok) { setFriends([]); return; }
             const data = await res.json();
-            setFriends(Array.isArray(data) ? data : []);
+            // backend returns { all: [...], mutual: [...] }
+            setFriends(data);  // 👈 pass the whole object
         } catch (err) { console.error(err); }
         finally { setFriendsLoading(false); }
     };
@@ -594,7 +597,7 @@ export default function ProfilePage({ type }) {
 
                     <div className={styles.profileContent}>
                         {isEditing ? (
-                            <ProfileEditCard styles={styles} edit={edit} setIsEditing={setIsEditing} user={user} />
+                            <ProfileEditCard styles={styles} edit={edit} setIsEditing={setIsEditing} user={user} API={API} token={token} />
                         ) : isBlocked ? (
                             <div className={styles.profileCard}>
                                 <div className={styles.coverWrap}>

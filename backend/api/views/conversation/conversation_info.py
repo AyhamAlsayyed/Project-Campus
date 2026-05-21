@@ -26,6 +26,7 @@ def get_friends_to_invite(request, conv_id):
         status=Friendship.Status.ACCEPTED,
         relation_type=Friendship.RelationType.USER_TO_USER,
     )
+    
 
     friend_ids = []
     for f in friendships:
@@ -37,6 +38,7 @@ def get_friends_to_invite(request, conv_id):
     invitable_users = (
         User.objects.filter(id__in=friend_ids).exclude(id__in=existing_member_ids).select_related("profile")
     )
+   
 
     serializer = UserMinimalSerializer(invitable_users, many=True, context={"request": request})
     return Response(serializer.data)

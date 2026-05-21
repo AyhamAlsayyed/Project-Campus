@@ -22,7 +22,7 @@ const SubLabel = ({ children, topPad = true }) => (
     </div>
 );
 
-export default function ProfileEditCard({ styles, edit, setIsEditing, user }) {
+export default function ProfileEditCard({ styles, edit, setIsEditing, user, API, token }) {
     const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, target: null });
 
     // Degrees

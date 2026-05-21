@@ -660,48 +660,135 @@ export default function ChatsPage() {
                                                         <div style={{ padding: "40px 20px", textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: "0.9rem" }}>
                                                             No message requests
                                                         </div>
-                                                    ) : chatRequests.map((req, index) => (
-                                                        <div key={req.conversation_id} className={styles.chatRow}>
-                                                            <div
-                                                                className={styles.chatItem}
-                                                                style={{ cursor: 'pointer' }}
-                                                                onClick={async () => {
-                                                                    setSelectedRequest(req);
-                                                                    const res = await fetch(`${API}/api/chats/${req.conversation_id}/messages/`, {
-                                                                        headers: { Authorization: `Bearer ${token}` },
-                                                                    });
-                                                                    const data = await res.json();
-                                                                    setRequestMessages(Array.isArray(data) ? data : []);
-                                                                }}
-                                                            >
-                                                                <div className={styles.chatItemLeft}>
-                                                                    <div className={styles.avatarWrapper}>
-                                                                        <div style={{
-                                                                            width: 46, height: 46, borderRadius: "50%",
-                                                                            background: "rgba(255,255,255,0.08)",
-                                                                            display: "flex", alignItems: "center", justifyContent: "center",
-                                                                            color: "rgba(255,255,255,0.5)", fontSize: "1.1rem", fontWeight: 700
-                                                                        }}>
-                                                                            {req.sender_username?.[0]?.toUpperCase()}
+                                                    ) : chatRequests.map((req, index) => {
+                                                        // Resolve avatar url safely if the backend provides it
+                                                        const reqAvatar = req.sender_avatar || req.avatar;
+                                                        const avatarUrl = reqAvatar ? (reqAvatar.startsWith('http') ? reqAvatar : `${API}${reqAvatar}`) : null;
+                                                        const isCurrentMenuOpen = openMenuId === req.conversation_id;
+
+                                                        return (
+                                                            <div key={req.conversation_id} className={styles.chatRow}>
+                                                                <div
+                                                                    className={styles.chatItem}
+                                                                    style={{ cursor: 'pointer' }}
+                                                                    onClick={async () => {
+                                                                        setSelectedRequest(req);
+                                                                        const res = await fetch(`${API}/api/chats/${req.conversation_id}/messages/`, {
+                                                                            headers: { Authorization: `Bearer ${token}` },
+                                                                        });
+                                                                        const data = await res.json();
+                                                                        setRequestMessages(Array.isArray(data) ? data : []);
+                                                                    }}
+                                                                >
+                                                                    <div className={styles.chatItemLeft}>
+                                                                        <div className={styles.avatarWrapper}>
+                                                                            {avatarUrl ? (
+                                                                                <img
+                                                                                    src={avatarUrl}
+                                                                                    alt={req.sender_username}
+                                                                                    className={styles.chatAvatar}
+                                                                                />
+                                                                            ) : (
+                                                                                <div
+                                                                                    className={styles.chatAvatar}
+                                                                                    style={{
+                                                                                        background: "rgba(255,255,255,0.08)",
+                                                                                        display: "flex",
+                                                                                        alignItems: "center",
+                                                                                        justifyContent: "center",
+                                                                                        color: "rgba(255,255,255,0.5)",
+                                                                                        fontSize: "1.1rem",
+                                                                                        fontWeight: 700
+                                                                                    }}
+                                                                                >
+                                                                                    {req.sender_username?.[0]?.toUpperCase() || "?"}
+                                                                                </div>
+                                                                            )}
+                                                                            <span className={`${styles.statusDot} ${styles.offline}`} />
+                                                                        </div>
+                                                                        <div className={styles.chatIdentity}>
+                                                                            <span className={styles.chatStatusText}>Message request</span>
+                                                                            <div className={styles.chatNameWrapper}>
+                                                                                <span className={styles.chatName}>{req.sender_username}</span>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
-                                                                    <div className={styles.chatIdentity}>
-                                                                        <span className={styles.chatStatusText}>Message request</span>
-                                                                        <div className={styles.chatNameWrapper}>
-                                                                            <span className={styles.chatName}>{req.sender_username}</span>
+
+                                                                    <div className={styles.chatItemRight}>
+                                                                        <div className={styles.chatDetails}>
+                                                                            <span className={styles.chatPreview}>{req.message_preview}</span>
+                                                                            <span className={styles.chatTime}>{req.time}</span>
+                                                                        </div>
+
+                                                                        {/* The three-dot dropdown menu matching the primary chat items */}
+                                                                        <div className={styles.chatActions} ref={isCurrentMenuOpen ? menuRef : null}>
+                                                                            <button
+                                                                                className={styles.moreButton}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                                                    const dropdownHeight = 110; // Slightly smaller height for request items
+                                                                                    const spaceBelow = window.innerHeight - rect.bottom;
+                                                                                    const top = spaceBelow < dropdownHeight
+                                                                                        ? rect.top - dropdownHeight + 35
+                                                                                        : rect.bottom + 8;
+                                                                                    setMenuPosition({ top, right: window.innerWidth - rect.right });
+                                                                                    setOpenMenuId(openMenuId === req.conversation_id ? null : req.conversation_id);
+                                                                                }}
+                                                                            >
+                                                                                <MoreHorizontal size={16} />
+                                                                            </button>
+
+                                                                            {isCurrentMenuOpen && (
+                                                                                <div className={styles.dropdownMenu} style={{ top: menuPosition.top, right: menuPosition.right }}>
+                                                                                    <button
+                                                                                        className={styles.menuItem}
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            acceptRequest(req.conversation_id);
+                                                                                            setOpenMenuId(null);
+                                                                                        }}
+                                                                                    >
+                                                                                        <CheckSquare size={14} /> Accept request
+                                                                                    </button>
+
+                                                                                    <div className={styles.menuDivider} />
+
+
+                                                                                    <button
+                                                                                        className={styles.menuItem}
+                                                                                        onClick={async (e) => {
+                                                                                            e.stopPropagation();
+
+                                                                                            await deleteChat(req.conversation_id);
+
+                                                                                            setChatRequests(prev => prev.filter(r => r.conversation_id !== req.conversation_id));
+                                                                                            setRequestsCount(prev => prev - 1);
+                                                                                            setOpenMenuId(null);
+                                                                                        }}
+                                                                                    >
+                                                                                        <Trash2 size={14} /> Delete chat
+                                                                                    </button>
+
+                                                                                    <button
+                                                                                        className={`${styles.menuItem} ${styles.destructive}`}
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            blockRequest(req.conversation_id);
+                                                                                            setOpenMenuId(null);
+                                                                                        }}
+                                                                                    >
+                                                                                        <Ban size={14} /> Block sender
+                                                                                    </button>
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                                <div className={styles.chatItemRight}>
-                                                                    <div className={styles.chatDetails}>
-                                                                        <span className={styles.chatPreview}>{req.message_preview}</span>
-                                                                        <span className={styles.chatTime}>{req.time}</span>
-                                                                    </div>
-                                                                </div>
+                                                                {index !== chatRequests.length - 1 && <div className={styles.chatDivider} />}
                                                             </div>
-                                                            {index !== chatRequests.length - 1 && <div className={styles.chatDivider} />}
-                                                        </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         </div>
@@ -833,12 +920,14 @@ export default function ChatsPage() {
                         <div className={`${styles.chatList} ${styles.activeChatOuter}`}>
                             {showGroupInfo ? (
                                 <GroupInfoPanel
-                                    group={selectedChat}
-                                    members={[]}
-                                    onBack={() => setShowGroupInfo(false)}
-                                    onClearChat={() => clearChat(selectedChat.id)}
-                                    onDeleteGroup={() => deleteChat(selectedChat.id)}
+                                    group={selectedChat} 
+                                    members={messages.length > 0 ? [...new Set(messages.map(m => m.sender))].map((name, idx) => ({ id: idx, name, role: idx === 0 ? 'Group admin' : 'member' })) : []}
                                     API={API}
+                                    token={token} 
+                                    messages={messages}
+                                    onBack={() => setShowGroupInfo(false)}
+                                    onClearChat={() => clearChat(selectedChat.id)} 
+                                    onDeleteGroup={() => deleteChat(selectedChat.id)} 
                                 />
                             ) : (
                                 <div className={styles.innerChatContainer}>
