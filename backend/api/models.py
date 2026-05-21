@@ -710,6 +710,7 @@ class Conversation(models.Model):
 
     name = models.CharField("conversation name", max_length=100, blank=True, null=True)
     image = models.ImageField("conversation image", upload_to="conversation_images", blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_group = models.BooleanField(default=False)
     is_private = models.BooleanField(default=False)

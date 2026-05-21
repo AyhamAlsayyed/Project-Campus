@@ -121,6 +121,32 @@ def decline_friend_request(request):
     return Response({"message": "Friend request rejected"}, status=200)
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def unfriend(request):
+    current_user = request.user
+    from_user_id = request.data.get("user_id")
+
+    if not from_user_id:
+        return Response({"error": "user_id required"}, status=400)
+
+    try:
+        from_user = User.objects.get(id=from_user_id)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
+
+    friendship = Friendship.objects.filter(
+        (Q(user1=current_user, user2=from_user) | Q(user1=from_user, user2=current_user)),
+    ).first()
+
+    if not friendship or friendship.status == Friendship.Status.REJECTED:
+        return Response({"error": "He is not a friend"}, status=400)
+
+    friendship.delete()
+
+    return Response({"message": "Unfriend"}, status=200)
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def user_friends_list(request, user_id):

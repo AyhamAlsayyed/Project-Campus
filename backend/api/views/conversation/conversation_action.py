@@ -119,6 +119,14 @@ def chat_requests(request):
             continue
 
         sender_user = sender_member.user
+        is_blocked = Friendship.objects.filter(
+            Q(user1=user, user2=sender_user) | Q(user1=sender_user, user2=user), status=Friendship.Status.BLOCKED
+        ).exists()
+
+        if is_blocked:
+            continue
+
+        sender_user = sender_member.user
 
         data.append(
             {
@@ -138,9 +146,7 @@ def chat_requests(request):
 @permission_classes([IsAuthenticated])
 def accept_chat_request(request, conversation_id):
     user = request.user
-
     member = get_object_or_404(ConversationMember, conversation_id=conversation_id, user=user)
-
     convo = member.conversation
 
     if convo.status == Conversation.Status.ACCEPTED:

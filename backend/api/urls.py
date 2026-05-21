@@ -37,7 +37,8 @@ from .views.conversation.conversation_info import (
     get_sorted_group_members,
 )
 """
-from .views.conversation.conversation_action import (  # accept_chat_request,
+from .views.conversation.conversation_action import (
+    accept_chat_request,
     block_user_from_chat,
     chat_requests,
     clear_chat,
@@ -81,6 +82,7 @@ from .views.user.friends import (
     accept_friend_request,
     decline_friend_request,
     send_friend_request,
+    unfriend,
     user_friends_list,
 )
 from .views.user.recently_contacted import recently_contacted
@@ -100,8 +102,8 @@ urlpatterns = [
     path("auth/me/", me),
     path("users/<int:user_id>/", profile_view),
     path("users/<int:user_id>/block/", toggle_block_user),
-    path("auth/check-username/", check_username),  #
-    path("auth/profile/update/", update_profile),  #
+    path("auth/check-username/", check_username),
+    path("auth/profile/update/", update_profile),  # the front dont send the degrees
     path("posts/feed/", feed),
     path("posts/", feed),
     path("posts/saved/", get_saved_posts),
@@ -124,9 +126,10 @@ urlpatterns = [
     path("communities/<int:community_id>/posts/", feed),
     path("posts/<int:post_id>/comments/", comment_list),
     path("posts/<int:post_id>/comments/create/", create_comment),
-    path("friends/request/", send_friend_request),  #
+    path("friends/request/", send_friend_request),
     path("friends/accept/", accept_friend_request),  #
     path("friends/decline/", decline_friend_request),  #
+    path("friends/unfriend/", unfriend),  #
     path("users/<int:user_id>/friends/", user_friends_list),
     path("friends/recently_contacted/", recently_contacted),
     path("notifications/", get_notifications),
@@ -143,6 +146,7 @@ urlpatterns = [
     path("chats/<int:conversation_id>/clear/", clear_chat),
     path("chats/<int:conversation_id>/block/", block_user_from_chat),
     path("chat-requests/", chat_requests),
+    path("chats/<int:conversation_id>/accept/", accept_chat_request),
     path("university/news/", university_news),
     path("university/events/", university_events),
     path("university/doctors/", university_doctors),
@@ -164,7 +168,6 @@ urlpatterns = [
 urlpatterns += [
     path("", blocked_accounts_list),
     path("", process_join_request),
-    path("", accept_chat_request),
     path("", create_event),
     path("", edit_event),
     path("", cancel_event),

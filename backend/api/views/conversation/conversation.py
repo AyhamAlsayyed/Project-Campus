@@ -16,6 +16,7 @@ from ...models import (
     MessageMedia,
 )
 from ...serializers import ConversationMemberSerializer, PostSerializer
+from ...utils.blocked_users import is_blocked
 from ...utils.notifications import send_global_notification
 from ...utils.user_type import get_user_avatar
 
@@ -139,16 +140,34 @@ def send_message(request, conversation_id):
     if not text and not uploaded_files:
         return Response({"error": "Cannot send an empty message"}, status=status.HTTP_400_BAD_REQUEST)
 
+    try:
+        current_member_state = ConversationMember.objects.select_related("conversation").get(
+            conversation_id=conversation_id, user=user
+        )
+    except ConversationMember.DoesNotExist:
+        return Response({"error": "You are not a member!"}, status=status.HTTP_403_FORBIDDEN)
+
+    conv = current_member_state.conversation
+
+    if conv.is_group:
+        if not conv.allow_members_to_send_messages:
+            is_privileged = (
+                current_member_state.role in [ConversationMember.Role.ADMIN, ConversationMember.Role.OWNER]
+                or conv.created_by == user
+            )
+            if not is_privileged:
+                raise PermissionDenied("Only administrators can send messages to this group right now.")
+    else:
+        other_member = conv.members.exclude(user=user).first()
+        if other_member and other_member.user:
+            if is_blocked(user, other_member.user):
+                raise PermissionDenied("You aer blocked.")
+
     if reply_to_id:
         try:
             parent_message = Message.objects.get(message_id=reply_to_id)
         except Message.DoesNotExist:
             parent_message = None
-
-    try:
-        ConversationMember.objects.get(conversation_id=conversation_id, user=user)
-    except ConversationMember.DoesNotExist:
-        return Response({"error": "You are not a member!"}, status=status.HTTP_403_FORBIDDEN)
 
     msg = Message.objects.create(
         conversation_id=conversation_id,
@@ -162,7 +181,6 @@ def send_message(request, conversation_id):
 
     for file_obj in uploaded_files:
         content_type = getattr(file_obj, "content_type", "")
-
         media_type = MessageMedia.MediaType.FILE
 
         if content_type.startswith("image/"):
@@ -185,6 +203,9 @@ def send_message(request, conversation_id):
             }
         )
         media_index += 1
+
+    conv.last_message = msg
+    conv.save(update_fields=["last_message"])
 
     return Response(
         {
@@ -212,47 +233,52 @@ def send_message(request, conversation_id):
 @permission_classes([IsAuthenticated])
 def create_dm(request, user_id):
     current_user = request.user
-    target_user = User.objects.get(id=user_id)
+    target_user = get_object_or_404(User, id=user_id)
     existing = request.data.get("conversation_id")
 
     if existing:
         return Response({"id": existing})
 
+    if is_blocked(current_user, target_user):
+        raise PermissionDenied("You cannot start a chat context with this profile due to block restrictions.")
+
     profile = getattr(target_user, "profile", None)
     if not profile:
-        return Response({"error": "User dont have a profile!"}, status=status.HTTP_400_BAD_REQUEST)
-    privacy_setting = profile.message_privacy
+        return Response({"error": "User does not have an active profile."}, status=status.HTTP_400_BAD_REQUEST)
 
-    if privacy_setting == "FRIENDS_ONLY":
+    privacy_setting = getattr(profile, "message_privacy", "EVERYONE")
+
+    if privacy_setting == "NOBODY":
         raise PermissionDenied("This user does not allow new conversations.")
 
-    elif privacy_setting == "contacts":
-        is_target_a_page = getattr(target_user, "is_page", False)
+    elif privacy_setting == "FRIENDS_ONLY":
+        is_target_a_page = hasattr(target_user, "page")
 
         if is_target_a_page:
             is_mutual = Friendship.objects.filter(
                 user1=current_user,
-                user2_id=target_user.id,
+                user2=target_user,
                 status=Friendship.Status.FOLLOWING,
                 relation_type=Friendship.RelationType.USER_TO_PAGE,
             ).exists()
         else:
-            current_follows_target = Friendship.objects.filter(
-                user1=current_user,
-                user2_id=target_user.id,
-                status=Friendship.Status.ACCEPTED,
-                relation_type=Friendship.RelationType.USER_TO_USER,
-            ).exists()
-            target_follows_current = Friendship.objects.filter(
-                user1_id=target_user.id,
-                user2=current_user,
+            is_mutual = Friendship.objects.filter(
+                (Q(user1=current_user, user2=target_user) | Q(user1=target_user, user2=current_user)),
                 status=Friendship.Status.ACCEPTED,
                 relation_type=Friendship.RelationType.USER_TO_USER,
             ).exists()
 
-            is_mutual = current_follows_target and target_follows_current
         if not is_mutual:
             raise PermissionDenied("You do not have permission to message this profile.")
+
+    duplicate_dm = (
+        Conversation.objects.filter(is_group=False, members__user=current_user)
+        .filter(members__user=target_user)
+        .first()
+    )
+
+    if duplicate_dm:
+        return Response({"id": duplicate_dm.conversation_id}, status=status.HTTP_200_OK)
 
     new_conv = Conversation.objects.create(is_group=False, created_by=current_user)
     ConversationMember.objects.create(conversation=new_conv, user=current_user)
@@ -265,4 +291,4 @@ def create_dm(request, user_id):
         target_object=new_conv,
         custom_text=f"{current_user.username} wants to start a conversation with you.",
     )
-    return Response({"id": new_conv.conversation_id}, status=201)
+    return Response({"id": new_conv.conversation_id}, status=status.HTTP_201_CREATED)

@@ -55,3 +55,12 @@ def get_all_blocked_relationships():
 def is_normal_post(post):
     """Check if a post is a normal post (not in a community)"""
     return post.community_id is None
+
+
+def is_blocked(user1, user2):
+    if user1 == user2:
+        return False
+
+    return Friendship.objects.filter(
+        Q(user1=user1, user2=user2) | Q(user1=user2, user2=user1), status=Friendship.Status.BLOCKED
+    ).exists()

@@ -125,16 +125,25 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_friendship_status(self, obj):
         request = self.context.get("request")
-        if not request or not request.user.is_authenticated:
+        if not request or not request.user or request.user.is_anonymous:
             return None
 
         current_user = request.user
+        target_user = obj
+
+        if current_user == target_user:
+            return None
 
         friendship = Friendship.objects.filter(
-            Q(user1=current_user, user2=obj) | Q(user1=obj, user2=current_user)
+            Q(user1=current_user, user2=target_user) | Q(user1=target_user, user2=current_user)
         ).first()
 
-        return friendship.status if friendship else None
+        if not friendship:
+            return {"status": None, "sent_by_me": False, "sender_id": None}
+
+        sent_by_me = friendship.user1_id == current_user.id
+
+        return {"status": friendship.status, "sent_by_me": sent_by_me, "sender_id": friendship.user1_id}
 
     def _can_see_friends_list(self, target_user):
         request = self.context.get("request")
@@ -812,10 +821,12 @@ class ConversationMemberSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
     preview = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
     time = serializers.SerializerMethodField()
     last_message_time = serializers.SerializerMethodField()
     unread_count = serializers.SerializerMethodField()
     is_group = serializers.BooleanField(source="conversation.is_group", read_only=True)
+    status = serializers.SerializerMethodField()
     conversations_owner = serializers.SerializerMethodField()
     other_member_id = serializers.SerializerMethodField()
     allow_members_to_edit_settings = serializers.BooleanField(
@@ -834,6 +845,8 @@ class ConversationMemberSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "avatar",
+            "description",
+            "role",
             "preview",
             "time",
             "last_message_time",
@@ -841,6 +854,7 @@ class ConversationMemberSerializer(serializers.ModelSerializer):
             "is_pinned",
             "is_muted",
             "is_group",
+            "status",
             "conversations_owner",
             "other_member_id",
             "allow_members_to_edit_settings",
@@ -879,6 +893,10 @@ class ConversationMemberSerializer(serializers.ModelSerializer):
             return get_user_avatar(request, other_member_obj.user)
         return ""
 
+    def get_description(self, obj):
+        description = obj.conversation.description
+        return description if description else ""
+
     def get_preview(self, obj):
         last_msg = obj.conversation.last_message
         return last_msg.content if last_msg else ""
@@ -904,11 +922,12 @@ class ConversationMemberSerializer(serializers.ModelSerializer):
 
         return msg_query.count()
 
+    def get_status(self, obj):
+        return obj.conversation.status
+
     def get_conversations_owner(self, obj):
         conv = obj.conversation
-        if conv.is_group and conv.created_by:
-            return conv.created_by.username
-        return ""
+        return conv.created_by.username if conv.created_by else None
 
     def get_other_member_id(self, obj):
         conv = obj.conversation
