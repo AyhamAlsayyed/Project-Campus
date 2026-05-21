@@ -148,7 +148,8 @@ export default function CommentModal({ post, onClose, currentUser }) {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const data = await res.json();
-                setComments(data);
+                // 👇 handle both array and object responses
+                setComments(Array.isArray(data) ? data : data.results || data.comments || []);
             } catch (err) {
                 console.error("Error fetching comments:", err);
             } finally {

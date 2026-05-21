@@ -294,13 +294,13 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user }) {
                         <Edit2 size={16} className={styles.fieldEditIcon} onClick={() => setEditView("email")} />
                     </div>
 
-                    {formData.secondaryEmail && (
+                  
                         <div className={styles.detailFieldItem}>
                             <span><Mail size={16} /> Personal Email</span>
                             <span className={styles.fieldValueText}>{formData.secondaryEmail}</span>
                             <Edit2 size={16} className={styles.fieldEditIcon} onClick={() => setEditView("email")} />
                         </div>
-                    )}
+               
 
                     <div className={styles.detailFieldItem}>
                         <span><Phone size={16} /> Primary Phone</span>
@@ -765,14 +765,14 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user }) {
                         <div style={{ height: 1, background: "#2a2a2a", marginBottom: 20 }} />
                         <div style={{ marginBottom: 16 }}>
                             <label style={{ color: "#888", fontSize: "0.85rem", display: "block", marginBottom: 8 }}>
-                                Primary <span style={{ color: "rgba(139,45,255,0.85)", fontSize: "0.72rem", background: "rgba(139,45,255,0.12)", border: "1px solid rgba(139,45,255,0.3)", borderRadius: 6, padding: "1px 6px", marginLeft: 6 }}>Academic · Read-only</span>
+                                Academic Email <span style={{ color: "rgba(139,45,255,0.85)", fontSize: "0.72rem", background: "rgba(139,45,255,0.12)", border: "1px solid rgba(139,45,255,0.3)", borderRadius: 6, padding: "1px 6px", marginLeft: 6 }}>Read-only</span>
                             </label>
                             <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 12, padding: "11px 14px", color: "rgba(255,255,255,0.45)", fontSize: "0.9rem" }}>
                                 {formData.primaryEmail || 'username@university.edu'}
                             </div>
                         </div>
                         <div>
-                            <label style={{ color: "#888", fontSize: "0.85rem", display: "block", marginBottom: 8 }}>Personal (optional)</label>
+                            <label style={{ color: "#888", fontSize: "0.85rem", display: "block", marginBottom: 8 }}>Personal Email <span style={{ color: "#666", fontSize: "0.72rem" }}>(optional)</span></label>
                             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                                 <input
                                     type="email"
@@ -781,14 +781,12 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user }) {
                                     onChange={e => setFormData(p => ({ ...p, secondaryEmail: e.target.value }))}
                                     style={{ flex: 1, background: "#252525", border: "1px solid #333", borderRadius: 12, padding: "11px 14px", color: "white", outline: "none", fontSize: "0.9rem" }}
                                 />
-                                {formData.secondaryEmail && (
-                                    <button
-                                        onClick={() => setFormData(p => ({ ...p, secondaryEmail: '' }))}
-                                        style={{ background: "transparent", border: "none", color: "#e91e63", cursor: "pointer", padding: 4 }}
-                                    >
-                                        <Trash2 size={15} />
-                                    </button>
-                                )}
+                                <button
+                                    onClick={() => setFormData(p => ({ ...p, secondaryEmail: '' }))}
+                                    style={{ background: "transparent", border: "none", color: "#e91e63", cursor: "pointer", padding: 4, opacity: formData.secondaryEmail ? 1 : 0, pointerEvents: formData.secondaryEmail ? 'auto' : 'none' }}
+                                >
+                                    <Trash2 size={15} />
+                                </button>
                             </div>
                         </div>
                     </div>

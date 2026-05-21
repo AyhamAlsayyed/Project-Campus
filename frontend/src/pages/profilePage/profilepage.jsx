@@ -26,6 +26,7 @@ import Events from '../../Assets/icons/event.png';
 import Share from '../../Assets/icons/share.png';
 import Bin from '../../Assets/icons/bin.png';
 import Info from '../../Assets/icons/info.png';
+import { AlertCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
     User, UserPlus, Bell, Users, Settings,
@@ -72,6 +73,17 @@ export default function ProfilePage({ type }) {
     const [eventMenuOpen, setEventMenuOpen] = useState(null);
     const [showRemindersMonthPicker, setShowRemindersMonthPicker] = useState(false);
     const [isBlocked, setIsBlocked] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [unfriendPopup, setUnfriendPopup] = useState(false);
+    const menuRef = useRef(null);
+    useEffect(() => {
+        const close = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target))
+                setMenuOpen(false);
+        };
+        document.addEventListener("mousedown", close);
+        return () => document.removeEventListener("mousedown", close);
+    }, []);
     useEffect(() => {
         if (!user) return;
 
@@ -111,6 +123,15 @@ export default function ProfilePage({ type }) {
             if (!res.ok) setIsBlocked(wasBlocked);
         } catch { setIsBlocked(wasBlocked); }
     };
+    const handleUnfriend = async () => {
+        const res = await fetch(`${API}/api/friends/unfriend/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ user_id: userId }),
+        });
+        if (res.ok) setFriendStatus("none");
+    };
+
 
     const API = "http://localhost:8000";
     const edit = useProfileEdit({ user, token, API, onSaved: () => onSavedRef.current?.() });
@@ -141,7 +162,7 @@ export default function ProfilePage({ type }) {
     const filteredActivityPosts = activityPosts.filter(post => {
         if (activitiesFilter === 'saves') return post.is_saved;
         if (activitiesFilter === 'likes') return post.is_liked;
-        if (activitiesFilter === 'comments') return true; // backend already filters by commented posts
+        if (activitiesFilter === 'comments') return post.is_commented;
         return true;
     });
 
@@ -223,6 +244,8 @@ export default function ProfilePage({ type }) {
                     accepted: "friends",
                     pending_sent: "sent",
                     pending_received: "received",
+                    pending: "sent",
+                    rejected: "none"
                 };
 
                 setFriendStatus(
@@ -576,6 +599,7 @@ export default function ProfilePage({ type }) {
                             <div className={styles.profileCard}>
                                 <div className={styles.coverWrap}>
                                     <div className={styles.coverPlaceholder} style={{ filter: "grayscale(1)", opacity: 0.3 }} />
+
                                 </div>
                                 <div className={styles.profileHeaderRow}>
                                     <div className={styles.avatarWrap}>
@@ -624,6 +648,58 @@ export default function ProfilePage({ type }) {
                             <div className={styles.profileCard}>
                                 <div className={styles.coverWrap}>
                                     {coverUrl ? <img className={styles.coverImage} src={coverUrl} alt="cover" /> : <div className={styles.coverPlaceholder} />}
+                                    {!isOwnProfile && (
+                                        <div ref={menuRef} style={{ position: "absolute", top: 14, right: 14, zIndex: 10 }}>
+                                            <button
+                                                onClick={() => setMenuOpen(prev => !prev)}
+                                                className={styles.messageBtn}
+                                                style={{ width: 38, height: 38, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                            >
+                                                <MoreHorizontal size={18} />
+                                            </button>
+                                            {menuOpen && (
+                                                <div style={{
+                                                    position: "absolute", top: "calc(100% + 8px)", right: 0,
+                                                    background: "#2c2c2c", border: "1px solid rgba(255,255,255,0.1)",
+                                                    borderRadius: 14, padding: "6px 0", minWidth: 160,
+                                                    boxShadow: "0 8px 24px rgba(0,0,0,0.5)", zIndex: 100,
+                                                }}>
+                                                    <button
+                                                        onClick={() => { handleBlock(); setMenuOpen(false); }}
+                                                        style={{
+                                                            display: "flex", alignItems: "center", gap: 10,
+                                                            width: "100%", padding: "10px 16px",
+                                                            background: "transparent", border: "none",
+                                                            color: isBlocked ? "#f87171" : "rgba(255,255,255,0.8)",
+                                                            fontSize: "0.88rem", fontWeight: 500, cursor: "pointer",
+                                                        }}
+                                                        onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                                                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                                    >
+                                                        <Ban size={15} />
+                                                        {isBlocked ? "Unblock user" : "Block user"}
+                                                    </button>
+
+                                                    {/* 👇 Add this */}
+                                                    <button
+                                                        onClick={() => { setMenuOpen(false); /* handleReport() */ }}
+                                                        style={{
+                                                            display: "flex", alignItems: "center", gap: 10,
+                                                            width: "100%", padding: "10px 16px",
+                                                            background: "transparent", border: "none",
+                                                            color: "#f87171",
+                                                            fontSize: "0.88rem", fontWeight: 500, cursor: "pointer",
+                                                        }}
+                                                        onMouseEnter={e => e.currentTarget.style.background = "rgba(248,113,113,0.08)"}
+                                                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                                    >
+                                                        <AlertCircle size={15} />
+                                                        Report user
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className={styles.profileHeaderRow}>
@@ -739,20 +815,60 @@ export default function ProfilePage({ type }) {
                                                         </button>
                                                     )}
                                                     {friendStatus === "sent" && <button className={styles.pendingBtn}>⏳ Request Sent</button>}
-                                                    {friendStatus === "received" && (<><button className={styles.acceptBtn} onClick={handleAccept}>✅ Accept</button><button className={styles.declineBtn} onClick={handleDecline}>❌ Decline</button></>)}
-                                                    {friendStatus === "friends" && <button className={styles.friendsBtn}>Friends</button>}
-                                                    <button
-                                                        onClick={handleBlock}
-                                                        style={{
-                                                            background: isBlocked ? "rgba(255,100,100,0.15)" : "rgba(255,255,255,0.07)",
-                                                            border: `1px solid ${isBlocked ? "rgba(255,100,100,0.3)" : "rgba(255,255,255,0.1)"}`,
-                                                            borderRadius: 20, padding: "8px 14px",
-                                                            color: isBlocked ? "#ff6464" : "rgba(255,255,255,0.5)",
-                                                            fontWeight: 600, fontSize: "0.85rem", cursor: "pointer"
-                                                        }}
-                                                    >
-                                                        {isBlocked ? "Unblock" : "Block"}
-                                                    </button>
+                                                    {friendStatus === "received" && (
+                                                        <div style={{ display: "flex", gap: 8 }}>
+                                                            <button
+                                                                onClick={handleAccept}
+                                                                style={{
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    gap: 6,
+                                                                    padding: "9px 20px",
+                                                                    borderRadius: 22,
+                                                                    background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))",
+                                                                    border: "none",
+                                                                    color: "#fff",
+                                                                    fontWeight: 600,
+                                                                    fontSize: "0.88rem",
+                                                                    cursor: "pointer",
+                                                                    transition: "opacity 0.15s, transform 0.1s",
+                                                                }}
+                                                                onMouseEnter={e => e.currentTarget.style.opacity = "0.88"}
+                                                                onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+                                                                onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"}
+                                                                onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
+                                                            >
+                                                                <Check size={15} />
+                                                                Accept
+                                                            </button>
+                                                            <button
+                                                                onClick={handleDecline}
+                                                                style={{
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    gap: 6,
+                                                                    padding: "9px 20px",
+                                                                    borderRadius: 22,
+                                                                    background: "rgba(255,255,255,0.07)",
+                                                                    border: "1px solid rgba(255,255,255,0.13)",
+                                                                    color: "rgba(255,255,255,0.7)",
+                                                                    fontWeight: 600,
+                                                                    fontSize: "0.88rem",
+                                                                    cursor: "pointer",
+                                                                    transition: "background 0.15s, transform 0.1s",
+                                                                }}
+                                                                onMouseEnter={e => e.currentTarget.style.background = "rgba(248,113,113,0.15)"}
+                                                                onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
+                                                                onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"}
+                                                                onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
+                                                            >
+                                                                <X size={15} />
+                                                                Reject
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                    {friendStatus === "friends" && <button className={styles.friendsBtn} onClick={() => setUnfriendPopup(true)}>Friends</button>}
+
                                                 </>
                                             )}
                                         </div>
@@ -1440,6 +1556,89 @@ export default function ProfilePage({ type }) {
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+            {unfriendPopup && createPortal(
+                <div style={{
+                    position: "fixed", inset: 0, zIndex: 10000,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: "rgba(0,0,0,0.65)", backdropFilter: "blur(5px)"
+                }}
+                    onClick={() => setUnfriendPopup(false)}
+                >
+                    <div style={{
+                        position: "relative",
+                        background: "linear-gradient(145deg, #1e1e2e, #252535)",
+                        border: "1px solid rgba(255,255,255,0.09)",
+                        borderRadius: 20, padding: "28px 28px 24px",
+                        width: 360, boxShadow: "0 24px 60px rgba(0,0,0,0.7)"
+                    }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button onClick={() => setUnfriendPopup(false)} style={{
+                            position: "absolute", top: 14, right: 14,
+                            background: "rgba(255,255,255,0.07)", border: "none",
+                            borderRadius: "50%", width: 30, height: 30,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            cursor: "pointer", color: "rgba(255,255,255,0.6)"
+                        }}>
+                            <X size={15} />
+                        </button>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
+                            <img
+                                src={avatarUrl || "/default-avatar.png"}
+                                alt=""
+                                style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                            />
+                            <div>
+                                <div style={{ color: "#fff", fontWeight: 700, fontSize: "1rem" }}>{username}</div>
+                                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.78rem", marginTop: 2 }}>
+                                    {user?.friends_count || 0} friends
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{
+                            background: "rgba(248,113,113,0.07)",
+                            border: "1px solid rgba(248,113,113,0.2)",
+                            borderRadius: 12, padding: "12px 14px", marginBottom: 22
+                        }}>
+                            <p style={{ margin: 0, color: "rgba(255,255,255,0.75)", fontSize: "0.875rem", lineHeight: 1.5 }}>
+                                Are you sure you want to unfriend <strong style={{ color: "#fff" }}>{username}</strong>? You'll have to send a new friend request if you change your mind.
+                            </p>
+                        </div>
+
+                        <div style={{ display: "flex", gap: 10 }}>
+                            <button
+                                onClick={() => setUnfriendPopup(false)}
+                                style={{
+                                    flex: 1, background: "rgba(255,255,255,0.06)",
+                                    border: "1px solid rgba(255,255,255,0.1)",
+                                    borderRadius: 12, padding: "11px 0",
+                                    color: "rgba(255,255,255,0.7)", fontWeight: 600,
+                                    fontSize: "0.9rem", cursor: "pointer"
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    await handleUnfriend();
+                                    setUnfriendPopup(false);
+                                }}
+                                style={{
+                                    flex: 2,
+                                    background: "linear-gradient(-90deg, rgba(248,113,113,0.9), rgba(220,38,38,0.9))",
+                                    border: "none", borderRadius: 12, padding: "11px 0",
+                                    color: "#fff", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer"
+                                }}
+                            >
+                                Yes, Unfriend
+                            </button>
                         </div>
                     </div>
                 </div>,

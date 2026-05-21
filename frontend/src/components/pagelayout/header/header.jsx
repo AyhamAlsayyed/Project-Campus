@@ -254,26 +254,43 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
   }, [user]);
 
   const handleNotificationClick = (n) => {
+    setShowNotifications(false);
+
+    const type = (n.type || "").toLowerCase();
+
+  
+    if (type.includes("friend") || type.includes("request")) {
+      const profileId = typeof n.link === 'number' ? n.link : n.link?.id || n.actor_id;
+      if (profileId) navigate(`/profile/${profileId}`);
+      return;
+    }
+
+    
     const post_id = n.post_id || (typeof n.link === 'number' ? n.link : n.link?.post_id);
     const comment_id = n.comment_id || null;
     const post = n.post || n.link?.post || null;
 
-    setShowNotifications(false);
-
     if (post_id) {
-        if (onOpenPost) {
-            onOpenPost(post_id, comment_id, post);
-        } else {
-            navigate('/home', {
-                state: { openPost: { post, postId: post_id, commentId: comment_id } }
-            });
-        }
-        return;
+      if (onOpenPost) {
+        onOpenPost(post_id, comment_id, post);
+      } else {
+        navigate('/home', {
+          state: { openPost: { post, postId: post_id, commentId: comment_id } }
+        });
+      }
+      return;
     }
 
-    if (n.event_id) navigate(`/events/${n.event_id}`);
+    // ── Event ──
+    if (n.event_id) {
+      navigate(`/events/${n.event_id}`);
+      return;
+    }
+
+    // ── Fallback → profile ──
+    if (n.link?.id) navigate(`/profile/${n.link.id}`);
     else if (n.actor_id) navigate(`/profile/${n.actor_id}`);
-};
+  };
   useEffect(() => {
     const updateRect = () => {
       if (showSearchDropdown && searchInputRef.current) {
@@ -826,6 +843,12 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                       {openMenuId === n.id && (
                         <div
                           className={styles.actionMenu}
+                          style={
+                            // If this notification is in the last 2, flip the menu upward
+                            notifications.indexOf(n) >= notifications.length - 2
+                              ? { bottom: 30, top: 'auto', right: 25 }
+                              : {}
+                          }
                           onMouseDown={(e) => e.stopPropagation()}
                         >
                           <button onClick={(e) => { e.stopPropagation(); handleMarkAsRead(n.id, n.is_read); }}>

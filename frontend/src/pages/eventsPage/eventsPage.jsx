@@ -32,6 +32,17 @@ export default function EventsPage() {
             }
         }
     }, [highlightId, events]);
+    const handlePageNotification = async (pageId) => {
+        const token = localStorage.getItem("access");
+        try {
+            await fetch(`${API}/api/pages/${pageId}/notify/`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        } catch (err) {
+            console.error("Failed to toggle page notification", err);
+        }
+    };
 
     const handleReminder = async (eventId) => {
         const token = localStorage.getItem("access");
@@ -60,13 +71,11 @@ export default function EventsPage() {
             };
 
             try {
-
                 const [eventsRes, userRes] = await Promise.all([
                     fetch(`${API}/api/events/`, { headers }),
                     fetch(`${API}/api/auth/me/`, { headers })
                 ]);
 
-                // Handle User Data (Same logic as Universities)
                 if (userRes.ok) {
                     const userData = await userRes.json();
                     setUser(userData);
@@ -74,10 +83,10 @@ export default function EventsPage() {
                     console.warn("User profile could not be fetched.");
                 }
 
-                // Handle Events Data
                 if (eventsRes.ok) {
                     const data = await eventsRes.json();
-                    const formatted = data.map(event => ({
+
+                    const formatEvent = (event) => ({
                         id: event.id,
                         pageId: event.page_id,
                         orgName: event.organization_name,
@@ -94,15 +103,19 @@ export default function EventsPage() {
                         title: event.title,
                         description: event.description,
                         pageType: event.page_type,
-                    }));
+                    });
+
+                    const formatted = (data.body || []).map(formatEvent);
+                    const formattedRec = (data.recommended || []).map(formatEvent);
+
                     setEvents(formatted);
+                    setRecommendedEvents(formattedRec);
+
                     const initialReminders = {};
-                    formatted.forEach(e => {
+                    [...formatted, ...formattedRec].forEach(e => {
                         initialReminders[e.id] = e.isReminded || false;
                     });
                     setReminders(initialReminders);
-
-                    setRecommendedEvents(formatted.slice(0, 3));
                 }
 
             } catch (err) {
@@ -194,7 +207,7 @@ export default function EventsPage() {
                                         {event.isFollowed && (
                                             <button
                                                 className={styles.bellBtn}
-                                                onClick={() => handleReminder(event.id)}
+                                                onClick={() => handlePageNotification(event.pageId)}
                                                 style={{
                                                     background: reminders[event.id] ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)",
                                                     transition: "background 0.2s"
@@ -298,7 +311,7 @@ export default function EventsPage() {
                                                     {rec.isFollowed && (
                                                         <button
                                                             className={styles.bellBtn}
-                                                            onClick={() => handleReminder(rec.id)}
+                                                            onClick={() => handlePageNotification(rec.pageId)}
                                                             style={{
                                                                 background: reminders[rec.id] ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)",
                                                                 transition: "background 0.2s",
