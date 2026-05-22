@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ...models import ConversationMember, Friendship
-from ...serializers import ConversationMemberSerializer, UserMinimalSerializer
+from ...serializers import GroupMemberSerializer, UserMinimalSerializer
 
 User = get_user_model()
 
@@ -26,7 +26,6 @@ def get_friends_to_invite(request, conv_id):
         status=Friendship.Status.ACCEPTED,
         relation_type=Friendship.RelationType.USER_TO_USER,
     )
-    
 
     friend_ids = []
     for f in friendships:
@@ -38,7 +37,6 @@ def get_friends_to_invite(request, conv_id):
     invitable_users = (
         User.objects.filter(id__in=friend_ids).exclude(id__in=existing_member_ids).select_related("profile")
     )
-   
 
     serializer = UserMinimalSerializer(invitable_users, many=True, context={"request": request})
     return Response(serializer.data)
@@ -46,9 +44,8 @@ def get_friends_to_invite(request, conv_id):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def add_member_to_group(request):
+def add_member_to_group(request, conv_id):
     user = request.user
-    conv_id = request.data.get("conversation_id")
     target_user_id = request.data.get("user_id")
 
     if not conv_id or not target_user_id:
@@ -96,13 +93,18 @@ def get_sorted_group_members(request, conv_id):
     if not ConversationMember.objects.filter(conversation_id=conv_id, user=request.user).exists():
         raise PermissionDenied("You cannot view members of a group you aren't part of.")
 
-    members = ConversationMember.objects.filter(conversation_id=conv_id).select_related("user__profile")
+    members = ConversationMember.objects.filter(conversation_id=conv_id).select_related(
+        "user",
+        "user__profile",
+        "user__student_profile",
+        "user__instructor_profile",
+        "user__admin_profile",
+    )
 
     if not members.exists():
         return Response([])
 
-    # 3. Use Case/When database statements to apply hierarchical sorting weight
-    ordered_members = members.annotate(
+    ordered_memberships = members.annotate(
         role_priority=Case(
             When(role=ConversationMember.Role.OWNER, then=Value(3)),
             When(role=ConversationMember.Role.ADMIN, then=Value(2)),
@@ -112,5 +114,12 @@ def get_sorted_group_members(request, conv_id):
         )
     ).order_by("-role_priority", "user__username")
 
-    serializer = ConversationMemberSerializer(ordered_members, many=True, context={"request": request})
+    sorted_users = []
+    for membership in ordered_memberships:
+        user_obj = membership.user
+        if user_obj:
+            user_obj.stashed_group_role = membership.role
+            sorted_users.append(user_obj)
+
+    serializer = GroupMemberSerializer(sorted_users, many=True, context={"request": request})
     return Response(serializer.data)

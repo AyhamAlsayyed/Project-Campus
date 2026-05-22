@@ -9,8 +9,8 @@ from ...models import ConversationMember
 User = get_user_model()
 
 
-def _verify_edit_permission(user, conv_id):
-    member = ConversationMember.objects.filter(conversation_id=conv_id, user=user).first()
+def _verify_edit_permission(user, conversation_id):
+    member = ConversationMember.objects.filter(conversation_id=conversation_id, user=user).first()
     if not member:
         raise PermissionDenied("Not a member of this group.")
 
@@ -24,8 +24,8 @@ def _verify_edit_permission(user, conv_id):
 
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
-def edit_group_details(request, conv_id):
-    conv = _verify_edit_permission(request.user, conv_id)
+def edit_group_details(request, conversation_id):
+    conv = _verify_edit_permission(request.user, conversation_id)
 
     name = request.data.get("name")
     description = request.data.get("description")
@@ -41,8 +41,8 @@ def edit_group_details(request, conv_id):
 
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
-def edit_group_image(request, conv_id):
-    conv = _verify_edit_permission(request.user, conv_id)
+def edit_group_image(request, conversation_id):
+    conv = _verify_edit_permission(request.user, conversation_id)
 
     if "image" not in request.FILES:
         raise ValidationError("No image payload detected in request.")
@@ -56,9 +56,8 @@ def edit_group_image(request, conv_id):
 
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
-def update_group_privacy_settings(request, conv_id):
-    # Core settings updates are limited STRICTLY to group owners or designated admins
-    member = ConversationMember.objects.filter(conversation_id=conv_id, user=request.user).first()
+def update_group_privacy_settings(request, conversation_id):
+    member = ConversationMember.objects.filter(conversation_id=conversation_id, user=request.user).first()
     if not member:
         raise PermissionDenied("Access denied.")
 

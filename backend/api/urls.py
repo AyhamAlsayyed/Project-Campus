@@ -18,25 +18,12 @@ from .views.communities.community_action import (
     leave_community,
     toggle_community_notifications,
 )
-from .views.conversation.conversation import (
+from .views.conversation.conversation import (  # create_group_conversation,
     create_dm,
     get_conversations,
     get_messages,
     send_message,
 )
-
-
-from .views.conversation.edit_conversation import (
-    edit_group_details,
-    edit_group_image,
-    update_group_privacy_settings
-)
-from .views.conversation.conversation_info import (
-    get_friends_to_invite,
-    add_member_to_group,
-    get_sorted_group_members,
-)
-
 from .views.conversation.conversation_action import (
     accept_chat_request,
     block_user_from_chat,
@@ -47,6 +34,15 @@ from .views.conversation.conversation_action import (
     mark_unread,
     toggle_mute,
     toggle_pin,
+)
+from .views.conversation.conversation_info import (
+    add_member_to_group,
+    get_friends_to_invite,
+    get_sorted_group_members,
+)
+from .views.conversation.edit_conversation import (  # update_group_privacy_settings,
+    edit_group_details,
+    edit_group_image,
 )
 from .views.event.event_action import toggle_event_reminder
 from .views.event.events import events  # , cancel_event, create_event, edit_event
@@ -162,10 +158,12 @@ urlpatterns = [
     path("events/reminders/", get_events),
     path("search/", search),
     path("reports/", create_report),
-    path("groups/<int:conv_id>/invite-friends/", get_friends_to_invite),
+    # we awaw
     path("groups/<int:conv_id>/members/", get_sorted_group_members),
     path("groups/<int:conv_id>/edit-details/", edit_group_details),
     path("groups/<int:conv_id>/edit-image/", edit_group_image),
+    path("groups/<int:conv_id>/add-member/", add_member_to_group),
+    path("groups/<int:conv_id>/invite-friends/", get_friends_to_invite),
 ]
 # not yet used urls
 """
@@ -175,12 +173,10 @@ urlpatterns += [
     path("", create_event),
     path("", edit_event),
     path("", cancel_event),
-   
+
     path("", update_group_privacy_settings),
-    path("", get_friends_to_invite),
-    path("", add_member_to_group),
-    
-    path("", ),
+    path("", create_group_conversation),
+
     path("", ),
     path("", ),
     path("", ),
