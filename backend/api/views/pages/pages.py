@@ -128,3 +128,30 @@ def page_events(request, page_id):
     serializer = EventSerializer(events, many=True, context={"request": request})
 
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def toggle_page_notifications(request, page_id):
+    page = get_object_or_404(User, id=page_id)
+
+    try:
+        friendship = Friendship.objects.get(
+            user1=request.user,
+            user2=page,
+            relation_type=Friendship.RelationType.USER_TO_PAGE,
+            status=Friendship.Status.FOLLOWING,
+        )
+    except Friendship.DoesNotExist:
+        return Response(
+            {"detail": "You must follow the page to toggle notification settings."}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    friendship.is_muted = not friendship.is_muted
+    friendship.save(update_fields=["is_muted"])
+
+    is_notified = not friendship.is_muted
+
+    return Response(
+        {"detail": "Notification settings updated successfully.", "is_notified": is_notified}, status=status.HTTP_200_OK
+    )

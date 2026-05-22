@@ -16,7 +16,7 @@ User = get_user_model()
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def get_friends_to_invite(request, conv_id):
+def get_friends_to_invite(request, conv_id=None):
     user = request.user
 
     existing_member_ids = ConversationMember.objects.filter(conversation_id=conv_id).values_list("user_id", flat=True)
@@ -89,7 +89,7 @@ def add_member_to_group(request, conv_id):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def get_sorted_group_members(request, conv_id):
+def get_group_members(request, conv_id):
     if not ConversationMember.objects.filter(conversation_id=conv_id, user=request.user).exists():
         raise PermissionDenied("You cannot view members of a group you aren't part of.")
 

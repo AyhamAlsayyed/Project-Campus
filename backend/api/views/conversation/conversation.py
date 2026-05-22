@@ -139,12 +139,39 @@ def create_group_conversation(request):
     is_academic = request.data.get("is_academic", False)
     group_image = request.FILES.get("image")
 
+    member_ids = request.data.get("members", [])
+
     if not name:
         return Response({"error": "Group name is required."}, status=status.HTTP_400_BAD_REQUEST)
 
+    if isinstance(member_ids, str):
+        try:
+            import json
+
+            member_ids = json.loads(member_ids)
+        except ValueError:
+            return Response({"error": "Members field must be a valid list."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not isinstance(member_ids, list) or len(member_ids) == 0:
+        return Response(
+            {"error": "At least one initial member is required to create a group chat."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    cleaned_member_ids = list(set(int(m_id) for m_id in member_ids if int(m_id) != user.id))
+
+    if not cleaned_member_ids:
+        return Response(
+            {"error": "You cannot create a group containing only yourself."}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    invited_users = User.objects.filter(id__in=cleaned_member_ids)
+
+    if not invited_users.exists():
+        return Response({"error": "No valid initial members found."}, status=status.HTTP_404_NOT_FOUND)
+
     if is_academic:
         is_instructor = hasattr(user, "instructor_profile") and user.instructor_profile is not None
-
         if not is_instructor:
             raise PermissionDenied("Only instructors can create academic groups.")
 
@@ -164,6 +191,15 @@ def create_group_conversation(request):
             conversation=new_group, user=user, role=ConversationMember.Role.OWNER, status="approved"
         )
 
+        membership_objects = [
+            ConversationMember(
+                conversation=new_group, user=invited_user, role=ConversationMember.Role.MEMBER, status="approved"
+            )
+            for invited_user in invited_users
+        ]
+
+        ConversationMember.objects.bulk_create(membership_objects)
+
     return Response(
         {
             "message": "Group created successfully.",
@@ -171,6 +207,7 @@ def create_group_conversation(request):
             "name": new_group.name,
             "is_academic": new_group.is_academic,
             "status": new_group.status,
+            "members_added": invited_users.count(),
         },
         status=status.HTTP_201_CREATED,
     )

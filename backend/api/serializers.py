@@ -355,6 +355,7 @@ class GroupMemberSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
     group_role = serializers.SerializerMethodField()
+    conversation_id = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -364,6 +365,7 @@ class GroupMemberSerializer(serializers.ModelSerializer):
             "avatar",
             "role",
             "group_role",
+            "conversation_id",
         ]
 
     def get_avatar(self, obj):
@@ -383,6 +385,25 @@ class GroupMemberSerializer(serializers.ModelSerializer):
 
     def get_group_role(self, obj):
         return getattr(obj, "stashed_group_role", "member")
+
+    def get_conversation_id(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
+            return None
+
+        current_user = request.user
+        target_user = obj
+
+        if current_user == target_user:
+            return None
+
+        existing_dm = (
+            Conversation.objects.filter(is_group=False, members__user=current_user)
+            .filter(members__user=target_user)
+            .first()
+        )
+
+        return existing_dm.conversation_id if existing_dm else None
 
 
 class BlockedUserListSerializer(serializers.ModelSerializer):
@@ -717,6 +738,7 @@ class EventSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
     banner = serializers.SerializerMethodField()
 
+    is_muted = serializers.SerializerMethodField()
     is_followed = serializers.BooleanField(read_only=True)
     is_reminded = serializers.SerializerMethodField()
 
@@ -729,6 +751,7 @@ class EventSerializer(serializers.ModelSerializer):
             "page_type",
             "avatar",
             "banner",
+            "is_muted",
             "is_followed",
             "is_reminded",
             "start_date",
@@ -755,6 +778,19 @@ class EventSerializer(serializers.ModelSerializer):
             except Exception:
                 return None
         return None
+
+    def get_is_muted(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated or not obj.page:
+            return False
+
+        return Friendship.objects.filter(
+            user1=request.user,
+            user2=obj.page.user,
+            relation_type=Friendship.RelationType.USER_TO_PAGE,
+            status=Friendship.Status.FOLLOWING,
+            is_muted=True,
+        ).exists()
 
     def get_is_reminded(self, obj):
         request = self.context.get("request")
