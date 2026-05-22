@@ -43,10 +43,10 @@ from .views.conversation.conversation_info import (
     get_group_members,
 )
 
-# from .views.conversation.conversation_member_action import (
-#    make_group_admin,
-#    remove_member_from_group,
-# )
+from .views.conversation.conversation_member_action import (
+   make_group_admin,
+   remove_member_from_group,  
+)
 from .views.conversation.edit_conversation import (  # update_group_privacy_settings,
     edit_group_details,
     edit_group_image,
@@ -182,6 +182,8 @@ urlpatterns += [
     path("groups/<int:conv_id>/invite-friends/", get_friends_to_invite),
     # chat_group_action
     path("groups/<int:conv_id>/add-member/", add_member_to_group),
+    path("groups/<int:conv_id>/remove-member/", remove_member_from_group),
+     path("groups/<int:conv_id>/make-admin/", make_group_admin),
 ]
 # page
 urlpatterns += [

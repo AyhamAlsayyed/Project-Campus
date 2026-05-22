@@ -492,838 +492,857 @@ export default function ChatsPage() {
                         <GroupCreationFlow closeFlow={() => setShowCreateGroup(false)} />
                     ) :
 
-                    !selectedChat ? (
-                        <>
-                            <h1 className={styles.title}>
-                                {showRequests
-                                    ? <><span className={styles.highlight}>Chat</span> Requests</>
-                                    : <><span className={styles.highlight}>Chats</span> section</>
-                                }
-                            </h1>
+                        !selectedChat ? (
+                            <>
+                                <h1 className={styles.title}>
+                                    {showRequests
+                                        ? <><span className={styles.highlight}>Chat</span> Requests</>
+                                        : <><span className={styles.highlight}>Chats</span> section</>
+                                    }
+                                </h1>
 
-                            {!showRequests && (
-                                <div className={styles.filterContainer}>
-                                    <div className={styles.filters}>
-                                        <button className={`${styles.filterBtn} ${filter === "all" ? styles.active : ""}`} onClick={() => setFilter("all")}>All</button>
-                                        <button className={`${styles.filterBtn} ${filter === "unread" ? styles.active : ""}`} onClick={() => setFilter("unread")}>Unread</button>
-                                        <button className={`${styles.filterBtn} ${filter === "pinned" ? styles.active : ""}`} onClick={() => setFilter("pinned")}>Pinned</button>
-                                        <button className={`${styles.filterBtn} ${filter === "groups" ? styles.active : ""}`} onClick={() => setFilter("groups")}>Groups</button>
-                                    </div>
-                                    <div className={styles.righSide} style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-                                        <div
-                                            className={styles.createGroup}
-                                            onClick={() => setShowCreateGroup(true)}
-                                            style={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                padding: "8px",
-                                                cursor: "pointer",
-                                                transition: "background 0.2s"
-                                            }}
-                                        >
-                                            <img src={CreateGroupIcon} alt="" style={{ width: "25px", height: "25px", filter: 'brightness(0) invert(0.9)' }} />
+                                {!showRequests && (
+                                    <div className={styles.filterContainer}>
+                                        <div className={styles.filters}>
+                                            <button className={`${styles.filterBtn} ${filter === "all" ? styles.active : ""}`} onClick={() => setFilter("all")}>All</button>
+                                            <button className={`${styles.filterBtn} ${filter === "unread" ? styles.active : ""}`} onClick={() => setFilter("unread")}>Unread</button>
+                                            <button className={`${styles.filterBtn} ${filter === "pinned" ? styles.active : ""}`} onClick={() => setFilter("pinned")}>Pinned</button>
+                                            <button className={`${styles.filterBtn} ${filter === "groups" ? styles.active : ""}`} onClick={() => setFilter("groups")}>Groups</button>
+                                        </div>
+                                        <div className={styles.righSide} style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                                            <div
+                                                className={styles.createGroup}
+                                                onClick={() => setShowCreateGroup(true)}
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    padding: "8px",
+                                                    cursor: "pointer",
+                                                    transition: "background 0.2s"
+                                                }}
+                                            >
+                                                <img src={CreateGroupIcon} alt="" style={{ width: "25px", height: "25px", filter: 'brightness(0) invert(0.9)' }} />
+                                            </div>
+
+                                            <div
+                                                className={styles.requestsLink}
+                                                onClick={() => setShowRequests(true)}
+                                                style={{ cursor: 'pointer' }}
+                                            >
+
+                                                <span>Requests</span> ({requestsCount})
+                                            </div>
                                         </div>
 
-                                        <div
-                                            className={styles.requestsLink}
-                                            onClick={() => setShowRequests(true)}
-                                            style={{ cursor: 'pointer' }}
-                                        >
-
-                                            <span>Requests</span> ({requestsCount})
-                                        </div>
                                     </div>
+                                )}
 
-                                </div>
-                            )}
+                                {showRequests ? (
+                                    <>
+                                        <button
+                                            onClick={() => { setShowRequests(false); setSelectedRequest(null); }}
+                                            className={styles.iconBtn}
+                                            style={{ marginBottom: 12 }}
+                                        >
+                                            <img
+                                                src={BackButton}
+                                                alt=""
+                                                style={{
+                                                    width: 22,
+                                                    height: 22,
+                                                    filter: "brightness(0) invert(1) opacity(0.9)"
+                                                }}
+                                            />
+                                        </button>
 
-                            {showRequests ? (
-                                <>
-                                    <button
-                                        onClick={() => { setShowRequests(false); setSelectedRequest(null); }}
-                                        className={styles.iconBtn}
-                                        style={{ marginBottom: 12 }}
-                                    >
-                                        <img
-                                            src={BackButton}
-                                            alt=""
-                                            style={{
-                                                width: 22,
-                                                height: 22,
-                                                filter: "brightness(0) invert(1) opacity(0.9)"
-                                            }}
-                                        />
-                                    </button>
-
-                                    {selectedRequest ? (
-                                        <div className={`${styles.chatList} ${styles.activeChatOuter}`}>
-                                            <div className={styles.innerChatContainer}>
-                                                <div className={styles.activeChatHeader}>
-                                                    <div className={styles.headerLeftWrapper}>
-                                                        <button className={styles.iconBtn} onClick={() => setSelectedRequest(null)}>
-                                                            <img src={BackButton} alt="" style={{ width: 22, height: 22, filter: "brightness(0) invert(1) opacity(0.9)" }} />
-                                                        </button>
-                                                        <div className={styles.headerTitleInfo}>
-                                                            <h2 className={styles.groupName}>{selectedRequest.sender_username}</h2>
-                                                            <p className={styles.memberSubtitle}>Wants to send you a message</p>
+                                        {selectedRequest ? (
+                                            <div className={`${styles.chatList} ${styles.activeChatOuter}`}>
+                                                <div className={styles.innerChatContainer}>
+                                                    <div className={styles.activeChatHeader}>
+                                                        <div className={styles.headerLeftWrapper}>
+                                                            <button className={styles.iconBtn} onClick={() => setSelectedRequest(null)}>
+                                                                <img src={BackButton} alt="" style={{ width: 22, height: 22, filter: "brightness(0) invert(1) opacity(0.9)" }} />
+                                                            </button>
+                                                            <div className={styles.headerTitleInfo}>
+                                                                <h2 className={styles.groupName}>{selectedRequest.sender_username}</h2>
+                                                                <p className={styles.memberSubtitle}>Wants to send you a message</p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
 
-                                                <div className={styles.activeChatInnerContainer}>
-                                                    <div className={styles.chatArea}>
-                                                        <div className={styles.messagesScrollArea}>
-                                                            {requestMessages.map(msg => (
-                                                                <div key={msg.id} className={`${styles.messageWrapper} ${msg.senderId === 'me' || msg.senderId === user?.id ? styles.messageMineWrapper : styles.messageOtherWrapper}`}>
-                                                                    <div className={styles.messageContentBlock}>
-                                                                        <div className={`${styles.messageMeta} ${msg.senderId === 'me' ? styles.metaRight : styles.metaLeft}`}>
-                                                                            <span className={styles.msgSenderName}>{msg.senderId === 'me' ? 'You' : msg.sender}</span>
-                                                                            <span className={styles.msgTime}>{msg.time}</span>
-                                                                        </div>
-                                                                        <div className={styles.messageRow}>
-                                                                            <div className={`${styles.messageBubble} ${msg.senderId === 'me' || msg.senderId === user?.id ? styles.bubbleMine : styles.bubbleOther}`}>
-                                                                                {msg.type === 'media' && msg.media?.length > 0 ? (
-                                                                                    <div className={styles.mediaAttachment}>
-                                                                                        {msg.media.map((m, i) => (
-                                                                                            m.type === 'image' ? (
-                                                                                                <img key={m.id ?? i} src={m.url?.startsWith('http') ? m.url : `${API}${m.url}`}
-                                                                                                    alt="attachment" className={styles.mediaImage}
-                                                                                                    onClick={() => setLightboxUrl(m.url?.startsWith('http') ? m.url : `${API}${m.url}`)} />
-                                                                                            ) : m.type === 'video' ? (
-                                                                                                <video key={m.id ?? i} src={m.url?.startsWith('http') ? m.url : `${API}${m.url}`} controls className={styles.mediaVideo} />
-                                                                                            ) : (
-                                                                                                <a key={m.id ?? i} href={m.url?.startsWith('http') ? m.url : `${API}${m.url}`} target="_blank" rel="noreferrer" className={styles.fileAttachment}>
-                                                                                                    <div className={styles.fileIconWrapper}><span className={styles.pdfLabel}>{m.url?.split('.').pop()?.toUpperCase() ?? 'FILE'}</span></div>
-                                                                                                    <div className={styles.fileDetails}><strong className={styles.fileName}>{m.url?.split('/').pop()}</strong></div>
-                                                                                                    <div className={styles.downloadWrapper}><Download size={20} strokeWidth={2.5} /></div>
-                                                                                                </a>
-                                                                                            )
-                                                                                        ))}
-                                                                                        {msg.text && <span style={{ whiteSpace: 'pre-wrap', display: 'block', marginTop: 6 }}>{msg.text}</span>}
-                                                                                    </div>
-                                                                                ) : msg.post ? (
-                                                                                    <div
-                                                                                        onClick={() => setOpenPost(msg.post)}
-                                                                                        style={{
-                                                                                            cursor: "pointer",
-                                                                                            background: "#1a1a2e",
-                                                                                            border: "1px solid rgba(255,255,255,0.12)",
-                                                                                            borderRadius: 12,
-                                                                                            overflow: "hidden",
-                                                                                            maxWidth: 260,
-                                                                                            margin: "-8px -12px",   // ← bleeds to bubble edges
-                                                                                            transition: "background 0.2s",
-                                                                                        }}
-                                                                                        onMouseEnter={e => e.currentTarget.style.background = "#22223a"}
-                                                                                        onMouseLeave={e => e.currentTarget.style.background = "#1a1a2e"}
-                                                                                    >
-                                                                                        {(msg.post.media?.[0]?.url || msg.post.image) && (
-                                                                                            <img src={msg.post.media?.[0]?.url || msg.post.image} alt="" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
-                                                                                        )}
-                                                                                        <div style={{ padding: "10px 12px" }}>
-                                                                                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                                                                                                <img src={msg.post.author?.avatar || "/default-avatar.png"} alt="" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} />
-                                                                                                <span style={{ color: "white", fontWeight: 600, fontSize: "0.82rem" }}>{msg.post.author?.username || "User"}</span>
-                                                                                            </div>
-                                                                                            {msg.post.content_text && (
-                                                                                                <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.78rem", margin: 0, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                                                                                                    {msg.post.content_text}
-                                                                                                </p>
-                                                                                            )}
-                                                                                            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", marginTop: 6, display: "block" }}>Tap to view post</span>
+                                                    <div className={styles.activeChatInnerContainer}>
+                                                        <div className={styles.chatArea}>
+                                                            <div className={styles.messagesScrollArea}>
+                                                                {requestMessages.map(msg => (
+                                                                    <div key={msg.id} className={`${styles.messageWrapper} ${msg.senderId === 'me' || msg.senderId === user?.id ? styles.messageMineWrapper : styles.messageOtherWrapper}`}>
+                                                                        <div className={styles.messageContentBlock}>
+                                                                            <div className={`${styles.messageMeta} ${msg.senderId === 'me' ? styles.metaRight : styles.metaLeft}`}>
+                                                                                <span className={styles.msgSenderName}>{msg.senderId === 'me' ? 'You' : msg.sender}</span>
+                                                                                <span className={styles.msgTime}>{msg.time}</span>
+                                                                            </div>
+                                                                            <div className={styles.messageRow}>
+                                                                                <div className={`${styles.messageBubble} ${msg.senderId === 'me' || msg.senderId === user?.id ? styles.bubbleMine : styles.bubbleOther}`}>
+                                                                                    {msg.type === 'media' && msg.media?.length > 0 ? (
+                                                                                        <div className={styles.mediaAttachment}>
+                                                                                            {msg.media.map((m, i) => (
+                                                                                                m.type === 'image' ? (
+                                                                                                    <img key={m.id ?? i} src={m.url?.startsWith('http') ? m.url : `${API}${m.url}`}
+                                                                                                        alt="attachment" className={styles.mediaImage}
+                                                                                                        onClick={() => setLightboxUrl(m.url?.startsWith('http') ? m.url : `${API}${m.url}`)} />
+                                                                                                ) : m.type === 'video' ? (
+                                                                                                    <video key={m.id ?? i} src={m.url?.startsWith('http') ? m.url : `${API}${m.url}`} controls className={styles.mediaVideo} />
+                                                                                                ) : (
+                                                                                                    <a key={m.id ?? i} href={m.url?.startsWith('http') ? m.url : `${API}${m.url}`} target="_blank" rel="noreferrer" className={styles.fileAttachment}>
+                                                                                                        <div className={styles.fileIconWrapper}><span className={styles.pdfLabel}>{m.url?.split('.').pop()?.toUpperCase() ?? 'FILE'}</span></div>
+                                                                                                        <div className={styles.fileDetails}><strong className={styles.fileName}>{m.url?.split('/').pop()}</strong></div>
+                                                                                                        <div className={styles.downloadWrapper}><Download size={20} strokeWidth={2.5} /></div>
+                                                                                                    </a>
+                                                                                                )
+                                                                                            ))}
+                                                                                            {msg.text && <span style={{ whiteSpace: 'pre-wrap', display: 'block', marginTop: 6 }}>{msg.text}</span>}
                                                                                         </div>
-                                                                                    </div>
-                                                                                ) : (
-                                                                                    <span style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</span>
-                                                                                )}
+                                                                                    ) : msg.post ? (
+                                                                                        <div
+                                                                                            onClick={() => setOpenPost(msg.post)}
+                                                                                            style={{
+                                                                                                cursor: "pointer",
+                                                                                                background: "#1a1a2e",
+                                                                                                border: "1px solid rgba(255,255,255,0.12)",
+                                                                                                borderRadius: 12,
+                                                                                                overflow: "hidden",
+                                                                                                maxWidth: 260,
+                                                                                                margin: "-8px -12px",   // ← bleeds to bubble edges
+                                                                                                transition: "background 0.2s",
+                                                                                            }}
+                                                                                            onMouseEnter={e => e.currentTarget.style.background = "#22223a"}
+                                                                                            onMouseLeave={e => e.currentTarget.style.background = "#1a1a2e"}
+                                                                                        >
+                                                                                            {(msg.post.media?.[0]?.url || msg.post.image) && (
+                                                                                                <img src={msg.post.media?.[0]?.url || msg.post.image} alt="" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
+                                                                                            )}
+                                                                                            <div style={{ padding: "10px 12px" }}>
+                                                                                                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                                                                                                    <img src={msg.post.author?.avatar || "/default-avatar.png"} alt="" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} />
+                                                                                                    <span style={{ color: "white", fontWeight: 600, fontSize: "0.82rem" }}>{msg.post.author?.username || "User"}</span>
+                                                                                                </div>
+                                                                                                {msg.post.content_text && (
+                                                                                                    <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.78rem", margin: 0, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                                                                                                        {msg.post.content_text}
+                                                                                                    </p>
+                                                                                                )}
+                                                                                                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", marginTop: 6, display: "block" }}>Tap to view post</span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    ) : (
+                                                                                        <span style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</span>
+                                                                                    )}
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
+                                                                ))}
+                                                            </div>
 
-                                                        <div style={{
-                                                            display: "flex", gap: 12, padding: "16px 20px",
-                                                            borderTop: "1px solid rgba(255,255,255,0.07)",
-                                                            background: "rgba(255,255,255,0.02)"
-                                                        }}>
-                                                            <p style={{ flex: 1, margin: 0, color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", alignSelf: "center" }}>
-                                                                Do you want to accept this message request?
-                                                            </p>
-                                                            <button
-                                                                onClick={() => acceptRequest(selectedRequest.conversation_id)}
-                                                                style={{
-                                                                    padding: "10px 22px", borderRadius: 22, border: "none",
-                                                                    background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))",
-                                                                    color: "#fff", fontWeight: 600, fontSize: "0.88rem", cursor: "pointer"
-                                                                }}
-                                                            >
-                                                                Accept
-                                                            </button>
-                                                            <button
-                                                                onClick={() => blockRequest(selectedRequest.conversation_id)}
-                                                                style={{
-                                                                    padding: "10px 22px", borderRadius: 22,
-                                                                    border: "1px solid rgba(248,113,113,0.3)",
-                                                                    background: "rgba(248,113,113,0.08)",
-                                                                    color: "#f87171", fontWeight: 600, fontSize: "0.88rem", cursor: "pointer"
-                                                                }}
-                                                            >
-                                                                Block
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className={styles.chatList}>
-                                            <div className={styles.innerContainer}>
-                                                <div className={styles.chatItemsContainer}>
-                                                    {chatRequests.length === 0 ? (
-                                                        <div style={{ padding: "40px 20px", textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: "0.9rem" }}>
-                                                            No message requests
-                                                        </div>
-                                                    ) : chatRequests.map((req, index) => {
-                                                        // Resolve avatar url safely if the backend provides it
-                                                        const reqAvatar = req.sender_avatar || req.avatar;
-                                                        const avatarUrl = reqAvatar ? (reqAvatar.startsWith('http') ? reqAvatar : `${API}${reqAvatar}`) : null;
-                                                        const isCurrentMenuOpen = openMenuId === req.conversation_id;
-
-                                                        return (
-                                                            <div key={req.conversation_id} className={styles.chatRow}>
-                                                                <div
-                                                                    className={styles.chatItem}
-                                                                    style={{ cursor: 'pointer' }}
-                                                                    onClick={async () => {
-                                                                        setSelectedRequest(req);
-                                                                        const res = await fetch(`${API}/api/chats/${req.conversation_id}/messages/`, {
-                                                                            headers: { Authorization: `Bearer ${token}` },
-                                                                        });
-                                                                        const data = await res.json();
-                                                                        setRequestMessages(Array.isArray(data) ? data : []);
+                                                            <div style={{
+                                                                display: "flex", gap: 12, padding: "16px 20px",
+                                                                borderTop: "1px solid rgba(255,255,255,0.07)",
+                                                                background: "rgba(255,255,255,0.02)"
+                                                            }}>
+                                                                <p style={{ flex: 1, margin: 0, color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", alignSelf: "center" }}>
+                                                                    Do you want to accept this message request?
+                                                                </p>
+                                                                <button
+                                                                    onClick={() => acceptRequest(selectedRequest.conversation_id)}
+                                                                    style={{
+                                                                        padding: "10px 22px", borderRadius: 22, border: "none",
+                                                                        background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))",
+                                                                        color: "#fff", fontWeight: 600, fontSize: "0.88rem", cursor: "pointer"
                                                                     }}
                                                                 >
-                                                                    <div className={styles.chatItemLeft}>
-                                                                        <div className={styles.avatarWrapper}>
-                                                                            {avatarUrl ? (
-                                                                                <img
-                                                                                    src={avatarUrl}
-                                                                                    alt={req.sender_username}
-                                                                                    className={styles.chatAvatar}
-                                                                                />
-                                                                            ) : (
-                                                                                <div
-                                                                                    className={styles.chatAvatar}
-                                                                                    style={{
-                                                                                        background: "rgba(255,255,255,0.08)",
-                                                                                        display: "flex",
-                                                                                        alignItems: "center",
-                                                                                        justifyContent: "center",
-                                                                                        color: "rgba(255,255,255,0.5)",
-                                                                                        fontSize: "1.1rem",
-                                                                                        fontWeight: 700
-                                                                                    }}
-                                                                                >
-                                                                                    {req.sender_username?.[0]?.toUpperCase() || "?"}
-                                                                                </div>
-                                                                            )}
-                                                                            <span className={`${styles.statusDot} ${styles.offline}`} />
-                                                                        </div>
-                                                                        <div className={styles.chatIdentity}>
-                                                                            <span className={styles.chatStatusText}>Message request</span>
-                                                                            <div className={styles.chatNameWrapper}>
-                                                                                <span className={styles.chatName}>{req.sender_username}</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className={styles.chatItemRight}>
-                                                                        <div className={styles.chatDetails}>
-                                                                            <span className={styles.chatPreview}>{req.message_preview}</span>
-                                                                            <span className={styles.chatTime}>{req.time}</span>
-                                                                        </div>
-
-                                                                        {/* The three-dot dropdown menu matching the primary chat items */}
-                                                                        <div className={styles.chatActions} ref={isCurrentMenuOpen ? menuRef : null}>
-                                                                            <button
-                                                                                className={styles.moreButton}
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    const rect = e.currentTarget.getBoundingClientRect();
-                                                                                    const dropdownHeight = 110; // Slightly smaller height for request items
-                                                                                    const spaceBelow = window.innerHeight - rect.bottom;
-                                                                                    const top = spaceBelow < dropdownHeight
-                                                                                        ? rect.top - dropdownHeight + 35
-                                                                                        : rect.bottom + 8;
-                                                                                    setMenuPosition({ top, right: window.innerWidth - rect.right });
-                                                                                    setOpenMenuId(openMenuId === req.conversation_id ? null : req.conversation_id);
-                                                                                }}
-                                                                            >
-                                                                                <MoreHorizontal size={16} />
-                                                                            </button>
-
-                                                                            {isCurrentMenuOpen && (
-                                                                                <div className={styles.dropdownMenu} style={{ top: menuPosition.top, right: menuPosition.right }}>
-                                                                                    <button
-                                                                                        className={styles.menuItem}
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            acceptRequest(req.conversation_id);
-                                                                                            setOpenMenuId(null);
-                                                                                        }}
-                                                                                    >
-                                                                                        <CheckSquare size={14} /> Accept request
-                                                                                    </button>
-
-                                                                                    <div className={styles.menuDivider} />
-
-
-                                                                                    <button
-                                                                                        className={styles.menuItem}
-                                                                                        onClick={async (e) => {
-                                                                                            e.stopPropagation();
-
-                                                                                            await deleteChat(req.conversation_id);
-
-                                                                                            setChatRequests(prev => prev.filter(r => r.conversation_id !== req.conversation_id));
-                                                                                            setRequestsCount(prev => prev - 1);
-                                                                                            setOpenMenuId(null);
-                                                                                        }}
-                                                                                    >
-                                                                                        <Trash2 size={14} /> Delete chat
-                                                                                    </button>
-
-                                                                                    <button
-                                                                                        className={`${styles.menuItem} ${styles.destructive}`}
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            blockRequest(req.conversation_id);
-                                                                                            setOpenMenuId(null);
-                                                                                        }}
-                                                                                    >
-                                                                                        <Ban size={14} /> Block sender
-                                                                                    </button>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                {index !== chatRequests.length - 1 && <div className={styles.chatDivider} />}
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
-                            ) : (
-                                <div className={styles.chatList}>
-                                    <div className={styles.innerContainer}>
-                                        <div className={styles.searchContainer}>
-                                            <Search size={18} className={styles.searchIcon} />
-                                            <input
-                                                type="text"
-                                                className={styles.searchInput}
-                                                placeholder="Searching for someone?"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                            />
-                                        </div>
-                                        <div className={styles.chatItemsContainer}>
-                                            {sortedChats.map((chat, index) => (
-                                                <div key={chat.id} className={styles.chatRow}>
-                                                    <div className={styles.chatItem} onClick={async () => {
-                                                        setSelectedChat(chat);
-                                                        navigate(`/chats/${chat.id}`);
-                                                        const res = await fetch(`http://localhost:8000/api/chats/${chat.id}/messages/`, {
-                                                            headers: { Authorization: `Bearer ${token}` },
-                                                        });
-                                                        const data = await res.json();
-                                                        console.log("RECEIVER MESSAGES:", JSON.stringify(data, null, 2));
-                                                        setMessages(data);
-                                                    }} style={{ cursor: 'pointer' }}>
-                                                        <div className={styles.chatItemLeft}>
-                                                            <div className={styles.avatarWrapper}>
-                                                                <img
-                                                                    src={chat.avatar?.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`}
-                                                                    alt={chat.name}
-                                                                    className={styles.chatAvatar}
-                                                                />
-                                                                <span className={`${styles.statusDot} ${chat.is_group ? styles.groupDot :
-                                                                    chat.is_blocked ? styles.blockedDot :
-                                                                        chat.status === 'online' ? styles.online :
-                                                                            chat.status === 'dnd' ? styles.dnd :
-                                                                                styles.offline
-                                                                    }`} />
-                                                            </div>
-                                                            <div className={styles.chatIdentity}>
-                                                                <span className={styles.chatStatusText}>
-                                                                    {chat.is_blocked ? 'Blocked' :
-                                                                        chat.is_group ? 'Group Chat' :
-                                                                            chat.status === 'online' ? 'Online' :
-                                                                                chat.status === 'dnd' ? 'Do Not Disturb' :
-                                                                                    'Offline'}
-                                                                </span>
-                                                                <div className={styles.chatNameWrapper}>
-                                                                    <span className={styles.chatName}>{chat.name}</span>
-                                                                </div>
+                                                                    Accept
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => blockRequest(selectedRequest.conversation_id)}
+                                                                    style={{
+                                                                        padding: "10px 22px", borderRadius: 22,
+                                                                        border: "1px solid rgba(248,113,113,0.3)",
+                                                                        background: "rgba(248,113,113,0.08)",
+                                                                        color: "#f87171", fontWeight: 600, fontSize: "0.88rem", cursor: "pointer"
+                                                                    }}
+                                                                >
+                                                                    Block
+                                                                </button>
                                                             </div>
                                                         </div>
-                                                        <div className={styles.chatItemRight}>
-                                                            <div className={styles.chatDetails}>
-                                                                <span className={styles.chatPreview}>{chat.preview}</span>
-                                                                <span className={styles.chatTime}>{chat.time}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className={styles.chatList}>
+                                                <div className={styles.innerContainer}>
+                                                    <div className={styles.chatItemsContainer}>
+                                                        {chatRequests.length === 0 ? (
+                                                            <div style={{ padding: "40px 20px", textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: "0.9rem" }}>
+                                                                No message requests
                                                             </div>
-                                                            <div className={styles.chatActions}>
-                                                                {chat.is_pinned && <Pin size={14} className={styles.actionIcon} />}
-                                                                {chat.is_muted && <BellOff size={14} className={styles.actionIcon} />}
-                                                                {chat.unread_count > 0 && (
-                                                                    <span className={styles.unreadBadge}>{chat.unread_count}</span>
-                                                                )}
-                                                                <div className={styles.menuWrapper} ref={openMenuId === chat.id ? menuRef : null}>
-                                                                    <button
-                                                                        className={styles.moreButton}
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            const rect = e.currentTarget.getBoundingClientRect();
-                                                                            const dropdownHeight = 280;
-                                                                            const spaceBelow = window.innerHeight - rect.bottom;
-                                                                            const top = spaceBelow < dropdownHeight
-                                                                                ? rect.top - dropdownHeight + 35
-                                                                                : rect.bottom + 8;
-                                                                            setMenuPosition({ top, right: window.innerWidth - rect.right });
-                                                                            setOpenMenuId(openMenuId === chat.id ? null : chat.id);
+                                                        ) : chatRequests.map((req, index) => {
+                                                            // Resolve avatar url safely if the backend provides it
+                                                            const reqAvatar = req.sender_avatar || req.avatar;
+                                                            const avatarUrl = reqAvatar ? (reqAvatar.startsWith('http') ? reqAvatar : `${API}${reqAvatar}`) : null;
+                                                            const isCurrentMenuOpen = openMenuId === req.conversation_id;
+
+                                                            return (
+                                                                <div key={req.conversation_id} className={styles.chatRow}>
+                                                                    <div
+                                                                        className={styles.chatItem}
+                                                                        style={{ cursor: 'pointer' }}
+                                                                        onClick={async () => {
+                                                                            setSelectedRequest(req);
+                                                                            const res = await fetch(`${API}/api/chats/${req.conversation_id}/messages/`, {
+                                                                                headers: { Authorization: `Bearer ${token}` },
+                                                                            });
+                                                                            const data = await res.json();
+                                                                            setRequestMessages(Array.isArray(data) ? data : []);
                                                                         }}
                                                                     >
-                                                                        <MoreHorizontal size={16} />
-                                                                    </button>
-                                                                    {openMenuId === chat.id && (
-                                                                        <div className={styles.dropdownMenu} style={{ top: menuPosition.top, right: menuPosition.right }}>
-                                                                            <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); togglePin(chat.id); setOpenMenuId(null); }}>
-                                                                                <Pin size={14} /> {chat.is_pinned ? 'Unpin chat' : 'Pin chat'}
-                                                                            </button>
-                                                                            <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); toggleMute(chat.id); setOpenMenuId(null); }}>
-                                                                                <BellOff size={14} /> Mute notifications
-                                                                            </button>
-                                                                            {chat.preview && (
-                                                                                <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); markUnread(chat.id); setOpenMenuId(null); }}>
-                                                                                    <Mail size={14} /> {chat.unread_count > 0 ? 'Mark as read' : 'Mark as unread'}
-                                                                                </button>
-                                                                            )}
-                                                                            <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); clearChat(chat.id); setOpenMenuId(null); }}>
-                                                                                <Trash2 size={14} /> Clear chat
-                                                                            </button>
-                                                                            <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); deleteChat(chat.id); setOpenMenuId(null); }}>
-                                                                                <Trash2 size={14} /> Delete chat
-                                                                            </button>
-                                                                            <div className={styles.menuDivider} />
-                                                                            <button className={`${styles.menuItem} ${styles.destructive}`} onClick={(e) => { e.stopPropagation(); blockUser(chat.id); setOpenMenuId(null); }}>
-                                                                                <Ban size={14} /> {chat.is_blocked ? 'Unblock user' : 'Block user'}
-                                                                            </button>
-                                                                            <button className={`${styles.menuItem} ${styles.destructive}`} onClick={(e) => { e.stopPropagation(); reportUser(chat.id); setOpenMenuId(null); }}>
-                                                                                <AlertCircle size={14} /> Report user
-                                                                            </button>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    {index !== sortedChats.length - 1 && <div className={styles.chatDivider}></div>}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </>
-                    ) : (
-
-                        <div className={`${styles.chatList} ${styles.activeChatOuter}`}>
-                            {showGroupInfo ? (
-                                <GroupInfoPanel
-                                    group={selectedChat}
-                                    members={messages.length > 0 ? [...new Set(messages.map(m => m.sender))].map((name, idx) => ({ id: idx, name, role: idx === 0 ? 'Group admin' : 'member' })) : []}
-                                    API={API}
-                                    token={token}
-                                    messages={messages}
-                                    onBack={() => setShowGroupInfo(false)}
-                                    onClearChat={() => clearChat(selectedChat.id)}
-                                    onDeleteGroup={() => deleteChat(selectedChat.id)}
-                                />
-                            ) : (
-                                <div className={styles.innerChatContainer}>
-
-                                    <div className={styles.activeChatHeader}>
-                                        <div className={styles.headerLeftWrapper}>
-                                            <button className={styles.iconBtn} onClick={() => {
-                                                setSelectedChat(null);
-                                                navigate('/chats');
-                                            }}>
-                                                <img
-                                                    src={BackButton}
-                                                    alt=""
-                                                    style={{
-                                                        width: 22,
-                                                        height: 22,
-                                                        filter: "brightness(0) invert(1) opacity(0.9)"
-                                                    }}
-                                                />
-                                            </button>
-                                            <img
-
-                                                src={selectedChat.avatar?.startsWith('http') ? selectedChat.avatar : `${API}${selectedChat.avatar}`}
-                                                alt={selectedChat.name}
-                                                className={styles.activeChatAvatar}
-                                            />
-                                            <div className={styles.headerTitleInfo}>
-                                                {selectedChat.is_group && (
-                                                    <span className={styles.professorName}>
-                                                        {selectedChat.conversations_owner}
-                                                    </span>
-                                                )}
-                                                <h2 className={styles.groupName}>{selectedChat.name}</h2>
-                                                <p className={styles.memberSubtitle}>{selectedChat.members}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className={styles.headerRightWrapper}>
-                                            <button className={styles.iconBtn}><Search size={30} /></button>
-                                            <div className={styles.menuWrapper} ref={activeChatMenuRef}>
-                                                <button className={styles.iconBtn} onClick={() => setActiveChatMenuOpen(!activeChatMenuOpen)}>
-                                                    <MoreHorizontal size={30} />
-                                                </button>
-                                                {activeChatMenuOpen && (
-                                                    <div className={styles.dropdownMenu}>
-                                                        <button
-                                                            className={styles.menuItem}
-                                                            onClick={() => {
-                                                                setActiveChatMenuOpen(false);
-
-                                                                if (selectedChat.is_group) {
-
-                                                                    setShowGroupInfo(true);
-                                                                } else {
-                                                                    // If it's a DM, navigate to the user's profile
-                                                                    navigate(`/profile/${selectedChat.id}`);
-                                                                }
-                                                            }}
-                                                        >
-                                                            <Info size={14} /> {selectedChat.is_group ? 'Group Info' : 'User Info'}
-                                                        </button>
-
-                                                        <button className={styles.menuItem}>
-                                                            <BellOff size={14} /> Mute notifications
-                                                        </button>
-                                                        <button className={styles.menuItem}>
-                                                            <CheckSquare size={14} /> Select messages
-                                                        </button>
-                                                        <div className={styles.menuDivider}></div>
-                                                        <button className={`${styles.menuItem} ${styles.destructive}`}>
-                                                            <AlertCircle size={14} /> {selectedChat.is_group ? 'Report group' : 'Report user'}
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                    <div className={styles.activeChatInnerContainer}>
-
-                                        <div className={styles.chatArea}>
-                                            <div className={styles.messagesScrollArea} ref={messagesScrollRef}>
-                                                {(() => {
-                                                    let lastDate = null;
-                                                    return messages.map((msg) => {
-                                                        const isMine = msg.senderId === 'me' || msg.senderId === user?.id;
-                                                        const msgDate = msg.date ? new Date(msg.date) : null;
-                                                        let dateLabel = null;
-                                                        if (msgDate) {
-                                                            const today = new Date();
-                                                            const yesterday = new Date();
-                                                            yesterday.setDate(today.getDate() - 1);
-                                                            const dateStr = msgDate.toDateString();
-                                                            if (dateStr !== lastDate) {
-                                                                lastDate = dateStr;
-                                                                if (msgDate.toDateString() === today.toDateString()) dateLabel = "Today";
-                                                                else if (msgDate.toDateString() === yesterday.toDateString()) dateLabel = "Yesterday";
-                                                                else dateLabel = msgDate.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
-                                                            }
-                                                        }
-
-                                                        const resolveUrl = (url) => url?.startsWith('http') ? url : `${API}${url}`;
-
-                                                        return (
-                                                            <div key={msg.id} ref={(el) => (messageRefs.current[msg.id] = el)}>
-                                                                {dateLabel && (
-                                                                    <div className={styles.dateSeparator}><span>{dateLabel}</span></div>
-                                                                )}
-                                                                <div className={`${styles.messageWrapper} ${isMine ? styles.messageMineWrapper : styles.messageOtherWrapper}`}>
-                                                                    {!isMine && (
-                                                                        <img
-                                                                            src={resolveUrl(msg.avatar)}
-                                                                            alt="Sender"
-                                                                            className={styles.messageAvatar}
-                                                                        />
-                                                                    )}
-                                                                    <div className={styles.messageContentBlock}>
-                                                                        <div className={`${styles.messageMeta} ${isMine ? styles.metaRight : styles.metaLeft}`}>
-                                                                            <span className={styles.msgSenderName}>{isMine ? 'You' : msg.sender}</span>
-                                                                            <span className={styles.msgTime}>{msg.time}</span>
-                                                                        </div>
-                                                                        <div className={styles.messageRow}>
-                                                                            <div className={`${styles.messageBubble} ${isMine ? styles.bubbleMine : styles.bubbleOther}`}>
-                                                                                {msg.reply_to_details && (
-                                                                                    <div className={styles.replyQuoteBox} onClick={() => scrollToMessage(msg.reply_to_details.id)}>
-                                                                                        <span className={styles.replySender}>
-                                                                                            {(msg.reply_to_details.senderId === 'me' || msg.reply_to_details.senderId === user?.id || msg.reply_to_details.sender_name === user?.username)
-                                                                                                ? 'You' : msg.reply_to_details.sender_name}
-                                                                                        </span>
-                                                                                        <p className={styles.replyTextPreview}>{msg.reply_to_details.text}</p>
+                                                                        <div className={styles.chatItemLeft}>
+                                                                            <div className={styles.avatarWrapper}>
+                                                                                {avatarUrl ? (
+                                                                                    <img
+                                                                                        src={avatarUrl}
+                                                                                        alt={req.sender_username}
+                                                                                        className={styles.chatAvatar}
+                                                                                    />
+                                                                                ) : (
+                                                                                    <div
+                                                                                        className={styles.chatAvatar}
+                                                                                        style={{
+                                                                                            background: "rgba(255,255,255,0.08)",
+                                                                                            display: "flex",
+                                                                                            alignItems: "center",
+                                                                                            justifyContent: "center",
+                                                                                            color: "rgba(255,255,255,0.5)",
+                                                                                            fontSize: "1.1rem",
+                                                                                            fontWeight: 700
+                                                                                        }}
+                                                                                    >
+                                                                                        {req.sender_username?.[0]?.toUpperCase() || "?"}
                                                                                     </div>
                                                                                 )}
+                                                                                <span className={`${styles.statusDot} ${styles.offline}`} />
+                                                                            </div>
+                                                                            <div className={styles.chatIdentity}>
+                                                                                <span className={styles.chatStatusText}>Message request</span>
+                                                                                <div className={styles.chatNameWrapper}>
+                                                                                    <span className={styles.chatName}>{req.sender_username}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
 
-                                                                                {msg.type === 'media' && msg.media?.length > 0 ? (
-                                                                                    <div className={styles.mediaAttachment}>
-                                                                                        {msg.media.map((m, i) => (
-                                                                                            m.type === 'image' ? (
-                                                                                                <img
-                                                                                                    key={m.id ?? i}
-                                                                                                    src={resolveUrl(m.url)}
-                                                                                                    alt="attachment"
-                                                                                                    className={styles.mediaImage}
-                                                                                                    onClick={() => setLightboxUrl(resolveUrl(m.url))}
-                                                                                                />
-                                                                                            ) : m.type === 'video' ? (
-                                                                                                <video key={m.id ?? i} src={resolveUrl(m.url)} controls className={styles.mediaVideo} />
-                                                                                            ) : (
-                                                                                                <a
+                                                                        <div className={styles.chatItemRight}>
+                                                                            <div className={styles.chatDetails}>
+                                                                                <span className={styles.chatPreview}>{req.message_preview}</span>
+                                                                                <span className={styles.chatTime}>{req.time}</span>
+                                                                            </div>
 
-                                                                                                    key={m.id ?? i}
-                                                                                                    href={resolveUrl(m.url)}
-                                                                                                    target="_blank"
-                                                                                                    rel="noreferrer"
-                                                                                                    className={styles.fileAttachment}
-                                                                                                >
-                                                                                                    <div className={styles.fileIconWrapper}>
-                                                                                                        <span className={styles.pdfLabel}>
-                                                                                                            {m.url?.split('.').pop()?.toUpperCase() ?? 'FILE'}
-                                                                                                        </span>
-                                                                                                    </div>
-                                                                                                    <div className={styles.fileDetails}>
-                                                                                                        <strong className={styles.fileName}>{m.url?.split('/').pop()}</strong>
-                                                                                                        <span className={styles.fileMeta}>{m.file_type ?? 'file'}</span>
-                                                                                                    </div>
-                                                                                                    <div className={styles.downloadWrapper}>
-                                                                                                        <Download size={20} strokeWidth={2.5} />
-                                                                                                    </div>
-                                                                                                </a>
-                                                                                            )
-                                                                                        ))}
-                                                                                        {msg.text && <span style={{ whiteSpace: 'pre-wrap', display: 'block', marginTop: 6 }}>{msg.text}</span>}
+                                                                            {/* The three-dot dropdown menu matching the primary chat items */}
+                                                                            <div className={styles.chatActions} ref={isCurrentMenuOpen ? menuRef : null}>
+                                                                                <button
+                                                                                    className={styles.moreButton}
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                                                        const dropdownHeight = 110; // Slightly smaller height for request items
+                                                                                        const spaceBelow = window.innerHeight - rect.bottom;
+                                                                                        const top = spaceBelow < dropdownHeight
+                                                                                            ? rect.top - dropdownHeight + 35
+                                                                                            : rect.bottom + 8;
+                                                                                        setMenuPosition({ top, right: window.innerWidth - rect.right });
+                                                                                        setOpenMenuId(openMenuId === req.conversation_id ? null : req.conversation_id);
+                                                                                    }}
+                                                                                >
+                                                                                    <MoreHorizontal size={16} />
+                                                                                </button>
+
+                                                                                {isCurrentMenuOpen && (
+                                                                                    <div className={styles.dropdownMenu} style={{ top: menuPosition.top, right: menuPosition.right }}>
+                                                                                        <button
+                                                                                            className={styles.menuItem}
+                                                                                            onClick={(e) => {
+                                                                                                e.stopPropagation();
+                                                                                                acceptRequest(req.conversation_id);
+                                                                                                setOpenMenuId(null);
+                                                                                            }}
+                                                                                        >
+                                                                                            <CheckSquare size={14} /> Accept request
+                                                                                        </button>
+
+                                                                                        <div className={styles.menuDivider} />
+
+
+                                                                                        <button
+                                                                                            className={styles.menuItem}
+                                                                                            onClick={async (e) => {
+                                                                                                e.stopPropagation();
+
+                                                                                                await deleteChat(req.conversation_id);
+
+                                                                                                setChatRequests(prev => prev.filter(r => r.conversation_id !== req.conversation_id));
+                                                                                                setRequestsCount(prev => prev - 1);
+                                                                                                setOpenMenuId(null);
+                                                                                            }}
+                                                                                        >
+                                                                                            <Trash2 size={14} /> Delete chat
+                                                                                        </button>
+
+                                                                                        <button
+                                                                                            className={`${styles.menuItem} ${styles.destructive}`}
+                                                                                            onClick={(e) => {
+                                                                                                e.stopPropagation();
+                                                                                                blockRequest(req.conversation_id);
+                                                                                                setOpenMenuId(null);
+                                                                                            }}
+                                                                                        >
+                                                                                            <Ban size={14} /> Block sender
+                                                                                        </button>
                                                                                     </div>
-                                                                                ) : msg.post ? (
-                                                                                    <div
-                                                                                        onClick={() => setOpenPost(msg.post)}
-                                                                                        style={{ cursor: "pointer", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, overflow: "hidden", maxWidth: 280, transition: "background 0.2s" }}
-                                                                                        onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
-                                                                                        onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                                                                                    >
-                                                                                        {(msg.post.media?.[0]?.url || msg.post.image) && (
-                                                                                            <img src={msg.post.media?.[0]?.url || msg.post.image} alt="" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
-                                                                                        )}
-                                                                                        <div style={{ padding: "10px 12px" }}>
-                                                                                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                                                                                                <img src={msg.post.author?.avatar || "/default-avatar.png"} alt="" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} />
-                                                                                                <span style={{ color: "white", fontWeight: 600, fontSize: "0.82rem" }}>{msg.post.author?.username || "User"}</span>
-                                                                                            </div>
-                                                                                            {msg.post.content_text && (
-                                                                                                <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.78rem", margin: 0, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                                                                                                    {msg.post.content_text}
-                                                                                                </p>
-                                                                                            )}
-                                                                                            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", marginTop: 6, display: "block" }}>Tap to view post</span>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                ) : msg.type === 'media' && msg.media?.length > 0 ? (
-                                                                                    <div className={styles.mediaAttachment}>
-                                                                                        {msg.media.map((m, i) => (
-                                                                                            m.type === 'image' ? (
-                                                                                                <img
-                                                                                                    key={m.id ?? i}
-                                                                                                    src={m.url?.startsWith('http') ? m.url : `${API}${m.url}`}
-                                                                                                    alt="attachment"
-                                                                                                    className={styles.mediaImage}
-                                                                                                    onClick={() => setLightboxUrl(m.url?.startsWith('http') ? m.url : `${API}${m.url}`)}
-                                                                                                />
-                                                                                            ) : m.type === 'video' ? (
-                                                                                                <video key={m.id ?? i} src={m.url?.startsWith('http') ? m.url : `${API}${m.url}`} controls className={styles.mediaVideo} />
-                                                                                            ) : (
-                                                                                                <a key={m.id ?? i} href={m.url?.startsWith('http') ? m.url : `${API}${m.url}`} target="_blank" rel="noreferrer" className={styles.fileAttachment}>
-                                                                                                    <div className={styles.fileIconWrapper}>
-                                                                                                        <span className={styles.pdfLabel}>{m.url?.split('.').pop()?.toUpperCase() ?? 'FILE'}</span>
-                                                                                                    </div>
-                                                                                                    <div className={styles.fileDetails}>
-                                                                                                        <strong className={styles.fileName}>{m.url?.split('/').pop()}</strong>
-                                                                                                        <span className={styles.fileMeta}>{m.file_type ?? 'file'}</span>
-                                                                                                    </div>
-                                                                                                    <div className={styles.downloadWrapper}><Download size={20} strokeWidth={2.5} /></div>
-                                                                                                </a>
-                                                                                            )
-                                                                                        ))}
-                                                                                        {msg.text && <span style={{ whiteSpace: 'pre-wrap', display: 'block', marginTop: 6 }}>{msg.text}</span>}
-                                                                                    </div>
-                                                                                ) : (
-                                                                                    <span style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</span>
                                                                                 )}
                                                                             </div>
-                                                                            <button className={styles.replyIconButton} onClick={() => setReplyingTo(msg)}>
-                                                                                <Reply size={16} />
-                                                                            </button>
                                                                         </div>
+                                                                    </div>
+                                                                    {index !== chatRequests.length - 1 && <div className={styles.chatDivider} />}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className={styles.chatList}>
+                                        <div className={styles.innerContainer}>
+                                            <div className={styles.searchContainer}>
+                                                <Search size={18} className={styles.searchIcon} />
+                                                <input
+                                                    type="text"
+                                                    className={styles.searchInput}
+                                                    placeholder="Searching for someone?"
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className={styles.chatItemsContainer}>
+                                                {sortedChats.map((chat, index) => (
+                                                    <div key={chat.id} className={styles.chatRow}>
+                                                        <div className={styles.chatItem} onClick={async () => {
+                                                            setSelectedChat(chat);
+                                                            navigate(`/chats/${chat.id}`);
+                                                            const res = await fetch(`http://localhost:8000/api/chats/${chat.id}/messages/`, {
+                                                                headers: { Authorization: `Bearer ${token}` },
+                                                            });
+                                                            const data = await res.json();
+                                                            console.log("RECEIVER MESSAGES:", JSON.stringify(data, null, 2));
+                                                            setMessages(data);
+                                                        }} style={{ cursor: 'pointer' }}>
+                                                            <div className={styles.chatItemLeft}>
+                                                                <div className={styles.avatarWrapper}>
+                                                                    <img
+                                                                        src={chat.avatar?.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`}
+                                                                        alt={chat.name}
+                                                                        className={styles.chatAvatar}
+                                                                    />
+                                                                    <span className={`${styles.statusDot} ${chat.is_group ? styles.groupDot :
+                                                                        chat.is_blocked ? styles.blockedDot :
+                                                                            chat.status === 'online' ? styles.online :
+                                                                                chat.status === 'dnd' ? styles.dnd :
+                                                                                    styles.offline
+                                                                        }`} />
+                                                                </div>
+                                                                <div className={styles.chatIdentity}>
+                                                                    <span className={styles.chatStatusText}>
+                                                                        {chat.is_blocked ? 'Blocked' :
+                                                                            chat.is_group ? 'Group Chat' :
+                                                                                chat.status === 'online' ? 'Online' :
+                                                                                    chat.status === 'dnd' ? 'Do Not Disturb' :
+                                                                                        'Offline'}
+                                                                    </span>
+                                                                    <div className={styles.chatNameWrapper}>
+                                                                        <span className={styles.chatName}>{chat.name}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        );
-                                                    });
-                                                })()}
-                                                <div ref={messagesEndRef} />
-                                            </div>
-
-
-                                            {pendingFiles.length > 0 && (
-                                                <div className={styles.pendingFilesBar}>
-                                                    {pendingFiles.map(pf => (
-                                                        <div key={pf.id} className={styles.pendingFileItem}>
-                                                            {pf.type === 'image' ? (
-                                                                <img src={pf.previewUrl} alt={pf.name} className={styles.pendingImageThumb} />
-                                                            ) : (
-                                                                <div className={styles.pendingFileThumb}>
-                                                                    <FileText size={20} />
+                                                            <div className={styles.chatItemRight}>
+                                                                <div className={styles.chatDetails}>
+                                                                    <span className={styles.chatPreview}>{chat.preview}</span>
+                                                                    <span className={styles.chatTime}>{chat.time}</span>
                                                                 </div>
-                                                            )}
-                                                            <div className={styles.pendingFileInfo}>
-                                                                <span className={styles.pendingFileName}>{pf.name}</span>
-                                                                <span className={styles.pendingFileSize}>{pf.size}</span>
+                                                                <div className={styles.chatActions}>
+                                                                    {chat.is_pinned && <Pin size={14} className={styles.actionIcon} />}
+                                                                    {chat.is_muted && <BellOff size={14} className={styles.actionIcon} />}
+                                                                    {chat.unread_count > 0 && (
+                                                                        <span className={styles.unreadBadge}>{chat.unread_count}</span>
+                                                                    )}
+                                                                    <div className={styles.menuWrapper} ref={openMenuId === chat.id ? menuRef : null}>
+                                                                        <button
+                                                                            className={styles.moreButton}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                                                const dropdownHeight = 280;
+                                                                                const spaceBelow = window.innerHeight - rect.bottom;
+                                                                                const top = spaceBelow < dropdownHeight
+                                                                                    ? rect.top - dropdownHeight + 35
+                                                                                    : rect.bottom + 8;
+                                                                                setMenuPosition({ top, right: window.innerWidth - rect.right });
+                                                                                setOpenMenuId(openMenuId === chat.id ? null : chat.id);
+                                                                            }}
+                                                                        >
+                                                                            <MoreHorizontal size={16} />
+                                                                        </button>
+                                                                        {openMenuId === chat.id && (
+                                                                            <div className={styles.dropdownMenu} style={{ top: menuPosition.top, right: menuPosition.right }}>
+                                                                                <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); togglePin(chat.id); setOpenMenuId(null); }}>
+                                                                                    <Pin size={14} /> {chat.is_pinned ? 'Unpin chat' : 'Pin chat'}
+                                                                                </button>
+                                                                                <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); toggleMute(chat.id); setOpenMenuId(null); }}>
+                                                                                    <BellOff size={14} /> Mute notifications
+                                                                                </button>
+                                                                                {chat.preview && (
+                                                                                    <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); markUnread(chat.id); setOpenMenuId(null); }}>
+                                                                                        <Mail size={14} /> {chat.unread_count > 0 ? 'Mark as read' : 'Mark as unread'}
+                                                                                    </button>
+                                                                                )}
+                                                                                <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); clearChat(chat.id); setOpenMenuId(null); }}>
+                                                                                    <Trash2 size={14} /> Clear chat
+                                                                                </button>
+                                                                                <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); deleteChat(chat.id); setOpenMenuId(null); }}>
+                                                                                    <Trash2 size={14} /> Delete chat
+                                                                                </button>
+                                                                                <div className={styles.menuDivider} />
+                                                                                <button className={`${styles.menuItem} ${styles.destructive}`} onClick={(e) => { e.stopPropagation(); blockUser(chat.id); setOpenMenuId(null); }}>
+                                                                                    <Ban size={14} /> {chat.is_blocked ? 'Unblock user' : 'Block user'}
+                                                                                </button>
+                                                                                <button className={`${styles.menuItem} ${styles.destructive}`} onClick={(e) => { e.stopPropagation(); reportUser(chat.id); setOpenMenuId(null); }}>
+                                                                                    <AlertCircle size={14} /> Report user
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                            <button className={styles.removePendingFile} onClick={() => removePendingFile(pf.id)}>
-                                                                <MinusCircle size={14} />
-                                                            </button>
                                                         </div>
-                                                    ))}
-                                                </div>
-                                            )}
-
-
-                                            {pollOpen && (
-                                                <div className={styles.pollCreator}>
-                                                    <div className={styles.pollHeader}>
-                                                        <span>Create a Poll</span>
-                                                        <button className={styles.cancelReply} onClick={() => { setPollOpen(false); setPollQuestion(''); setPollOptions(['', '']); }}>
-                                                            <MinusCircle size={16} />
-                                                        </button>
+                                                        {index !== sortedChats.length - 1 && <div className={styles.chatDivider}></div>}
                                                     </div>
-                                                    <input
-                                                        className={styles.pollQuestionInput}
-                                                        placeholder="Ask a question..."
-                                                        value={pollQuestion}
-                                                        onChange={e => setPollQuestion(e.target.value)}
-                                                    />
-                                                    {pollOptions.map((opt, i) => (
-                                                        <div key={i} className={styles.pollOptionRow}>
-                                                            <input
-                                                                className={styles.pollOptionInput}
-                                                                placeholder={`Option ${i + 1}`}
-                                                                value={opt}
-                                                                onChange={e => {
-                                                                    const updated = [...pollOptions];
-                                                                    updated[i] = e.target.value;
-                                                                    setPollOptions(updated);
-                                                                }}
-                                                            />
-                                                            {pollOptions.length > 2 && (
-                                                                <button className={styles.cancelReply} onClick={() => removePollOption(i)}>
-                                                                    <MinusCircle size={14} />
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                    {pollOptions.length < 6 && (
-                                                        <button className={styles.addPollOption} onClick={addPollOption}>+ Add option</button>
-                                                    )}
-                                                    <button className={styles.sendPollBtn} onClick={() => {
-                                                        console.log('Poll:', pollQuestion, pollOptions);
-                                                        setPollOpen(false); setPollQuestion(''); setPollOptions(['', '']);
-                                                    }}>
-                                                        Send Poll
-                                                    </button>
-                                                </div>
-                                            )}
-
-                                            {/* Reply preview - keep exactly as before */}
-                                            {replyingTo && (
-                                                <div className={styles.replyPreviewBar}>
-                                                    <div className={styles.replyPreviewContent}>
-                                                        <span>Replying to <strong>{replyingTo.sender}</strong></span>
-                                                        <p>{replyingTo.text}</p>
-                                                    </div>
-                                                    <button onClick={() => setReplyingTo(null)} className={styles.cancelReply}>
-                                                        <MinusCircle size={18} />
-                                                    </button>
-                                                </div>
-                                            )}
-
-
-                                            <div className={styles.messageInputArea}>
-
-                                                <input ref={imageInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'image')} />
-                                                <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.zip" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'file')} />
-
-                                                <div className={styles.attachmentWrapper} ref={attachmentRef}>
-                                                    <button className={styles.iconBtn} onClick={() => setAttachmentMenuOpen(!attachmentMenuOpen)}>
-                                                        <Paperclip size={20} />
-                                                    </button>
-                                                    {attachmentMenuOpen && (
-                                                        <div className={styles.attachmentMenu} ref={attachmentMenuRef}>
-                                                            <button className={styles.attachmentMenuItem} onClick={() => imageInputRef.current.click()}>
-                                                                🖼️ Image
-                                                            </button>
-                                                            <button className={styles.attachmentMenuItem} onClick={() => fileInputRef.current.click()}>
-                                                                📄 File / PDF
-                                                            </button>
-                                                            <button className={styles.attachmentMenuItem} onClick={() => { setPollOpen(true); setAttachmentMenuOpen(false); }}>
-                                                                📊 Poll
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-
-                                                <input
-                                                    type="text"
-                                                    placeholder="Type a message..."
-                                                    className={styles.messageInput}
-                                                    value={inputText}
-                                                    onChange={(e) => setInputText(e.target.value)}
-                                                    onKeyDown={(e) => { if (e.key === 'Enter') handleSendMessage(); }}
-                                                />
-                                                <button className={styles.sendBtn} onClick={handleSendMessage}>
-                                                    <Send size={18} />
-                                                </button>
+                                                ))}
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                )}
+                            </>
+                        ) : (
 
-                            )}
+                            <div className={`${styles.chatList} ${styles.activeChatOuter}`}>
+                                {showGroupInfo ? (
+                                    <GroupInfoPanel
+                                        group={selectedChat}
+                                        API={API}
+                                        members={[]}
+                                        currentUser={user}
+                                        token={token}
+                                        messages={messages}
+                                        onBack={() => setShowGroupInfo(false)}
+                                        onMakeMemberAdmin={async (member) => {
+                                            await fetch(`${API}/api/groups/${selectedChat.id}/make-admin/`, {
+                                                method: 'POST',
+                                                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ member_id: member.id })  // ← member_id not user_id
+                                            });
+                                        }}
+                                        onRemoveMember={async (member) => {
+                                            const res = await fetch(`${API}/api/groups/${selectedChat.id}/remove-member/`, {
+                                                method: 'POST',
+                                                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ member_id: member.id }) 
+                                            });
+                                            if (res.ok) {
+                                              
+                                                window.location.reload();
+                                            }
+                                        }}
+                                        onClearChat={() => clearChat(selectedChat.id)}
+                                        onDeleteGroup={() => deleteChat(selectedChat.id)}
+                                    />
+                                ) : (
+                                    <div className={styles.innerChatContainer}>
 
-                        </div>
-                    )}
+                                        <div className={styles.activeChatHeader}>
+                                            <div className={styles.headerLeftWrapper}>
+                                                <button className={styles.iconBtn} onClick={() => {
+                                                    setSelectedChat(null);
+                                                    navigate('/chats');
+                                                }}>
+                                                    <img
+                                                        src={BackButton}
+                                                        alt=""
+                                                        style={{
+                                                            width: 22,
+                                                            height: 22,
+                                                            filter: "brightness(0) invert(1) opacity(0.9)"
+                                                        }}
+                                                    />
+                                                </button>
+                                                <img
+
+                                                    src={selectedChat.avatar?.startsWith('http') ? selectedChat.avatar : `${API}${selectedChat.avatar}`}
+                                                    alt={selectedChat.name}
+                                                    className={styles.activeChatAvatar}
+                                                />
+                                                <div className={styles.headerTitleInfo}>
+                                                    {selectedChat.is_group && (
+                                                        <span className={styles.professorName}>
+                                                            {selectedChat.conversations_owner}
+                                                        </span>
+                                                    )}
+                                                    <h2 className={styles.groupName}>{selectedChat.name}</h2>
+                                                    <p className={styles.memberSubtitle}>{selectedChat.members}</p>
+                                                </div>
+                                            </div>
+
+                                            <div className={styles.headerRightWrapper}>
+                                                <button className={styles.iconBtn}><Search size={30} /></button>
+                                                <div className={styles.menuWrapper} ref={activeChatMenuRef}>
+                                                    <button className={styles.iconBtn} onClick={() => setActiveChatMenuOpen(!activeChatMenuOpen)}>
+                                                        <MoreHorizontal size={30} />
+                                                    </button>
+                                                    {activeChatMenuOpen && (
+                                                        <div className={styles.dropdownMenu}>
+                                                            <button
+                                                                className={styles.menuItem}
+                                                                onClick={() => {
+                                                                    setActiveChatMenuOpen(false);
+
+                                                                    if (selectedChat.is_group) {
+
+                                                                        setShowGroupInfo(true);
+                                                                    } else {
+                                                                        // If it's a DM, navigate to the user's profile
+                                                                        navigate(`/profile/${selectedChat.id}`);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Info size={14} /> {selectedChat.is_group ? 'Group Info' : 'User Info'}
+                                                            </button>
+
+                                                            <button className={styles.menuItem}>
+                                                                <BellOff size={14} /> Mute notifications
+                                                            </button>
+                                                            <button className={styles.menuItem}>
+                                                                <CheckSquare size={14} /> Select messages
+                                                            </button>
+                                                            <div className={styles.menuDivider}></div>
+                                                            <button className={`${styles.menuItem} ${styles.destructive}`}>
+                                                                <AlertCircle size={14} /> {selectedChat.is_group ? 'Report group' : 'Report user'}
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                        <div className={styles.activeChatInnerContainer}>
+
+                                            <div className={styles.chatArea}>
+                                                <div className={styles.messagesScrollArea} ref={messagesScrollRef}>
+                                                    {(() => {
+                                                        let lastDate = null;
+                                                        return messages.map((msg) => {
+                                                            const isMine = msg.senderId === 'me' || msg.senderId === user?.id;
+                                                            const msgDate = msg.date ? new Date(msg.date) : null;
+                                                            let dateLabel = null;
+                                                            if (msgDate) {
+                                                                const today = new Date();
+                                                                const yesterday = new Date();
+                                                                yesterday.setDate(today.getDate() - 1);
+                                                                const dateStr = msgDate.toDateString();
+                                                                if (dateStr !== lastDate) {
+                                                                    lastDate = dateStr;
+                                                                    if (msgDate.toDateString() === today.toDateString()) dateLabel = "Today";
+                                                                    else if (msgDate.toDateString() === yesterday.toDateString()) dateLabel = "Yesterday";
+                                                                    else dateLabel = msgDate.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+                                                                }
+                                                            }
+
+                                                            const resolveUrl = (url) => url?.startsWith('http') ? url : `${API}${url}`;
+
+                                                            return (
+                                                                <div key={msg.id} ref={(el) => (messageRefs.current[msg.id] = el)}>
+                                                                    {dateLabel && (
+                                                                        <div className={styles.dateSeparator}><span>{dateLabel}</span></div>
+                                                                    )}
+                                                                    <div className={`${styles.messageWrapper} ${isMine ? styles.messageMineWrapper : styles.messageOtherWrapper}`}>
+                                                                        {!isMine && (
+                                                                            <img
+                                                                                src={resolveUrl(msg.avatar)}
+                                                                                alt="Sender"
+                                                                                className={styles.messageAvatar}
+                                                                            />
+                                                                        )}
+                                                                        <div className={styles.messageContentBlock}>
+                                                                            <div className={`${styles.messageMeta} ${isMine ? styles.metaRight : styles.metaLeft}`}>
+                                                                                <span className={styles.msgSenderName}>{isMine ? 'You' : msg.sender}</span>
+                                                                                <span className={styles.msgTime}>{msg.time}</span>
+                                                                            </div>
+                                                                            <div className={styles.messageRow}>
+                                                                                <div className={`${styles.messageBubble} ${isMine ? styles.bubbleMine : styles.bubbleOther}`}>
+                                                                                    {msg.reply_to_details && (
+                                                                                        <div className={styles.replyQuoteBox} onClick={() => scrollToMessage(msg.reply_to_details.id)}>
+                                                                                            <span className={styles.replySender}>
+                                                                                                {(msg.reply_to_details.senderId === 'me' || msg.reply_to_details.senderId === user?.id || msg.reply_to_details.sender_name === user?.username)
+                                                                                                    ? 'You' : msg.reply_to_details.sender_name}
+                                                                                            </span>
+                                                                                            <p className={styles.replyTextPreview}>{msg.reply_to_details.text}</p>
+                                                                                        </div>
+                                                                                    )}
+
+                                                                                    {msg.type === 'media' && msg.media?.length > 0 ? (
+                                                                                        <div className={styles.mediaAttachment}>
+                                                                                            {msg.media.map((m, i) => (
+                                                                                                m.type === 'image' ? (
+                                                                                                    <img
+                                                                                                        key={m.id ?? i}
+                                                                                                        src={resolveUrl(m.url)}
+                                                                                                        alt="attachment"
+                                                                                                        className={styles.mediaImage}
+                                                                                                        onClick={() => setLightboxUrl(resolveUrl(m.url))}
+                                                                                                    />
+                                                                                                ) : m.type === 'video' ? (
+                                                                                                    <video key={m.id ?? i} src={resolveUrl(m.url)} controls className={styles.mediaVideo} />
+                                                                                                ) : (
+                                                                                                    <a
+
+                                                                                                        key={m.id ?? i}
+                                                                                                        href={resolveUrl(m.url)}
+                                                                                                        target="_blank"
+                                                                                                        rel="noreferrer"
+                                                                                                        className={styles.fileAttachment}
+                                                                                                    >
+                                                                                                        <div className={styles.fileIconWrapper}>
+                                                                                                            <span className={styles.pdfLabel}>
+                                                                                                                {m.url?.split('.').pop()?.toUpperCase() ?? 'FILE'}
+                                                                                                            </span>
+                                                                                                        </div>
+                                                                                                        <div className={styles.fileDetails}>
+                                                                                                            <strong className={styles.fileName}>{m.url?.split('/').pop()}</strong>
+                                                                                                            <span className={styles.fileMeta}>{m.file_type ?? 'file'}</span>
+                                                                                                        </div>
+                                                                                                        <div className={styles.downloadWrapper}>
+                                                                                                            <Download size={20} strokeWidth={2.5} />
+                                                                                                        </div>
+                                                                                                    </a>
+                                                                                                )
+                                                                                            ))}
+                                                                                            {msg.text && <span style={{ whiteSpace: 'pre-wrap', display: 'block', marginTop: 6 }}>{msg.text}</span>}
+                                                                                        </div>
+                                                                                    ) : msg.post ? (
+                                                                                        <div
+                                                                                            onClick={() => setOpenPost(msg.post)}
+                                                                                            style={{ cursor: "pointer", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, overflow: "hidden", maxWidth: 280, transition: "background 0.2s" }}
+                                                                                            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
+                                                                                            onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                                                                                        >
+                                                                                            {(msg.post.media?.[0]?.url || msg.post.image) && (
+                                                                                                <img src={msg.post.media?.[0]?.url || msg.post.image} alt="" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
+                                                                                            )}
+                                                                                            <div style={{ padding: "10px 12px" }}>
+                                                                                                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                                                                                                    <img src={msg.post.author?.avatar || "/default-avatar.png"} alt="" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} />
+                                                                                                    <span style={{ color: "white", fontWeight: 600, fontSize: "0.82rem" }}>{msg.post.author?.username || "User"}</span>
+                                                                                                </div>
+                                                                                                {msg.post.content_text && (
+                                                                                                    <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.78rem", margin: 0, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                                                                                                        {msg.post.content_text}
+                                                                                                    </p>
+                                                                                                )}
+                                                                                                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", marginTop: 6, display: "block" }}>Tap to view post</span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    ) : msg.type === 'media' && msg.media?.length > 0 ? (
+                                                                                        <div className={styles.mediaAttachment}>
+                                                                                            {msg.media.map((m, i) => (
+                                                                                                m.type === 'image' ? (
+                                                                                                    <img
+                                                                                                        key={m.id ?? i}
+                                                                                                        src={m.url?.startsWith('http') ? m.url : `${API}${m.url}`}
+                                                                                                        alt="attachment"
+                                                                                                        className={styles.mediaImage}
+                                                                                                        onClick={() => setLightboxUrl(m.url?.startsWith('http') ? m.url : `${API}${m.url}`)}
+                                                                                                    />
+                                                                                                ) : m.type === 'video' ? (
+                                                                                                    <video key={m.id ?? i} src={m.url?.startsWith('http') ? m.url : `${API}${m.url}`} controls className={styles.mediaVideo} />
+                                                                                                ) : (
+                                                                                                    <a key={m.id ?? i} href={m.url?.startsWith('http') ? m.url : `${API}${m.url}`} target="_blank" rel="noreferrer" className={styles.fileAttachment}>
+                                                                                                        <div className={styles.fileIconWrapper}>
+                                                                                                            <span className={styles.pdfLabel}>{m.url?.split('.').pop()?.toUpperCase() ?? 'FILE'}</span>
+                                                                                                        </div>
+                                                                                                        <div className={styles.fileDetails}>
+                                                                                                            <strong className={styles.fileName}>{m.url?.split('/').pop()}</strong>
+                                                                                                            <span className={styles.fileMeta}>{m.file_type ?? 'file'}</span>
+                                                                                                        </div>
+                                                                                                        <div className={styles.downloadWrapper}><Download size={20} strokeWidth={2.5} /></div>
+                                                                                                    </a>
+                                                                                                )
+                                                                                            ))}
+                                                                                            {msg.text && <span style={{ whiteSpace: 'pre-wrap', display: 'block', marginTop: 6 }}>{msg.text}</span>}
+                                                                                        </div>
+                                                                                    ) : (
+                                                                                        <span style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</span>
+                                                                                    )}
+                                                                                </div>
+                                                                                <button className={styles.replyIconButton} onClick={() => setReplyingTo(msg)}>
+                                                                                    <Reply size={16} />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        });
+                                                    })()}
+                                                    <div ref={messagesEndRef} />
+                                                </div>
+
+
+                                                {pendingFiles.length > 0 && (
+                                                    <div className={styles.pendingFilesBar}>
+                                                        {pendingFiles.map(pf => (
+                                                            <div key={pf.id} className={styles.pendingFileItem}>
+                                                                {pf.type === 'image' ? (
+                                                                    <img src={pf.previewUrl} alt={pf.name} className={styles.pendingImageThumb} />
+                                                                ) : (
+                                                                    <div className={styles.pendingFileThumb}>
+                                                                        <FileText size={20} />
+                                                                    </div>
+                                                                )}
+                                                                <div className={styles.pendingFileInfo}>
+                                                                    <span className={styles.pendingFileName}>{pf.name}</span>
+                                                                    <span className={styles.pendingFileSize}>{pf.size}</span>
+                                                                </div>
+                                                                <button className={styles.removePendingFile} onClick={() => removePendingFile(pf.id)}>
+                                                                    <MinusCircle size={14} />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+
+                                                {pollOpen && (
+                                                    <div className={styles.pollCreator}>
+                                                        <div className={styles.pollHeader}>
+                                                            <span>Create a Poll</span>
+                                                            <button className={styles.cancelReply} onClick={() => { setPollOpen(false); setPollQuestion(''); setPollOptions(['', '']); }}>
+                                                                <MinusCircle size={16} />
+                                                            </button>
+                                                        </div>
+                                                        <input
+                                                            className={styles.pollQuestionInput}
+                                                            placeholder="Ask a question..."
+                                                            value={pollQuestion}
+                                                            onChange={e => setPollQuestion(e.target.value)}
+                                                        />
+                                                        {pollOptions.map((opt, i) => (
+                                                            <div key={i} className={styles.pollOptionRow}>
+                                                                <input
+                                                                    className={styles.pollOptionInput}
+                                                                    placeholder={`Option ${i + 1}`}
+                                                                    value={opt}
+                                                                    onChange={e => {
+                                                                        const updated = [...pollOptions];
+                                                                        updated[i] = e.target.value;
+                                                                        setPollOptions(updated);
+                                                                    }}
+                                                                />
+                                                                {pollOptions.length > 2 && (
+                                                                    <button className={styles.cancelReply} onClick={() => removePollOption(i)}>
+                                                                        <MinusCircle size={14} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                        {pollOptions.length < 6 && (
+                                                            <button className={styles.addPollOption} onClick={addPollOption}>+ Add option</button>
+                                                        )}
+                                                        <button className={styles.sendPollBtn} onClick={() => {
+                                                            console.log('Poll:', pollQuestion, pollOptions);
+                                                            setPollOpen(false); setPollQuestion(''); setPollOptions(['', '']);
+                                                        }}>
+                                                            Send Poll
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                {/* Reply preview - keep exactly as before */}
+                                                {replyingTo && (
+                                                    <div className={styles.replyPreviewBar}>
+                                                        <div className={styles.replyPreviewContent}>
+                                                            <span>Replying to <strong>{replyingTo.sender}</strong></span>
+                                                            <p>{replyingTo.text}</p>
+                                                        </div>
+                                                        <button onClick={() => setReplyingTo(null)} className={styles.cancelReply}>
+                                                            <MinusCircle size={18} />
+                                                        </button>
+                                                    </div>
+                                                )}
+
+
+                                                <div className={styles.messageInputArea}>
+
+                                                    <input ref={imageInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'image')} />
+                                                    <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.zip" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'file')} />
+
+                                                    <div className={styles.attachmentWrapper} ref={attachmentRef}>
+                                                        <button className={styles.iconBtn} onClick={() => setAttachmentMenuOpen(!attachmentMenuOpen)}>
+                                                            <Paperclip size={20} />
+                                                        </button>
+                                                        {attachmentMenuOpen && (
+                                                            <div className={styles.attachmentMenu} ref={attachmentMenuRef}>
+                                                                <button className={styles.attachmentMenuItem} onClick={() => imageInputRef.current.click()}>
+                                                                    🖼️ Image
+                                                                </button>
+                                                                <button className={styles.attachmentMenuItem} onClick={() => fileInputRef.current.click()}>
+                                                                    📄 File / PDF
+                                                                </button>
+                                                                <button className={styles.attachmentMenuItem} onClick={() => { setPollOpen(true); setAttachmentMenuOpen(false); }}>
+                                                                    📊 Poll
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Type a message..."
+                                                        className={styles.messageInput}
+                                                        value={inputText}
+                                                        onChange={(e) => setInputText(e.target.value)}
+                                                        onKeyDown={(e) => { if (e.key === 'Enter') handleSendMessage(); }}
+                                                    />
+                                                    <button className={styles.sendBtn} onClick={handleSendMessage}>
+                                                        <Send size={18} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                )}
+
+                            </div>
+                        )}
                 </div>
                 <div className={styles.rightSection}>
                     <div className={styles.pill}>ACADEMIC GROUP CHATS</div>

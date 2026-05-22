@@ -13,6 +13,7 @@ import BellInactive from '../../Assets/icons/notifications.png';
 import Bin from '../../Assets/icons/bin.png';
 import Share from '../../Assets/icons/share.png';
 import AddFriend from '../../Assets/icons/add-friend.png';
+import { useNavigate } from 'react-router-dom';
 
 export default function GroupInfoPanel({
     // Base Context Props
@@ -141,13 +142,15 @@ export default function GroupInfoPanel({
         }
     }, [group.id, token, API]);
 
-  
-    const admin = currentMembers.find(m => m.role === 'owner' || m.role === 'admin');
-    const regularMembers = currentMembers.filter(m => m.role !== 'owner' && m.role !== 'admin');
 
-   
-    const allAdmins = currentMembers.filter(m => m.role === 'owner' || m.role === 'admin');
-    const isInstructor = currentMembers.some(m => m.id === currentUser?.id && (m.role === 'owner' || m.role === 'admin'));
+    const admin = currentMembers.find(m => m.group_role === 'owner' || m.group_role === 'admin');
+    const regularMembers = currentMembers.filter(m => m.group_role !== 'owner' && m.group_role !== 'admin');
+
+    const allAdmins = currentMembers.filter(m => m.group_role === 'owner' || m.group_role === 'admin');
+    const isInstructor = currentMembers.some(m =>
+        (m.id == currentUser?.id || m.username === currentUser?.username) &&
+        (m.group_role === 'owner' || m.group_role === 'admin')
+    );
 
     const avatarSrc = group.avatar
         ? (group.avatar.startsWith('http') ? group.avatar : `${API}${group.avatar}`)
@@ -345,7 +348,7 @@ export default function GroupInfoPanel({
                                 <MemberRow
                                     key={m.id}
                                     member={m}
-                                    isAdmin={true} // Passing true hides the context menu, showing a clean list
+                                    isAdmin={true}
                                     openMemberId={openMemberId}
                                     setOpenMemberId={setOpenMemberId}
                                     API={API}
@@ -638,22 +641,31 @@ export default function GroupInfoPanel({
                                     <button className={styles.viewAllBtn} onClick={onViewAllMembers}>View all</button>
                                 </div>
 
-                                {admin && (
+                                {allAdmins.map(m => (
                                     <MemberRow
-                                        member={admin}
+                                        key={m.id}
+                                        member={m}
                                         isAdmin={true}
+                                        onBack={onBack}
+                                        token={token}
+                                        currentUser={currentUser}
+                                        canManage={isInstructor}
                                         openMemberId={openMemberId}
                                         setOpenMemberId={setOpenMemberId}
                                         API={API}
                                     />
-                                )}
+                                ))}
                                 {regularMembers.map(m => (
                                     <MemberRow
                                         key={m.id}
                                         member={m}
+                                        token={token}
+                                        onBack={onBack}
                                         openMemberId={openMemberId}
+                                        canManage={isInstructor}
                                         setOpenMemberId={setOpenMemberId}
                                         onViewProfile={onViewMemberProfile}
+                                        currentUser={currentUser}
                                         onSendMessage={onSendMessageToMember}
                                         onMakeAdmin={onMakeMemberAdmin}
                                         onRemove={onRemoveMember}
@@ -855,17 +867,25 @@ function MemberRow({
     member,
     isAdmin,
     openMemberId,
+    token,
     setOpenMemberId,
+    canManage,
+    onBack,
     onViewProfile,
     onSendMessage,
+    currentUser,
     onMakeAdmin,
     onRemove,
     API
 }) {
-    const isOpen = openMemberId === member.id;
+
     const avatarSrc = member.avatar
         ? (member.avatar.startsWith('http') ? member.avatar : `${API}${member.avatar}`)
         : null;
+    const isOpen = openMemberId === member.id;
+    const isSelf = member.id == currentUser?.id || member.username === currentUser?.username;
+    const isAlreadyAdmin = member.group_role === 'owner' || member.group_role === 'admin';
+    const navigate = useNavigate();
 
     return (
         <div className={styles.memberRow}>
@@ -877,25 +897,31 @@ function MemberRow({
             </div>
             <div className={styles.memberInfo}>
                 <span className={
-                    member.role === 'owner'
+                    member.group_role === 'owner' || member.group_role === 'admin'
                         ? styles.adminBadge
-                        : member.role === 'admin'
-                            ? styles.adminBadge
-                            : styles.memberBadge
+                        : styles.memberBadge
                 }>
-                    {member.role === 'owner'
+                    {member.group_role === 'owner'
                         ? 'Group creator'
-                        : member.role === 'admin'
+                        : member.group_role === 'admin'
                             ? 'Group admin'
                             : 'Member'}
                 </span>
                 <div className={styles.memberNameRow}>
-                    <span className={isAdmin ? styles.adminName : styles.memberName}>{member.name}</span>
-                    <span className={styles.memberRoleLabel}>{member.roleLabel}</span>
+                    <span className={
+                        (member.group_role === 'owner' || member.group_role === 'admin')
+                            ? styles.adminName
+                            : styles.memberName
+                    } style={{ fontSize: "1.1rem" }}>
+                        {member.name || member.username}
+                    </span>
+                    <span style={{ fontSize: '0.7rem', color: '#999999', marginLeft: '6px', textTransform: 'capitalize' }}>
+                        {member.role}
+                    </span>
                 </div>
             </div>
 
-            {!isAdmin && (
+            {canManage && !isSelf && (
                 <div className={styles.memberMenuWrapper}>
                     <button
                         className={styles.memberMenuBtn}
@@ -906,15 +932,37 @@ function MemberRow({
                     </button>
                     {isOpen && (
                         <div className={styles.memberDropdown}>
-                            <button className={styles.memberMenuItem} onClick={() => { onViewProfile?.(member); setOpenMemberId(null); }}>
+                            <button className={styles.memberMenuItem} onClick={() => {
+                                navigate(`/profile/${member.id}`);
+                                setOpenMemberId(null);
+                            }}>
                                 View profile
                             </button>
-                            <button className={styles.memberMenuItem} onClick={() => { onSendMessage?.(member); setOpenMemberId(null); }}>
+                            <button className={styles.memberMenuItem} onClick={async () => {
+                                setOpenMemberId(null);
+                                onBack?.();
+                                // Always use create_dm — it returns existing DM if already exists
+                                const res = await fetch(`${API}/api/conversations/create/${member.id}/`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Authorization': `Bearer ${token}`,
+                                        'Content-Type': 'application/json'
+                                    }
+                                });
+                                const data = await res.json();
+                                if (data.id) navigate(`/chats/${data.id}`);
+                            }}>
                                 Send message
                             </button>
-                            <button className={styles.memberMenuItem} onClick={() => { onMakeAdmin?.(member); setOpenMemberId(null); }}>
-                                Make admin
-                            </button>
+                            {isAlreadyAdmin ? (
+                                <button className={styles.memberMenuItem} onClick={() => { onMakeAdmin?.(member); setOpenMemberId(null); }}>
+                                    Remove admin
+                                </button>
+                            ) : (
+                                <button className={styles.memberMenuItem} onClick={() => { onMakeAdmin?.(member); setOpenMemberId(null); }}>
+                                    Make admin
+                                </button>
+                            )}
                             <div className={styles.menuDivider} />
                             <button
                                 className={`${styles.memberMenuItem} ${styles.destructiveMI}`}
