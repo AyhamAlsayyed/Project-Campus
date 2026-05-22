@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -125,6 +126,54 @@ def get_messages(request, conversation_id):
     member.save(update_fields=["last_read_at"])
 
     return Response(data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def create_group_conversation(request):
+    user = request.user
+
+    name = request.data.get("name", "").strip()
+    description = request.data.get("description", "").strip()
+    is_private = request.data.get("is_private", False)
+    is_academic = request.data.get("is_academic", False)
+    group_image = request.FILES.get("image")
+
+    if not name:
+        return Response({"error": "Group name is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if is_academic:
+        is_instructor = hasattr(user, "instructor_profile") and user.instructor_profile is not None
+
+        if not is_instructor:
+            raise PermissionDenied("Only instructors can create academic groups.")
+
+    with transaction.atomic():
+        new_group = Conversation.objects.create(
+            name=name,
+            description=description if description else None,
+            image=group_image,
+            is_group=True,
+            is_private=is_private,
+            is_academic=is_academic,
+            status=Conversation.Status.ACCEPTED,
+            created_by=user,
+        )
+
+        ConversationMember.objects.create(
+            conversation=new_group, user=user, role=ConversationMember.Role.OWNER, status="approved"
+        )
+
+    return Response(
+        {
+            "message": "Group created successfully.",
+            "conversation_id": new_group.conversation_id,
+            "name": new_group.name,
+            "is_academic": new_group.is_academic,
+            "status": new_group.status,
+        },
+        status=status.HTTP_201_CREATED,
+    )
 
 
 @api_view(["POST"])

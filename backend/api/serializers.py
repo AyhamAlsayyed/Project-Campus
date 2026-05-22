@@ -72,6 +72,7 @@ class UserSerializer(serializers.ModelSerializer):
     academic_title = serializers.SerializerMethodField()
     instructor_type = serializers.SerializerMethodField()
     convention_id = serializers.SerializerMethodField()
+    conversation_detail = serializers.SerializerMethodField()
     is_restricted = serializers.SerializerMethodField()
     friends_count = serializers.SerializerMethodField()
     friendship_status = serializers.SerializerMethodField()
@@ -93,6 +94,7 @@ class UserSerializer(serializers.ModelSerializer):
             "instructor_type",
             "degrees",
             "convention_id",
+            "conversation_detail",
             "is_restricted",
             "friends_count",
             "friendship_status",
@@ -247,6 +249,37 @@ class UserSerializer(serializers.ModelSerializer):
         )
         return existing.conversation_id if existing else None
 
+    def get_conversation_detail(self, obj):
+        if self._should_restrict_data(obj):
+            return None
+
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
+            return None
+
+        current_user = request.user
+        target_user = obj
+
+        if current_user == target_user:
+            return None
+
+        existing = (
+            Conversation.objects.filter(is_group=False)
+            .filter(members__user=current_user)
+            .filter(members__user=target_user)
+            .select_related("created_by")
+            .first()
+        )
+
+        if not existing:
+            return {"conversation_id": None, "status": None, "is_creator": False}
+
+        return {
+            "conversation_id": existing.conversation_id,
+            "status": existing.status,
+            "is_creator": existing.created_by == current_user,
+        }
+
     def get_role(self, obj):
         if hasattr(obj, "page") and obj.page:
             return obj.page.page_type
@@ -316,6 +349,40 @@ class UserDegreeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserDegree
         fields = ["id", "degree_type", "major", "institution"]
+
+
+class GroupMemberSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+    role = serializers.SerializerMethodField()
+    group_role = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "avatar",
+            "role",
+            "group_role",
+        ]
+
+    def get_avatar(self, obj):
+        request = self.context.get("request")
+        return get_user_avatar(request, obj)
+
+    def get_role(self, obj):
+        if hasattr(obj, "page") and obj.page:
+            return obj.page.page_type
+        if hasattr(obj, "student_profile"):
+            return "student"
+        if hasattr(obj, "instructor_profile"):
+            return "instructor"
+        if hasattr(obj, "admin_profile"):
+            return "admin"
+        return "unknown"
+
+    def get_group_role(self, obj):
+        return getattr(obj, "stashed_group_role", "member")
 
 
 class BlockedUserListSerializer(serializers.ModelSerializer):
