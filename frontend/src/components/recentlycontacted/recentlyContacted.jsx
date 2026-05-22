@@ -4,6 +4,7 @@ import { Search, MessageSquare } from "lucide-react"
 import { useNavigate } from 'react-router-dom';
 import Messages from '../../Assets/icons/messages.png'
 
+
 export default function FriendsSuggestion() {
     const [contacts, setContacts] = useState([]);
     const [loading, setLoading] = useState(true);

@@ -18,9 +18,10 @@ export default function GroupInfoPanel({
     // Base Context Props
     group = {},
     members = [],
-    messages = [], // <--- Added messages prop here
+    messages = [],
     API = '',
-    token = '', // Authenticated fetch token
+    token = '',
+    currentUser = {},
 
     // Header Actions
     onBack,
@@ -44,13 +45,24 @@ export default function GroupInfoPanel({
     onMakeMemberAdmin,
     onRemoveMember
 }) {
-    console.log("Messages in Panel:", messages);
+
     // UI Local Modals States
     const [openMemberId, setOpenMemberId] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
     const [currentMembers, setCurrentMembers] = useState(members);
     const [showShareGroupModal, setShowShareGroupModal] = useState(false);
+
+    // Group Permissions View Toggle States
+    const [showPermissions, setShowPermissions] = useState(false);
+    const [showAdmins, setShowAdmins] = useState(false); // <--- Added Admin View State
+
+    const [permissions, setPermissions] = useState({
+        editSettings: true,
+        sendMessages: true,
+        addMembers: true,
+        approveMembers: false
+    });
 
     // Search Query Strings State
     const [memberSearch, setMemberSearch] = useState('');
@@ -70,6 +82,11 @@ export default function GroupInfoPanel({
 
     // Determine if this is a group or a private chat
     const isGroup = group.is_group !== false;
+
+    // Toggle single permission switch state handler
+    const togglePermission = (key) => {
+        setPermissions(prev => ({ ...prev, [key]: !prev[key] }));
+    };
 
     // Sync input initializations whenever the base chat reference shifts
     useEffect(() => {
@@ -111,14 +128,26 @@ export default function GroupInfoPanel({
                 },
             })
                 .then(res => res.json())
-                .then(data => setCurrentMembers(data))
+                .then(data => {
+                    const seen = new Set();
+                    const unique = (Array.isArray(data) ? data : []).filter(m => {
+                        if (seen.has(m.id)) return false;
+                        seen.add(m.id);
+                        return true;
+                    });
+                    setCurrentMembers(unique);
+                })
                 .catch(err => console.error("Error fetching sorted members:", err));
         }
     }, [group.id, token, API]);
 
-    // Derived Component Mappings
+  
     const admin = currentMembers.find(m => m.role === 'owner' || m.role === 'admin');
     const regularMembers = currentMembers.filter(m => m.role !== 'owner' && m.role !== 'admin');
+
+   
+    const allAdmins = currentMembers.filter(m => m.role === 'owner' || m.role === 'admin');
+    const isInstructor = currentMembers.some(m => m.id === currentUser?.id && (m.role === 'owner' || m.role === 'admin'));
 
     const avatarSrc = group.avatar
         ? (group.avatar.startsWith('http') ? group.avatar : `${API}${group.avatar}`)
@@ -135,18 +164,12 @@ export default function GroupInfoPanel({
     );
 
     // ── DYNAMIC MEDIA EXTRACTION ──
-    // Extracts images and files directly from the messages passed by ChatsPage!
-    useEffect(() => {
-        console.log("Current messages prop:", messages);
-    }, [messages]);
-
     const extractedMedia = useMemo(() => {
         if (!messages || !Array.isArray(messages)) return [];
 
         const items = [];
 
         messages.forEach((msg, msgIdx) => {
-            // Handle msg.media as an ARRAY (your actual data shape)
             if (Array.isArray(msg.media) && msg.media.length > 0) {
                 msg.media.forEach((m, i) => {
                     const rawUrl = m.url || '';
@@ -161,7 +184,6 @@ export default function GroupInfoPanel({
                 });
             }
 
-            // Fallback: top-level file or image field
             const rawUrl = msg.file || msg.image || '';
             if (rawUrl) {
                 const fullUrl = rawUrl.startsWith('http') ? rawUrl : `${API}${rawUrl}`;
@@ -176,6 +198,7 @@ export default function GroupInfoPanel({
 
         return items.filter(item => item.url && item.url !== API);
     }, [messages, API]);
+
     // ── INTERNAL ACTIONS ──
     const handleAddMemberSubmit = async (friendId) => {
         try {
@@ -228,7 +251,7 @@ export default function GroupInfoPanel({
 
         try {
             const formData = new FormData();
-            formData.append("image", file); // Fixed "image" key
+            formData.append("image", file);
 
             const res = await fetch(
                 `${API}/api/groups/${group.id}/edit-image/`,
@@ -304,236 +327,356 @@ export default function GroupInfoPanel({
     return (
         <div className={styles.container}>
 
-            {/* ── Header ── */}
-            <div className={styles.header}>
-                <button className={styles.backBtn} onClick={onBack} aria-label="Go back">
-                    <img src={BackArrow} alt="Back" style={headerPngStyle} />
-                </button>
-                <span className={styles.headerTitle}>{isGroup ? 'Group Info' : 'User Info'}</span>
-                <div className={styles.headerIcons}>
-                    <button className={styles.iconBtn} onClick={onSearchClick} aria-label="Search">
-                        <img src={SearchIconAsset} alt="Search" style={headerPngStyle} />
-                    </button>
-                    <button className={styles.iconBtn} onClick={onNotificationToggle} aria-label="Notifications">
-                        <img
-                            src={group.hasUnreadNotifications ? BellActive : BellInactive}
-                            alt="Notifications"
-                            style={headerPngStyle}
-                        />
-                    </button>
-                    <button className={styles.iconBtn} onClick={onSettingsClick} aria-label="Settings">
-                        <img src={Settings} alt="Settings" style={headerPngStyle} />
-                    </button>
-                </div>
-            </div>
+            {showAdmins ? (
 
-            <div className={styles.headerDivider} />
+                <>
+                    <div className={styles.header}>
+                        <button className={styles.backBtn} onClick={() => { setShowAdmins(false); setOpenMemberId(null); }} aria-label="Return to Permissions">
+                            <img src={BackArrow} alt="Back" style={headerPngStyle} />
+                        </button>
+                        <span className={styles.headerTitle}>Group admins</span>
+                    </div>
 
-            {/* ── Scrollable Body ── */}
-            <div className={styles.body}>
+                    <div className={styles.headerDivider} />
 
-                {/* ── Top Identity Header Segment ── */}
-                <div className={styles.topCard}>
-                    <div className={styles.infoAndPictureWrapper}>
-                        <div className={styles.avatarRing}>
-                            <div className={styles.avatar}>
-                                {avatarSrc
-                                    ? <img src={avatarSrc} alt={group.name} className={styles.avatarImg} />
-                                    : <span className={styles.avatarInitials}>{group.name?.slice(0, 2).toUpperCase() || ''}</span>
-                                }
-                            </div>
-                            <button
-                                className={styles.cameraBtn}
-                                onClick={() => avatarInputRef.current?.click()}
-                                aria-label="Change group photo"
-                            >
-                                <Camera size={13} />
-                            </button>
-                            <input
-                                ref={avatarInputRef}
-                                type="file"
-                                accept="image/*"
-                                style={{ display: 'none' }}
-                                onChange={handleAvatarFileChange}
-                            />
+                    <div className={styles.body}>
+                        <div className={styles.membersSection} style={{ borderTop: 'none', marginTop: 0 }}>
+                            {allAdmins.map(m => (
+                                <MemberRow
+                                    key={m.id}
+                                    member={m}
+                                    isAdmin={true} // Passing true hides the context menu, showing a clean list
+                                    openMemberId={openMemberId}
+                                    setOpenMemberId={setOpenMemberId}
+                                    API={API}
+                                />
+                            ))}
                         </div>
+                    </div>
+                </>
 
-                        <div className={styles.identityBlock}>
-                            {isGroup && group.type && (
-                                <span className={styles.typeBadge}>{group.type}</span>
-                            )}
-                            <div className={styles.nameRow}>
-                                {isEditing ? (
+            ) : showPermissions ? (
+                // ── FULL PAGE: PERMISSIONS VIEW ──
+                <>
+                    <div className={styles.header}>
+                        <button className={styles.backBtn} onClick={() => setShowPermissions(false)} aria-label="Return to Info">
+                            <img src={BackArrow} alt="Back" style={headerPngStyle} />
+                        </button>
+                        <span className={styles.headerTitle}>Group permissions</span>
+                    </div>
+
+                    <div className={styles.headerDivider} />
+
+                    <div className={styles.body}>
+                        <div className={styles.permissionsScroll}>
+                            {/* MEMBERS CAN SECTION */}
+                            <h3 className={styles.sectionHeading}>Members can:</h3>
+                            <div className={styles.permissionBlock}>
+
+                                <div className={styles.permissionItem}>
+                                    <div className={styles.permissionText}>
+                                        <span className={styles.permissionLabel}>Edit group settings</span>
+                                        <span className={styles.permissionDesc}>This includes the name, icon, description, disappearing message timer, and keeping messages.</span>
+                                    </div>
+                                    <label className={styles.toggleSwitch}>
+                                        <input type="checkbox" checked={permissions.editSettings} onChange={() => togglePermission('editSettings')} />
+                                        <span className={styles.toggleSlider}></span>
+                                    </label>
+                                </div>
+
+                                <div className={styles.permissionItem}>
+                                    <div className={styles.permissionText}>
+                                        <span className={styles.permissionLabel}>Send messages</span>
+                                    </div>
+                                    <label className={styles.toggleSwitch}>
+                                        <input type="checkbox" checked={permissions.sendMessages} onChange={() => togglePermission('sendMessages')} />
+                                        <span className={styles.toggleSlider}></span>
+                                    </label>
+                                </div>
+
+                                <div className={styles.permissionItem}>
+                                    <div className={styles.permissionText}>
+                                        <span className={styles.permissionLabel}>Add other members</span>
+                                    </div>
+                                    <label className={styles.toggleSwitch}>
+                                        <input type="checkbox" checked={permissions.addMembers} onChange={() => togglePermission('addMembers')} />
+                                        <span className={styles.toggleSlider}></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* ADMINS CAN SECTION */}
+                            <h3 className={styles.sectionHeading}>Admins can:</h3>
+                            <div className={styles.permissionBlock}>
+                                <div className={styles.permissionItem}>
+                                    <div className={styles.permissionText}>
+                                        <span className={styles.permissionLabel}>Approve new members</span>
+                                        <span className={styles.permissionDesc}>When turned on, admins must approve anyone who wants to join the group.</span>
+                                    </div>
+                                    <label className={styles.toggleSwitch}>
+                                        <input type="checkbox" checked={permissions.approveMembers} onChange={() => togglePermission('approveMembers')} />
+                                        <span className={styles.toggleSlider}></span>
+                                    </label>
+                                </div>
+
+                                {/* ── EDIT GROUP ADMINS NAV BUTTON ── */}
+                                <div
+                                    className={styles.permissionItem}
+                                    style={{ cursor: 'pointer', marginTop: '4px' }}
+                                    onClick={() => setShowAdmins(true)}
+                                >
+                                    <div className={styles.permissionText}>
+                                        <span className={styles.permissionLabel}>Edit group admins</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </>
+
+            ) : (
+                // ── NORMAL GROUP INFO VIEW ──
+                <>
+                    {/* ── Header ── */}
+                    <div className={styles.header}>
+                        <button className={styles.backBtn} onClick={onBack} aria-label="Go back">
+                            <img src={BackArrow} alt="Back" style={headerPngStyle} />
+                        </button>
+                        <span className={styles.headerTitle}>{isGroup ? 'Group Info' : 'User Info'}</span>
+                        <div className={styles.headerIcons}>
+                            <button className={styles.iconBtn} onClick={onSearchClick} aria-label="Search">
+                                <img src={SearchIconAsset} alt="Search" style={headerPngStyle} />
+                            </button>
+                            <button className={styles.iconBtn} onClick={onNotificationToggle} aria-label="Notifications">
+                                <img
+                                    src={group.hasUnreadNotifications ? BellActive : BellInactive}
+                                    alt="Notifications"
+                                    style={headerPngStyle}
+                                />
+                            </button>
+                            <button
+                                className={styles.iconBtn}
+                                onClick={() => {
+                                    if (isGroup) {
+                                        setShowPermissions(true);
+                                    }
+                                    if (onSettingsClick) onSettingsClick();
+                                }}
+                                aria-label="Settings"
+                            >
+                                <img src={Settings} alt="Settings" style={headerPngStyle} />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className={styles.headerDivider} />
+
+                    {/* ── Scrollable Body ── */}
+                    <div className={styles.body}>
+
+                        {/* ── Top Identity Header Segment ── */}
+                        <div className={styles.topCard}>
+                            <div className={styles.infoAndPictureWrapper}>
+                                <div className={styles.avatarRing}>
+                                    <div className={styles.avatar}>
+                                        {avatarSrc
+                                            ? <img src={avatarSrc} alt={group.name} className={styles.avatarImg} />
+                                            : <span className={styles.avatarInitials}>{group.name?.slice(0, 2).toUpperCase() || ''}</span>
+                                        }
+                                    </div>
+                                    <button
+                                        className={styles.cameraBtn}
+                                        onClick={() => avatarInputRef.current?.click()}
+                                        aria-label="Change group photo"
+                                    >
+                                        <Camera size={13} />
+                                    </button>
                                     <input
-                                        type="text"
-                                        value={editedName}
-                                        onChange={(e) => setEditedName(e.target.value)}
-                                        className={styles.groupNameInput}
-                                        style={{ background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '4px', padding: '2px 6px', fontSize: '1.1rem' }}
+                                        ref={avatarInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                        onChange={handleAvatarFileChange}
                                     />
-                                ) : (
-                                    <h2 className={styles.groupName}>{group.name}</h2>
-                                )}
+                                </div>
 
-                                {isEditing ? (
-                                    <div style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>
-                                        <button onClick={handleSaveGroupDetails} style={{ background: 'none', border: 'none', color: '#4ade80', cursor: 'pointer' }}>
-                                            <Check size={16} />
+                                <div className={styles.identityBlock}>
+                                    {isGroup && group.type && (
+                                        <span className={styles.typeBadge}>{group.type}</span>
+                                    )}
+                                    <div className={styles.nameRow}>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={editedName}
+                                                onChange={(e) => setEditedName(e.target.value)}
+                                                className={styles.groupNameInput}
+                                                style={{ background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '4px', padding: '2px 6px', fontSize: '1.1rem' }}
+                                            />
+                                        ) : (
+                                            <h2 className={styles.groupName}>{group.name}</h2>
+                                        )}
+
+                                        {isEditing ? (
+                                            <div style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>
+                                                <button onClick={handleSaveGroupDetails} style={{ background: 'none', border: 'none', color: '#4ade80', cursor: 'pointer' }}>
+                                                    <Check size={16} />
+                                                </button>
+                                                <button onClick={handleCancelGroupDetails} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer' }}>
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button className={styles.editBtn} onClick={() => setIsEditing(true)}>
+                                                <span>Edit</span>
+                                                <Edit2 size={13} />
+                                            </button>
+                                        )}
+                                    </div>
+                                    <p className={styles.createdBy}>
+                                        Created by: {group.conversations_owner || group.created_by || '—'}
+                                        {group.created_at && <>&nbsp;&nbsp;•&nbsp;&nbsp;{group.created_at}</>}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {isGroup && (
+                                <div className={styles.descriptionAndButtonsWrapper}>
+                                    <div className={styles.buttonsContainer}>
+                                        <button className={styles.shareBtn} onClick={() => setShowShareGroupModal(true)}>
+                                            <img src={Share} alt="Share" style={inlineButtonPngStyle} />
+                                            <span>Share group</span>
                                         </button>
-                                        <button onClick={handleCancelGroupDetails} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer' }}>
-                                            <X size={16} />
+                                        <button className={styles.addMemberBtn} onClick={() => setShowAddMemberModal(true)}>
+                                            <img src={AddFriend} alt="Add member" style={inlineButtonPngStyle} />
+                                            <span>Add member</span>
                                         </button>
                                     </div>
-                                ) : (
-                                    <button className={styles.editBtn} onClick={() => setIsEditing(true)}>
-                                        <span>Edit</span>
-                                        <Edit2 size={13} />
+
+                                    <div className={styles.bioBox}>
+                                        {isEditing ? (
+                                            <textarea
+                                                value={editedBio}
+                                                onChange={(e) => setEditedBio(e.target.value)}
+                                                style={{ background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '4px', padding: '6px', width: '100%', minHeight: '50px', fontSize: '0.85rem', resize: 'vertical' }}
+                                            />
+                                        ) : (
+                                            <p className={styles.bioText}>
+                                                {group.description || group.bio || 'No description added yet.'}
+                                            </p>
+                                        )}
+                                        <span className={styles.memberCount}>
+                                            {group.member_count ?? currentMembers.length}/{group.member_limit ?? 150}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className={styles.sectionDivider} />
+
+                        {/* ── Subtitle Info Block ── */}
+                        <div className={styles.detailsHeading}>
+                            <span className={styles.sectionTitle}>{isGroup ? 'Group details' : 'User details'}</span>
+                            <span className={styles.sectionSub}>
+                                {isGroup ? "In this section you'll get to see more details from this group, like media share, members and more!" : "View shared media, links, and documents with this user."}
+                            </span>
+                        </div>
+
+                        {/* ── Media Cards Tray ── */}
+                        <div className={styles.mediaCard}>
+                            <div className={styles.mediaCardHeader}>
+                                <span className={styles.mediaCardTitle}>Media, links and docs</span>
+                                <div className={styles.mediaHeaderLine} />
+                            </div>
+
+                            <div className={styles.mediaGrid}>
+                                {extractedMedia.slice(0, 3).map((item) => {
+                                    if (item.type === 'pdf') {
+                                        return (
+                                            <div key={item.id} className={styles.pdfTile}>
+                                                <FileText size={28} color="#E53935" />
+                                                <strong className={styles.pdfName}>{item.name || 'Document'}</strong>
+                                                <span className={styles.pdfMeta}>
+                                                    {item.pages || '1'} pages · pdf · {item.size || ''}
+                                                </span>
+                                            </div>
+                                        );
+                                    }
+                                    return (
+                                        <div key={item.id} className={styles.imageTile} onClick={() => setLightboxUrl(item.url)}>
+                                            <img
+                                                src={item.url}
+                                                alt="media"
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit', display: 'block', cursor: 'pointer' }}
+                                                onError={e => { e.currentTarget.style.display = 'none'; }}
+                                            />
+                                        </div>
+                                    );
+                                })}
+                                {extractedMedia.length === 0 && (
+                                    <div className={styles.emptyMediaMsg}>No media shared yet.</div>
+                                )}
+
+                                {extractedMedia.length > 0 && (
+                                    <button className={styles.viewAllTile} onClick={onViewAllMedia}>
+                                        View all {extractedMedia.length}+
                                     </button>
                                 )}
                             </div>
-                            <p className={styles.createdBy}>
-                                Created by: {group.conversations_owner || group.created_by || '—'}
-                                {group.created_at && <>&nbsp;&nbsp;•&nbsp;&nbsp;{group.created_at}</>}
-                            </p>
                         </div>
-                    </div>
 
-                    {isGroup && (
-                        <div className={styles.descriptionAndButtonsWrapper}>
-                            <div className={styles.buttonsContainer}>
-                                <button className={styles.shareBtn} onClick={() => setShowShareGroupModal(true)}>
-                                    <img src={Share} alt="Share" style={inlineButtonPngStyle} />
-                                    <span>Share group</span>
-                                </button>
-                                <button className={styles.addMemberBtn} onClick={() => setShowAddMemberModal(true)}>
-                                    <img src={AddFriend} alt="Add member" style={inlineButtonPngStyle} />
-                                    <span>Add member</span>
-                                </button>
-                            </div>
-
-                            <div className={styles.bioBox}>
-                                {isEditing ? (
-                                    <textarea
-                                        value={editedBio}
-                                        onChange={(e) => setEditedBio(e.target.value)}
-                                        style={{ background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '4px', padding: '6px', width: '100%', minHeight: '50px', fontSize: '0.85rem', resize: 'vertical' }}
-                                    />
-                                ) : (
-                                    <p className={styles.bioText}>
-                                        {group.description || group.bio || 'No description added yet.'}
-                                    </p>
-                                )}
-                                <span className={styles.memberCount}>
-                                    {group.member_count ?? currentMembers.length}/{group.member_limit ?? 150}
-                                </span>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                <div className={styles.sectionDivider} />
-
-                {/* ── Subtitle Info Block ── */}
-                <div className={styles.detailsHeading}>
-                    <span className={styles.sectionTitle}>{isGroup ? 'Group details' : 'User details'}</span>
-                    <span className={styles.sectionSub}>
-                        {isGroup ? "In this section you'll get to see more details from this group, like media share, members and more!" : "View shared media, links, and documents with this user."}
-                    </span>
-                </div>
-
-                {/* ── Media Cards Tray ── */}
-                <div className={styles.mediaCard}>
-                    <div className={styles.mediaCardHeader}>
-                        <span className={styles.mediaCardTitle}>Media, links and docs</span>
-                        <div className={styles.mediaHeaderLine} />
-                    </div>
-
-                    <div className={styles.mediaGrid}>
-                        {extractedMedia.slice(0, 3).map((item) => {
-                            if (item.type === 'pdf') {
-                                return (
-                                    <div key={item.id} className={styles.pdfTile}>
-                                        <FileText size={28} color="#E53935" />
-                                        <strong className={styles.pdfName}>{item.name || 'Document'}</strong>
-                                        <span className={styles.pdfMeta}>
-                                            {item.pages || '1'} pages · pdf · {item.size || ''}
-                                        </span>
+                        {/* ── Group Members Roster ── */}
+                        {isGroup && (
+                            <div className={styles.membersSection}>
+                                <div className={styles.membersSectionHeader}>
+                                    <div className={styles.membersSectionLeft}>
+                                        <span className={styles.sectionTitle}>Group members</span>
+                                        <span className={styles.memberDot} />
+                                        <span className={styles.memberCountLabel}>{currentMembers.length} members</span>
                                     </div>
-                                );
-                            }
-                            return (
-                                <div key={item.id} className={styles.imageTile} onClick={() => setLightboxUrl(item.url)}>
-                                    <img
-                                        src={item.url}
-                                        alt="media"
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit', display: 'block', cursor: 'pointer' }}
-                                        onError={e => { e.currentTarget.style.display = 'none'; }}
-                                    />
+                                    <button className={styles.viewAllBtn} onClick={onViewAllMembers}>View all</button>
                                 </div>
-                            );
-                        })}
-                        {extractedMedia.length === 0 && (
-                            <div className={styles.emptyMediaMsg}>No media shared yet.</div>
-                        )}
 
-                        {extractedMedia.length > 0 && (
-                            <button className={styles.viewAllTile} onClick={onViewAllMedia}>
-                                View all {extractedMedia.length}+
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* ── Group Members Roster ── */}
-                {isGroup && (
-                    <div className={styles.membersSection}>
-                        <div className={styles.membersSectionHeader}>
-                            <div className={styles.membersSectionLeft}>
-                                <span className={styles.sectionTitle}>Group members</span>
-                                <span className={styles.memberDot} />
-                                <span className={styles.memberCountLabel}>{currentMembers.length} members</span>
+                                {admin && (
+                                    <MemberRow
+                                        member={admin}
+                                        isAdmin={true}
+                                        openMemberId={openMemberId}
+                                        setOpenMemberId={setOpenMemberId}
+                                        API={API}
+                                    />
+                                )}
+                                {regularMembers.map(m => (
+                                    <MemberRow
+                                        key={m.id}
+                                        member={m}
+                                        openMemberId={openMemberId}
+                                        setOpenMemberId={setOpenMemberId}
+                                        onViewProfile={onViewMemberProfile}
+                                        onSendMessage={onSendMessageToMember}
+                                        onMakeAdmin={onMakeMemberAdmin}
+                                        onRemove={onRemoveMember}
+                                        API={API}
+                                    />
+                                ))}
                             </div>
-                            <button className={styles.viewAllBtn} onClick={onViewAllMembers}>View all</button>
-                        </div>
-
-                        {admin && (
-                            <MemberRow
-                                member={admin}
-                                isAdmin
-                                openMemberId={openMemberId}
-                                setOpenMemberId={setOpenMemberId}
-                                API={API}
-                            />
                         )}
-                        {regularMembers.map(m => (
-                            <MemberRow
-                                key={m.id}
-                                member={m}
-                                openMemberId={openMemberId}
-                                setOpenMemberId={setOpenMemberId}
-                                onViewProfile={onViewMemberProfile}
-                                onSendMessage={onSendMessageToMember}
-                                onMakeAdmin={onMakeMemberAdmin}
-                                onRemove={onRemoveMember}
-                                API={API}
-                            />
-                        ))}
+
+                        <div className={styles.otherSection}>
+                            <span className={styles.sectionTitle}>Other</span>
+                            <button className={styles.otherBtn} onClick={onClearChat}>
+                                <MinusCircle size={18} className={styles.otherIcon} />
+                                <span>Clear chat</span>
+                            </button>
+                            <button className={`${styles.otherBtn} ${styles.destructiveBtn}`} onClick={onDeleteGroup}>
+                                <img src={Bin} alt="Delete" style={inlineButtonPngStyle} />
+                                <span>{isGroup ? 'Delete group' : 'Delete chat'}</span>
+                            </button>
+                        </div>
                     </div>
-                )}
-
-
-                <div className={styles.otherSection}>
-                    <span className={styles.sectionTitle}>Other</span>
-                    <button className={styles.otherBtn} onClick={onClearChat}>
-                        <MinusCircle size={18} className={styles.otherIcon} />
-                        <span>Clear chat</span>
-                    </button>
-                    <button className={`${styles.otherBtn} ${styles.destructiveBtn}`} onClick={onDeleteGroup}>
-                        <img src={Bin} alt="Delete" style={inlineButtonPngStyle} />
-                        <span>{isGroup ? 'Delete group' : 'Delete chat'}</span>
-                    </button>
-                </div>
-            </div>
+                </>
+            )}
 
             {/* ── POPUP MODAL COMPONENT: ADD MEMBER ── */}
             {showAddMemberModal && (
@@ -669,6 +812,7 @@ export default function GroupInfoPanel({
                     </div>
                 </div>
             )}
+
             {lightboxUrl && (
                 <div
                     onClick={() => setLightboxUrl(null)}
@@ -740,7 +884,7 @@ function MemberRow({
                             : styles.memberBadge
                 }>
                     {member.role === 'owner'
-                        ? 'Group owner'
+                        ? 'Group creator'
                         : member.role === 'admin'
                             ? 'Group admin'
                             : 'Member'}

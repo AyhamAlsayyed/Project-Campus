@@ -929,3 +929,129 @@
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.35);
 }
+/* --- WhatsApp Group Permissions UI --- */
+
+.permissionsContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #333333; /* Matches your main container background */
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.permissionsHeader {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.permissionsTitle {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #e9edef;
+  margin: 0;
+}
+
+.permissionsScroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 0 30px 0;
+}
+
+.sectionHeading {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #8696a0; /* WhatsApp secondary text color */
+  padding: 15px 20px 8px 20px;
+  margin: 0;
+}
+
+.permissionBlock {
+  background: transparent; /* Slightly darker to contrast with main bg */
+  display: flex;
+  flex-direction: column;
+}
+
+.permissionItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.permissionItem:last-child {
+  border-bottom: none;
+}
+
+.permissionText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 20px;
+  max-width: 85%;
+}
+
+.permissionLabel {
+  font-size: 1.05rem;
+  color: #e9edef;
+}
+
+.permissionDesc {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #8696a0;
+}
+
+/* --- Custom iOS/WhatsApp Toggle Switch --- */
+
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggleSwitch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggleSlider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #5a5a5a;
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.toggleSlider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.toggleSwitch input:checked + .toggleSlider {
+   background: linear-gradient(90deg, #612886, #892A82);
+}
+
+.toggleSwitch input:checked + .toggleSlider:before {
+  transform: translateX(18px);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

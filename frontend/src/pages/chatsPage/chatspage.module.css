@@ -1529,3 +1529,14 @@
     padding-left: 4px;
     flex-shrink: 0;
 }
+.createGroup {
+    border-radius: 50%; /* Changed from 50px for a perfect circle */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.createGroup:hover {
+    background-color: #A2279C;
+}

@@ -13,6 +13,8 @@ import { Download } from 'lucide-react';
 import BackButton from '../../Assets/icons/arrow-left.png'
 import CommentModal from '../../components/comments/commentsModal';
 import GroupInfoPanel from '../../components/chatPageComponents/groupInfoPanel';
+import CreateGroupIcon from '../../Assets/icons/create-group.png'
+import GroupCreationFlow from '../../components/chatPageComponents/GroupCreationFlow';
 function MarqueeText({ text, className }) {
     const wrapperRef = useRef(null);
     const textRef = useRef(null);
@@ -78,6 +80,7 @@ export default function ChatsPage() {
     const [chatRequests, setChatRequests] = useState([]);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [requestMessages, setRequestMessages] = useState([]);
+    const [showCreateGroup, setShowCreateGroup] = useState(false);
 
 
     const { chatId } = useParams();
@@ -485,7 +488,11 @@ export default function ChatsPage() {
             <div className={`${styles.content} ${styles.page}`}>
                 <SideBarNav />
                 <div className={styles.mainContent}>
-                    {!selectedChat ? (
+                    {showCreateGroup ? (
+                        <GroupCreationFlow closeFlow={() => setShowCreateGroup(false)} />
+                    ) :
+
+                    !selectedChat ? (
                         <>
                             <h1 className={styles.title}>
                                 {showRequests
@@ -502,13 +509,32 @@ export default function ChatsPage() {
                                         <button className={`${styles.filterBtn} ${filter === "pinned" ? styles.active : ""}`} onClick={() => setFilter("pinned")}>Pinned</button>
                                         <button className={`${styles.filterBtn} ${filter === "groups" ? styles.active : ""}`} onClick={() => setFilter("groups")}>Groups</button>
                                     </div>
-                                    <div
-                                        className={styles.requestsLink}
-                                        onClick={() => setShowRequests(true)}
-                                        style={{ cursor: 'pointer' }}
-                                    >
-                                        <span>Requests</span> ({requestsCount})
+                                    <div className={styles.righSide} style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                                        <div
+                                            className={styles.createGroup}
+                                            onClick={() => setShowCreateGroup(true)}
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                padding: "8px",
+                                                cursor: "pointer",
+                                                transition: "background 0.2s"
+                                            }}
+                                        >
+                                            <img src={CreateGroupIcon} alt="" style={{ width: "25px", height: "25px", filter: 'brightness(0) invert(0.9)' }} />
+                                        </div>
+
+                                        <div
+                                            className={styles.requestsLink}
+                                            onClick={() => setShowRequests(true)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+
+                                            <span>Requests</span> ({requestsCount})
+                                        </div>
                                     </div>
+
                                 </div>
                             )}
 
@@ -920,14 +946,14 @@ export default function ChatsPage() {
                         <div className={`${styles.chatList} ${styles.activeChatOuter}`}>
                             {showGroupInfo ? (
                                 <GroupInfoPanel
-                                    group={selectedChat} 
+                                    group={selectedChat}
                                     members={messages.length > 0 ? [...new Set(messages.map(m => m.sender))].map((name, idx) => ({ id: idx, name, role: idx === 0 ? 'Group admin' : 'member' })) : []}
                                     API={API}
-                                    token={token} 
+                                    token={token}
                                     messages={messages}
                                     onBack={() => setShowGroupInfo(false)}
-                                    onClearChat={() => clearChat(selectedChat.id)} 
-                                    onDeleteGroup={() => deleteChat(selectedChat.id)} 
+                                    onClearChat={() => clearChat(selectedChat.id)}
+                                    onDeleteGroup={() => deleteChat(selectedChat.id)}
                                 />
                             ) : (
                                 <div className={styles.innerChatContainer}>

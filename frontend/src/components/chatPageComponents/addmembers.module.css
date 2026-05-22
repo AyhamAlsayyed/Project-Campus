@@ -1,0 +1,388 @@
+.pageContainer {
+    background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
+    width: 100%;
+    padding-top: 6px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-radius: 30px;
+    z-index: 1;
+    position: relative;
+    margin: 4% 0 0 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.createGroupCard {
+    background-color: #333333;
+    width: 100%;
+    height: 100%;
+    border-top-left-radius: 28px;
+    border-top-right-radius: 28px;
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+    position: relative;
+    padding: 30px 60px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+/* --- HEADER --- */
+.header {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.iconBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-right: 20px;
+}
+
+.backIconAsset {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(0.85);
+}
+
+.headerTitleContainer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.headerTitle {
+    color: #CCCCCC;
+    font-size: 1.9rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.headerSubtitle {
+    color: #888888;
+    font-size: 0.72rem;
+    margin: 4px 0 0 0;
+    font-weight: 400;
+}
+
+.starPrefix {
+    color: #C8226B; 
+    font-weight: bold;
+    margin-right: 3px;
+}
+
+.headerRight {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.selectionCount {
+    color: #CCCCCC;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-right: 5px;
+}
+
+.doneBtn {
+    background-color: #404040;
+    color: #888888;
+    border: none;
+    padding: 10px 28px;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: not-allowed;
+    transition: background 0.2s, color 0.2s;
+}
+
+.doneBtnActive {
+    background: linear-gradient(90deg, #7524A1 0%, #9D269D 100%) !important;
+    color: #FFFFFF !important;
+    cursor: pointer !important;
+}
+
+.helpIconAsset {
+    width: 28px;
+    height: 28px;
+    filter: brightness(0) invert(0.55);
+}
+
+.sectionDivider {
+    width: 75%;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 30px auto;
+}
+
+/* --- SEARCH & SHARE ROW --- */
+.searchAndShareRow {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    margin-bottom: 25px;
+}
+
+.searchContactWrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 999px;
+    padding: 12px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.searchIconAsset {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) invert(0.85); 
+    flex: 0 0 auto;
+}
+
+.searchInput {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    color: #FFFFFF;
+    font-size: 0.95rem;
+}
+
+.searchInput::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.shareBtn {
+    background-color: #4D4D4D;
+    border: none;
+    border-radius: 999px;
+    height: 46px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.2s;
+}
+
+.shareBtn:hover {
+    background-color: #5D5D5D;
+}
+
+.shareBtnText {
+    color: #FFFFFF;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.shareIconAsset {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) invert(1);
+}
+
+/* --- CONTACTS LIST SECTION --- */
+.contactsSection {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.contactsList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.contactRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Pushes check circle to the far right */
+    width: 100%;
+    padding: 12px 10px;
+    box-sizing: border-box;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.contactRow:hover {
+    background-color: #464646;
+}
+
+.selectedRow {
+    background-color: #464646 !important;
+}
+
+.instructorRow {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.instructorRow:hover {
+    background-color: transparent !important;
+}
+
+.contactLeftBlock {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.avatarImage {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.contactDetails {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px; /* Proper spacing between role and name */
+}
+
+/* ── EXACT ROLE & NAME STYLING ── */
+.roleLabel {
+    color: #999999;
+    font-size: 0.75rem; /* Small font size matching design */
+    font-weight: 400;
+    line-height: 1;
+}
+
+.contactName {
+    color: #FFFFFF;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── EXACT 25% DIVIDER ── */
+.contactDivider {
+    width: 30%;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.08); /* Very subtle line */
+    margin: 4px auto; 
+    border-radius: 2px;
+}
+
+/* --- CHECKBOX / SELECTION WHEEL --- */
+.selectionWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.checkCircle {
+    width: 22px;
+    height: 22px;
+    border: 3px solid #777777; 
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+    transition: background-color 0.2s, border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.checkCircleSelected {
+    background-color: #A6279C;
+    border-color: #A6279C;
+}
+.instructorCircle {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: #424242;
+    box-sizing: border-box;
+    pointer-events: none; 
+}
+.noResultsText {
+    color: #888888;
+    font-size: 0.9rem;
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* --- TOP RIGHT CIRCULAR ACTIONS (From previous steps) --- */
+.righSide {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.createGroup {
+    border-radius: 50%; /* Perfect circle */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px; /* Hover breathing room */
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.createGroup:hover {
+    background-color: #A2279C;
+}
+
+.requestsLink {
+    cursor: pointer;
+    color: #fff;
+    font-size: 1rem;
+    transition: opacity 0.2s;
+}
+
+.requestsLink:hover {
+    opacity: 0.8;
+}
+.loadingState, .emptyState {
+    padding: 32px 16px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.875rem;
+}
+
+.errorBanner {
+    margin: 8px 16px;
+    padding: 10px 14px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    color: #f87171;
+    font-size: 0.8rem;
+}
+
+.avatarWrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.avatarInitials {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #fff;
+}
