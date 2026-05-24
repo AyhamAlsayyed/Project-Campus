@@ -1,0 +1,89 @@
+.settingsNavContainer {
+  background-color: #333333;
+  border-radius: 24px;
+  padding: 30px 24px 40px 24px;
+  color: #E6E6E6;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.settingsNavHeader {
+  display: flex;
+  align-items: center;
+  gap: 50px;
+  margin-bottom: 16px;
+}
+
+.settingsNavTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: 0.3px;
+}
+
+.centeredDivider {
+  width: 75%;
+  height: 1px;
+  background-color: #4D4D4D;
+  margin: 0 auto 28px auto;
+}
+
+.settingsNavList {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+  padding-left: 24px;
+}
+
+.settingsNavItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settingsNavText {
+  font-size: 1.15rem;
+}
+
+.navTextActive {
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.navTextDefault {
+  font-weight: 500;
+  color: #B3B3B3;
+}
+
+.navTextDelete {
+  font-weight: 500;
+  color: #D4145A;
+}
+
+.activeArrowWrapper {
+  position: absolute;
+  left: -22px;
+  display: flex;
+  align-items: center;
+}
+
+/* Gradient Mask for the Active Arrow */
+.activeGradientArrow {
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(to right, #8625A0, #A0279D);
+  -webkit-mask-image: url('../../Assets/icons/arrow-left.png');
+  mask-image: url('../../Assets/icons/arrow-left.png');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transform: rotate(180deg);
+  display: inline-block;
+}

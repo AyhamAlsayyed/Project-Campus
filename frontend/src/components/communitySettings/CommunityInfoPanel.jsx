@@ -1,0 +1,253 @@
+import React, { useState, useRef } from 'react';
+import styles from './communityInfoPanel.module.css';
+import Help from '../../Assets/icons/help.png';
+import VerifiedBadge from '../../Assets/icons/verified-mark.png';
+import EditIcon from '../../Assets/icons/edit.png';
+import ArrowLeft from '../../Assets/icons/arrow-left.png';
+import CameraIcon from '../../Assets/icons/camera.png';
+
+const API = 'http://localhost:8000';
+
+const renderIcon = (src, color, width = '20px', height = '20px', additionalStyles = {}) => (
+    <div
+        style={{
+            width, height,
+            backgroundColor: color,
+            maskImage: `url(${src})`,
+            WebkitMaskImage: `url(${src})`,
+            maskSize: 'contain', WebkitMaskSize: 'contain',
+            maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+            maskPosition: 'center', WebkitMaskPosition: 'center',
+            display: 'inline-block',
+            flexShrink: 0,
+            ...additionalStyles,
+        }}
+    />
+);
+
+export default function CommunityInfoPanel({ community, onBack }) {
+    const token = localStorage.getItem('access');
+    const originalDescription = community?.description || "consectetuer adipiscing elit, sed diam nonummy nibh";
+    const originalPrivacy = community?.isPublic === false ? 'Private' : 'Public';
+    const originalBanner = community?.banner || "url('https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1000')";
+    const [description, setDescription] = useState(originalDescription);
+    const [privacyType, setPrivacyType] = useState(originalPrivacy);
+    const [isPrivacyDropdownOpen, setIsPrivacyDropdownOpen] = useState(false);
+    const [bannerFile, setBannerFile] = useState(null);
+    const [bannerUrl, setBannerUrl] = useState(originalBanner);
+    const [isSaving, setIsSaving] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    const fileInputRef = useRef(null);
+    const maxChars = 150;
+
+    // ── Detect any change ──
+    const hasChanges =
+        description !== originalDescription ||
+        privacyType !== originalPrivacy ||
+        bannerFile !== null;
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
+
+    // ── Banner handlers ──
+    const handleCameraClick = () => fileInputRef.current?.click();
+
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setBannerFile(file);
+        const reader = new FileReader();
+        reader.onload = (ev) => setBannerUrl(`url('${ev.target.result}')`);
+        reader.readAsDataURL(file);
+    };
+
+    // ── Save handler ──
+    const handleSave = async () => {
+        if (!hasChanges || isSaving) return;
+        setIsSaving(true);
+        try {
+            const formData = new FormData();
+            formData.append('description', description);
+            formData.append('is_public', privacyType === 'Public' ? 'true' : 'false');
+            if (bannerFile) formData.append('banner', bannerFile);
+
+            const res = await fetch(`${API}/api/communities/${community?.id}/update/`, {
+                method: 'PATCH',
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData,
+            });
+
+            if (!res.ok) throw new Error('Save failed');
+            setBannerFile(null);
+            showToast('Changes saved successfully!', 'success');
+        } catch (err) {
+            showToast('Failed to save changes. Try again.', 'error');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const communityName = community?.name || 'Programmers';
+    const createdBy = community?.created_by || 'Dr. Samer Swalen';
+    const createdDate = community?.created_at || '18/12/2025';
+
+    return (
+        <div className={styles.infoPanelContainer}>
+
+            {/* Toast */}
+            {toast && (
+                <div className={`${styles.toast} ${toast.type === 'error' ? styles.toastError : styles.toastSuccess}`}>
+                    {toast.message}
+                </div>
+            )}
+
+            {/* ── HEADER ── */}
+            <div className={styles.infoHeader}>
+                <div className={styles.infoHeaderLeft}>
+                    <button
+                        onClick={onBack}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}
+                    >
+                        {renderIcon(ArrowLeft, '#E6E6E6', '20px', '20px')}
+                    </button>
+                    <h2 className={styles.infoTitle}>Community Info</h2>
+                </div>
+
+                <div className={styles.infoHeaderRight}>
+                    <button
+                        className={styles.saveBtn}
+                        onClick={handleSave}
+                        disabled={!hasChanges || isSaving}
+                        style={{
+                            background: hasChanges
+                                ? 'linear-gradient(90deg, #612886, #892A82)'
+                                : '#404040',
+                            opacity: isSaving ? 0.7 : 1,
+                            cursor: hasChanges && !isSaving ? 'pointer' : 'default',
+                        }}
+                    >
+                        {isSaving ? 'Saving...' : 'Save'}
+                    </button>
+                    {renderIcon(Help, '#E6E6E6', '22px', '22px', { cursor: 'pointer' })}
+                </div>
+            </div>
+
+            <div className={styles.centeredDivider} />
+
+            {/* ── BANNER ── */}
+            <div className={styles.sectionWrapper}>
+                <div className={styles.sectionHeaderBanner}>
+                    <h3 className={styles.sectionTitle}>
+                        Banner <span className={styles.requiredAsterisk}>*</span>
+                    </h3>
+                    <span className={styles.sectionHelperTextBanner}>
+                        Make sure to give your community a unique banner that suits its topic, use wide high resolution pictures!
+                    </span>
+                </div>
+
+                <div
+                    className={styles.bannerContainer}
+                    style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), ${bannerUrl}` }}
+                >
+                    <input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
+                    />
+                    <div className={styles.cameraBtn} onClick={handleCameraClick}>
+                        {renderIcon(CameraIcon, '#E6E6E6', '18px', '18px')}
+                    </div>
+                </div>
+            </div>
+
+            <div className={styles.centeredDivider} />
+
+            {/* ── NAME (read-only) ── */}
+            <div className={styles.sectionWrapper}>
+                <div className={styles.nameRow}>
+                    <div className={styles.nameWrapper}>
+                        <h1 className={styles.communityName}>{communityName}</h1>
+                        {renderIcon(VerifiedBadge, '#595959', '18px', '18px')}
+                    </div>
+                    {renderIcon(EditIcon, '#595959', '18px', '18px', { cursor: 'pointer' })}
+                </div>
+                <p className={styles.communityMeta}>
+                    Created by: {createdBy} &bull; {createdDate}
+                </p>
+            </div>
+
+            {/* ── DESCRIPTION ── */}
+            <div className={styles.sectionWrapper}>
+                <div className={styles.sectionHeaderDescription}>
+                    <h3 className={styles.sectionTitle}>Description</h3>
+                    <span className={styles.sectionHelperText}>
+                        Give your community a relatable description that is related to its topic
+                    </span>
+                </div>
+
+                <div className={styles.descriptionInputWrapper}>
+                    <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        maxLength={maxChars}
+                        className={styles.descriptionTextarea}
+                        placeholder="Enter a description..."
+                    />
+                    <span className={styles.charCounter}>
+                        {description.length}/{maxChars}
+                    </span>
+                </div>
+            </div>
+
+            <div className={styles.centeredDivider} />
+
+            {/* ── PRIVACY ── */}
+            <div>
+                <div className={styles.privacyContainer}>
+                    <div className={styles.privacyInfo}>
+                        <h3 className={styles.privacyTitle}>Privacy</h3>
+                        <span className={styles.sectionHelperText}>
+                            Public communities are open to everyone. Private communities require admin approval to join.
+                        </span>
+                    </div>
+
+                    <div className={styles.privacySelectorWrapper}>
+                        <div
+                            className={styles.privacySelector}
+                            onClick={() => setIsPrivacyDropdownOpen(p => !p)}
+                        >
+                            <div className={styles.privacyBtn}>{privacyType}</div>
+                            {renderIcon(ArrowLeft, '#E6E6E6', '16px', '16px', {
+                                transform: isPrivacyDropdownOpen ? 'rotate(90deg)' : 'rotate(270deg)',
+                                transition: 'transform 0.2s ease',
+                            })}
+                        </div>
+
+                        {isPrivacyDropdownOpen && (
+                            <div className={styles.privacyDropdown}>
+                                {['Public', 'Private'].map((option) => (
+                                    <div
+                                        key={option}
+                                        className={styles.dropdownItem}
+                                        onClick={() => {
+                                            setPrivacyType(option);
+                                            setIsPrivacyDropdownOpen(false);
+                                        }}
+                                    >
+                                        {option}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    );
+}

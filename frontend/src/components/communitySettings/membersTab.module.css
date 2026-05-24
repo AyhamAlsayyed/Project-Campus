@@ -1,0 +1,387 @@
+.membersContainer {
+  background-color: #333333;
+  border-radius: 24px;
+  padding: 32px;
+  color: #E6E6E6;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  min-height: 800px;
+}
+
+/* ── HEADER ── */
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.headerTitle {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #CCCCCC;
+}
+
+.memberCount {
+  font-size: 1.1rem;
+  color: #B3B3B3;
+  font-weight: 500;
+}
+
+.centeredDivider {
+  width: 75%;
+  height: 1px;
+  background-color: #4D4D4D;
+  margin: 0 auto 28px auto;
+}
+
+/* ── SEARCH & FILTER ROW ── */
+.controlsRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.searchWrapper {
+  flex-grow: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 16px;
+}
+
+.searchInput {
+  width: 100%;
+  background-color: #262626;
+  border: none;
+  border-radius: 20px;
+  padding: 12px 16px 12px 48px;
+  color: #E6E6E6;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: #808080;
+}
+
+.buttonWrapper {
+  position: relative;
+}
+
+.filterBtn, .sortBtn {
+  background-color: #404040;
+  border: none;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  color: #CCCCCC;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.filterBtn:hover, .sortBtn:hover {
+  background-color: #4D4D4D;
+}
+
+.sortBtn {
+  padding: 10px; /* circle-like for icon only */
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  justify-content: center;
+}
+
+/* ── DROPDOWNS ── */
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background-color: #333333;
+  border-radius: 16px;
+  padding: 12px 0;
+  width: max-content;
+  min-width: 180px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  color: #CCCCCC;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  gap: 16px;
+}
+
+.dropdownItem:hover {
+  background-color: #404040;
+}
+
+.dropdownItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.radioCircle {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #666666;
+  border-radius: 50%;
+}
+
+.dropdownCount {
+  color: #B3B3B3;
+  font-size: 0.85rem;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background-color: #4D4D4D;
+  margin: 8px 20px;
+}
+
+.dangerText {
+  color: #D4145A;
+}
+
+/* ── MEMBER LIST ── */
+.memberList {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.memberItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.memberInfoLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #4D4D4D;
+}
+
+.memberDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.roleBadge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #E6E6E6;
+  width: fit-content;
+}
+
+.roleAdmin {
+  background: linear-gradient(to right, #3A268B, #7C2983);
+}
+
+.roleMember {
+  background-color: #454545;
+}
+
+.nameRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.memberName {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #E6E6E6;
+  margin: 0;
+}
+
+.nameAdmin {
+  color: #E043B5;
+}
+
+.userType {
+  font-size: 0.8rem;
+  color: #808080;
+}
+
+/* ── ACTION MENU (3 DOTS) ── */
+.actionBtnWrapper {
+  position: relative;
+}
+
+.dotsBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+/* Custom Thick 3 Dots */
+.dot {
+  width: 6px;
+  height: 6px;
+  background-color: #808080;
+  border-radius: 50%;
+}
+
+.dotsBtn:hover .dot {
+  background-color: #CCCCCC;
+}
+
+.actionDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #333333;
+  border-radius: 12px;
+  padding: 8px 0;
+  width: max-content;
+  min-width: 160px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  z-index: 20;
+}
+
+.actionItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  font-size: 0.9rem;
+  color: #CCCCCC;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.actionItem:hover {
+  background-color: #383838;
+}
+.actionDivider {
+  height: 1px;
+  background-color: #4D4D4D;
+  width: 60%;
+  margin: 4px auto; 
+}
+/* ── New functional additions ── */
+
+.backBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.clearSearch {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    margin-left: auto;
+    opacity: 0.6;
+    transition: opacity 0.15s;
+}
+.clearSearch:hover { opacity: 1; }
+
+.filterActive {
+    border-color: rgba(199, 44, 255, 0.5) !important;
+    color: #c72cff !important;
+}
+
+.dropdownItemActive {
+    background: rgba(199, 44, 255, 0.08);
+}
+
+.radioChecked {
+    background: #c72cff !important;
+    border-color: #c72cff !important;
+}
+
+.stateMsg {
+    padding: 40px 20px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 0.9rem;
+}
+
+.memberActing {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: #c72cff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    z-index: 9999;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.toastSuccess { background: #1e3a2a; color: #4ade80; border: 1px solid rgba(74,222,128,0.2); }
+.toastError   { background: #3a1e1e; color: #f87171; border: 1px solid rgba(248,113,113,0.2); }
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

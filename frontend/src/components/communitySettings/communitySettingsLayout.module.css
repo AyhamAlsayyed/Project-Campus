@@ -1,0 +1,9 @@
+.layoutContainer {
+    display: flex;
+    gap: 24px;
+    width: 100%;
+}
+
+.mainContent {
+    flex: 1;
+}
