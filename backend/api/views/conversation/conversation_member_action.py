@@ -10,7 +10,7 @@ from ...models import ConversationMember
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def make_group_admin(request, conv_id):
+def toggle_group_admin(request, conv_id):
     current_user = request.user
     target_member_id = request.data.get("member_id")
 
@@ -36,12 +36,23 @@ def make_group_admin(request, conv_id):
         return Response({"error": "The group owner's role cannot be modified."}, status=status.HTTP_400_BAD_REQUEST)
 
     if target_membership.role == ConversationMember.Role.ADMIN:
-        return Response({"message": "User is already an administrator."}, status=status.HTTP_200_OK)
+        if request_sender_membership.role != ConversationMember.Role.OWNER:
+            raise PermissionDenied("Only the group owner can demote an administrator.")
+
+        target_membership.role = ConversationMember.Role.MEMBER
+        target_membership.save(update_fields=["role"])
+        return Response(
+            {"message": "Successfully demoted administrator to regular group member."},
+            status=status.HTTP_200_OK,
+        )
 
     target_membership.role = ConversationMember.Role.ADMIN
     target_membership.save(update_fields=["role"])
 
-    return Response({"message": "Successfully promoted user to group administrator."}, status=status.HTTP_200_OK)
+    return Response(
+        {"message": "Successfully promoted user to group administrator.", "current_role": "admin"},
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["POST"])
