@@ -61,13 +61,22 @@ export default function GroupInfoPanel({
 
     // Group Permissions View Toggle States
     const [showPermissions, setShowPermissions] = useState(false);
-    const [showAdmins, setShowAdmins] = useState(false); // <--- Added Admin View State
+    const [showAdmins, setShowAdmins] = useState(false);
+    // Add these with your other modal states
+    const [showViewAllModal, setShowViewAllModal] = useState(false);
+    const [viewAllSearch, setViewAllSearch] = useState('');
+    const [openModalMemberId, setOpenModalMemberId] = useState(null);
+
+    // Add this with your other filter functions (around line 190)
+    const filteredAllMembers = currentMembers.filter(m =>
+        (m.name || m.username || '').toLowerCase().includes(viewAllSearch.toLowerCase())
+    );
 
     const [permissions, setPermissions] = useState({
-        editSettings: true,
-        sendMessages: true,
-        addMembers: true,
-        approveMembers: false
+        editSettings: group.allow_members_to_edit_settings ?? false,
+        sendMessages: group.allow_members_to_send_messages ?? true,
+        addMembers: group.allow_members_to_add_others ?? true,
+        approveMembers: group.is_private ?? false
     });
 
     // Search Query Strings State
@@ -101,6 +110,16 @@ export default function GroupInfoPanel({
         setEditedBio(group.bio || group.description || '');
     }, [group]);
     useEffect(() => setCurrentMembers(members), [members]);
+    useEffect(() => {
+        if (group) {
+            setPermissions({
+                editSettings: group.allow_members_to_edit_settings ?? true,
+                sendMessages: group.allow_members_to_send_messages ?? true,
+                addMembers: group.allow_members_to_add_others ?? true,
+                approveMembers: group.is_private ?? false
+            });
+        }
+    }, [group]);
 
     // ── NATIVE INNER FETCH: Pull friends eligible to be added or shared to ──
     useEffect(() => {
@@ -148,16 +167,44 @@ export default function GroupInfoPanel({
         }
     }, [group.id, token, API]);
     const togglePermission = async (key) => {
-        const updated = { ...permissions, [key]: !permissions[key] };
-        setPermissions(updated);
+
+        const keyMap = {
+            editSettings: 'allow_members_to_edit_settings',
+            sendMessages: 'allow_members_to_send_messages',
+            addMembers: 'allow_members_to_add_others',
+            approveMembers: 'is_private'
+        };
+
+        const backendField = keyMap[key];
+        if (!backendField) return;
+
+        // Calculate what the NEW value should be
+        const nextValue = !permissions[key];
+
+
+        setPermissions(prev => ({ ...prev, [key]: nextValue }));
+
         try {
-            await fetch(`${API}/api/groups/${group.id}/edit-details/`, {
+            // 2. Hit the correct endpoint for permissions!
+            const res = await fetch(`${API}/api/groups/${group.id}/privacy-settings/`, {
                 method: 'PATCH',
-                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ permissions: updated }),
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify({ [backendField]: nextValue }),
             });
+
+            if (!res.ok) {
+                // If the server rejects it, flip the toggle switch back
+                setPermissions(prev => ({ ...prev, [key]: !nextValue }));
+                const errData = await res.json();
+                alert(errData.detail || errData.error || "Failed to update permission.");
+            }
         } catch (err) {
-            setPermissions(permissions);
+            // If the network fails entirely, flip the toggle switch back
+            setPermissions(prev => ({ ...prev, [key]: !nextValue }));
             console.error('Failed to save permissions', err);
         }
     };
@@ -275,16 +322,41 @@ export default function GroupInfoPanel({
         }
     };
     const handleMakeMemberAdmin = async (member) => {
+        const targetUserId = member.user?.id || member.user_id || member.id;
         try {
-            await fetch(`${API}/api/groups/${group.id}/toggle-admin/`, {
+            const res = await fetch(`${API}/api/groups/${group.id}/toggle-admin/`, {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ member_id: member.id }),
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ member_id: targetUserId }),
             });
-            setCurrentMembers(prev => prev.map(m =>
-                m.id === member.id ? { ...m, group_role: m.group_role === 'admin' ? 'member' : 'admin' } : m
-            ));
-        } catch (err) { console.error('Toggle admin failed', err); }
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                console.error('Toggle admin error:', data.error);
+                alert(data.error || 'Failed to update role');
+                return;
+            }
+
+            // Update local state smoothly
+            setCurrentMembers(prev => prev.map(m => {
+                if (m.id === member.id) {
+                    const updatedRole = data.current_role || 'member';
+
+                    return {
+                        ...m,
+                        group_role: updatedRole
+                    };
+                }
+                return m;
+            }));
+
+        } catch (err) {
+            console.error('Toggle admin failed', err);
+        }
     };
 
     const handleRemoveMember = async (member) => {
@@ -292,7 +364,7 @@ export default function GroupInfoPanel({
             await fetch(`${API}/api/groups/${group.id}/remove-member/`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: member.id }),
+                body: JSON.stringify({ member_id: member.id }),
             });
             setCurrentMembers(prev => prev.filter(m => m.id !== member.id));
         } catch (err) { console.error('Remove member failed', err); }
@@ -426,6 +498,12 @@ export default function GroupInfoPanel({
                                     openMemberId={openMemberId}
                                     setOpenMemberId={setOpenMemberId}
                                     API={API}
+                                    onMakeAdmin={handleMakeMemberAdmin}
+                                    onRemove={handleRemoveMember}
+                                    onViewProfile={onViewMemberProfile}
+                                    onSendMessage={onSendMessageToMember}
+                                    currentUser={currentUser}
+                                    token={token}
                                 />
                             ))}
                         </div>
@@ -706,16 +784,25 @@ export default function GroupInfoPanel({
                         {/* ── Group Members Roster ── */}
                         {isGroup && (
                             <div className={styles.membersSection}>
-                                <div className={styles.membersSectionHeader}>
+                                <div className={styles.membersSectionHeader} style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                                     <div className={styles.membersSectionLeft}>
                                         <span className={styles.sectionTitle}>Group members</span>
                                         <span className={styles.memberDot} />
                                         <span className={styles.memberCountLabel}>{currentMembers.length} members</span>
                                     </div>
-                                    <button className={styles.viewAllBtn} onClick={onViewAllMembers}>View all</button>
+
+                                    {/* The horizontal line that stretches to fill the gap */}
+                                    <div style={{
+                                        flex: 1,
+                                        height: '1px',
+                                        backgroundColor: '#4D4D4D',
+                                        margin: '0 16px'
+                                    }} />
+
+                                    <button className={styles.viewAllBtn} onClick={() => setShowViewAllModal(true)}>View all</button>
                                 </div>
 
-                                {allAdmins.map(m => (
+                                {allAdmins.map((m, index) => (
                                     <MemberRow
                                         key={m.id}
                                         member={m}
@@ -727,9 +814,14 @@ export default function GroupInfoPanel({
                                         openMemberId={openMemberId}
                                         setOpenMemberId={setOpenMemberId}
                                         API={API}
+                                        onMakeAdmin={handleMakeMemberAdmin}
+                                        onRemove={handleRemoveMember}
+                                        onViewProfile={onViewMemberProfile}
+                                        onSendMessage={onSendMessageToMember}
+                                        isLast={index === allAdmins.length - 1 && regularMembers.length === 0}
                                     />
                                 ))}
-                                {regularMembers.map(m => (
+                                {regularMembers.map((m, index) => (
                                     <MemberRow
                                         key={m.id}
                                         member={m}
@@ -744,13 +836,25 @@ export default function GroupInfoPanel({
                                         onMakeAdmin={handleMakeMemberAdmin}
                                         onRemove={handleRemoveMember}
                                         API={API}
+                                        isLast={index === regularMembers.length - 1}
                                     />
                                 ))}
                             </div>
                         )}
 
-                        <div className={styles.otherSection}>
-                            <span className={styles.sectionTitle}>Other</span>
+                        <div className={styles.otherSection} style={{ display: 'flex', width: '100%' }}>
+                            <div className={styles.sectionTitleWrapper}>
+                                <span className={styles.sectionTitle}>Other</span>
+                                <div style={{
+                                    flex: 1,
+                                    height: '1px',
+                                    backgroundColor: '#4D4D4D',
+                                    margin: '0 16px'
+                                }} />
+
+                            </div>
+
+
                             <button className={styles.otherBtn} onClick={handleClearChat}>
                                 <MinusCircle size={18} className={styles.otherIcon} />
                                 <span>Clear chat</span>
@@ -898,6 +1002,60 @@ export default function GroupInfoPanel({
                     </div>
                 </div>
             )}
+            {/* ── POPUP MODAL COMPONENT: VIEW ALL MEMBERS ── */}
+            {showViewAllModal && (
+                <div className={styles.modalOverlay} onClick={() => setShowViewAllModal(false)}>
+                    <div className={styles.viewAllModalContent} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h3 className={styles.viewAllTitle}>All Group Members</h3>
+                            <button className={styles.modalCloseBtn} onClick={() => setShowViewAllModal(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className={styles.searchWrapper}>
+                            <div className={styles.searchIcon}>
+                                {/* Using your existing search asset */}
+                                <img src={SearchIconAsset} alt="Search" style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(0.65)' }} />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Search members..."
+                                className={styles.searchInput}
+                                value={viewAllSearch}
+                                onChange={(e) => setViewAllSearch(e.target.value)}
+                            />
+                        </div>
+
+                        <div className={styles.popupScrollList}>
+                            {filteredAllMembers.map((m, index) => (
+                                <MemberRow
+                                    key={m.id}
+                                    member={m}
+                                    isAdmin={m.group_role === 'owner' || m.group_role === 'admin'}
+                                    token={token}
+                                    onBack={onBack}
+                                    openMemberId={openModalMemberId}
+                                    setOpenMemberId={setOpenModalMemberId}
+                                    canManage={isInstructor}
+
+                                    onViewProfile={onViewMemberProfile}
+                                    currentUser={currentUser}
+                                    onSendMessage={onSendMessageToMember}
+                                    onMakeAdmin={handleMakeMemberAdmin}
+                                    onRemove={handleRemoveMember}
+                                    API={API}
+                                    isLast={index === filteredAllMembers.length - 1}
+                                    openDropdownUp={index >= filteredAllMembers.length - 3}
+                                />
+                            ))}
+                            {filteredAllMembers.length === 0 && (
+                                <div className={styles.popupEmptyState}>No members found</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {lightboxUrl && (
                 <div
@@ -933,6 +1091,7 @@ export default function GroupInfoPanel({
                     </button>
                 </div>
             )}
+
         </div>
     );
 }
@@ -948,108 +1107,149 @@ function MemberRow({
     onViewProfile,
     onSendMessage,
     currentUser,
+    isLast,
     onMakeAdmin,
     onRemove,
-    API
+    API,
+    openDropdownUp
 }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
+    const btnRef = useRef(null);
 
     const avatarSrc = member.avatar
         ? (member.avatar.startsWith('http') ? member.avatar : `${API}${member.avatar}`)
         : null;
-    const isOpen = openMemberId === member.id;
+   
     const isSelf = member.id == currentUser?.id || member.username === currentUser?.username;
+    const currentRole = member.group_role?.toLowerCase();
     const isAlreadyAdmin = member.group_role === 'owner' || member.group_role === 'admin';
+    const isOwner = currentRole === 'owner';
     const navigate = useNavigate();
+    const dropdownRef = useRef(null);
+    const toggleDropdown = () => {
+        if (!isOpen) {
+            const rect = btnRef.current.getBoundingClientRect();
+
+            setDropdownPos({
+                top: rect.bottom + 8,
+                left: rect.left - 120
+            });
+        }
+        setIsOpen(!isOpen);
+    };
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setOpenMemberId(null);
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
 
     return (
-        <div className={styles.memberRow}>
-            <div className={styles.memberAvatar}>
-                {avatarSrc
-                    ? <img src={avatarSrc} alt={member.name} className={styles.memberAvatarImg} />
-                    : <span className={styles.memberInitials}>{member.initials || member.name?.slice(0, 2).toUpperCase()}</span>
-                }
-            </div>
-            <div className={styles.memberInfo}>
-                <span className={
-                    member.group_role === 'owner' || member.group_role === 'admin'
-                        ? styles.adminBadge
-                        : styles.memberBadge
-                }>
-                    {member.group_role === 'owner'
-                        ? 'Group creator'
-                        : member.group_role === 'admin'
-                            ? 'Group admin'
-                            : 'Member'}
-                </span>
-                <div className={styles.memberNameRow}>
+        <>
+            <div className={styles.memberRow}>
+                <div className={styles.memberAvatar}>
+                    {avatarSrc
+                        ? <img src={avatarSrc} alt={member.name} className={styles.memberAvatarImg} />
+                        : <span className={styles.memberInitials}>{member.initials || member.name?.slice(0, 2).toUpperCase()}</span>
+                    }
+                </div>
+                <div className={styles.memberInfo}>
                     <span className={
-                        (member.group_role === 'owner' || member.group_role === 'admin')
-                            ? styles.adminName
-                            : styles.memberName
-                    } style={{ fontSize: "1.1rem" }}>
-                        {member.name || member.username}
+                        member.group_role === 'owner' || member.group_role === 'admin'
+                            ? styles.adminBadge
+                            : styles.memberBadge
+                    }>
+                        {member.group_role === 'owner'
+                            ? 'Group creator'
+                            : member.group_role === 'admin'
+                                ? 'Group admin'
+                                : 'Member'}
                     </span>
-                    <span style={{ fontSize: '0.7rem', color: '#999999', marginLeft: '6px', textTransform: 'capitalize' }}>
-                        {member.role}
-                    </span>
+                    <div className={styles.memberNameRow}>
+                        <span className={
+                            (member.group_role === 'owner' || member.group_role === 'admin')
+                                ? styles.adminName
+                                : styles.memberName
+                        } style={{ fontSize: "1.1rem" }}>
+                            {member.name || member.username}
+                        </span>
+                        <span style={{ fontSize: '0.7rem', color: '#999999', marginLeft: '6px', textTransform: 'capitalize' }}>
+                            {member.role}
+                        </span>
+                    </div>
                 </div>
+
+                {canManage && !isSelf && (
+                    <div className={styles.memberMenuWrapper} ref={dropdownRef}>
+                        <button ref={btnRef} className={styles.memberMenuBtn} onClick={toggleDropdown}>
+                            <MoreHorizontal size={18} />
+                        </button>
+                        {isOpen && (
+                            <div className={styles.memberDropdown} style={{ top: dropdownPos.top, left: dropdownPos.left }}>
+                                <button className={styles.memberMenuItem} onClick={() => {
+                                    navigate(`/profile/${member.id}`);
+                                    setOpenMemberId(null);
+                                }}>
+                                    <img src={ViewProfile} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) invert(0.85)', marginRight: '8px' }} />
+                                    View profile
+                                </button>
+
+                                <button className={styles.memberMenuItem} onClick={async () => {
+                                    setOpenMemberId(null);
+                                    onBack?.();
+                                    const res = await fetch(`${API}/api/conversations/create/${member.id}/`, {
+                                        method: 'POST',
+                                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+                                    });
+                                    const data = await res.json();
+                                    if (data.id) navigate(`/chats/${data.id}`);
+                                }}>
+                                    <img src={Messages} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) invert(0.85)', marginRight: '8px' }} />
+                                    Send message
+                                </button>
+                                {!isOwner && (
+                                    isAlreadyAdmin ? (
+                                        <button className={styles.memberMenuItem} onClick={() => { onMakeAdmin?.(member); setOpenMemberId(null); }}>
+                                            <img src={MakeAdmin} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) invert(0.85)', marginRight: '8px' }} />
+                                            Remove admin
+                                        </button>
+                                    ) : (
+                                        <button className={styles.memberMenuItem} onClick={() => { onMakeAdmin?.(member); setOpenMemberId(null); }}>
+                                            <img src={MakeAdmin} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) invert(0.85)', marginRight: '8px' }} />
+                                            Make admin
+                                        </button>
+                                    )
+                                )}
+
+                                <div className={styles.menuDivider} />
+
+                                <button className={`${styles.memberMenuItem} ${styles.destructiveMI}`} onClick={() => { onRemove?.(member); setOpenMemberId(null); }}>
+                                    <img src={Leave} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) saturate(1) invert(0.3) sepia(1) saturate(5) hue-rotate(320deg)', marginRight: '8px' }} />
+                                    Remove from group
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
-            {canManage && !isSelf && (
-                <div className={styles.memberMenuWrapper}>
-                    <button
-                        className={styles.memberMenuBtn}
-                        onClick={() => setOpenMemberId(isOpen ? null : member.id)}
-                        aria-label="Member options"
-                    >
-                        <MoreHorizontal size={18} />
-                    </button>
-                    {isOpen && (
-                        <div className={styles.memberDropdown}>
-                            <button className={styles.memberMenuItem} onClick={() => {
-                                navigate(`/profile/${member.id}`);
-                                setOpenMemberId(null);
-                            }}>
-                                <img src={ViewProfile} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) invert(0.85)', marginRight: '8px' }} />
-                                View profile
-                            </button>
-
-                            <button className={styles.memberMenuItem} onClick={async () => {
-                                setOpenMemberId(null);
-                                onBack?.();
-                                const res = await fetch(`${API}/api/conversations/create/${member.id}/`, {
-                                    method: 'POST',
-                                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-                                });
-                                const data = await res.json();
-                                if (data.id) navigate(`/chats/${data.id}`);
-                            }}>
-                                <img src={Messages} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) invert(0.85)', marginRight: '8px' }} />
-                                Send message
-                            </button>
-
-                            {isAlreadyAdmin ? (
-                                <button className={styles.memberMenuItem} onClick={() => { onMakeAdmin?.(member); setOpenMemberId(null); }}>
-                                    <img src={MakeAdmin} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) sepia(1) saturate(3) hue-rotate(180deg)', marginRight: '8px' }} />
-                                    Remove admin
-                                </button>
-                            ) : (
-                                <button className={styles.memberMenuItem} onClick={() => { onMakeAdmin?.(member); setOpenMemberId(null); }}>
-                                    <img src={MakeAdmin} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) invert(0.85)', marginRight: '8px' }} />
-                                    Make admin
-                                </button>
-                            )}
-
-                            <div className={styles.menuDivider} />
-
-                            <button className={`${styles.memberMenuItem} ${styles.destructiveMI}`} onClick={() => { onRemove?.(member); setOpenMemberId(null); }}>
-                                <img src={Leave} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) saturate(1) invert(0.3) sepia(1) saturate(5) hue-rotate(320deg)', marginRight: '8px' }} />
-                                Remove from group
-                            </button>
-                        </div>
-                    )}
-                </div>
+            {/* The 50% Centered Horizontal Divider */}
+            {!isLast && (
+                <div style={{
+                    width: '50%',
+                    height: '1px',
+                    backgroundColor: '#4D4D4D',
+                    margin: '8px auto'
+                }} />
             )}
-        </div>
+        </>
     );
 }

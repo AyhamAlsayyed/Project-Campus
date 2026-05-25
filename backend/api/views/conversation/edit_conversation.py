@@ -24,8 +24,8 @@ def _verify_edit_permission(user, conversation_id):
 
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
-def edit_group_details(request, conversation_id):
-    conv = _verify_edit_permission(request.user, conversation_id)
+def edit_group_details(request, conv_id):
+    conv = _verify_edit_permission(request.user, conv_id)
 
     name = request.data.get("name")
     description = request.data.get("description")
@@ -41,8 +41,8 @@ def edit_group_details(request, conversation_id):
 
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
-def edit_group_image(request, conversation_id):
-    conv = _verify_edit_permission(request.user, conversation_id)
+def edit_group_image(request, conv_id):
+    conv = _verify_edit_permission(request.user, conv_id)
 
     if "image" not in request.FILES:
         raise ValidationError("No image payload detected in request.")
