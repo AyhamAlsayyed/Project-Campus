@@ -81,10 +81,28 @@ export default function ChatsPage() {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [requestMessages, setRequestMessages] = useState([]);
     const [showCreateGroup, setShowCreateGroup] = useState(false);
+    const [fullGroupData, setFullGroupData] = useState(null);
 
 
     const { chatId } = useParams();
     const [navOpen, setNavOpen] = useState(false);
+    useEffect(() => {
+        if (!selectedChat?.is_group) return;
+        const fetchGroupDetails = async () => {
+            try {
+                const res = await fetch(`${API}/api/groups/${selectedChat.id}/edit-details/`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setFullGroupData(data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch group details', err);
+            }
+        };
+        fetchGroupDetails();
+    }, [selectedChat?.id]);
 
     const handleSendMessage = async () => {
         if (!selectedChat) return;
@@ -946,7 +964,8 @@ export default function ChatsPage() {
                             <div className={`${styles.chatList} ${styles.activeChatOuter}`}>
                                 {showGroupInfo ? (
                                     <GroupInfoPanel
-                                        group={selectedChat}
+
+                                        group={fullGroupData || selectedChat}
                                         API={API}
                                         members={[]}
                                         currentUser={user}
@@ -964,10 +983,10 @@ export default function ChatsPage() {
                                             const res = await fetch(`${API}/api/groups/${selectedChat.id}/remove-member/`, {
                                                 method: 'POST',
                                                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ member_id: member.id }) 
+                                                body: JSON.stringify({ member_id: member.id })
                                             });
                                             if (res.ok) {
-                                              
+
                                                 window.location.reload();
                                             }
                                         }}

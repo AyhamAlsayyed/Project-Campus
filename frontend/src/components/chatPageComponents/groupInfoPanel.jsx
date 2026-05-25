@@ -9,10 +9,14 @@ import BackArrow from '../../Assets/icons/arrow-left.png';
 import SearchIconAsset from '../../Assets/icons/search.png';
 import Settings from '../../Assets/icons/setting.png';
 import BellActive from '../../Assets/icons/notifications-active.png';
-import BellInactive from '../../Assets/icons/notifications.png';
+import Mute from '../../Assets/icons/mute.png';
 import Bin from '../../Assets/icons/bin.png';
 import Share from '../../Assets/icons/share.png';
 import AddFriend from '../../Assets/icons/add-friend.png';
+import MakeAdmin from '../../Assets/icons/make-admin.png'
+import Messages from '../../Assets/icons/messages.png'
+import ViewProfile from '../../Assets/icons/default-pfp.png'
+import Leave from '../../Assets/icons/leave.png'
 import { useNavigate } from 'react-router-dom';
 
 export default function GroupInfoPanel({
@@ -53,6 +57,7 @@ export default function GroupInfoPanel({
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
     const [currentMembers, setCurrentMembers] = useState(members);
     const [showShareGroupModal, setShowShareGroupModal] = useState(false);
+    const [isNotificationOn, setIsNotificationOn] = useState(group.hasUnreadNotifications ?? true);
 
     // Group Permissions View Toggle States
     const [showPermissions, setShowPermissions] = useState(false);
@@ -85,11 +90,12 @@ export default function GroupInfoPanel({
     const isGroup = group.is_group !== false;
 
     // Toggle single permission switch state handler
-    const togglePermission = (key) => {
-        setPermissions(prev => ({ ...prev, [key]: !prev[key] }));
-    };
+
 
     // Sync input initializations whenever the base chat reference shifts
+    useEffect(() => {
+        setIsNotificationOn(group.hasUnreadNotifications ?? true);
+    }, [group.hasUnreadNotifications]);
     useEffect(() => {
         setEditedName(group.name || '');
         setEditedBio(group.bio || group.description || '');
@@ -141,7 +147,32 @@ export default function GroupInfoPanel({
                 .catch(err => console.error("Error fetching sorted members:", err));
         }
     }, [group.id, token, API]);
-
+    const togglePermission = async (key) => {
+        const updated = { ...permissions, [key]: !permissions[key] };
+        setPermissions(updated);
+        try {
+            await fetch(`${API}/api/groups/${group.id}/edit-details/`, {
+                method: 'PATCH',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ permissions: updated }),
+            });
+        } catch (err) {
+            setPermissions(permissions);
+            console.error('Failed to save permissions', err);
+        }
+    };
+    const handleNotificationToggle = async () => {
+        try {
+            await fetch(`${API}/api/chats/${group.id}/mute/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setIsNotificationOn(prev => !prev); // ← flip local state immediately
+            if (onNotificationToggle) onNotificationToggle();
+        } catch (err) {
+            console.error('Notification toggle failed', err);
+        }
+    };
 
     const admin = currentMembers.find(m => m.group_role === 'owner' || m.group_role === 'admin');
     const regularMembers = currentMembers.filter(m => m.group_role !== 'owner' && m.group_role !== 'admin');
@@ -203,6 +234,25 @@ export default function GroupInfoPanel({
     }, [messages, API]);
 
     // ── INTERNAL ACTIONS ──
+    const handleClearChat = async () => {
+        try {
+            await fetch(`${API}/api/chats/${group.id}/clear/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (onClearChat) onClearChat();
+        } catch (err) { console.error('Clear chat failed', err); }
+    };
+
+    const handleDeleteGroup = async () => {
+        try {
+            await fetch(`${API}/api/chats/${group.id}/`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (onDeleteGroup) onDeleteGroup();
+        } catch (err) { console.error('Delete failed', err); }
+    };
     const handleAddMemberSubmit = async (friendId) => {
         try {
             const res = await fetch(`${API}/api/groups/${group.id}/add-member/`, {
@@ -224,6 +274,30 @@ export default function GroupInfoPanel({
             console.error("Error performing inner component add:", err);
         }
     };
+    const handleMakeMemberAdmin = async (member) => {
+        try {
+            await fetch(`${API}/api/groups/${group.id}/toggle-admin/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ member_id: member.id }),
+            });
+            setCurrentMembers(prev => prev.map(m =>
+                m.id === member.id ? { ...m, group_role: m.group_role === 'admin' ? 'member' : 'admin' } : m
+            ));
+        } catch (err) { console.error('Toggle admin failed', err); }
+    };
+
+    const handleRemoveMember = async (member) => {
+        try {
+            await fetch(`${API}/api/groups/${group.id}/remove-member/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: member.id }),
+            });
+            setCurrentMembers(prev => prev.filter(m => m.id !== member.id));
+        } catch (err) { console.error('Remove member failed', err); }
+    };
+
 
     const handleShareWithFriend = async (friendId) => {
         try {
@@ -450,9 +524,9 @@ export default function GroupInfoPanel({
                             <button className={styles.iconBtn} onClick={onSearchClick} aria-label="Search">
                                 <img src={SearchIconAsset} alt="Search" style={headerPngStyle} />
                             </button>
-                            <button className={styles.iconBtn} onClick={onNotificationToggle} aria-label="Notifications">
+                            <button className={styles.iconBtn} onClick={handleNotificationToggle} aria-label="Notifications">
                                 <img
-                                    src={group.hasUnreadNotifications ? BellActive : BellInactive}
+                                    src={isNotificationOn ? BellActive : Mute}
                                     alt="Notifications"
                                     style={headerPngStyle}
                                 />
@@ -667,8 +741,8 @@ export default function GroupInfoPanel({
                                         onViewProfile={onViewMemberProfile}
                                         currentUser={currentUser}
                                         onSendMessage={onSendMessageToMember}
-                                        onMakeAdmin={onMakeMemberAdmin}
-                                        onRemove={onRemoveMember}
+                                        onMakeAdmin={handleMakeMemberAdmin}
+                                        onRemove={handleRemoveMember}
                                         API={API}
                                     />
                                 ))}
@@ -677,11 +751,11 @@ export default function GroupInfoPanel({
 
                         <div className={styles.otherSection}>
                             <span className={styles.sectionTitle}>Other</span>
-                            <button className={styles.otherBtn} onClick={onClearChat}>
+                            <button className={styles.otherBtn} onClick={handleClearChat}>
                                 <MinusCircle size={18} className={styles.otherIcon} />
                                 <span>Clear chat</span>
                             </button>
-                            <button className={`${styles.otherBtn} ${styles.destructiveBtn}`} onClick={onDeleteGroup}>
+                            <button className={`${styles.otherBtn} ${styles.destructiveBtn}`} onClick={handleDeleteGroup}>
                                 <img src={Bin} alt="Delete" style={inlineButtonPngStyle} />
                                 <span>{isGroup ? 'Delete group' : 'Delete chat'}</span>
                             </button>
@@ -936,38 +1010,40 @@ function MemberRow({
                                 navigate(`/profile/${member.id}`);
                                 setOpenMemberId(null);
                             }}>
+                                <img src={ViewProfile} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) invert(0.85)', marginRight: '8px' }} />
                                 View profile
                             </button>
+
                             <button className={styles.memberMenuItem} onClick={async () => {
                                 setOpenMemberId(null);
                                 onBack?.();
-                                // Always use create_dm — it returns existing DM if already exists
                                 const res = await fetch(`${API}/api/conversations/create/${member.id}/`, {
                                     method: 'POST',
-                                    headers: {
-                                        'Authorization': `Bearer ${token}`,
-                                        'Content-Type': 'application/json'
-                                    }
+                                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
                                 });
                                 const data = await res.json();
                                 if (data.id) navigate(`/chats/${data.id}`);
                             }}>
+                                <img src={Messages} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) invert(0.85)', marginRight: '8px' }} />
                                 Send message
                             </button>
+
                             {isAlreadyAdmin ? (
                                 <button className={styles.memberMenuItem} onClick={() => { onMakeAdmin?.(member); setOpenMemberId(null); }}>
+                                    <img src={MakeAdmin} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) sepia(1) saturate(3) hue-rotate(180deg)', marginRight: '8px' }} />
                                     Remove admin
                                 </button>
                             ) : (
                                 <button className={styles.memberMenuItem} onClick={() => { onMakeAdmin?.(member); setOpenMemberId(null); }}>
+                                    <img src={MakeAdmin} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) invert(0.85)', marginRight: '8px' }} />
                                     Make admin
                                 </button>
                             )}
+
                             <div className={styles.menuDivider} />
-                            <button
-                                className={`${styles.memberMenuItem} ${styles.destructiveMI}`}
-                                onClick={() => { onRemove?.(member); setOpenMemberId(null); }}
-                            >
+
+                            <button className={`${styles.memberMenuItem} ${styles.destructiveMI}`} onClick={() => { onRemove?.(member); setOpenMemberId(null); }}>
+                                <img src={Leave} alt="" style={{ width: '15px', height: '15px', objectFit: 'contain', filter: 'brightness(0) saturate(1) invert(0.3) sepia(1) saturate(5) hue-rotate(320deg)', marginRight: '8px' }} />
                                 Remove from group
                             </button>
                         </div>
