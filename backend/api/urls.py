@@ -175,7 +175,7 @@ urlpatterns += [
     path("chat-requests/", chat_requests),
     path("chats/<int:conversation_id>/accept/", accept_chat_request),
     # chat_group
-    path("groups/<int:conv_id>/create/", create_group_conversation),
+    path("groups/create/", create_group_conversation),
     path("groups/<int:conv_id>/members/", get_group_members),
     path("groups/<int:conv_id>/edit-details/", edit_group_details),
     path("groups/<int:conv_id>/edit-image/", edit_group_image),
@@ -183,7 +183,7 @@ urlpatterns += [
     # chat_group_action
     path("groups/<int:conv_id>/add-member/", add_member_to_group),
     path("groups/<int:conv_id>/remove-member/", remove_member_from_group),
-     path("groups/<int:conv_id>/make-admin/", make_group_admin),
+    path("groups/<int:conv_id>/make-admin/", make_group_admin),
 ]
 # page
 urlpatterns += [

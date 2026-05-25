@@ -8,43 +8,101 @@ import {
     UserCheck
 } from 'lucide-react';
 
-// Imported asset paths
 import Help from '../../Assets/icons/help.png';
 import BackButton from '../../Assets/icons/arrow-left.png';
 import Education from '../../Assets/icons/education.png';
 import SettingsIcon from '../../Assets/icons/setting.png';
-import SearchIcon from '../../Assets/icons/search.png'
 
-// Added isInstructor to props (defaults to false)
-export default function CreateGroup({ onBack, onCreate, isInstructor = false }) {
+export default function CreateGroup({
+    onBack,
+    onCreate,
+    isInstructor = false,
+    API = '',
+    token = '',
+}) {
     const [groupName, setGroupName] = useState('');
     const [groupDescription, setGroupDescription] = useState('');
-    
-    // Default states per your request
-    const [isAcademic, setIsAcademic] = useState(false); // Academic off
-    const [canEditSettings, setCanEditSettings] = useState(false); // Off by default
-    const [canSendMessages, setCanSendMessages] = useState(true); // On by default
-    const [canAddMembers, setCanAddMembers] = useState(true); // On by default
-    const [requireApproval, setRequireApproval] = useState(false); // Off by default
-    
-    // States and refs for the group picture upload
+    const [isAcademic, setIsAcademic] = useState(false);
+    const [canEditSettings, setCanEditSettings] = useState(false);
+    const [canSendMessages, setCanSendMessages] = useState(true);
+    const [canAddMembers, setCanAddMembers] = useState(true);
+    const [requireApproval, setRequireApproval] = useState(false);
     const [groupImage, setGroupImage] = useState(null);
-    const fileInputRef = useRef(null);
+    const [groupImageFile, setGroupImageFile] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleImageClick = () => {
-        fileInputRef.current.click();
-    };
+    const fileInputRef = useRef(null);
 
     const handleImageChange = (e) => {
         const file = e.target.files?.[0];
         if (file) {
-            const imageUrl = URL.createObjectURL(file);
-            setGroupImage(imageUrl);
+            setGroupImageFile(file);
+            setGroupImage(URL.createObjectURL(file));
         }
     };
 
-    // Form button validation check
-    const isCreateEnabled = groupName.trim() !== '' && groupImage !== null;
+    const isCreateEnabled = groupName.trim() !== '' && groupImage !== null && !isLoading;
+
+    const handleCreate = async () => {
+        if (!isCreateEnabled) return;
+        setIsLoading(true);
+        setError('');
+        try {
+
+            const res = await fetch(`${API}/api/groups/create/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: groupName,
+                    description: groupDescription,
+                    is_academic: isAcademic,
+                    permissions: {
+                        editSettings: canEditSettings,
+                        sendMessages: canSendMessages,
+                        addMembers: canAddMembers,
+                        approveMembers: requireApproval,
+                    },
+                }),
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error || errData.detail || 'Failed to create group');
+            }
+
+            const newGroup = await res.json();
+            const groupId = newGroup.id;
+
+            if (groupImageFile && groupId) {
+                const formData = new FormData();
+                formData.append('image', groupImageFile);
+
+                const imgRes = await fetch(`${API}/api/groups/${groupId}/edit-image/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: formData,
+                });
+
+                if (!imgRes.ok) {
+                    console.warn('Group created but image upload failed');
+                }
+            }
+
+            if (onCreate) onCreate(newGroup);
+
+        } catch (err) {
+            console.error('Create group error:', err);
+            setError(err.message || 'Something went wrong');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className={styles.pageContainer}>
@@ -56,30 +114,36 @@ export default function CreateGroup({ onBack, onCreate, isInstructor = false }) 
                     </button>
                     <h1 className={styles.headerTitle}>Create Group</h1>
                     <div className={styles.headerRight}>
-                        <button 
-                            className={`${styles.createBtn} ${isCreateEnabled ? styles.createBtnActive : ''}`} 
+                        <button
+                            className={`${styles.createBtn} ${isCreateEnabled ? styles.createBtnActive : ''}`}
                             disabled={!isCreateEnabled}
-                            onClick={onCreate}
+                            onClick={handleCreate}
                         >
-                            Create
+                            {isLoading ? 'Creating...' : 'Create'}
                         </button>
                         <img src={Help} alt="Help" className={styles.helpIconAsset} />
                     </div>
                 </div>
+
+                {error && (
+                    <div style={{ color: '#f87171', fontSize: '0.85rem', padding: '8px 16px', background: 'rgba(248,113,113,0.1)', margin: '0 16px', borderRadius: '6px' }}>
+                        {error}
+                    </div>
+                )}
 
                 <div className={styles.sectionDivider}></div>
 
                 {/* --- DETAILS SECTION --- */}
                 <div className={styles.detailsSection}>
                     <div className={styles.photoColumn}>
-                        <input 
-                            type="file" 
-                            accept="image/*" 
-                            ref={fileInputRef} 
-                            onChange={handleImageChange} 
-                            style={{ display: 'none' }} 
+                        <input
+                            type="file"
+                            accept="image/*"
+                            ref={fileInputRef}
+                            onChange={handleImageChange}
+                            style={{ display: 'none' }}
                         />
-                        <div className={styles.photoCircle} onClick={handleImageClick}>
+                        <div className={styles.photoCircle} onClick={() => fileInputRef.current.click()}>
                             {groupImage ? (
                                 <img src={groupImage} alt="Group" className={styles.uploadedImage} />
                             ) : (
@@ -95,9 +159,9 @@ export default function CreateGroup({ onBack, onCreate, isInstructor = false }) 
                     <div className={styles.inputsColumn}>
                         <div className={styles.nameRow}>
                             <div className={styles.inputWrapper}>
-                                <input 
-                                    type="text" 
-                                    className={styles.nameInput} 
+                                <input
+                                    type="text"
+                                    className={styles.nameInput}
                                     value={groupName}
                                     onChange={(e) => setGroupName(e.target.value)}
                                 />
@@ -113,7 +177,7 @@ export default function CreateGroup({ onBack, onCreate, isInstructor = false }) 
                         </div>
 
                         <div className={styles.textareaWrapper}>
-                            <textarea 
+                            <textarea
                                 className={styles.descriptionInput}
                                 placeholder="Group description"
                                 value={groupDescription}
@@ -138,10 +202,9 @@ export default function CreateGroup({ onBack, onCreate, isInstructor = false }) 
                         <p>group it gives it priority over other normal groups!</p>
                     </div>
                     <div className={styles.academicRight}>
-                        <span className={styles.instructorOnly}>Available only for<br/>Instructors!</span>
-                        {/* Instructor check gates the click */}
-                        <div 
-                            className={`${styles.toggle} ${!isInstructor ? styles.toggleDisabled : ''} ${isAcademic ? styles.toggleActive : ''}`} 
+                        <span className={styles.instructorOnly}>Available only for<br />Instructors!</span>
+                        <div
+                            className={`${styles.toggle} ${!isInstructor ? styles.toggleDisabled : ''} ${isAcademic ? styles.toggleActive : ''}`}
                             onClick={() => { if (isInstructor) setIsAcademic(!isAcademic); }}
                         >
                             <div className={styles.toggleThumb}></div>
@@ -171,8 +234,8 @@ export default function CreateGroup({ onBack, onCreate, isInstructor = false }) 
                                 <Edit2 size={20} color="#CCCCCC" />
                                 <span>Edit group settings</span>
                             </div>
-                            <div 
-                                className={`${styles.toggle} ${canEditSettings ? styles.toggleActive : ''}`} 
+                            <div
+                                className={`${styles.toggle} ${canEditSettings ? styles.toggleActive : ''}`}
                                 onClick={() => setCanEditSettings(!canEditSettings)}
                             >
                                 <div className={styles.toggleThumb}></div>
@@ -184,8 +247,8 @@ export default function CreateGroup({ onBack, onCreate, isInstructor = false }) 
                                 <MessageSquare size={20} color="#CCCCCC" />
                                 <span>Send new messages</span>
                             </div>
-                            <div 
-                                className={`${styles.toggle} ${canSendMessages ? styles.toggleActive : ''}`} 
+                            <div
+                                className={`${styles.toggle} ${canSendMessages ? styles.toggleActive : ''}`}
                                 onClick={() => setCanSendMessages(!canSendMessages)}
                             >
                                 <div className={styles.toggleThumb}></div>
@@ -197,15 +260,14 @@ export default function CreateGroup({ onBack, onCreate, isInstructor = false }) 
                                 <UserPlus size={20} color="#CCCCCC" />
                                 <span>Add other members</span>
                             </div>
-                            <div 
-                                className={`${styles.toggle} ${canAddMembers ? styles.toggleActive : ''}`} 
+                            <div
+                                className={`${styles.toggle} ${canAddMembers ? styles.toggleActive : ''}`}
                                 onClick={() => setCanAddMembers(!canAddMembers)}
                             >
                                 <div className={styles.toggleThumb}></div>
                             </div>
                         </div>
 
-                        {/* --- ADMINS ONLY SUB SECTION --- */}
                         <div className={styles.adminsCanLabel}>Admins can:</div>
 
                         <div className={`${styles.permissionItem} ${styles.permissionItemWithDescription}`}>
@@ -215,11 +277,12 @@ export default function CreateGroup({ onBack, onCreate, isInstructor = false }) 
                                     <span>Approve new members</span>
                                 </div>
                                 <p className={styles.approvalDescriptionText}>
-                                    When turned on, admins must approve anyone who wants to join the group. <a href="#learn-more" className={styles.learnMoreLink}>Learn more</a>
+                                    When turned on, admins must approve anyone who wants to join the group.{' '}
+                                    <a href="#learn-more" className={styles.learnMoreLink}>Learn more</a>
                                 </p>
                             </div>
-                            <div 
-                                className={`${styles.toggle} ${requireApproval ? styles.toggleActive : ''}`} 
+                            <div
+                                className={`${styles.toggle} ${requireApproval ? styles.toggleActive : ''}`}
                                 onClick={() => setRequireApproval(!requireApproval)}
                             >
                                 <div className={styles.toggleThumb}></div>
