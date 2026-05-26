@@ -30,11 +30,14 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
   const [showChats, setShowChats] = useState(false);
   const chatRef = useRef(null);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [menuRect, setMenuRect] = useState(null)
   const [chats, setChats] = useState([]);
   const searchInputRef = useRef(null);
   const [searchBoxRect, setSearchBoxRect] = useState(null);
   const [requestGate, setRequestGate] = useState(null);
   const searchDropdownRef = useRef(null);
+  const notifMenuBtnRef = useRef(null);
+
 
   const [joinGate, setJoinGate] = useState(null);
   const [joinLoading, setJoinLoading] = useState(false);
@@ -178,6 +181,22 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
     setSearchResults(null);
     setShowSearchDropdown(false);
   };
+  useEffect(() => {
+    if (!openMenuId) return;
+
+    const update = () => {
+      if (notifMenuBtnRef.current) {
+        setMenuRect(notifMenuBtnRef.current.getBoundingClientRect());
+      }
+    };
+
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [openMenuId]);
 
   useEffect(() => {
     const fetchHeaderData = async () => {
@@ -258,14 +277,14 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
 
     const type = (n.type || "").toLowerCase();
 
-  
+
     if (type.includes("friend") || type.includes("request")) {
       const profileId = typeof n.link === 'number' ? n.link : n.link?.id || n.actor_id;
       if (profileId) navigate(`/profile/${profileId}`);
       return;
     }
 
-    
+
     const post_id = n.post_id || (typeof n.link === 'number' ? n.link : n.link?.post_id);
     const comment_id = n.comment_id || null;
     const post = n.post || n.link?.post || null;
@@ -306,6 +325,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
       if (notifRef.current && !notifRef.current.contains(event.target)) {
         setShowNotifications(false);
         setOpenMenuId(null);
+        setMenuRect(null);
       }
       if (chatRef.current && !chatRef.current.contains(event.target)) {
         setShowChats(false);
@@ -387,6 +407,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
           n.id === id ? { ...n, is_read: !currentlyRead } : n
         ));
         setOpenMenuId(null);
+        setMenuRect(null);
       }
     } catch (error) { console.error("Error toggling read status:", error); }
   };
@@ -401,11 +422,12 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
       if (response.ok) {
         setNotifications(prev => prev.filter(n => n.id !== id));
         setOpenMenuId(null);
+        setMenuRect(null);
       }
     } catch (error) { console.error("Error deleting notification:", error); }
   };
 
-  const handleManage = (id) => { navigate("/settings/notifications"); setOpenMenuId(null); };
+  const handleManage = (id) => { navigate("/settings/notifications"); setOpenMenuId(null); setMenuRect(null); };
 
   const rawAvatar = user?.profile?.avatar || user?.avatar;
   const avatarSrc = rawAvatar
@@ -835,20 +857,29 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                         className={styles.notifMenuBtn}
                         onClick={(e) => {
                           e.stopPropagation();
-                          setOpenMenuId(openMenuId === n.id ? null : n.id);
+                          if (openMenuId === n.id) {
+                            setOpenMenuId(null);
+                            setMenuRect(null);
+                            notifMenuBtnRef.current = null;
+                          } else {
+                            notifMenuBtnRef.current = e.currentTarget;
+                            setOpenMenuId(n.id);
+                            setMenuRect(e.currentTarget.getBoundingClientRect());
+                          }
                         }}
                       >
                         <MoreHorizontal size={18} />
                       </button>
-                      {openMenuId === n.id && (
+                      {openMenuId === n.id && menuRect && createPortal(
                         <div
                           className={styles.actionMenu}
-                          style={
-                            // If this notification is in the last 2, flip the menu upward
-                            notifications.indexOf(n) >= notifications.length - 2
-                              ? { bottom: 30, top: 'auto', right: 25 }
-                              : {}
-                          }
+                          style={{
+                            position: "fixed",
+                            top: menuRect.bottom + 6,
+                            left: menuRect.left + menuRect.width / 2,
+                            transform: "translateX(-50%)",
+                            zIndex: 999999,
+                          }}
                           onMouseDown={(e) => e.stopPropagation()}
                         >
                           <button onClick={(e) => { e.stopPropagation(); handleMarkAsRead(n.id, n.is_read); }}>
@@ -857,7 +888,8 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                           </button>
                           <button onClick={(e) => { e.stopPropagation(); handleManage(n.id); }}>Manage</button>
                           <button className={styles.deleteAction} onClick={(e) => { e.stopPropagation(); handleDelete(n.id); }}>Delete</button>
-                        </div>
+                        </div>,
+                        document.body
                       )}
                     </div>
                   </div>

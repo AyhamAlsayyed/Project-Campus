@@ -4,6 +4,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import { useParams } from "react-router-dom";
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
     Search, MoreHorizontal, Pin, BellOff, Mail, MinusCircle,
     Trash2, Ban, Reply, AlertCircle, ChevronLeft, Info, CheckSquare,
@@ -55,7 +56,9 @@ export default function ChatsPage() {
     const [groups, setGroups] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
     const [activeChatMenuOpen, setActiveChatMenuOpen] = useState(false);
+    const [activeChatMenuRect, setActiveChatMenuRect] = useState(null);
     const activeChatMenuRef = useRef(null);
+    const activeChatMenuBtnRef = useRef(null);
     const messagesEndRef = useRef(null);
     const messagesScrollRef = useRef(null);
     const academicGroups = chats.filter(chat => chat.is_group);
@@ -197,6 +200,7 @@ export default function ChatsPage() {
                 activeChatMenuRef.current &&
                 !activeChatMenuRef.current.contains(event.target)) {
                 setActiveChatMenuOpen(false);
+                setActiveChatMenuRect(null);
             }
 
             if (openMenuId &&
@@ -352,6 +356,22 @@ export default function ChatsPage() {
                 setChatRequests(data);
             });
     }, []);
+    useEffect(() => {
+        if (!activeChatMenuOpen) return;
+
+        const update = () => {
+            if (activeChatMenuBtnRef.current) {
+                setActiveChatMenuRect(activeChatMenuBtnRef.current.getBoundingClientRect());
+            }
+        };
+
+        window.addEventListener('scroll', update, true);  // true = capture all scroll events
+        window.addEventListener('resize', update);
+        return () => {
+            window.removeEventListener('scroll', update, true);
+            window.removeEventListener('resize', update);
+        };
+    }, [activeChatMenuOpen]);
     useEffect(() => {
         const fetchChats = async () => {
             try {
@@ -971,6 +991,7 @@ export default function ChatsPage() {
                                         currentUser={user}
                                         token={token}
                                         messages={messages}
+                                        otherMemberId={selectedChat?.other_member_id}
                                         onBack={() => setShowGroupInfo(false)}
                                         onMakeMemberAdmin={async (member) => {
                                             await fetch(`${API}/api/groups/${selectedChat.id}/make-admin/`, {
@@ -1013,10 +1034,15 @@ export default function ChatsPage() {
                                                     />
                                                 </button>
                                                 <img
-
                                                     src={selectedChat.avatar?.startsWith('http') ? selectedChat.avatar : `${API}${selectedChat.avatar}`}
                                                     alt={selectedChat.name}
                                                     className={styles.activeChatAvatar}
+                                                    onClick={() => {
+                                                        if (!selectedChat.is_group && selectedChat.other_member_id) {
+                                                            navigate(`/profile/${selectedChat.other_member_id}`);
+                                                        }
+                                                    }}
+                                                    style={!selectedChat.is_group ? { cursor: 'pointer' } : {}}
                                                 />
                                                 <div className={styles.headerTitleInfo}>
                                                     {selectedChat.is_group && (
@@ -1032,39 +1058,54 @@ export default function ChatsPage() {
                                             <div className={styles.headerRightWrapper}>
                                                 <button className={styles.iconBtn}><Search size={30} /></button>
                                                 <div className={styles.menuWrapper} ref={activeChatMenuRef}>
-                                                    <button className={styles.iconBtn} onClick={() => setActiveChatMenuOpen(!activeChatMenuOpen)}>
+                                                    <button
+                                                        ref={activeChatMenuBtnRef}
+                                                        className={styles.iconBtn}
+                                                        onClick={(e) => {
+                                                            if (activeChatMenuOpen) {
+                                                                setActiveChatMenuOpen(false);
+                                                                setActiveChatMenuRect(null);
+                                                            } else {
+                                                                setActiveChatMenuOpen(true);
+                                                                setActiveChatMenuRect(e.currentTarget.getBoundingClientRect());
+                                                            }
+                                                        }}
+                                                    >
                                                         <MoreHorizontal size={30} />
                                                     </button>
-                                                    {activeChatMenuOpen && (
-                                                        <div className={styles.dropdownMenu}>
+                                                    {activeChatMenuOpen && activeChatMenuRect && createPortal(
+                                                        <div
+                                                            className={styles.dropdownMenu}
+                                                            style={{
+                                                                position: "fixed",
+                                                                top: activeChatMenuRect.bottom + 8,
+                                                                right: window.innerWidth - activeChatMenuRect.right,
+                                                                zIndex: 999999,
+                                                            }}
+                                                            onMouseDown={(e) => e.stopPropagation()}
+                                                        >
                                                             <button
                                                                 className={styles.menuItem}
                                                                 onClick={() => {
                                                                     setActiveChatMenuOpen(false);
-
-                                                                    if (selectedChat.is_group) {
-
-                                                                        setShowGroupInfo(true);
-                                                                    } else {
-                                                                        // If it's a DM, navigate to the user's profile
-                                                                        navigate(`/profile/${selectedChat.id}`);
-                                                                    }
+                                                                    setActiveChatMenuRect(null);
+                                                                    setShowGroupInfo(true);  // opens for both group and DM
                                                                 }}
                                                             >
-                                                                <Info size={14} /> {selectedChat.is_group ? 'Group Info' : 'User Info'}
+                                                                <Info size={14} /> {selectedChat.is_group ? 'Group Info' : 'Chat Info'}
                                                             </button>
-
                                                             <button className={styles.menuItem}>
                                                                 <BellOff size={14} /> Mute notifications
                                                             </button>
                                                             <button className={styles.menuItem}>
                                                                 <CheckSquare size={14} /> Select messages
                                                             </button>
-                                                            <div className={styles.menuDivider}></div>
+                                                            <div className={styles.menuDivider} />
                                                             <button className={`${styles.menuItem} ${styles.destructive}`}>
                                                                 <AlertCircle size={14} /> {selectedChat.is_group ? 'Report group' : 'Report user'}
                                                             </button>
-                                                        </div>
+                                                        </div>,
+                                                        document.body
                                                     )}
                                                 </div>
                                             </div>

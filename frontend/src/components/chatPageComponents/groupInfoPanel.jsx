@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import styles from './groupInfoPanel.module.css';
 import {
-    Camera, MoreHorizontal, MinusCircle, Edit2, FileText, Check, X
+    Camera, MoreHorizontal, MinusCircle, Edit2, FileText, Check, X, Ban, AlertCircle
 } from 'lucide-react';
 
 // Custom Asset PNG Imports
@@ -27,6 +27,7 @@ export default function GroupInfoPanel({
     API = '',
     token = '',
     currentUser = {},
+    otherMemberId,
 
     // Header Actions
     onBack,
@@ -53,11 +54,13 @@ export default function GroupInfoPanel({
 
     // UI Local Modals States
     const [openMemberId, setOpenMemberId] = useState(null);
+    const [otherMemberBio, setOtherMemberBio] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
     const [currentMembers, setCurrentMembers] = useState(members);
     const [showShareGroupModal, setShowShareGroupModal] = useState(false);
     const [isNotificationOn, setIsNotificationOn] = useState(group.hasUnreadNotifications ?? true);
+
 
     // Group Permissions View Toggle States
     const [showPermissions, setShowPermissions] = useState(false);
@@ -66,11 +69,13 @@ export default function GroupInfoPanel({
     const [showViewAllModal, setShowViewAllModal] = useState(false);
     const [viewAllSearch, setViewAllSearch] = useState('');
     const [openModalMemberId, setOpenModalMemberId] = useState(null);
+    const [otherMemberFullName, setOtherMemberFullName] = useState('');
 
     // Add this with your other filter functions (around line 190)
     const filteredAllMembers = currentMembers.filter(m =>
         (m.name || m.username || '').toLowerCase().includes(viewAllSearch.toLowerCase())
     );
+
 
     const [permissions, setPermissions] = useState({
         editSettings: group.allow_members_to_edit_settings ?? false,
@@ -78,6 +83,9 @@ export default function GroupInfoPanel({
         addMembers: group.allow_members_to_add_others ?? true,
         approveMembers: group.is_private ?? false
     });
+    const [showMediaGallery, setShowMediaGallery] = useState(false);
+
+    const [activeTab, setActiveTab] = useState('media');
 
     // Search Query Strings State
     const [memberSearch, setMemberSearch] = useState('');
@@ -225,11 +233,10 @@ export default function GroupInfoPanel({
     const regularMembers = currentMembers.filter(m => m.group_role !== 'owner' && m.group_role !== 'admin');
 
     const allAdmins = currentMembers.filter(m => m.group_role === 'owner' || m.group_role === 'admin');
-    const isInstructor = currentMembers.some(m =>
+    const isGroupAdmin = currentMembers.some(m =>
         (m.id == currentUser?.id || m.username === currentUser?.username) &&
         (m.group_role === 'owner' || m.group_role === 'admin')
     );
-
     const avatarSrc = group.avatar
         ? (group.avatar.startsWith('http') ? group.avatar : `${API}${group.avatar}`)
         : null;
@@ -279,6 +286,15 @@ export default function GroupInfoPanel({
 
         return items.filter(item => item.url && item.url !== API);
     }, [messages, API]);
+    const galleryImages = useMemo(
+        () => extractedMedia.filter(m => m.type === 'image' || m.type === 'video'),
+        [extractedMedia]
+    );
+
+    const galleryDocs = useMemo(
+        () => extractedMedia.filter(m => m.type === 'pdf'),
+        [extractedMedia]
+    );
 
     // ── INTERNAL ACTIONS ──
     const handleClearChat = async () => {
@@ -423,6 +439,24 @@ export default function GroupInfoPanel({
             console.error(err);
         }
     };
+    useEffect(() => {
+        if (isGroup || !otherMemberId || !token) return;
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch(`${API}/api/users/${otherMemberId}/`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setOtherMemberBio(data.profile?.bio || data.profile?.about || '');
+                    setOtherMemberFullName(data.profile?.full_name || '');
+                }
+            } catch (err) {
+                console.error('Failed to fetch user bio', err);
+            }
+        };
+        fetchProfile();
+    }, [otherMemberId, isGroup, token]);
 
     const handleSaveGroupDetails = async () => {
         try {
@@ -597,7 +631,7 @@ export default function GroupInfoPanel({
                         <button className={styles.backBtn} onClick={onBack} aria-label="Go back">
                             <img src={BackArrow} alt="Back" style={headerPngStyle} />
                         </button>
-                        <span className={styles.headerTitle}>{isGroup ? 'Group Info' : 'User Info'}</span>
+                        <span className={styles.headerTitle}>{isGroup ? 'Group Info' : 'Chat Info'}</span>
                         <div className={styles.headerIcons}>
                             <button className={styles.iconBtn} onClick={onSearchClick} aria-label="Search">
                                 <img src={SearchIconAsset} alt="Search" style={headerPngStyle} />
@@ -609,18 +643,18 @@ export default function GroupInfoPanel({
                                     style={headerPngStyle}
                                 />
                             </button>
-                            <button
-                                className={styles.iconBtn}
-                                onClick={() => {
-                                    if (isGroup) {
+                            {isGroup && isGroupAdmin && (
+                                <button
+                                    className={styles.iconBtn}
+                                    onClick={() => {
                                         setShowPermissions(true);
-                                    }
-                                    if (onSettingsClick) onSettingsClick();
-                                }}
-                                aria-label="Settings"
-                            >
-                                <img src={Settings} alt="Settings" style={headerPngStyle} />
-                            </button>
+                                        if (onSettingsClick) onSettingsClick();
+                                    }}
+                                    aria-label="Settings"
+                                >
+                                    <img src={Settings} alt="Settings" style={headerPngStyle} />
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -639,13 +673,15 @@ export default function GroupInfoPanel({
                                             : <span className={styles.avatarInitials}>{group.name?.slice(0, 2).toUpperCase() || ''}</span>
                                         }
                                     </div>
-                                    <button
-                                        className={styles.cameraBtn}
-                                        onClick={() => avatarInputRef.current?.click()}
-                                        aria-label="Change group photo"
-                                    >
-                                        <Camera size={13} />
-                                    </button>
+                                    {isGroup && isGroupAdmin && (
+                                        <button
+                                            className={styles.cameraBtn}
+                                            onClick={() => avatarInputRef.current?.click()}
+                                            aria-label="Change group photo"
+                                        >
+                                            <Camera size={13} />
+                                        </button>
+                                    )}
                                     <input
                                         ref={avatarInputRef}
                                         type="file"
@@ -672,58 +708,103 @@ export default function GroupInfoPanel({
                                             <h2 className={styles.groupName}>{group.name}</h2>
                                         )}
 
-                                        {isEditing ? (
-                                            <div style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>
-                                                <button onClick={handleSaveGroupDetails} style={{ background: 'none', border: 'none', color: '#4ade80', cursor: 'pointer' }}>
-                                                    <Check size={16} />
+                                        {isGroup && isGroupAdmin && (
+                                            isEditing ? (
+                                                <div style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>
+                                                    <button onClick={handleSaveGroupDetails} style={{ background: 'none', border: 'none', color: '#4ade80', cursor: 'pointer' }}>
+                                                        <Check size={16} />
+                                                    </button>
+                                                    <button onClick={handleCancelGroupDetails} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer' }}>
+                                                        <X size={16} />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button className={styles.editBtn} onClick={() => setIsEditing(true)}>
+                                                    <span>Edit</span>
+                                                    <Edit2 size={13} />
                                                 </button>
-                                                <button onClick={handleCancelGroupDetails} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer' }}>
-                                                    <X size={16} />
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <button className={styles.editBtn} onClick={() => setIsEditing(true)}>
-                                                <span>Edit</span>
-                                                <Edit2 size={13} />
-                                            </button>
+                                            )
                                         )}
                                     </div>
-                                    <p className={styles.createdBy}>
-                                        Created by: {group.conversations_owner || group.created_by || '—'}
-                                        {group.created_at && <>&nbsp;&nbsp;•&nbsp;&nbsp;{group.created_at}</>}
-                                    </p>
+
+                                    {isGroup && (
+                                        <p className={styles.createdBy}>
+                                            Created by: {group.conversations_owner || group.created_by || '—'}
+                                            {group.created_at && <>&nbsp;&nbsp;•&nbsp;&nbsp;{group.created_at}</>}
+                                        </p>
+                                    )}
+                                    {!isGroup && otherMemberFullName && (
+                                        <p style={{
+                                            margin: '-6px 0 -6px 0',
+                                            color: 'rgba(255,255,255,0.6)',
+                                            fontSize: ' 1.9rem',
+                                            lineHeight: 1.5,
+                                            background: 'transparent',
+                                        }}>
+                                            {otherMemberFullName}
+                                        </p>
+                                    )}
+
+                                    {!isGroup && otherMemberBio && (
+                                        <p style={{
+                                            margin: '4px 0 0 0',
+                                            color: 'rgba(255,255,255,0.6)',
+                                            fontSize: '0.85rem',
+                                            lineHeight: 1.5,
+                                            background: 'transparent',
+                                        }}>
+                                            {otherMemberBio}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
                             {isGroup && (
                                 <div className={styles.descriptionAndButtonsWrapper}>
-                                    <div className={styles.buttonsContainer}>
-                                        <button className={styles.shareBtn} onClick={() => setShowShareGroupModal(true)}>
-                                            <img src={Share} alt="Share" style={inlineButtonPngStyle} />
-                                            <span>Share group</span>
-                                        </button>
-                                        <button className={styles.addMemberBtn} onClick={() => setShowAddMemberModal(true)}>
-                                            <img src={AddFriend} alt="Add member" style={inlineButtonPngStyle} />
-                                            <span>Add member</span>
-                                        </button>
-                                    </div>
+                                    {(isGroupAdmin || (!isGroupAdmin && permissions.addMembers)) && (
+                                        <div className={styles.buttonsContainer}>
+                                            <button className={styles.shareBtn} onClick={() => setShowShareGroupModal(true)}>
+                                                <img src={Share} alt="Share" style={inlineButtonPngStyle} />
+                                                <span>Share group</span>
+                                            </button>
+                                            <button className={styles.addMemberBtn} onClick={() => setShowAddMemberModal(true)}>
+                                                <img src={AddFriend} alt="Add member" style={inlineButtonPngStyle} />
+                                                <span>Add member</span>
+                                            </button>
+                                        </div>
+                                    )}
 
-                                    <div className={styles.bioBox}>
-                                        {isEditing ? (
-                                            <textarea
-                                                value={editedBio}
-                                                onChange={(e) => setEditedBio(e.target.value)}
-                                                style={{ background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '4px', padding: '6px', width: '100%', minHeight: '50px', fontSize: '0.85rem', resize: 'vertical' }}
-                                            />
-                                        ) : (
-                                            <p className={styles.bioText}>
-                                                {group.description || group.bio || 'No description added yet.'}
+                                    {isGroupAdmin ? (
+                                        <div className={styles.bioBox}>
+                                            {isEditing ? (
+                                                <div style={{ position: 'relative' }}>
+                                                    <textarea
+                                                        value={editedBio}
+                                                        onChange={(e) => setEditedBio(e.target.value)}
+                                                        maxLength={300}
+                                                        style={{ background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '4px', padding: '6px', width: '100%', minHeight: '50px', fontSize: '0.85rem', resize: 'vertical', boxSizing: 'border-box' }}
+                                                    />
+                                                    <span style={{
+                                                        position: 'absolute', bottom: 6, right: 8,
+                                                        fontSize: '0.72rem', color: editedBio.length >= 280 ? '#f87171' : 'rgba(255,255,255,0.3)',
+                                                        pointerEvents: 'none',
+                                                    }}>
+                                                        {editedBio.length}/300
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <p className={styles.bioText}>
+                                                    {group.description || group.bio || 'No description added yet.'}
+                                                </p>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className={styles.bioBox} style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
+                                            <p className={styles.bioText} style={{ margin: 0 }}>
+                                                {group.description || group.bio || ''}
                                             </p>
-                                        )}
-                                        <span className={styles.memberCount}>
-                                            {group.member_count ?? currentMembers.length}/{group.member_limit ?? 150}
-                                        </span>
-                                    </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -732,7 +813,7 @@ export default function GroupInfoPanel({
 
                         {/* ── Subtitle Info Block ── */}
                         <div className={styles.detailsHeading}>
-                            <span className={styles.sectionTitle}>{isGroup ? 'Group details' : 'User details'}</span>
+                            <span className={styles.sectionTitle}>{isGroup ? 'Group details' : 'Chat Details'}</span>
                             <span className={styles.sectionSub}>
                                 {isGroup ? "In this section you'll get to see more details from this group, like media share, members and more!" : "View shared media, links, and documents with this user."}
                             </span>
@@ -773,8 +854,8 @@ export default function GroupInfoPanel({
                                     <div className={styles.emptyMediaMsg}>No media shared yet.</div>
                                 )}
 
-                                {extractedMedia.length > 0 && (
-                                    <button className={styles.viewAllTile} onClick={onViewAllMedia}>
+                                {extractedMedia.length > 3 && (
+                                    <button className={styles.viewAllTile} onClick={() => { setActiveTab('media'); setShowMediaGallery(true); }}>
                                         View all {extractedMedia.length}+
                                     </button>
                                 )}
@@ -810,7 +891,7 @@ export default function GroupInfoPanel({
                                         onBack={onBack}
                                         token={token}
                                         currentUser={currentUser}
-                                        canManage={isInstructor}
+                                        canManage={isGroupAdmin}
                                         openMemberId={openMemberId}
                                         setOpenMemberId={setOpenMemberId}
                                         API={API}
@@ -828,7 +909,7 @@ export default function GroupInfoPanel({
                                         token={token}
                                         onBack={onBack}
                                         openMemberId={openMemberId}
-                                        canManage={isInstructor}
+                                        canManage={isGroupAdmin}
                                         setOpenMemberId={setOpenMemberId}
                                         onViewProfile={onViewMemberProfile}
                                         currentUser={currentUser}
@@ -845,24 +926,47 @@ export default function GroupInfoPanel({
                         <div className={styles.otherSection} style={{ display: 'flex', width: '100%' }}>
                             <div className={styles.sectionTitleWrapper}>
                                 <span className={styles.sectionTitle}>Other</span>
-                                <div style={{
-                                    flex: 1,
-                                    height: '1px',
-                                    backgroundColor: '#4D4D4D',
-                                    margin: '0 16px'
-                                }} />
-
+                                <div style={{ flex: 1, height: '1px', backgroundColor: '#4D4D4D', margin: '0 16px' }} />
                             </div>
+
 
 
                             <button className={styles.otherBtn} onClick={handleClearChat}>
                                 <MinusCircle size={18} className={styles.otherIcon} />
                                 <span>Clear chat</span>
                             </button>
+
                             <button className={`${styles.otherBtn} ${styles.destructiveBtn}`} onClick={handleDeleteGroup}>
                                 <img src={Bin} alt="Delete" style={inlineButtonPngStyle} />
                                 <span>{isGroup ? 'Delete group' : 'Delete chat'}</span>
                             </button>
+
+                            {!isGroup && (
+                                <>
+                                    <button className={`${styles.otherBtn} ${styles.destructiveBtn}`} onClick={async () => {
+                                        await fetch(`${API}/api/chats/${group.id}/report/`, {
+                                            method: 'POST',
+                                            headers: { Authorization: `Bearer ${token}` },
+                                        });
+                                    }}>
+                                        <AlertCircle size={18} className={styles.otherIcon} />
+                                        <span>Report {group.name}</span>
+                                    </button>
+                                    <button className={`${styles.otherBtn} ${styles.destructiveBtn}`} onClick={async () => {
+                                        await fetch(`${API}/api/chats/${group.id}/block/`, {
+                                            method: 'POST',
+                                            headers: { Authorization: `Bearer ${token}` },
+                                        });
+                                    }}>
+                                        <Ban size={18} className={styles.otherIcon} />
+                                        <span>Block {group.name}</span>
+                                    </button>
+
+
+                                </>
+                            )}
+
+
                         </div>
                     </div>
                 </>
@@ -1037,7 +1141,7 @@ export default function GroupInfoPanel({
                                     onBack={onBack}
                                     openMemberId={openModalMemberId}
                                     setOpenMemberId={setOpenModalMemberId}
-                                    canManage={isInstructor}
+                                    canManage={isGroupAdmin}
 
                                     onViewProfile={onViewMemberProfile}
                                     currentUser={currentUser}
@@ -1056,43 +1160,169 @@ export default function GroupInfoPanel({
                     </div>
                 </div>
             )}
+            {showMediaGallery && (() => {
 
-            {lightboxUrl && (
-                <div
-                    onClick={() => setLightboxUrl(null)}
-                    style={{
-                        position: 'fixed', inset: 0, zIndex: 9999,
-                        background: 'rgba(0,0,0,0.92)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'zoom-out',
-                    }}
-                >
-                    <img
-                        src={lightboxUrl}
-                        alt="full"
-                        onClick={e => e.stopPropagation()}
-                        style={{
-                            maxWidth: '90vw', maxHeight: '90vh',
-                            borderRadius: 12, objectFit: 'contain',
-                            boxShadow: '0 20px 60px rgba(0,0,0,0.8)',
-                        }}
-                    />
-                    <button
+                return (
+                    <div style={{
+                        position: 'fixed', inset: 0, zIndex: 9998,
+                        background: 'rgba(0,0,0,0.95)',
+                        display: 'flex', flexDirection: 'column',
+                    }}>
+                        {/* Header */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: 12,
+                            padding: '14px 16px',
+                            borderBottom: '1px solid rgba(255,255,255,0.08)',
+                            background: '#1a1a1a', flexShrink: 0,
+                        }}>
+                            <button
+                                onClick={() => setShowMediaGallery(false)}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}
+                            >
+                                <img src={BackArrow} alt="Back" style={{ width: 20, height: 20, filter: 'brightness(0) invert(1)' }} />
+                            </button>
+                            <div>
+                                <div style={{ color: '#fff', fontWeight: 600, fontSize: '1rem' }}>{group.name}</div>
+                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem' }}>{extractedMedia.length} items</div>
+                            </div>
+                        </div>
+
+                        {/* Tabs */}
+                        <div style={{
+                            display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)',
+                            background: '#1a1a1a', flexShrink: 0,
+                        }}>
+                            {['media', 'docs'].map(tab => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    style={{
+                                        flex: 1, padding: '12px 0', background: 'none', border: 'none',
+                                        color: activeTab === tab ? '#c084fc' : 'rgba(255,255,255,0.4)',
+                                        fontWeight: activeTab === tab ? 700 : 400,
+                                        fontSize: '0.875rem', cursor: 'pointer',
+                                        borderBottom: activeTab === tab ? '2px solid #c084fc' : '2px solid transparent',
+                                        transition: 'all 0.15s',
+                                    }}
+                                >
+                                    {tab === 'media' ? `Media (${galleryImages.length})` : `Docs (${galleryDocs.length})`}
+
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Content */}
+                        <div style={{ flex: 1, overflowY: 'auto', padding: 2 }}>
+                            {activeTab === 'media' ? (
+                                galleryImages.length === 0 ? (
+                                    <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: 40 }}>No media shared yet</div>
+                                ) : (
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, contentVisibility: 'auto', }}>
+                                        {galleryImages.map(item => (
+                                            <div
+                                                key={item.id}
+                                                onClick={() => setLightboxUrl(item.url)}
+                                                style={{ aspectRatio: '1', cursor: 'pointer', overflow: 'hidden', background: '#111' }}
+                                            >
+                                                {item.type === 'video' ? (
+                                                    <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                ) : (
+                                                    <img
+                                                        src={item.url}
+                                                        alt=""
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                                        onError={e => { e.currentTarget.style.display = 'none'; }}
+                                                    />
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )
+                            ) : (
+                                galleryDocs.length === 0 ? (
+                                    <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: 40 }}>No documents shared yet</div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                        {galleryDocs.map(item => (
+                                            <a
+
+                                                key={item.id}
+                                                href={item.url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: 12,
+                                                    padding: '14px 16px', textDecoration: 'none',
+                                                    borderBottom: '1px solid rgba(255,255,255,0.06)',
+                                                    background: 'rgba(255,255,255,0.03)',
+                                                }}
+                                            >
+                                                <div style={{
+                                                    width: 42, height: 42, borderRadius: 8, flexShrink: 0,
+                                                    background: 'rgba(229,57,53,0.15)',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                }}>
+                                                    <FileText size={22} color="#E53935" />
+                                                </div>
+                                                <div style={{ minWidth: 0 }}>
+                                                    <div style={{ color: '#fff', fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                        {item.name}
+                                                    </div>
+                                                    <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', marginTop: 2 }}>
+                                                        {item.file_type?.toUpperCase() || 'FILE'}
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        ))}
+                                    </div>
+                                )
+                            )}
+                        </div>
+                    </div>
+                );
+            })()}
+
+            {
+                lightboxUrl && (
+                    <div
                         onClick={() => setLightboxUrl(null)}
                         style={{
-                            position: 'absolute', top: 20, right: 24,
-                            background: 'rgba(255,255,255,0.1)', border: 'none',
-                            borderRadius: '50%', width: 40, height: 40,
-                            color: '#fff', fontSize: '1.2rem', cursor: 'pointer',
+                            position: 'fixed', inset: 0, zIndex: 9999,
+                            background: 'rgba(0,0,0,0.92)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'zoom-out',
                         }}
                     >
-                        ✕
-                    </button>
-                </div>
-            )}
+                        <img
+                            src={lightboxUrl}
+                            alt="full"
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                                maxWidth: '90vw', maxHeight: '90vh',
+                                borderRadius: 12, objectFit: 'contain',
+                                boxShadow: '0 20px 60px rgba(0,0,0,0.8)',
+                            }}
+                        />
+                        <button
+                            onClick={() => setLightboxUrl(null)}
+                            style={{
+                                position: 'absolute', top: 20, right: 24,
+                                background: 'rgba(255,255,255,0.1)', border: 'none',
+                                borderRadius: '50%', width: 40, height: 40,
+                                color: '#fff', fontSize: '1.2rem', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}
+                        >
+                            ✕
+                        </button>
+                    </div>
+                )
+            }
 
-        </div>
+
+        </div >
     );
 }
 
@@ -1120,7 +1350,7 @@ function MemberRow({
     const avatarSrc = member.avatar
         ? (member.avatar.startsWith('http') ? member.avatar : `${API}${member.avatar}`)
         : null;
-   
+
     const isSelf = member.id == currentUser?.id || member.username === currentUser?.username;
     const currentRole = member.group_role?.toLowerCase();
     const isAlreadyAdmin = member.group_role === 'owner' || member.group_role === 'admin';
