@@ -84,6 +84,7 @@ export default function GroupInfoPanel({
         approveMembers: group.is_private ?? false
     });
     const [showMediaGallery, setShowMediaGallery] = useState(false);
+    const [showExitConfirm, setShowExitConfirm] = useState(false);
 
     const [activeTab, setActiveTab] = useState('media');
 
@@ -936,9 +937,9 @@ export default function GroupInfoPanel({
                                 <span>Clear chat</span>
                             </button>
 
-                            <button className={`${styles.otherBtn} ${styles.destructiveBtn}`} onClick={handleDeleteGroup}>
+                            <button className={`${styles.otherBtn} ${styles.destructiveBtn}`} onClick={() => isGroup ? setShowExitConfirm(true) : handleDeleteGroup()}>
                                 <img src={Bin} alt="Delete" style={inlineButtonPngStyle} />
-                                <span>{isGroup ? 'Delete group' : 'Delete chat'}</span>
+                                <span>{isGroup ? 'Exit group' : 'Delete chat'}</span>
                             </button>
 
                             {!isGroup && (
@@ -1283,6 +1284,47 @@ export default function GroupInfoPanel({
                     </div>
                 );
             })()}
+            {showExitConfirm && (
+                <div
+                    className={styles.exitModalOverlay}
+                    onClick={() => setShowExitConfirm(false)}
+                >
+                    <div
+                        className={styles.exitModalContent}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <h3 className={styles.exitModalTitle}>
+                            Exit group: "{group.name}"?
+                        </h3>
+                        <p className={styles.exitModalText}>
+                            Only admins are notified when you leave a group.
+                        </p>
+
+                        <div className={styles.exitButtonGroup}>
+                            <button
+                                className={styles.exitCancelBtn}
+                                onClick={() => setShowExitConfirm(false)}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                className={styles.exitOutlineBtn}
+                                onClick={() => { setShowExitConfirm(false); handleDeleteGroup(); }}
+                            >
+                                Exit and delete for me
+                            </button>
+
+                            <button
+                                className={styles.exitSolidBtn}
+                                onClick={() => { setShowExitConfirm(false); handleDeleteGroup(); }}
+                            >
+                                Exit group
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {
                 lightboxUrl && (

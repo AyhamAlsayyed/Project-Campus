@@ -88,8 +88,7 @@ export function useProfileEdit({ user, token, API, onSaved }) {
             setUsernameChecking(true);
             try {
                 const res = await fetch(`${API}/api/auth/check-username/?username=${encodeURIComponent(val)}`, { headers: { Authorization: `Bearer ${token}` } });
-                const data = await res.json();
-                if (!data.available) setUsernameError('Username unavailable.');
+                if (!res.ok) setUsernameError('Username unavailable.');
             } catch { }
             finally { setUsernameChecking(false); }
         }, 600);
@@ -159,10 +158,28 @@ export function useProfileEdit({ user, token, API, onSaved }) {
             fd.append('personal_email', formData.secondaryEmail);
             fd.append('primary_phone', formData.primaryPhone);
             fd.append('secondary_phone', formData.secondaryPhone);
+
             const { day, month, year } = formData.birthday;
             if (day && month && year) fd.append('birthday', `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+
             if (avatarFile) fd.append('avatar', avatarFile);
             if (coverFile) fd.append('cover', coverFile);
+
+            fd.append('degrees', JSON.stringify(
+                (formData.degrees || []).map(d => ({
+                    id: d.id || null,
+                    degree_type: d.title,
+                    major: d.field,
+                    institution: d.institution,
+                }))
+            ));
+            if (formData.teachingPositions?.length) {
+                fd.append('teaching_positions', JSON.stringify(formData.teachingPositions));
+            }
+            if (formData.educationEntries?.length) {
+                fd.append('education', JSON.stringify(formData.educationEntries));
+            }
+
             const res = await fetch(`${API}/api/auth/profile/update/`, {
                 method: 'PATCH', headers: { Authorization: `Bearer ${token}` }, body: fd,
             });
@@ -170,7 +187,6 @@ export function useProfileEdit({ user, token, API, onSaved }) {
         } catch { }
         finally { setEditSaving(false); }
     };
-
     const handleEditCancel = () => {
         syncFromUser(user);
         setUsernameError('');

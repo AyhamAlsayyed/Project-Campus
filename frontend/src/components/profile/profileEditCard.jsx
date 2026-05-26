@@ -3,9 +3,17 @@ import {
     Languages, Home, HelpCircle, MessageSquare,
     Menu, X, Search, Check, MoreHorizontal,
     Volume2, Calendar, Heart, ChevronLeft,
-    Upload, Trash2, Mail, Phone, Edit2, Camera
+    Upload, Trash2, Mail, Phone, Edit2
 } from "lucide-react";
 import { useState } from "react";
+import BackBtn from '../../Assets/icons/arrow-left.png'
+import { useRef, useEffect } from "react";
+import Camera from '../../Assets/icons/camera.png'
+import MailIcon from '../../Assets/icons/mail.png'
+import EditIcon from '../../Assets/icons/edit.png'
+import BirthdayIcon from '../../Assets/icons/cake.png'
+import PhoneIcon from '../../Assets/icons/phone.png'
+import EducationIcon from '../../Assets/icons/education.png'
 
 const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS_SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -35,11 +43,19 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
     const [showAddEducation, setShowAddEducation] = useState(false);
     const [newEducation, setNewEducation] = useState({ institution: '', degree: '' });
 
-    // Teaching positions (instructor only)
+
     const [showAddPosition, setShowAddPosition] = useState(false);
     const [newPosition, setNewPosition] = useState({ institution: '', type: 'parttime' });
 
     const isInstructor = user?.role === 'instructor';
+    const cameraButtonRef = useRef(null);
+    const [coverDropdownPos, setCoverDropdownPos] = useState({ top: 0, left: 0 });
+    const [showPicksModal, setShowPicksModal] = useState(false);
+    const [joinedCommunities, setJoinedCommunities] = useState([]);
+    const [picksLoading, setPicksLoading] = useState(false);
+
+
+
 
     const handleConfirmDelete = () => {
         if (deleteConfirm.target === 'avatar') {
@@ -67,6 +83,16 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
         handleSendOtp, handleOtpChange, handleOtpKeyDown, handleCheckOtp,
         handleEditSave, handleEditCancel,
     } = edit;
+    useEffect(() => {
+        if (!showCoverDropdown) return;
+        const close = () => setShowCoverDropdown(false);
+        document.addEventListener('mousedown', close);
+        document.addEventListener('scroll', close, true); // ← true catches scroll on any element
+        return () => {
+            document.removeEventListener('mousedown', close);
+            document.removeEventListener('scroll', close, true);
+        };
+    }, [showCoverDropdown]);
 
     // Shared input style
     const inlineInput = (flex = 1) => ({
@@ -103,7 +129,11 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
             <div className={styles.editHeader}>
                 <div className={styles.flexAlign}>
                     <button className={styles.backBtn} onClick={() => setIsEditing(false)}>
-                        <ChevronLeft size={24} />
+                        <img
+                            src={BackBtn}
+                            alt="back"
+                            style={{ filter: 'brightness(0) invert(0.9)', width: 22, height: 22 }}
+                        />
                     </button>
                     <h1 className={styles.whiteHeaderText}>Edit Your Profile</h1>
                 </div>
@@ -146,6 +176,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                 </div>
 
                 {/* Cover */}
+                {/* Cover */}
                 <div style={{ flex: 1, position: "relative" }}>
                     <div style={{
                         width: "100%", minHeight: 180, height: "100%",
@@ -157,28 +188,76 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                 style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                         )}
                         <button
+                            ref={cameraButtonRef}
                             className={styles.centeredCameraBtn}
                             style={{ position: "absolute", bottom: 10, right: 10, top: "auto", left: "auto", transform: "none" }}
-                            onClick={() => setShowCoverDropdown(p => !p)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                const rect = cameraButtonRef.current.getBoundingClientRect();
+                                setCoverDropdownPos({
+                                    top: rect.bottom + 8,
+                                    left: rect.right,
+                                });
+                                setShowCoverDropdown(p => !p);
+                            }}
                         >
-                            <Camera size={16} />
+                            <img
+                                src={Camera}
+                                alt="back"
+                                style={{ filter: 'brightness(0) invert(0.9)', width: 22, height: 22 }}
+                            />
                         </button>
-                        {showCoverDropdown && (
-                            <div className={styles.coverActionsDropdown}
-                                style={{ position: "absolute", bottom: 50, right: 10, top: "auto", left: "auto", transform: "none" }}>
-                                <button onClick={() => coverInputRef.current?.click()}>
-                                    <Upload size={14} /> Upload
-                                </button>
-                                <button
-                                    className={styles.deleteText}
-                                    onClick={() => setDeleteConfirm({ isOpen: true, target: 'cover' })}
-                                >
-                                    <Trash2 size={14} /> Delete
-                                </button>
-                            </div>
-                        )}
+
                         <input hidden ref={coverInputRef} type="file" accept="image/*" onChange={handleCoverChange} />
                     </div>
+
+                    {/* Fixed dropdown — never moves on scroll */}
+                    {showCoverDropdown && (
+                        <div
+                            onMouseDown={e => e.stopPropagation()}
+                            style={{
+                                position: "fixed",
+                                top: coverDropdownPos.top,
+                                left: coverDropdownPos.left,
+                                transform: "translateX(-100%)",
+                                background: "#333333",
+                                border: "1px solid rgba(255,255,255,0.1)",
+                                borderRadius: 15, padding: "6px 0",
+                                minWidth: 140, zIndex: 9999,
+                                boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+                            }}
+                        >
+                            <button
+                                onClick={() => { coverInputRef.current?.click(); setShowCoverDropdown(false); }}
+                                style={{
+                                    display: "flex", alignItems: "center", gap: 10,
+                                    width: "100%", padding: "10px 16px",
+                                    background: "transparent", border: "none",
+                                    color: "rgba(255,255,255,0.85)", fontSize: "0.88rem",
+                                    fontWeight: 500, cursor: "pointer",
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                            >
+                                <Upload size={14} /> Upload
+                            </button>
+                            <div style={{ height: 1, width: "60%", background: '#4D4D4D', margin: '4px auto' }} />
+                            <button
+                                onClick={() => { setDeleteConfirm({ isOpen: true, target: 'cover' }); setShowCoverDropdown(false); }}
+                                style={{
+                                    display: "flex", alignItems: "center", gap: 10,
+                                    width: "100%", padding: "10px 16px",
+                                    background: "transparent", border: "none",
+                                    color: "#e91e63", fontSize: "0.88rem",
+                                    fontWeight: 500, cursor: "pointer",
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = "rgba(233,30,99,0.08)"}
+                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                            >
+                                <Trash2 size={14} /> Delete
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -268,7 +347,51 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                     </p>
                 )}
 
-                <div style={{ borderTop: "1px solid #2a2a2a", margin: "20px 0 24px" }} />
+                <div style={{ borderTop: "1px solid #999999", width: "70%", margin: "20px auto 24px" }} />
+                {isInstructor && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 20, gap: 20 }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 500, color: '#E6E6E6', margin: 0, whiteSpace: 'nowrap' }}>
+                                Community Picks
+                            </h3>
+                            <p style={{ fontSize: '0.6rem', color: '#808080', margin: 0, lineHeight: 1.4 }}>
+                                Manage your highlighted community picks on your profile
+                            </p>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+                            <span style={{ color: '#B3B3B3', fontSize: '0.9rem', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                                {(formData.communityPicks || []).length}/3
+                            </span>
+                            <button
+                                onClick={async () => {
+                                    setShowPicksModal(true);
+                                    setPicksLoading(true);
+                                    try {
+                                        const res = await fetch(`${API}/api/communities/?filter=joined`, {
+                                            headers: { Authorization: `Bearer ${token}` }
+                                        });
+                                        if (res.ok) {
+                                            const data = await res.json();
+                                            setJoinedCommunities(data.map(c => ({ ...c, bgImage: c.image })));
+                                        }
+                                    } catch (e) { console.error(e); }
+                                    finally { setPicksLoading(false); }
+                                }}
+                                style={{
+                                    background: '#4D4D4D', border: 'none', borderRadius: 20,
+                                    padding: '8px 20px', color: '#CCCCCC', fontSize: '0.9rem',
+                                    fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = '#666666'}
+                                onMouseLeave={e => e.currentTarget.style.background = '#4D4D4D'}
+                            >
+                                Manage
+                            </button>
+                        </div>
+                    </div>
+                )}
+                <div style={{ borderTop: "1px solid #999999", width: "70%", margin: "20px auto 24px" }} />
+
 
                 {/* Details header */}
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 24, marginBottom: 24 }}>
@@ -289,30 +412,40 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                     </div>
 
                     <div className={styles.detailFieldItem}>
-                        <span><Mail size={16} /> Primary Email</span>
+                        <span>
+                            <img src={MailIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                            Primary Email
+                        </span>
                         <span className={styles.fieldValueText}>{formData.primaryEmail || 'username@gmail.com'}</span>
-                        <Edit2 size={16} className={styles.fieldEditIcon} onClick={() => setEditView("email")} />
+                        <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("email")} />
                     </div>
 
-                  
-                        <div className={styles.detailFieldItem}>
-                            <span><Mail size={16} /> Personal Email</span>
-                            <span className={styles.fieldValueText}>{formData.secondaryEmail}</span>
-                            <Edit2 size={16} className={styles.fieldEditIcon} onClick={() => setEditView("email")} />
-                        </div>
-               
+                    <div className={styles.detailFieldItem}>
+                        <span>
+                            <img src={MailIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                            Personal Email
+                        </span>
+                        <span className={styles.fieldValueText}>{formData.secondaryEmail}</span>
+                        <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("email")} />
+                    </div>
 
                     <div className={styles.detailFieldItem}>
-                        <span><Phone size={16} /> Primary Phone</span>
+                        <span>
+                            <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                            Primary Phone
+                        </span>
                         <span className={styles.fieldValueText}>{formData.primaryPhone || '—'}</span>
-                        <Edit2 size={16} className={styles.fieldEditIcon} onClick={() => setEditView("phone")} />
+                        <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("phone")} />
                     </div>
 
                     {formData.secondaryPhone && (
                         <div className={styles.detailFieldItem}>
-                            <span><Phone size={16} /> Secondary Phone</span>
+                            <span>
+                                <img src={PhoneIcon} alt="" style={{width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                                Secondary Phone
+                            </span>
                             <span className={styles.fieldValueText}>{formData.secondaryPhone}</span>
-                            <Edit2 size={16} className={styles.fieldEditIcon} onClick={() => setEditView("phone")} />
+                            <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("phone")} />
                         </div>
                     )}
                     {/* ── Personal Details ── */}
@@ -323,7 +456,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
 
                     {/* Birthday */}
                     <div className={styles.detailFieldItem} style={{ position: "relative" }}>
-                        <span>🎂 Birthday</span>
+                        <span><img src={BirthdayIcon} alt=""style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} /> Birthday</span>
                         <div className={styles.birthdayInputsGroup}>
                             <input
                                 type="text" maxLength={2} placeholder="MM"
@@ -411,16 +544,86 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                             </div>
                         )}
                     </div>
+                    {/* ── Degrees (students only) ── */}
+                    {!isInstructor && (
+                        <>
+                            <SubLabel>Degrees</SubLabel>
+                            {(formData.degrees || []).map((deg, i) => (
+                                <div key={i}>
+                                    {editingDegreeIdx === i ? (
+                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', flexWrap: 'wrap' }}>
+                                            <select
+                                                value={editingDegree.title}
+                                                onChange={e => setEditingDegree(p => ({ ...p, title: e.target.value }))}
+                                                style={inlineInput(1)}
+                                            >
+                                                <option value="">Degree type</option>
+                                                <option value="High School Diploma">Diploma</option>
+                                                <option value="Bachelor's">Bachelor's</option>
+                                                <option value="Master's">Master's</option>
+                                                <option value="PhD">PhD</option>
+                                            </select>
+                                            <input
+                                                placeholder="Field e.g. Computer Science"
+                                                value={editingDegree.field}
+                                                onChange={e => setEditingDegree(p => ({ ...p, field: e.target.value }))}
+                                                style={inlineInput(1.5)}
+                                            />
+                                            <input
+                                                placeholder="Institution e.g. Harvard University"
+                                                value={editingDegree.institution}
+                                                onChange={e => setEditingDegree(p => ({ ...p, institution: e.target.value }))}
+                                                style={inlineInput(1.5)}
+                                            />
+                                            <button
+                                                style={addBtn}
+                                                onClick={() => {
+                                                    if (!editingDegree.title.trim()) return;
+                                                    setFormData(p => ({
+                                                        ...p,
+                                                        degrees: p.degrees.map((d, idx) => idx === i ? editingDegree : d)
+                                                    }));
+                                                    setEditingDegreeIdx(null);
+                                                }}
+                                            >
+                                                Save
+                                            </button>
+                                            <button style={cancelIconBtn} onClick={() => setEditingDegreeIdx(null)}>
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div key={i} className={styles.detailFieldItem}>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                <span style={{ fontSize: 16 }}>🎓</span>
+                                                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
+                                                    {deg.title}{deg.field ? ` — ${deg.field}` : ''}{deg.institution ? ` · ${deg.institution}` : ''}
+                                                </span>
+                                            </span>
+                                            <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
+                                                <button
+                                                    style={{ background: 'transparent', border: 'none', color: '#c084fc', cursor: 'pointer', padding: 4 }}
+                                                    onClick={() => { setEditingDegreeIdx(i); setEditingDegree(deg); }}
+                                                >
+                                                    <Edit2 size={14} />
+                                                </button>
+                                                <button
+                                                    style={trashBtn}
+                                                    onClick={() => setFormData(p => ({ ...p, degrees: p.degrees.filter((_, idx) => idx !== i) }))}
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
 
-                    {/* ── Degrees (both roles) ── */}
-                    <SubLabel>Degrees</SubLabel>
-                    {(formData.degrees || []).map((deg, i) => (
-                        <div key={i}>
-                            {editingDegreeIdx === i ? (
+                            {showAddDegree ? (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', flexWrap: 'wrap' }}>
                                     <select
-                                        value={editingDegree.title}
-                                        onChange={e => setEditingDegree(p => ({ ...p, title: e.target.value }))}
+                                        value={newDegree.title}
+                                        onChange={e => setNewDegree(p => ({ ...p, title: e.target.value }))}
                                         style={inlineInput(1)}
                                     >
                                         <option value="">Degree type</option>
@@ -431,111 +634,43 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     </select>
                                     <input
                                         placeholder="Field e.g. Computer Science"
-                                        value={editingDegree.field}
-                                        onChange={e => setEditingDegree(p => ({ ...p, field: e.target.value }))}
+                                        value={newDegree.field}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            setNewDegree(p => ({ ...p, field: val.charAt(0).toUpperCase() + val.slice(1) }));
+                                        }}
                                         style={inlineInput(1.5)}
                                     />
                                     <input
                                         placeholder="Institution e.g. Harvard University"
-                                        value={editingDegree.institution}
-                                        onChange={e => setEditingDegree(p => ({ ...p, institution: e.target.value }))}
+                                        value={newDegree.institution}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            setNewDegree(p => ({ ...p, institution: val.charAt(0).toUpperCase() + val.slice(1) }));
+                                        }}
                                         style={inlineInput(1.5)}
                                     />
                                     <button
                                         style={addBtn}
                                         onClick={() => {
-                                            if (!editingDegree.title.trim()) return;
-                                            setFormData(p => ({
-                                                ...p,
-                                                degrees: p.degrees.map((d, idx) => idx === i ? editingDegree : d)
-                                            }));
-                                            setEditingDegreeIdx(null);
+                                            if (!newDegree.title.trim()) return;
+                                            setFormData(p => ({ ...p, degrees: [...(p.degrees || []), newDegree] }));
+                                            setNewDegree({ title: '', field: '', institution: '' });
+                                            setShowAddDegree(false);
                                         }}
                                     >
-                                        Save
+                                        Add
                                     </button>
-                                    <button style={cancelIconBtn} onClick={() => setEditingDegreeIdx(null)}>
+                                    <button style={cancelIconBtn} onClick={() => { setShowAddDegree(false); setNewDegree({ title: '', field: '', institution: '' }); }}>
                                         <X size={16} />
                                     </button>
                                 </div>
                             ) : (
-                                <div key={i} className={styles.detailFieldItem}>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                        <span style={{ fontSize: 16 }}>🎓</span>
-                                        <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
-                                            {deg.title}{deg.field ? ` — ${deg.field}` : ''}{deg.institution ? ` · ${deg.institution}` : ''}
-                                        </span>
-                                    </span>
-                                    <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
-                                        <button
-                                            style={{ background: 'transparent', border: 'none', color: '#c084fc', cursor: 'pointer', padding: 4 }}
-                                            onClick={() => { setEditingDegreeIdx(i); setEditingDegree(deg); }}
-                                        >
-                                            <Edit2 size={14} />
-                                        </button>
-                                        <button
-                                            style={trashBtn}
-                                            onClick={() => setFormData(p => ({ ...p, degrees: p.degrees.filter((_, idx) => idx !== i) }))}
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                    </div>
-                                </div>
+                                <button style={dashedAddBtn} onClick={() => setShowAddDegree(true)}>
+                                    + Add Degree
+                                </button>
                             )}
-                        </div>
-                    ))}
-
-                    {showAddDegree ? (
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', flexWrap: 'wrap' }}>
-                            <select
-                                value={newDegree.title}
-                                onChange={e => setNewDegree(p => ({ ...p, title: e.target.value }))}
-                                style={inlineInput(1)}
-                            >
-                                <option value="">Degree type</option>
-                                <option value="High School Diploma">Diploma</option>
-                                <option value="Bachelor's">Bachelor's</option>
-                                <option value="Master's">Master's</option>
-                                <option value="PhD">PhD</option>
-
-                            </select>
-                            <input
-                                placeholder="Field e.g. Computer Science"
-                                value={newDegree.field}
-                                onChange={e => {
-                                    const val = e.target.value;
-                                    setNewDegree(p => ({ ...p, field: val.charAt(0).toUpperCase() + val.slice(1) }));
-                                }}
-                                style={inlineInput(1.5)}
-                            />
-                            <input
-                                placeholder="Institution e.g. Harvard University"
-                                value={newDegree.institution}
-                                onChange={e => {
-                                    const val = e.target.value;
-                                    setNewDegree(p => ({ ...p, institution: val.charAt(0).toUpperCase() + val.slice(1) }));
-                                }}
-                                style={inlineInput(1.5)}
-                            />
-                            <button
-                                style={addBtn}
-                                onClick={() => {
-                                    if (!newDegree.title.trim()) return;
-                                    setFormData(p => ({ ...p, degrees: [...(p.degrees || []), newDegree] }));
-                                    setNewDegree({ title: '', field: '', institution: '' });
-                                    setShowAddDegree(false);
-                                }}
-                            >
-                                Add
-                            </button>
-                            <button style={cancelIconBtn} onClick={() => { setShowAddDegree(false); setNewDegree({ title: '', field: '', institution: '' }); }}>
-                                <X size={16} />
-                            </button>
-                        </div>
-                    ) : (
-                        <button style={dashedAddBtn} onClick={() => setShowAddDegree(true)}>
-                            + Add Degree
-                        </button>
+                        </>
                     )}
 
                     {/* ── Instructor only: Teaching Positions + Education ── */}
@@ -615,12 +750,9 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                             {(formData.degrees || []).map((deg, i) => (
                                 <div key={i} className={styles.detailFieldItem}>
                                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                        <span style={{ fontSize: 16 }}>🎓</span>
+                                        <span style={{ fontSize: 16 }}> <img src={EducationIcon} style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }}/></span>
                                         <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
-                                            {/* Use degree_type and major instead of title and field */}
-                                            {deg.degree_type || deg.title}
-                                            {(deg.major || deg.field) ? ` — ${deg.major || deg.field}` : ''}
-                                            {deg.institution ? ` at ${deg.institution}` : ''}
+                                            {deg.university || deg.institution}
                                         </span>
                                     </span>
                                     <button
@@ -631,6 +763,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     </button>
                                 </div>
                             ))}
+
                             {showAddEducation ? (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0' }}>
                                     <input
@@ -878,6 +1011,138 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                             <button className={styles.modalConfirmBtn} onClick={handleConfirmDelete}>
                                 Yes, remove it
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* ══════════════════════════════════════
+    COMMUNITY PICKS MODAL
+══════════════════════════════════════ */}
+            {showPicksModal && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 1000,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)'
+                }}
+                    onClick={() => setShowPicksModal(false)}
+                >
+                    <div style={{
+                        position: 'relative', background: '#333333', borderRadius: 24,
+                        padding: 32, width: '90%', maxWidth: 650,
+                        maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.4)', boxSizing: 'border-box'
+                    }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div style={{
+                            display: 'flex', justifyContent: 'space-between',
+                            alignItems: 'center', marginBottom: 24,
+                            paddingBottom: 16, borderBottom: '1px solid #4D4D4D'
+                        }}>
+                            <div>
+                                <h2 style={{ margin: 0, color: '#E6E6E6', fontSize: '1.4rem', fontWeight: 600 }}>
+                                    Community Picks
+                                </h2>
+                                <p style={{ margin: '4px 0 0', color: '#808080', fontSize: '0.8rem' }}>
+                                    Select up to 3 communities to feature on your profile
+                                </p>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                <span style={{ color: '#B3B3B3', fontSize: '0.9rem', fontWeight: 500 }}>
+                                    {(formData.communityPicks || []).length}/3
+                                </span>
+                                <button
+                                    onClick={() => setShowPicksModal(false)}
+                                    style={{
+                                        background: 'none', border: 'none',
+                                        color: '#808080', fontSize: '1.5rem',
+                                        cursor: 'pointer', lineHeight: 1, padding: 0
+                                    }}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* List */}
+                        <div style={{
+                            flex: 1, overflowY: 'auto',
+                            display: 'flex', flexDirection: 'column', gap: 12,
+                            paddingRight: 8
+                        }}>
+                            {picksLoading ? (
+                                <p style={{ color: '#808080', textAlign: 'center', marginTop: 40 }}>Loading...</p>
+                            ) : joinedCommunities.length === 0 ? (
+                                <p style={{ color: '#808080', textAlign: 'center', marginTop: 40 }}>
+                                    You haven't joined any communities yet.
+                                </p>
+                            ) : joinedCommunities.map(community => {
+                                const isPicked = (formData.communityPicks || []).some(p => p.id === community.id);
+                                const atLimit = (formData.communityPicks || []).length >= 3;
+
+                                return (
+                                    <div key={community.id} style={{ position: 'relative' }}>
+                                        {/* CommunityCard with Pick button overlay */}
+                                        <div style={{
+                                            borderRadius: 16, overflow: 'hidden',
+                                            backgroundImage: `linear-gradient(to right, rgba(25,25,25,0.95) 10%, rgba(25,25,25,0.7) 40%, rgba(25,25,25,0.2) 100%), url(${community.image})`,
+                                            backgroundSize: 'cover', backgroundPosition: 'center',
+                                            padding: '16px 20px',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                            border: isPicked ? '1px solid rgba(139,45,255,0.5)' : '1px solid transparent',
+                                        }}>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <h3 style={{
+                                                    margin: '0 0 4px', color: 'white',
+                                                    fontSize: '0.95rem', fontWeight: 700,
+                                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                                                }}>
+                                                    {community.name}
+                                                </h3>
+                                                <p style={{
+                                                    margin: 0, color: 'rgba(255,255,255,0.55)',
+                                                    fontSize: '0.78rem', lineHeight: 1.4,
+                                                    display: '-webkit-box', WebkitLineClamp: 2,
+                                                    WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                                                }}>
+                                                    {community.description || 'No description available.'}
+                                                </p>
+                                            </div>
+
+                                            <button
+                                                onClick={() => {
+                                                    setFormData(p => {
+                                                        const picks = p.communityPicks || [];
+                                                        if (isPicked) {
+                                                            return { ...p, communityPicks: picks.filter(c => c.id !== community.id) };
+                                                        }
+                                                        if (picks.length >= 3) return p;
+                                                        return { ...p, communityPicks: [...picks, community] };
+                                                    });
+                                                }}
+                                                disabled={!isPicked && atLimit}
+                                                style={{
+                                                    flexShrink: 0, marginLeft: 16,
+                                                    padding: '8px 20px', borderRadius: 20,
+                                                    fontWeight: 600, fontSize: '0.85rem',
+                                                    cursor: (!isPicked && atLimit) ? 'not-allowed' : 'pointer',
+                                                    border: 'none',
+                                                    background: isPicked
+                                                        ? 'rgba(139,45,255,0.3)'
+                                                        : (!isPicked && atLimit)
+                                                            ? 'rgba(255,255,255,0.05)'
+                                                            : 'linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))',
+                                                    color: (!isPicked && atLimit) ? 'rgba(255,255,255,0.3)' : 'white',
+                                                    transition: 'all 0.15s'
+                                                }}
+                                            >
+                                                {isPicked ? 'Unpick' : 'Pick'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

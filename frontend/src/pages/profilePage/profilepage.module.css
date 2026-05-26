@@ -827,7 +827,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 28px 28px 20px 28px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  
   margin-bottom: 28px;
 }
 
@@ -857,8 +857,8 @@ body {
 }
 
 .whiteHeaderText {
-  color: white;
-  font-size: 1.5rem;
+  color: #CCCCCC;
+  font-size: 1.8rem;
   font-weight: 700;
   margin: 0;
 }
@@ -897,8 +897,8 @@ body {
 }
 
 .savePill:hover {
-  background: #9b51e0;
-  border-color: #9b51e0;
+  background: #5A5A5A;
+  
 }
 
 /* ── Media Area ── */
@@ -990,7 +990,7 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.65);
+  background: transparent;
   color: white;
   border: none;
   width: 36px;
@@ -1171,8 +1171,8 @@ body {
 }
 
 .sectionLabelDivider {
-  color: #999;
-  font-size: 0.85rem;
+  color: #CCCCCC;
+  font-size: 1.3rem;
   font-weight: 600;
   margin: 24px 0 8px;
   display: flex;
@@ -1184,14 +1184,14 @@ body {
 .dividerLine {
   flex: 1;
   height: 1px;
-  background: #2a2a2a;
+  background: #606060;
 }
 
 .detailFieldItem {
   display: flex;
   align-items: center;
   padding: 14px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+
   gap: 12px;
 }
 
