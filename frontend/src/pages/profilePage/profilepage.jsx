@@ -1063,7 +1063,7 @@ export default function ProfilePage({ type }) {
                                 <div style={{
                                     background: "rgba(61,60,60,0.45)", borderRadius: 20,
                                     padding: "20px 20px 16px", border: "1px solid rgba(255,255,255,0.08)",
-                                    backdropFilter: "blur(10px)", margin: "0 0 -10%"
+                                    backdropFilter: "blur(10px)", margin: "-10% 0 -10%"
                                 }}>
                                     <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
                                         <img src={Events} alt="events" style={{
