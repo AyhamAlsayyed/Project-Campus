@@ -25,6 +25,7 @@ import Star from '../../Assets/icons/star.png';
 import Events from '../../Assets/icons/event.png';
 import Share from '../../Assets/icons/share.png';
 import Bin from '../../Assets/icons/bin.png';
+import ArrowRight from '../../Assets/icons/arrow-right.png'
 import Info from '../../Assets/icons/info.png';
 import { AlertCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -76,6 +77,10 @@ export default function ProfilePage({ type }) {
     const [menuOpen, setMenuOpen] = useState(false);
     const [unfriendPopup, setUnfriendPopup] = useState(false);
     const menuRef = useRef(null);
+    const [showPicksModal, setShowPicksModal] = useState(false);
+    const [joinedCommunities, setJoinedCommunities] = useState([]);
+    const [picksLoading, setPicksLoading] = useState(false);
+    const [modalPicks, setModalPicks] = useState([]);
     useEffect(() => {
         const close = (e) => {
             if (menuRef.current && !menuRef.current.contains(e.target))
@@ -1049,7 +1054,160 @@ export default function ProfilePage({ type }) {
                         {userLoading && <div className={styles.notice}>Loading profile...</div>}
                     </div>
                     <div className={styles.rightSection}>
-                        {isOwnProfile ? (
+                        {isOwnProfile && user?.role === 'instructor' ? (
+                            <>
+                                {/* Recently Contacted — always shows */}
+                                <FriendsSuggestion />
+
+                                {/* Reminders — own container */}
+                                <div style={{
+                                    background: "rgba(61,60,60,0.45)", borderRadius: 20,
+                                    padding: "20px 20px 16px", border: "1px solid rgba(255,255,255,0.08)",
+                                    backdropFilter: "blur(10px)", margin: "0 0 -10%"
+                                }}>
+                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
+                                        <img src={Events} alt="events" style={{
+                                            width: 30, height: 30, flexShrink: 0,
+                                            filter: "brightness(0) saturate(100%) invert(22%) sepia(80%) saturate(1300%) hue-rotate(280deg) brightness(90%)"
+                                        }} />
+                                        <span style={{ color: "white", fontWeight: 700, fontSize: "1.5rem", marginLeft: 8 }}>
+                                            Reminders set
+                                        </span>
+                                        <span
+                                            onClick={() => setShowRemindersMonthPicker(p => !p)}
+                                            style={{
+                                                color: "rgba(255,255,255,0.45)", fontSize: "0.85rem", marginLeft: "auto",
+                                                borderBottom: "1.5px solid #A6279C", cursor: "pointer",
+                                                userSelect: "none", transition: "color 0.15s"
+                                            }}
+                                            onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.75)"}
+                                            onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.45)"}
+                                        >
+                                            {remindersMonth.toLocaleString('default', { month: 'long' })} {remindersMonth.getFullYear()}
+                                        </span>
+                                    </div>
+
+                                    <div style={{ width: "75%", height: 1, background: "#666666", margin: "0 auto 16px" }} />
+
+                                    {(() => {
+                                        const upcoming = reminders
+                                            .map(e => ({ ...e, _d: new Date(e.start_date || e.date || e.event_date) }))
+                                            .filter(e => e._d >= new Date())
+                                            .sort((a, b) => a._d - b._d);
+                                        const next = upcoming[0];
+                                        const daysLeft = next ? Math.ceil((next._d - new Date()) / 86400000) : null;
+                                        return (
+                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                                    <span style={{ color: "#999999", fontSize: "0.85rem", fontWeight: 500 }}>
+                                                        {daysLeft !== null ? `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left` : 'No upcoming events'}
+                                                    </span>
+                                                    {next && (
+                                                        <span style={{ color: "white", fontSize: "1rem", fontWeight: 600 }}>
+                                                            Upcoming event on {next._d.getDate()}{['st', 'nd', 'rd'][((next._d.getDate() + 90) % 100 - 10) % 10 - 1] || 'th'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {next && (
+                                                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                                        {/* Stacked avatars */}
+                                                        <div style={{ display: "flex", alignItems: "center" }}>
+                                                            {upcoming.slice(0, 3).map((event, i) => {
+                                                                const avatar = event.page?.avatar || event.host?.avatar;
+                                                                return avatar ? (
+                                                                    <img
+                                                                        key={event.id}
+                                                                        src={resolveUrl(avatar)}
+                                                                        alt=""
+                                                                        style={{
+                                                                            width: 46, height: 46, borderRadius: "50%",
+                                                                            objectFit: "cover",
+                                                                            border: "2.5px solid rgba(61,60,60,0.9)",
+                                                                            marginLeft: i === 0 ? 0 : -16,
+                                                                            zIndex: upcoming.slice(0, 3).length - i,
+                                                                            position: "relative"
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <div
+                                                                        key={event.id || i}
+                                                                        style={{
+                                                                            width: 46, height: 46, borderRadius: "50%",
+                                                                            background: "rgba(255,255,255,0.08)",
+                                                                            border: "2.5px solid rgba(61,60,60,0.9)",
+                                                                            display: "flex", alignItems: "center", justifyContent: "center",
+                                                                            marginLeft: i === 0 ? 0 : -16,
+                                                                            zIndex: upcoming.slice(0, 3).length - i,
+                                                                            position: "relative"
+                                                                        }}
+                                                                    >
+                                                                        <User size={18} color="rgba(255,255,255,0.4)" />
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                        <img
+                                                            src={ArrowRight}
+                                                            alt=""
+                                                            onClick={() => navigate('/events', { state: { highlightId: next.id } })}
+                                                            style={{ width: 20, height: 20, filter: "brightness(0) invert(0.9)", cursor: "pointer" }}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+
+                                {/* Your Picks — own container */}
+                                <div style={{
+                                    background: "rgba(61,60,60,0.45)", borderRadius: 25,
+                                    padding: "23px 20px 23px", border: "1px solid rgba(255,255,255,0.08)",
+                                    backdropFilter: "blur(10px)", marginTop: 0
+                                }}>
+                                    <div style={{ display: "flex", alignItems: "center" }}>
+                                        <img src={Community} alt="" style={{
+                                            width: 25, height: 20, flexShrink: 0,
+                                            filter: "brightness(0) saturate(100%) invert(23%) sepia(85%) saturate(1200%) hue-rotate(280deg) brightness(90%)"
+                                        }} />
+                                        <span style={{ color: "white", fontWeight: 700, fontSize: "1.3rem", marginLeft: 8 }}>
+                                            Your Picks
+                                        </span>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: "auto" }}>
+                                            <span style={{ color: "#999999", fontSize: "0.85rem", fontWeight: 500 }}>
+                                                {(user?.community_picks || []).length}/3
+                                            </span>
+                                            <button
+                                                onClick={async () => {
+                                                    setModalPicks(user?.community_picks || []);
+                                                    setShowPicksModal(true);
+                                                    setPicksLoading(true);
+                                                    try {
+                                                        const res = await fetch(`${API}/api/communities/?filter=joined`, {
+                                                            headers: { Authorization: `Bearer ${token}` }
+                                                        });
+                                                        if (res.ok) {
+                                                            const data = await res.json();
+                                                            setJoinedCommunities(data.map(c => ({ ...c, bgImage: c.image })));
+                                                        }
+                                                    } catch (e) { console.error(e); }
+                                                    finally { setPicksLoading(false); }
+                                                }}
+                                                style={{
+                                                    background: '#4D4D4D', border: 'none', borderRadius: 20,
+                                                    padding: '8px 20px', color: '#CCCCCC', fontSize: '0.9rem',
+                                                    fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.background = '#666666'}
+                                                onMouseLeave={e => e.currentTarget.style.background = '#4D4D4D'}
+                                            >
+                                                Manage
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        ) : isOwnProfile ? (
                             <>
                                 <FriendsSuggestion />
                                 {(() => {
@@ -1071,12 +1229,12 @@ export default function ProfilePage({ type }) {
                                     return (
                                         <div style={{
                                             background: "rgba(61,60,60,0.45)", borderRadius: 20,
-                                            padding: "20px 20px 16px", border: "1px solid rgba(255,255,255,0.08)",
+                                           padding: "14px 16px 12px", border: "1px solid rgba(255,255,255,0.08)",
                                             backdropFilter: "blur(10px)", marginTop: 16, position: "relative"
                                         }}>
                                             <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-                                                <img src={Events} alt="events" style={{ width: 20, height: 20, flexShrink: 0, filter: "brightness(0) saturate(100%) invert(22%) sepia(80%) saturate(1300%) hue-rotate(280deg) brightness(90%)" }} />
-                                                <span style={{ color: "white", fontWeight: 700, fontSize: "1.1rem", marginLeft: 8 }}>
+                                                <img src={Events} alt="events" style={{ width: 30, height: 30, flexShrink: 0, filter: "brightness(0) saturate(100%) invert(22%) sepia(80%) saturate(1300%) hue-rotate(280deg) brightness(90%)" }} />
+                                                <span style={{ color: "white", fontWeight: 700, fontSize: "1.6rem", marginLeft: 8 }}>
                                                     Reminders set
                                                 </span>
                                                 <span
@@ -1094,76 +1252,46 @@ export default function ProfilePage({ type }) {
                                             </div>
                                             {showRemindersMonthPicker && (
                                                 <div style={{
-                                                    position: "absolute",        // ← float over content
-                                                    top: 56,                     // ← sits just below the header row
-                                                    left: 0,
-                                                    right: 0,
-                                                    zIndex: 50,                  // ← above the calendar grid
-                                                    background: "#252525",
-                                                    border: "1px solid rgba(255,255,255,0.1)",
-                                                    borderRadius: 16, padding: 14,
-                                                    boxShadow: "0 16px 40px rgba(0,0,0,0.6)",
-                                                    margin: "0 0 0 0"           // ← remove the old marginBottom
+                                                    position: "absolute", top: 56, left: 0, right: 0, zIndex: 50,
+                                                    background: "#252525", border: "1px solid rgba(255,255,255,0.1)",
+                                                    borderRadius: 16, padding: 14, boxShadow: "0 16px 40px rgba(0,0,0,0.6)"
                                                 }}>
-                                                    {/* Year navigation */}
                                                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                                                         <button
                                                             onClick={() => setRemindersMonth(new Date(year - 1, month, 1))}
                                                             disabled={year <= 2026}
-                                                            style={{
-                                                                background: "transparent", border: "none",
-                                                                color: year <= 2026 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)",
-                                                                fontSize: "1.2rem", cursor: year <= 2026 ? "not-allowed" : "pointer",
-                                                                width: 28, height: 28, borderRadius: "50%",
-                                                                display: "flex", alignItems: "center", justifyContent: "center"
-                                                            }}
+                                                            style={{ background: "transparent", border: "none", color: year <= 2026 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)", fontSize: "1.2rem", cursor: year <= 2026 ? "not-allowed" : "pointer", width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
                                                         >‹</button>
                                                         <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem" }}>{year}</span>
                                                         <button
                                                             onClick={() => setRemindersMonth(new Date(year + 1, month, 1))}
                                                             disabled={year >= new Date().getFullYear() + 2}
-                                                            style={{
-                                                                background: "transparent", border: "none",
-                                                                color: year >= new Date().getFullYear() + 2 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)",
-                                                                fontSize: "1.2rem", cursor: year >= new Date().getFullYear() + 2 ? "not-allowed" : "pointer",
-                                                                width: 28, height: 28, borderRadius: "50%",
-                                                                display: "flex", alignItems: "center", justifyContent: "center"
-                                                            }}
+                                                            style={{ background: "transparent", border: "none", color: year >= new Date().getFullYear() + 2 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)", fontSize: "1.2rem", cursor: year >= new Date().getFullYear() + 2 ? "not-allowed" : "pointer", width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
                                                         >›</button>
                                                     </div>
-
-                                                    {/* Month grid */}
                                                     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
                                                         {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => {
                                                             const isSelected = i === month;
                                                             return (
                                                                 <button
                                                                     key={m}
-                                                                    onClick={() => {
-                                                                        setRemindersMonth(new Date(year, i, 1));
-                                                                        setShowRemindersMonthPicker(false);
-                                                                    }}
+                                                                    onClick={() => { setRemindersMonth(new Date(year, i, 1)); setShowRemindersMonthPicker(false); }}
                                                                     style={{
-                                                                        background: isSelected
-                                                                            ? "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))"
-                                                                            : "transparent",
+                                                                        background: isSelected ? "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))" : "transparent",
                                                                         border: "none", borderRadius: 10,
                                                                         color: isSelected ? "#fff" : "rgba(255,255,255,0.7)",
                                                                         padding: "8px 4px", fontSize: "0.8rem",
-                                                                        fontWeight: isSelected ? 700 : 400,
-                                                                        cursor: "pointer", transition: "background 0.15s"
+                                                                        fontWeight: isSelected ? 700 : 400, cursor: "pointer", transition: "background 0.15s"
                                                                     }}
                                                                     onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
                                                                     onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
-                                                                >
-                                                                    {m}
-                                                                </button>
+                                                                >{m}</button>
                                                             );
                                                         })}
                                                     </div>
                                                 </div>
                                             )}
-
+                                            
                                             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
                                                 {cells.map((day, i) => {
                                                     const hasEvent = day && eventDays.has(day);
@@ -1180,8 +1308,7 @@ export default function ProfilePage({ type }) {
                                                             }}
                                                             style={{
                                                                 display: "flex", alignItems: "center", justifyContent: "center",
-                                                                width: 30, height: 30, margin: "2px auto",
-                                                                borderRadius: "50%",
+                                                                width: 30, height: 30, margin: "2px auto", borderRadius: "50%",
                                                                 background: hasEvent ? "#A4279C" : "transparent",
                                                                 color: day ? (hasEvent ? "white" : "rgba(255,255,255,0.7)") : "transparent",
                                                                 fontSize: "0.78rem", fontWeight: hasEvent ? 700 : 400,
@@ -1220,21 +1347,14 @@ export default function ProfilePage({ type }) {
                                                     onMouseEnter={() => setHoverRating(star)}
                                                     onMouseLeave={() => setHoverRating(0)}
                                                     onClick={() => handleReview(star)}
-                                                    style={{
-                                                        background: "none", border: "none", cursor: "pointer",
-                                                        padding: 0,
-                                                        transition: "filter 0.15s, transform 0.15s",
-                                                        transform: star <= (hoverRating || reviewRating) ? "scale(1.1)" : "scale(1)"
-                                                    }}
+                                                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, transition: "filter 0.15s, transform 0.15s", transform: star <= (hoverRating || reviewRating) ? "scale(1.1)" : "scale(1)" }}
                                                 >
                                                     <img
                                                         src={Star}
                                                         alt="star"
                                                         style={{
                                                             width: "1.9rem", height: "1.9rem", display: "block",
-                                                            filter: star <= (hoverRating || reviewRating)
-                                                                ? "brightness(0) invert(1) opacity(0.72)"        // #B8B8B8
-                                                                : "brightness(0) invert(1) opacity(0.28)"        // dark unselected
+                                                            filter: star <= (hoverRating || reviewRating) ? "brightness(0) invert(1) opacity(0.72)" : "brightness(0) invert(1) opacity(0.28)"
                                                         }}
                                                     />
                                                 </button>
@@ -1250,48 +1370,26 @@ export default function ProfilePage({ type }) {
                                 {communityPicks.length > 0 && (
                                     <div className={styles.picksCard}>
                                         <div className={styles.picksHeader}>
-                                            <img
-                                                src={Community}
-                                                alt="icon"
-                                                className={styles.picksIconPng}
-                                                style={{ filter: 'brightness(0) saturate(100%) invert(23%) sepia(85%) saturate(1200%) hue-rotate(280deg) brightness(90%)' }}
-                                            />
+                                            <img src={Community} alt="icon" className={styles.picksIconPng} style={{ filter: 'brightness(0) saturate(100%) invert(23%) sepia(85%) saturate(1200%) hue-rotate(280deg) brightness(90%)' }} />
                                             <span className={styles.picksTitle}>{user?.username?.split(' ')[0]}'s Picks</span>
                                         </div>
-
                                         <div className={styles.picksSlideWrapper}>
                                             {communityPicks[picksSlide] && (() => {
                                                 const pick = communityPicks[picksSlide];
                                                 return (
-                                                    <div
-                                                        className={styles.pickItemCard}
-                                                        style={{ backgroundImage: `url(${pick.image})` }}
-                                                    >
+                                                    <div className={styles.pickItemCard} style={{ backgroundImage: `url(${pick.image})` }}>
                                                         <div className={styles.pickOverlay}>
                                                             <div className={styles.pickContentTop}>
                                                                 <div className={styles.pickTitleGroup}>
                                                                     <h2 className={styles.pickName}>{pick.name}</h2>
-                                                                    {pick.is_verified && (
-                                                                        <img src={VerifiedBadge} alt="Verified" width={18} height={18} style={{ filter: "brightness(0) invert(1)" }} />
-                                                                    )}
+                                                                    {pick.is_verified && <img src={VerifiedBadge} alt="Verified" width={18} height={18} style={{ filter: "brightness(0) invert(1)" }} />}
                                                                 </div>
-                                                                <button
-                                                                    className={styles.pickViewBtn}
-                                                                    onClick={() => navigate(`/communities/${pick.id}`)}
-                                                                >
-                                                                    view
-                                                                </button>
+                                                                <button className={styles.pickViewBtn} onClick={() => navigate(`/communities/${pick.id}`)}>view</button>
                                                             </div>
-
                                                             <div className={styles.pickContentBottom}>
                                                                 <p className={styles.pickDescription}>{pick.description}</p>
                                                                 {pick.description?.length > 80 && (
-                                                                    <button
-                                                                        className={styles.readMore}
-                                                                        onClick={() => setPicksPopup(pick)}
-                                                                    >
-                                                                        read more
-                                                                    </button>
+                                                                    <button className={styles.readMore} onClick={() => setPicksPopup(pick)}>read more</button>
                                                                 )}
                                                             </div>
                                                         </div>
@@ -1299,7 +1397,6 @@ export default function ProfilePage({ type }) {
                                                 );
                                             })()}
                                         </div>
-
                                         <div className={styles.paginationRow}>
                                             <button className={styles.navArrow} onClick={() => setPicksSlide(prev => Math.max(0, prev - 1))} disabled={picksSlide === 0}>
                                                 <div className={styles.arrowLeft} />
@@ -1315,33 +1412,12 @@ export default function ProfilePage({ type }) {
                                         </div>
                                     </div>
                                 )}
-
-                                {/* Picks popup — outside the picks card */}
                                 {picksPopup && createPortal(
-                                    <div style={{
-                                        position: "fixed", inset: 0, zIndex: 9999,
-                                        background: "rgba(0,0,0,0.6)", backdropFilter: "blur(5px)",
-                                        display: "flex", alignItems: "center", justifyContent: "center"
-                                    }} onClick={() => setPicksPopup(null)}>
-                                        <div style={{
-                                            background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.1)",
-                                            borderRadius: 20, padding: 32, width: "90%", maxWidth: 500,
-                                            position: "relative", boxShadow: "0 10px 40px rgba(0,0,0,0.5)"
-                                        }} onClick={e => e.stopPropagation()}>
-                                            <button onClick={() => setPicksPopup(null)} style={{
-                                                position: "absolute", top: 16, right: 16,
-                                                background: "none", border: "none",
-                                                color: "rgba(255,255,255,0.5)", fontSize: 20, cursor: "pointer"
-                                            }}>✕</button>
-                                            <h3 style={{ color: "#fff", fontSize: 24, fontWeight: 800, margin: "0 0 16px" }}>
-                                                {picksPopup.name}
-                                            </h3>
-                                            <p style={{
-                                                color: "rgba(255,255,255,0.85)", fontSize: 15,
-                                                lineHeight: 1.6, margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word"
-                                            }}>
-                                                {picksPopup.description}
-                                            </p>
+                                    <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setPicksPopup(null)}>
+                                        <div style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 32, width: "90%", maxWidth: 500, position: "relative", boxShadow: "0 10px 40px rgba(0,0,0,0.5)" }} onClick={e => e.stopPropagation()}>
+                                            <button onClick={() => setPicksPopup(null)} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 20, cursor: "pointer" }}>✕</button>
+                                            <h3 style={{ color: "#fff", fontSize: 24, fontWeight: 800, margin: "0 0 16px" }}>{picksPopup.name}</h3>
+                                            <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 15, lineHeight: 1.6, margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{picksPopup.description}</p>
                                         </div>
                                     </div>,
                                     document.body
@@ -1647,6 +1723,137 @@ export default function ProfilePage({ type }) {
                 </div>,
                 document.body
             )}
+            {showPicksModal && createPortal(
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 9999,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                }}
+                    onClick={() => setShowPicksModal(false)}
+                >
+                    <div style={{
+                        position: 'relative', background: '#333333', borderRadius: 24,
+                        padding: 32, width: '90%', maxWidth: 650,
+                        maxHeight: '60vh', display: 'flex', flexDirection: 'column',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.4)', boxSizing: 'border-box',
+                        overflowY: 'auto',
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: 'rgba(255,255,255,0.15) transparent',
+                    }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div style={{
+                            display: 'flex', justifyContent: 'space-between',
+                            alignItems: 'center', marginBottom: 24,
+                            paddingBottom: 16, borderBottom: '1px solid #4D4D4D'
+                        }}>
+                            <div>
+                                <h2 style={{ margin: 0, color: '#E6E6E6', fontSize: '1.4rem', fontWeight: 600 }}>
+                                    Community Picks
+                                </h2>
+                                <p style={{ margin: '4px 0 0', color: '#808080', fontSize: '0.8rem' }}>
+                                    Select up to 3 communities to feature on your profile
+                                </p>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                <span style={{ color: '#B3B3B3', fontSize: '0.9rem', fontWeight: 500 }}>
+                                    {(modalPicks).length}/3
+                                </span>
+                                <button
+                                    onClick={() => setShowPicksModal(false)}
+                                    style={{
+                                        background: 'none', border: 'none',
+                                        color: '#808080', fontSize: '1.5rem',
+                                        cursor: 'pointer', lineHeight: 1, padding: 0
+                                    }}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* List */}
+                        <div style={{
+                            flex: 1, overflowY: 'auto',
+                            display: 'flex', flexDirection: 'column', gap: 12,
+                            paddingRight: 8
+                        }}>
+                            {picksLoading ? (
+                                <p style={{ color: '#808080', textAlign: 'center', marginTop: 40 }}>Loading...</p>
+                            ) : joinedCommunities.length === 0 ? (
+                                <p style={{ color: '#808080', textAlign: 'center', marginTop: 40 }}>
+                                    You haven't joined any communities yet.
+                                </p>
+                            ) : joinedCommunities.map(community => {
+                                const isPicked = modalPicks.some(p => p.id === community.id);
+                                const atLimit = modalPicks.length >= 3;
+
+                                return (
+                                    <div key={community.id} style={{ position: 'relative' }}>
+                                        {/* CommunityCard with Pick button overlay */}
+                                        <div style={{
+                                            borderRadius: 16, overflow: 'hidden',
+                                            backgroundImage: `linear-gradient(to right, rgba(25,25,25,0.95) 10%, rgba(25,25,25,0.7) 40%, rgba(25,25,25,0.2) 100%), url(${community.image})`,
+                                            backgroundSize: 'cover', backgroundPosition: 'center',
+                                            padding: '16px 20px',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                            border: isPicked ? '1px solid rgba(139,45,255,0.5)' : '1px solid transparent',
+                                        }}>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <h3 style={{
+                                                    margin: '0 0 4px', color: 'white',
+                                                    fontSize: '0.95rem', fontWeight: 700,
+                                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                                                }}>
+                                                    {community.name}
+                                                </h3>
+                                                <p style={{
+                                                    margin: 0, color: 'rgba(255,255,255,0.55)',
+                                                    fontSize: '0.78rem', lineHeight: 1.4,
+                                                    display: '-webkit-box', WebkitLineClamp: 2,
+                                                    WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                                                }}>
+                                                    {community.description || 'No description available.'}
+                                                </p>
+                                            </div>
+
+                                            <button
+                                                onClick={() => {
+                                                    if (isPicked) {
+                                                        setModalPicks(prev => prev.filter(c => c.id !== community.id));
+                                                    } else {
+                                                        if (modalPicks.length >= 3) return;
+                                                        setModalPicks(prev => [...prev, community]);
+                                                    }
+                                                }}
+                                                disabled={!isPicked && atLimit}
+                                                style={{
+                                                    flexShrink: 0, marginLeft: 16,
+                                                    padding: '8px 20px', borderRadius: 20,
+                                                    fontWeight: 600, fontSize: '0.85rem',
+                                                    cursor: (!isPicked && atLimit) ? 'not-allowed' : 'pointer',
+                                                    border: 'none',
+                                                    background: isPicked
+                                                        ? 'rgba(139,45,255,0.3)'
+                                                        : (!isPicked && atLimit)
+                                                            ? 'rgba(255,255,255,0.05)'
+                                                            : 'linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))',
+                                                    color: (!isPicked && atLimit) ? 'rgba(255,255,255,0.3)' : 'white',
+                                                    transition: 'all 0.15s'
+                                                }}
+                                            >
+                                                {isPicked ? 'Unpick' : 'Pick'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+                , document.body)}
+
         </div>
     );
 }

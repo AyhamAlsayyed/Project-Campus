@@ -1665,3 +1665,20 @@ body {
     0%   { transform: translateX(100%); }
     100% { transform: translateX(-100%); }
 }
+/* Picks modal scrollbar */
+.picksModalInner::-webkit-scrollbar {
+    width: 5px;
+}
+
+.picksModalInner::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.picksModalInner::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+}
+
+.picksModalInner::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.25);
+}

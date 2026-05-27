@@ -53,6 +53,19 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
     const [showPicksModal, setShowPicksModal] = useState(false);
     const [joinedCommunities, setJoinedCommunities] = useState([]);
     const [picksLoading, setPicksLoading] = useState(false);
+    const [showTitleDropdown, setShowTitleDropdown] = useState(false);
+    const [titleDropdownPos, setTitleDropdownPos] = useState({ top: 0, left: 0 });
+    const titleBtnRef = useRef(null);
+    useEffect(() => {
+        if (!showTitleDropdown) return;
+        const close = () => setShowTitleDropdown(false);
+        document.addEventListener('mousedown', close);
+        document.addEventListener('scroll', close, true);
+        return () => {
+            document.removeEventListener('mousedown', close);
+            document.removeEventListener('scroll', close, true);
+        };
+    }, [showTitleDropdown]);
 
 
 
@@ -82,6 +95,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
         handleUsernameChange, handleAvatarChange, handleCoverChange,
         handleSendOtp, handleOtpChange, handleOtpKeyDown, handleCheckOtp,
         handleEditSave, handleEditCancel,
+         usernameChecking,
     } = edit;
     useEffect(() => {
         if (!showCoverDropdown) return;
@@ -268,59 +282,215 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                 <div style={{ display: "flex", gap: 16, marginBottom: 4, alignItems: "stretch" }}>
                     {/* Left: 2×2 inputs */}
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
-                        <div style={{ display: "flex", gap: 12 }}>
-                            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+
+                        {isInstructor ? (
+                            <>
+                                {/* Row 1: Title dropdown + Username */}
+                                {/* Row 1: Title dropdown + Arrow + Username */}
+                                <div style={{ display: "flex", gap: 12, alignItems: "stretch" }}>
+
+                                    {/* Title button */}
+                                    <button
+                                        ref={titleBtnRef}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const rect = titleBtnRef.current.getBoundingClientRect();
+                                            setTitleDropdownPos({ top: rect.bottom + 8, left: rect.left });
+                                            setShowTitleDropdown(p => !p);
+                                        }}
+                                        style={{
+                                            background: "#262626", border: "1px solid #444",
+                                            borderRadius: 24, padding: "14px 40px 14px 15px", color: "white",
+                                            outline: "none", fontSize: 14, boxSizing: "border-box",
+                                            cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
+                                            display: "flex", justifyContent: "flex-start"
+                                        }}
+                                    >
+                                        {formData.title || 'Title'}
+                                    </button>
+
+                                    {/* Arrow — sits between title and username */}
+                                    <img
+                                        src={BackBtn}
+                                        alt=""
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const rect = titleBtnRef.current.getBoundingClientRect();
+                                            setTitleDropdownPos({ top: rect.bottom + 8, left: rect.left });
+                                            setShowTitleDropdown(p => !p);
+                                        }}
+                                        style={{
+                                            width: 14, height: 14,
+                                            filter: 'brightness(0) invert(0.6)',
+                                            transform: 'rotate(-90deg)',
+                                            cursor: 'pointer',
+                                            flexShrink: 0,
+                                            alignSelf: 'center'
+                                        }}
+                                    />
+
+                                    {/* Title dropdown — fixed, anchored to title button */}
+                                    {showTitleDropdown && (
+                                        <div
+                                            onMouseDown={e => e.stopPropagation()}
+                                            style={{
+                                                position: "fixed",
+                                                top: titleDropdownPos.top,
+                                                left: titleDropdownPos.left,
+                                                background: "#2c2c2c",
+                                                border: "1px solid rgba(255,255,255,0.1)",
+                                                borderRadius: 12, padding: "6px 0",
+                                                minWidth: 120, zIndex: 9999,
+                                                boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+                                            }}
+                                        >
+                                            {['Mr.', 'Mrs.', 'Dr.', 'Prof.'].map((t, i, arr) => (
+                                                <div key={t}>
+                                                    <button
+                                                        onClick={() => {
+                                                            setFormData(p => ({ ...p, title: t }));
+                                                            setShowTitleDropdown(false);
+                                                        }}
+                                                        style={{
+                                                            display: "flex", alignItems: "center",
+                                                            width: "100%", padding: "10px 16px",
+                                                            background: formData.title === t ? "rgba(255,255,255,0.06)" : "transparent",
+                                                            border: "none", color: "rgba(255,255,255,0.85)",
+                                                            fontSize: "0.88rem", fontWeight: formData.title === t ? 600 : 400,
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                                                        onMouseLeave={e => e.currentTarget.style.background = formData.title === t ? "rgba(255,255,255,0.06)" : "transparent"}
+                                                    >
+                                                        {t}
+                                                    </button>
+                                                    {i < arr.length - 1 && (
+                                                        <div style={{ height: 1, width: "50%", background: '#4D4D4D', margin: '2px auto' }} />
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Username */}
+                                    <input
+                                        style={{
+                                            flex: 1, background: "#262626",
+                                            border: `1px solid ${usernameError
+                                                    ? '#ff4b4b'
+                                                    : !usernameChecking && formData.username && !usernameError && formData.username !== user?.username
+                                                        ? '#4ade80'
+                                                        : '#444'
+                                                }`,
+                                            borderRadius: 24, padding: "14px 16px", color: "white",
+                                            outline: "none", fontSize: 14, boxSizing: "border-box",
+                                            transition: "border-color 0.2s"
+                                        }}
+                                        type="text"
+                                        value={formData.username}
+                                        placeholder="Username"
+                                        onChange={e => handleUsernameChange(e.target.value)}
+                                    />
+                                </div>
+
+                                {/* Row 2: Full name — matches full width of row above */}
                                 <input
-                                    className={`${styles.inputPairRow} ${usernameError ? styles.invalidInput : ''}`}
                                     style={{
-                                        width: "100%", background: "#262626",
-                                        border: `1px solid ${usernameError ? '#ff4b4b' : '#444'}`,
-                                        borderRadius: 24, padding: "14px 16px",
-                                        color: "white", outline: "none", fontSize: 14, boxSizing: "border-box"
+                                        width: "100%", background: "#262626", border: "1px solid #444",
+                                        borderRadius: 24, padding: "14px 16px", color: "white",
+                                        outline: "none", fontSize: 14, boxSizing: "border-box"
                                     }}
                                     type="text"
-                                    value={formData.username}
-                                    placeholder="Username"
-                                    onChange={e => handleUsernameChange(e.target.value)}
+                                    value={formData.fullName}
+                                    placeholder="Full Name"
+                                    onChange={e => setFormData(p => ({ ...p, fullName: e.target.value }))}
                                 />
-                            </div>
-                            <input
-                                style={{
-                                    flex: 1, background: "#262626", border: "1px solid #444",
-                                    borderRadius: 24, padding: "14px 16px", color: "white",
-                                    outline: "none", fontSize: 14, boxSizing: "border-box"
-                                }}
-                                type="text"
-                                value={formData.fullName}
-                                placeholder="Real Name"
-                                onChange={e => setFormData(p => ({ ...p, fullName: e.target.value }))}
-                            />
-                        </div>
-                        <div style={{ display: "flex", gap: 12 }}>
-                            <input
-                                readOnly
-                                style={{
-                                    flex: 1, background: "#262626", border: "1px solid #444",
-                                    borderRadius: 24, padding: "14px 16px", color: "white",
-                                    outline: "none", fontSize: 14, boxSizing: "border-box",
-                                    opacity: 0.4, cursor: "not-allowed",
-                                }}
-                                type="text"
-                                value={formData.university}
-                                placeholder="University"
-                            />
-                            <input
-                                style={{
-                                    flex: 1, background: "#262626", border: "1px solid #444",
-                                    borderRadius: 24, padding: "14px 16px", color: "white",
-                                    outline: "none", fontSize: 14, boxSizing: "border-box"
-                                }}
-                                type="text"
-                                value={formData.major}
-                                placeholder="Major"
-                                onChange={e => setFormData(p => ({ ...p, major: e.target.value }))}
-                            />
-                        </div>
+
+                                {/* Row 3: University (read-only) + Major */}
+                                <div style={{ display: "flex", gap: 12 }}>
+                                    <input
+                                        readOnly
+                                        style={{
+                                            flex: 1, background: "#2F2F2F", border: "1px solid #2F2F2F",
+                                            borderRadius: 24, padding: "14px 16px", color: "#616161",
+                                            outline: "none", fontSize: 14, boxSizing: "border-box",
+                                            cursor: "not-allowed",
+                                        }}
+                                        type="text"
+                                        value={formData.university}
+                                        placeholder="University"
+                                    />
+                                    <input
+                                        style={{
+                                            flex: 1, background: "#262626", border: "1px solid #444",
+                                            borderRadius: 24, padding: "14px 16px", color: "white",
+                                            outline: "none", fontSize: 14, boxSizing: "border-box"
+                                        }}
+                                        type="text"
+                                        value={formData.major}
+                                        placeholder="Major"
+                                        onChange={e => setFormData(p => ({ ...p, major: e.target.value }))}
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                {/* Student layout — original 2x2 */}
+                                <div style={{ display: "flex", gap: 12 }}>
+                                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+                                        <input
+                                            className={`${styles.inputPairRow} ${usernameError ? styles.invalidInput : ''}`}
+                                            style={{
+                                                width: "100%", background: "#262626",
+                                                border: `1px solid ${usernameError ? '#ff4b4b' : '#444'}`,
+                                                borderRadius: 24, padding: "14px 16px",
+                                                color: "white", outline: "none", fontSize: 14, boxSizing: "border-box"
+                                            }}
+                                            type="text"
+                                            value={formData.username}
+                                            placeholder="Username"
+                                            onChange={e => handleUsernameChange(e.target.value)}
+                                        />
+                                    </div>
+                                    <input
+                                        style={{
+                                            flex: 1, background: "#262626", border: "1px solid #444",
+                                            borderRadius: 24, padding: "14px 16px", color: "white",
+                                            outline: "none", fontSize: 14, boxSizing: "border-box"
+                                        }}
+                                        type="text"
+                                        value={formData.fullName}
+                                        placeholder="Real Name"
+                                        onChange={e => setFormData(p => ({ ...p, fullName: e.target.value }))}
+                                    />
+                                </div>
+                                <div style={{ display: "flex", gap: 12 }}>
+                                    <input
+                                        readOnly
+                                        style={{
+                                            flex: 1, background: "#262626", border: "1px solid #444",
+                                            borderRadius: 24, padding: "14px 16px", color: "white",
+                                            outline: "none", fontSize: 14, boxSizing: "border-box",
+                                            opacity: 0.4, cursor: "not-allowed",
+                                        }}
+                                        type="text"
+                                        value={formData.university}
+                                        placeholder="University"
+                                    />
+                                    <input
+                                        style={{
+                                            flex: 1, background: "#262626", border: "1px solid #444",
+                                            borderRadius: 24, padding: "14px 16px", color: "white",
+                                            outline: "none", fontSize: 14, boxSizing: "border-box"
+                                        }}
+                                        type="text"
+                                        value={formData.major}
+                                        placeholder="Major"
+                                        onChange={e => setFormData(p => ({ ...p, major: e.target.value }))}
+                                    />
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     {/* Right: Bio */}
@@ -348,49 +518,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                 )}
 
                 <div style={{ borderTop: "1px solid #999999", width: "70%", margin: "20px auto 24px" }} />
-                {isInstructor && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 20, gap: 20 }}>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-                            <h3 style={{ fontSize: '1.5rem', fontWeight: 500, color: '#E6E6E6', margin: 0, whiteSpace: 'nowrap' }}>
-                                Community Picks
-                            </h3>
-                            <p style={{ fontSize: '0.6rem', color: '#808080', margin: 0, lineHeight: 1.4 }}>
-                                Manage your highlighted community picks on your profile
-                            </p>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
-                            <span style={{ color: '#B3B3B3', fontSize: '0.9rem', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                                {(formData.communityPicks || []).length}/3
-                            </span>
-                            <button
-                                onClick={async () => {
-                                    setShowPicksModal(true);
-                                    setPicksLoading(true);
-                                    try {
-                                        const res = await fetch(`${API}/api/communities/?filter=joined`, {
-                                            headers: { Authorization: `Bearer ${token}` }
-                                        });
-                                        if (res.ok) {
-                                            const data = await res.json();
-                                            setJoinedCommunities(data.map(c => ({ ...c, bgImage: c.image })));
-                                        }
-                                    } catch (e) { console.error(e); }
-                                    finally { setPicksLoading(false); }
-                                }}
-                                style={{
-                                    background: '#4D4D4D', border: 'none', borderRadius: 20,
-                                    padding: '8px 20px', color: '#CCCCCC', fontSize: '0.9rem',
-                                    fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.background = '#666666'}
-                                onMouseLeave={e => e.currentTarget.style.background = '#4D4D4D'}
-                            >
-                                Manage
-                            </button>
-                        </div>
-                    </div>
-                )}
-                <div style={{ borderTop: "1px solid #999999", width: "70%", margin: "20px auto 24px" }} />
+                
+               
 
 
                 {/* Details header */}
@@ -441,7 +570,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                     {formData.secondaryPhone && (
                         <div className={styles.detailFieldItem}>
                             <span>
-                                <img src={PhoneIcon} alt="" style={{width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                                <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
                                 Secondary Phone
                             </span>
                             <span className={styles.fieldValueText}>{formData.secondaryPhone}</span>
@@ -456,7 +585,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
 
                     {/* Birthday */}
                     <div className={styles.detailFieldItem} style={{ position: "relative" }}>
-                        <span><img src={BirthdayIcon} alt=""style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} /> Birthday</span>
+                        <span><img src={BirthdayIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} /> Birthday</span>
                         <div className={styles.birthdayInputsGroup}>
                             <input
                                 type="text" maxLength={2} placeholder="MM"
@@ -750,7 +879,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                             {(formData.degrees || []).map((deg, i) => (
                                 <div key={i} className={styles.detailFieldItem}>
                                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                        <span style={{ fontSize: 16 }}> <img src={EducationIcon} style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }}/></span>
+                                        <span style={{ fontSize: 16 }}> <img src={EducationIcon} style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} /></span>
                                         <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
                                             {deg.university || deg.institution}
                                         </span>
