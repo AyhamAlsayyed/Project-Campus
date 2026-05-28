@@ -243,7 +243,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                 minWidth: 140, zIndex: 9999,
                                 boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
                             }}
-                        >
+                         >
                             <button
                                 onClick={() => { coverInputRef.current?.click(); setShowCoverDropdown(false); }}
                                 style={{

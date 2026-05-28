@@ -188,3 +188,85 @@
   align-items: center;
   gap: 12px;
 }
+.communityRequest {
+    background-color: #333333;
+    border-radius: 30px; /* Large, smooth corners like the image */
+    padding: 40px 24px;  /* Generous padding around the whole container */
+    display: flex;
+    flex-direction: column;
+    gap: 20px; 
+  
+    width: calc(100% + 40px); 
+     
+    box-sizing: border-box;
+}
+
+/* Top Row: Icon and Title */
+.requestHeader {
+    display: flex;
+    align-items: center;
+    gap: 14px; /* Little space between palette and title */
+}
+
+.paletteIcon {
+    width: 32px;
+    height: 33px;
+    display: inline-block;
+    flex-shrink: 0; /* Prevents the icon from squeezing */
+    
+    /* This paints the exact gradient you requested across the icon area */
+    background: linear-gradient(130deg, #8425A0, #A0279D);
+    
+    /* Ensures the cutout centers and scales perfectly inside the 28x28 box */
+    mask-size: contain;
+    -webkit-mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-position: center;
+}
+.requestTitle {
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 0.3px;
+}
+
+/* Bottom Row: Text and Button */
+.requestBody {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; 
+    margin-top: 10px;
+    gap: 16px; 
+}
+
+.requestText {
+    color: #CCCCCC; /* Light gray text */
+    font-size: 0.95rem;
+    line-height: 1.4;
+    margin: 0 0 0 5px;
+    font-weight: 400;
+}
+
+.applyButton {
+    background: linear-gradient(to right, #662697, #8E2793); /* Your exact gradient */
+    color: #ffffff;
+    border: none;
+    border-radius: 24px; 
+    padding: 10px 24px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.1s ease;
+    white-space: nowrap;
+}
+
+.applyButton:hover {
+    opacity: 0.9;
+}
+
+.applyButton:active {
+    transform: scale(0.96); /* Nice click animation */
+}

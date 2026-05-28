@@ -6,7 +6,9 @@ import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import { useState, useEffect, useRef } from 'react';
 import { X, Menu } from 'lucide-react';
 import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
-
+import Palette from '../../Assets/icons/palette.png'
+import Arrow from '../../Assets/icons/arrow-right.png'
+import RequestModal from '../../components/CommunityRequest/RequestModal'
 export default function Community() {
     const [theme, setTheme] = useState('dark');
     const [loading, setLoading] = useState(true)
@@ -17,6 +19,8 @@ export default function Community() {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const mobileMenuRef = useRef(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    
 
     const API = "http://localhost:8000";
     const token = localStorage.getItem("access");
@@ -295,8 +299,41 @@ export default function Community() {
                                 ))}
                             </div>
                         </div>
+
+                        {/* New Community Request Block */}
+                        <div className={styles.communityRequest}>
+
+                            <div className={styles.requestHeader}>
+                                {/* MUST be an empty div, do not use <img src={Palette} /> */}
+                                <div
+                                    className={styles.paletteIcon}
+                                    style={{
+                                        maskImage: `url(${Palette})`,
+                                        WebkitMaskImage: `url(${Palette})`
+                                    }}
+                                />
+                                <h3 className={styles.requestTitle}>Request a community</h3>
+                            </div>
+
+                            <div className={styles.requestBody}>
+                                <p className={styles.requestText}>
+                                    Can't find your community?<br />
+                                    Request one and we'll review it.
+                                </p>
+                                <button
+                                    className={styles.applyButton}
+                                    onClick={() => setIsModalOpen(true)}
+                                >
+                                    Apply
+                                </button>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
+            )}
+            {isModalOpen && (
+                <RequestModal onClose={() => setIsModalOpen(false)} />
             )}
         </div>
     );
