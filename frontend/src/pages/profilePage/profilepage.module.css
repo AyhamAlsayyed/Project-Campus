@@ -444,59 +444,6 @@ body {
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* Post card example */
-.postCard {
-  width: calc(100% - 36px);
-  margin: 14px auto 0 auto;
-  border-radius: 22px;
-  background: rgba(0, 0, 0, 0.18);
-  padding: 14px;
-}
-
-.postTop {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.postLeft {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.postAvatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  display: grid;
-  place-items: center;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.postInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.postNameLine {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.postName {
-  font-weight: 800;
-}
-
-.postTime {
-  opacity: 0.6;
-  font-size: 0.85rem;
-}
 
 .pinned {
   opacity: 0.75;
@@ -598,11 +545,11 @@ body {
 }
 
 .postsSection {
-  width: calc(100% - 36px);
+  width: 100%;
   margin: 14px auto 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 5px;
 }
 
 .rightSection {

@@ -27,6 +27,7 @@ import Share from '../../Assets/icons/share.png';
 import Bin from '../../Assets/icons/bin.png';
 import ArrowRight from '../../Assets/icons/arrow-right.png'
 import Info from '../../Assets/icons/info.png';
+import ProfilePicture from '../../Assets/icons/default-pfp.png'
 import { AlertCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
@@ -510,7 +511,7 @@ export default function ProfilePage({ type }) {
 
     const currentAvatarSrc = currentUser?.avatar
         ? currentUser.avatar.startsWith("http") ? currentUser.avatar : `${API}${currentUser.avatar}`
-        : "/default-avatar.png";
+        : ProfilePicture;
 
 
     return (
@@ -611,8 +612,13 @@ export default function ProfilePage({ type }) {
                                 </div>
                                 <div className={styles.profileHeaderRow}>
                                     <div className={styles.avatarWrap}>
-                                        <div className={styles.avatarCircle} style={{ filter: "grayscale(1)", opacity: 0.4 }}>
-                                            <User size={52} />
+                                        <div className={styles.avatarCircle}>
+                                            <img
+                                                className={styles.avatarImage}
+                                                src={avatarUrl || ProfilePicture}
+                                                alt="avatar"
+                                                onError={e => { e.currentTarget.src = ProfilePicture; }}
+                                            />
                                         </div>
                                     </div>
                                     <div className={styles.profileMeta}>
@@ -688,7 +694,7 @@ export default function ProfilePage({ type }) {
                                                         {isBlocked ? "Unblock user" : "Block user"}
                                                     </button>
 
-                                                    {/* 👇 Add this */}
+
                                                     <button
                                                         onClick={() => { setMenuOpen(false); /* handleReport() */ }}
                                                         style={{
@@ -713,7 +719,12 @@ export default function ProfilePage({ type }) {
                                 <div className={styles.profileHeaderRow}>
                                     <div className={styles.avatarWrap}>
                                         <div className={styles.avatarCircle}>
-                                            {avatarUrl ? <img className={styles.avatarImage} src={avatarUrl} alt="avatar" /> : <User size={52} />}
+                                            <img
+                                                className={styles.avatarImage}
+                                                src={avatarUrl || ProfilePicture}
+                                                alt="avatar"
+                                                onError={e => { e.currentTarget.src = ProfilePicture; }}
+                                            />
                                         </div>
                                     </div>
                                     <div className={styles.profileMeta}>
@@ -1063,7 +1074,7 @@ export default function ProfilePage({ type }) {
                                 <div style={{
                                     background: "rgba(61,60,60,0.45)", borderRadius: 20,
                                     padding: "20px 20px 16px", border: "1px solid rgba(255,255,255,0.08)",
-                                    backdropFilter: "blur(10px)", margin: "-10% 0 -10%"
+                                    backdropFilter: "blur(10px)", margin: "-10% 0 -10%", boxShadow: " 0 18px 40px rgba(0, 0, 0, 0.35)"
                                 }}>
                                     <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
                                         <img src={Events} alt="events" style={{
@@ -1098,7 +1109,7 @@ export default function ProfilePage({ type }) {
                                         const daysLeft = next ? Math.ceil((next._d - new Date()) / 86400000) : null;
                                         return (
                                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                                <div style={{ display: "flex", flexDirection: "column", gap: 4, marginLeft: 5 }}>
                                                     <span style={{ color: "#999999", fontSize: "0.85rem", fontWeight: 500 }}>
                                                         {daysLeft !== null ? `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left` : 'No upcoming events'}
                                                     </span>
@@ -1120,7 +1131,7 @@ export default function ProfilePage({ type }) {
                                                                         src={resolveUrl(avatar)}
                                                                         alt=""
                                                                         style={{
-                                                                            width: 46, height: 46, borderRadius: "50%",
+                                                                            width: 40, height: 40, borderRadius: "50%",
                                                                             objectFit: "cover",
                                                                             border: "2.5px solid rgba(61,60,60,0.9)",
                                                                             marginLeft: i === 0 ? 0 : -16,
@@ -1150,7 +1161,7 @@ export default function ProfilePage({ type }) {
                                                             src={ArrowRight}
                                                             alt=""
                                                             onClick={() => navigate('/events', { state: { highlightId: next.id } })}
-                                                            style={{ width: 20, height: 20, filter: "brightness(0) invert(0.9)", cursor: "pointer" }}
+                                                            style={{ width: 15, height: 15, filter: "brightness(0) invert(0.9)", cursor: "pointer" }}
                                                         />
                                                     </div>
                                                 )}
@@ -1163,11 +1174,11 @@ export default function ProfilePage({ type }) {
                                 <div style={{
                                     background: "rgba(61,60,60,0.45)", borderRadius: 25,
                                     padding: "23px 20px 23px", border: "1px solid rgba(255,255,255,0.08)",
-                                    backdropFilter: "blur(10px)", marginTop: 0
+                                    backdropFilter: "blur(10px)", marginTop: 0, boxShadow: " 0 18px 40px rgba(0, 0, 0, 0.35)"
                                 }}>
                                     <div style={{ display: "flex", alignItems: "center" }}>
                                         <img src={Community} alt="" style={{
-                                            width: 25, height: 20, flexShrink: 0,
+                                            width: 30, height: 20, flexShrink: 0,
                                             filter: "brightness(0) saturate(100%) invert(23%) sepia(85%) saturate(1200%) hue-rotate(280deg) brightness(90%)"
                                         }} />
                                         <span style={{ color: "white", fontWeight: 700, fontSize: "1.3rem", marginLeft: 8 }}>
@@ -1229,10 +1240,10 @@ export default function ProfilePage({ type }) {
                                     return (
                                         <div style={{
                                             background: "rgba(61,60,60,0.45)", borderRadius: 20,
-                                           padding: "14px 16px 12px", border: "1px solid rgba(255,255,255,0.08)",
-                                            backdropFilter: "blur(10px)", marginTop: 16, position: "relative"
+                                            padding: "14px 16px 12px", border: "1px solid rgba(255,255,255,0.08)",
+                                            backdropFilter: "blur(10px)", marginTop: -30, position: "relative", boxShadow: " 0 18px 40px rgba(0, 0, 0, 0.35)"
                                         }}>
-                                            <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+                                            <div style={{ display: "flex", alignItems: "center", marginBottom: 16, }}>
                                                 <img src={Events} alt="events" style={{ width: 30, height: 30, flexShrink: 0, filter: "brightness(0) saturate(100%) invert(22%) sepia(80%) saturate(1300%) hue-rotate(280deg) brightness(90%)" }} />
                                                 <span style={{ color: "white", fontWeight: 700, fontSize: "1.6rem", marginLeft: 8 }}>
                                                     Reminders set
@@ -1291,7 +1302,7 @@ export default function ProfilePage({ type }) {
                                                     </div>
                                                 </div>
                                             )}
-                                            
+
                                             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
                                                 {cells.map((day, i) => {
                                                     const hasEvent = day && eventDays.has(day);
@@ -1669,7 +1680,7 @@ export default function ProfilePage({ type }) {
 
                         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
                             <img
-                                src={avatarUrl || "/default-avatar.png"}
+                                src={avatarUrl || ProfilePicture}
                                 alt=""
                                 style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
                             />

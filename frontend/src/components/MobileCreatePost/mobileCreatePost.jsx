@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './mobileCreatePost.module.css'; // <-- Using its own CSS now!
-
+import ProfilePicture from '../../Assets/icons/default-pfp.png';
 export default function MobileCreatePost({
     avatarSrc,
     setIsModalOpen,
@@ -17,9 +17,10 @@ export default function MobileCreatePost({
             <div className={styles.topRow}>
                 <div className={styles.leftSide}>
                     <img
-                        src={avatarSrc}
-                        alt=""
+                        src={avatarSrc || ProfilePicture}
+                        alt="User Avatar"
                         className={styles.userProfilePicture}
+                        onError={e => { e.currentTarget.src = ProfilePicture; }}
                     />
                     <input
                         type="text"

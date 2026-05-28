@@ -16,8 +16,8 @@ import NotificationInactive from '../../Assets/icons/notifications.png'
 import NotificationActive from '../../Assets/icons/notifications-active.png'
 import Leave from '../../Assets/icons/leave.png'
 import Setting from '../../Assets/icons/setting.png'
+import ProfilePicture from '../../Assets/icons/default-pfp.png'
 
-// New imports for the Settings Feature
 import CommunitySettingsNav from '../../components/communitySettings/CommunitySettingsNav';
 import CommunityInfoPanel from '../../components/communitySettings/CommunityInfoPanel';
 import MembersTab from '../../components/communitySettings/membersTab';
@@ -214,9 +214,10 @@ export default function CommunityPage() {
     };
 
     const rawAvatar = user?.profile?.avatar || user?.avatar;
-    const avatarSrc = rawAvatar ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`) : "/default-avatar.png";
+    const avatarSrc = rawAvatar
+        ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
+        : ProfilePicture;
 
-    // Determine if the user is the community admin
     const isAdmin = user?.id === community?.admin;
 
     const mobileFilters = [
@@ -355,7 +356,7 @@ export default function CommunityPage() {
                                         <button onClick={handleToggleNotification} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                                             <img src={isNotified ? NotificationActive : NotificationInactive} alt="notifications" style={{ width: 28, height: 28, filter: "brightness(0) invert(1)" }} />
                                         </button>
-                                        
+
                                         {isAdmin ? (
                                             <button onClick={() => setIsSettingsOpen(!isSettingsOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                                                 <img src={Setting} alt="settings" style={{ width: 28, height: 28, filter: "brightness(0) invert(1)" }} />
@@ -365,7 +366,7 @@ export default function CommunityPage() {
                                                 <img src={Leave} alt="leave" style={{ width: 28, height: 28, filter: "brightness(0) invert(1)" }} />
                                             </button>
                                         )}
-                                        
+
                                     </div>
                                 </div>
                                 {posts.length > 0 ? (

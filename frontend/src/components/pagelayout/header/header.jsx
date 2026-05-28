@@ -13,6 +13,7 @@ import Bell from '../../../Assets/icons/notifications.png';
 import BellActive from '../../../Assets/icons/notifications-active.png';
 import Home from '../../../Assets/icons/home.png'
 import Read from '../../../Assets/icons/read.png'
+import ProfilePicture from '../../../Assets/icons/default-pfp.png';
 
 import { createPortal } from 'react-dom';
 
@@ -432,7 +433,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
   const rawAvatar = user?.profile?.avatar || user?.avatar;
   const avatarSrc = rawAvatar
     ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
-    : "/default-avatar.png";
+    : ProfilePicture;
 
   const handleAvatarClick = () => {
     if (!user?.id) return;
@@ -836,7 +837,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                   >
                     {!n.is_read && <span className={styles.unreadDot} />}
                     <div className={styles.notifAvatarWrap}>
-                      <img src={n.avatar || "/default-avatar.png"} alt="" className={styles.notifAvatar} />
+                      <img src={n.avatar ||  ProfilePicture} alt="" className={styles.notifAvatar} />
                       <div className={styles.notifIconBadge}>{getNotificationIcon(n.type)}</div>
                     </div>
                     <div className={styles.notifContent}>

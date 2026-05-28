@@ -9,6 +9,7 @@
   top: 100px;
   gap: 18px;
   background-color: #333333;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
   height: 600px;
   margin: 2% 0 0 0;
 }

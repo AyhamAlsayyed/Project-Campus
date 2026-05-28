@@ -1,8 +1,8 @@
 import React from 'react';
 import { Cloud } from 'lucide-react';
 import { useEffect } from 'react';
-import styles from './desktopCreatePost.module.css'; // Adjust path as needed
-
+import styles from './desktopCreatePost.module.css';
+import ProfilePicture from '../../Assets/icons/default-pfp.png';
 const DesktopCreatePost = ({
     user,
     avatarSrc,
@@ -18,13 +18,13 @@ const DesktopCreatePost = ({
     joinedCommunities,
     API,
     defaultCommunity,
-    refreshPosts // 1. Added this prop from parent
+    refreshPosts
 }) => {
     const hour = new Date().getHours();
     const timeGreeting = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
 
     useEffect(() => {
-       
+
         if (defaultCommunity && (!selectedCommunity || selectedCommunity.id !== defaultCommunity.id)) {
             setSelectedCommunity(defaultCommunity);
         }
@@ -33,7 +33,12 @@ const DesktopCreatePost = ({
     return (
         <div className={styles.createPostSection} onClick={() => setIsModalOpen(true)}>
             <div className={styles.greetingRow}>
-                <img src={avatarSrc} alt="User Avatar" className={styles.userProfilePicture} />
+                <img
+                    src={avatarSrc || ProfilePicture}
+                    alt="User Avatar"
+                    className={styles.userProfilePicture}
+                    onError={e => { e.currentTarget.src = ProfilePicture; }}
+                />
                 <div className={styles.greetingText}>
                     <strong className={styles.greeting}>
                         Good {timeGreeting}, {user?.full_name || user?.username || "User"}!

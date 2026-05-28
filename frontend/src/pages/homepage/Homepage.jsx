@@ -5,6 +5,7 @@ import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import DesktopCreatePost from '../../components/DesktopCreatePost/desktopCreatePost';
 import CommentModal from '../../components/comments/commentsModal';
+import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import { useState, useEffect, useRef } from 'react';
 import {
     X, Cloud, Menu, Search,
@@ -289,7 +290,7 @@ export default function Homepage() {
                 }
             } catch (err) {
                 console.error(err);
-    
+
                 setSelectedPost({ id: pendingOpen.postId, highlightCommentId: pendingOpen.commentId });
             }
             setPendingOpen(null);
@@ -311,7 +312,7 @@ export default function Homepage() {
     const rawAvatar = user?.profile?.avatar || user?.avatar;
     const avatarSrc = rawAvatar
         ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
-        : "/default-avatar.png";
+        : ProfilePicture;
 
     return (
         <div className={styles.darkContainer}>
@@ -540,7 +541,12 @@ export default function Homepage() {
                             <button className={styles.closeButton} onClick={() => { setIsModalOpen(false); resetPostState(); setModalCommunityDropdownOpen(false); }}>✕</button>
                         </div>
                         <div className={styles.leftSide}>
-                            <img src={avatarSrc} alt="" className={styles.userProfilePicture} />
+                            <img
+                                src={avatarSrc}
+                                alt=""
+                                className={styles.userProfilePicture}
+                                onError={e => { e.currentTarget.src = ProfilePicture; }}
+                            />
                             <strong>{user?.full_name || user?.username}</strong>
                         </div>
                         <textarea

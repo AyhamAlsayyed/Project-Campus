@@ -2,18 +2,23 @@ import styles from "./sideBarNav.module.css";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import Home from '../../../Assets/icons/home.png';
-import Community from '../../../Assets/icons/community.png';
+
 import University from '../../../Assets/icons/university.png';
 import Events from '../../../Assets/icons/event.png';
 import About from '../../../Assets/icons/about-us.png';
 import Privacy from '../../../Assets/icons/privacy-policy.png';
 import Help from '../../../Assets/icons/help.png';
+import Profile from '../../../Assets/icons/default-pfp.png'
+import Friends from '../../../Assets/icons/add-friend.png'
+import Community from '../../../Assets/icons/community.png'
+import Settings from '../../../Assets/icons/setting.png'
+import PrivacyPolicy from '../../../Assets/icons/privacy-policy.png'
+import FollowedPages from '../../../Assets/icons/followed-pages.png'
 import {
   User,
   UserPlus,
   Bell,
   Users,
-  Settings,
   Languages,
   HelpCircle,
 } from "lucide-react";
@@ -43,16 +48,16 @@ export default function SidebarNav({ variant = "default", currentUser }) {
   ];
 
   const profileMainItems = [
-    { label: "Profile", path: `/profile/${currentUser?.id}`, icon: User },
-    { label: "Friends", path: `/profile/${currentUser?.id}/friends`, icon: UserPlus },
-    { label: "Pages", path: `/profile/${currentUser?.id}/pages`, icon: Bell },
-    { label: "Communities", path: `/profile/${currentUser?.id}/communities`, icon: Users },
+    { label: "Profile", path: `/profile/${currentUser?.id}`, icon: Profile },
+    { label: "Friends", path: `/profile/${currentUser?.id}/friends`, icon: Friends },
+    { label: "Pages", path: `/profile/${currentUser?.id}/pages`, icon: FollowedPages },
+    { label: "Communities", path: `/profile/${currentUser?.id}/communities`, icon: Community },
   ];
 
   const profileFooterItems = [
     { label: "Settings", path: "/settings", icon: Settings },
-    { label: "Language", path: "/language", icon: Languages },
-    { label: "Help", path: "/help", icon: HelpCircle },
+    { label: "Privacy Policy", path: "/language", icon: PrivacyPolicy },
+    { label: "Help", path: "/help", icon: Help },
   ];
 
   const mainItems = variant === "profile" ? profileMainItems : defaultMainItems;
@@ -71,7 +76,16 @@ export default function SidebarNav({ variant = "default", currentUser }) {
           className={`${styles.sideBarButton} ${isActive(path) ? styles.active : ""}`}
         >
           {Icon && typeof Icon === "string" ? (
-            <img src={Icon} alt="" className={styles.icon} width={22} height={22} style={{ filter: "invert(1)" }} />
+            <img
+              src={Icon}
+              alt=""
+              className={styles.icon}
+              style={{
+                filter: "brightness(0) invert(1)",
+                width: Icon === Community ? "30px" : "25px",
+                height: Icon === Community ? "20px" : "25px",
+              }}
+            />
           ) : Icon ? (
             <Icon size={22} />
           ) : null}
@@ -88,7 +102,7 @@ export default function SidebarNav({ variant = "default", currentUser }) {
           className={`${styles.sideBarButton} ${isActive(path) ? styles.active : ""}`}
         >
           {Icon && typeof Icon === "string" ? (
-            <img src={Icon} alt="" className={styles.icon} width={22} height={22} style={{ filter: "invert(1)" }} />
+            <img src={Icon} alt="" className={styles.icon} width={25} height={25} style={{ filter: "invert(1)" }} />
           ) : Icon ? (
             <Icon size={22} />
           ) : null}

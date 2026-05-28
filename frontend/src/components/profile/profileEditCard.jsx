@@ -14,6 +14,7 @@ import EditIcon from '../../Assets/icons/edit.png'
 import BirthdayIcon from '../../Assets/icons/cake.png'
 import PhoneIcon from '../../Assets/icons/phone.png'
 import EducationIcon from '../../Assets/icons/education.png'
+import ProfilePicture from '../../Assets/icons/default-pfp.png';
 
 const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS_SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -95,7 +96,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
         handleUsernameChange, handleAvatarChange, handleCoverChange,
         handleSendOtp, handleOtpChange, handleOtpKeyDown, handleCheckOtp,
         handleEditSave, handleEditCancel,
-         usernameChecking,
+        usernameChecking,
     } = edit;
     useEffect(() => {
         if (!showCoverDropdown) return;
@@ -166,10 +167,12 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, flexShrink: 0 }}>
                     <div className={styles.avatarEditGroup} onClick={() => avatarInputRef.current?.click()}>
                         <div className={styles.editAvatarCircle} style={{ width: 130, height: 130 }}>
-                            {avatarPreview
-                                ? <img src={avatarPreview} alt="avatar" />
-                                : <User size={70} color="#888" />
-                            }
+                            <img
+                                src={avatarPreview || ProfilePicture}
+                                alt="avatar"
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                onError={e => { e.currentTarget.src = ProfilePicture; }}
+                            />
                         </div>
                         <div style={{ display: "flex", gap: 16 }} onClick={e => e.stopPropagation()}>
                             <button
@@ -377,10 +380,10 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                         style={{
                                             flex: 1, background: "#262626",
                                             border: `1px solid ${usernameError
-                                                    ? '#ff4b4b'
-                                                    : !usernameChecking && formData.username && !usernameError && formData.username !== user?.username
-                                                        ? '#4ade80'
-                                                        : '#444'
+                                                ? '#ff4b4b'
+                                                : !usernameChecking && formData.username && !usernameError && formData.username !== user?.username
+                                                    ? '#4ade80'
+                                                    : '#444'
                                                 }`,
                                             borderRadius: 24, padding: "14px 16px", color: "white",
                                             outline: "none", fontSize: 14, boxSizing: "border-box",
@@ -518,8 +521,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                 )}
 
                 <div style={{ borderTop: "1px solid #999999", width: "70%", margin: "20px auto 24px" }} />
-                
-               
+
+
 
 
                 {/* Details header */}
