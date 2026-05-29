@@ -28,6 +28,8 @@ import Bin from '../../Assets/icons/bin.png';
 import ArrowRight from '../../Assets/icons/arrow-right.png'
 import Info from '../../Assets/icons/info.png';
 import ProfilePicture from '../../Assets/icons/default-pfp.png'
+import BellOn from '../../Assets/icons/notifications.png'
+import BellOff from '../../Assets/icons/mute.png'
 import { AlertCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
@@ -82,6 +84,9 @@ export default function ProfilePage({ type }) {
     const [joinedCommunities, setJoinedCommunities] = useState([]);
     const [picksLoading, setPicksLoading] = useState(false);
     const [modalPicks, setModalPicks] = useState([]);
+    const [pageFollowStatus, setPageFollowStatus] = useState({});
+    const [pageNotifyStatus, setPageNotifyStatus] = useState({});
+
     useEffect(() => {
         const close = (e) => {
             if (menuRef.current && !menuRef.current.contains(e.target))
@@ -90,6 +95,7 @@ export default function ProfilePage({ type }) {
         document.addEventListener("mousedown", close);
         return () => document.removeEventListener("mousedown", close);
     }, []);
+
     useEffect(() => {
         if (!user) return;
 
@@ -114,7 +120,20 @@ export default function ProfilePage({ type }) {
             });
             if (res.ok) {
                 const data = await res.json();
-                setReminders(Array.isArray(data) ? data : []);
+                const events = Array.isArray(data) ? data : [];
+                setReminders(events);
+
+                const followInit = {};
+                const notifyInit = {};
+                events.forEach(e => {
+                    const pageId = e.page?.page_id ?? e.page?.id;
+                    if (pageId) {
+                        followInit[pageId] = e.page.is_followed ?? true;
+                        notifyInit[pageId] = e.page.is_notified ?? false; // ← fixed
+                    }
+                });
+                setPageFollowStatus(followInit);
+                setPageNotifyStatus(notifyInit);
             }
         } catch (e) { console.error(e); }
     };
@@ -150,7 +169,9 @@ export default function ProfilePage({ type }) {
     const { pathname } = useLocation();
     const { userId } = useParams();
     const navigate = useNavigate();
+
     useEffect(() => { if (user) edit.syncFromUser(user); }, [user]);
+
     const handlePinChange = (pinnedPostId) => {
         setPosts(prev => prev.map(p => ({
             ...p,
@@ -158,13 +179,12 @@ export default function ProfilePage({ type }) {
         })));
     };
 
-
-
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 1024);
         window.addEventListener("resize", check);
         return () => window.removeEventListener("resize", check);
     }, []);
+
     const filteredActivityPosts = activityPosts.filter(post => {
         if (activitiesFilter === 'saves') return post.is_saved;
         if (activitiesFilter === 'likes') return post.is_liked;
@@ -185,7 +205,6 @@ export default function ProfilePage({ type }) {
         document.addEventListener("mousedown", close);
         return () => document.removeEventListener("mousedown", close);
     }, []);
-
 
     const loadCurrentUser = async () => {
         try {
@@ -280,25 +299,26 @@ export default function ProfilePage({ type }) {
             if (res.ok) setFriendStatus("sent");
         } catch (e) { console.error(e); }
     };
+
     useEffect(() => {
         if (user?.type === 'page') {
             setIsFollowing(user?.is_following || false);
             setFollowersCount(user?.followers_count || 0);
         }
     }, [user]);
+
     const handleFollow = async () => {
         try {
-
             const path = user?.type === 'page'
                 ? `pages/${user.id}/follow/`
                 : `friends/request/`;
 
-            const token = localStorage.getItem('access'); // Make sure the key matches exactly what you used during login
+            const token = localStorage.getItem('access');
 
             const response = await fetch(`${API}/api/pages/${user.id}/follow/`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`, // Ensure space between Bearer and token
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -313,6 +333,44 @@ export default function ProfilePage({ type }) {
             console.error("Network Error:", error);
         }
     };
+    const handleReminderPageFollow = async (pageId) => {
+        const prev = pageFollowStatus[pageId];
+        setPageFollowStatus(s => ({ ...s, [pageId]: !prev }));
+        try {
+            const res = await fetch(`${API}/api/pages/${pageId}/follow/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setPageFollowStatus(s => ({ ...s, [pageId]: data.is_followed }));
+            } else {
+                setPageFollowStatus(s => ({ ...s, [pageId]: prev })); // rollback
+            }
+        } catch {
+            setPageFollowStatus(s => ({ ...s, [pageId]: prev }));
+        }
+    };
+
+    const handleReminderPageNotify = async (pageId) => {
+        const prev = pageNotifyStatus[pageId];
+        setPageNotifyStatus(s => ({ ...s, [pageId]: !prev })); // optimistic toggle
+        try {
+            const res = await fetch(`${API}/api/pages/${pageId}/notify/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setPageNotifyStatus(s => ({ ...s, [pageId]: data.is_notified })); // ← fixed
+            } else {
+                setPageNotifyStatus(s => ({ ...s, [pageId]: prev })); // rollback
+            }
+        } catch {
+            setPageNotifyStatus(s => ({ ...s, [pageId]: prev }));
+        }
+    };
+
     const handleReview = async (rating) => {
         setReviewRating(rating);
         try {
@@ -341,8 +399,8 @@ export default function ProfilePage({ type }) {
                 const data = await res.json();
                 const formatted = (Array.isArray(data) ? data : []).map(post => ({
                     ...post,
-                    id: post.post_id || post.id,          // ← normalize post_id → id
-                    content: post.content_text || post.content,  // ← normalize content_text → content
+                    id: post.post_id || post.id,
+                    content: post.content_text || post.content,
                     author: post.author || {
                         id: post.author_user || post.author_page,
                         username: post.author_username || "Unknown",
@@ -372,8 +430,7 @@ export default function ProfilePage({ type }) {
             });
             if (!res.ok) { setFriends([]); return; }
             const data = await res.json();
-            // backend returns { all: [...], mutual: [...] }
-            setFriends(data);  // 👈 pass the whole object
+            setFriends(data);
         } catch (err) { console.error(err); }
         finally { setFriendsLoading(false); }
     };
@@ -412,7 +469,6 @@ export default function ProfilePage({ type }) {
             }
             if (!res.ok) { setPostsError(data?.message || "Failed to load posts"); setPosts([]); return; }
 
-            // ← normalize post_id → id
             const normalized = (Array.isArray(data) ? data : []).map(p => ({
                 ...p,
                 id: p.id || p.post_id,
@@ -454,18 +510,14 @@ export default function ProfilePage({ type }) {
 
     const handleMessage = async () => {
         try {
-            // First check if a conversation already exists
             const chatsRes = await fetch(`${API}/api/chats/`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const chats = await chatsRes.json();
 
-            // Find existing conversation with this user
             const existing = chats.find(c =>
                 !c.is_group && c.name === username
             );
-
-
 
             if (existing) {
                 console.log("existing chat found:", existing?.id, existing?.name);
@@ -473,7 +525,6 @@ export default function ProfilePage({ type }) {
                 return;
             }
 
-            // No existing conversation, create one
             const res = await fetch(`${API}/api/conversations/create/${userId}/`, {
                 method: 'POST',
                 headers: {
@@ -489,6 +540,7 @@ export default function ProfilePage({ type }) {
             console.error("Error opening chat:", e);
         }
     };
+
     const toggleTheme = () => setTheme((p) => (p === "light" ? "dark" : "light"));
     const openComments = (post) => setSelectedPost(post);
     const closeComments = () => setSelectedPost(null);
@@ -513,13 +565,12 @@ export default function ProfilePage({ type }) {
         ? currentUser.avatar.startsWith("http") ? currentUser.avatar : `${API}${currentUser.avatar}`
         : ProfilePicture;
 
-
     return (
         <div className={styles.darkContainer}>
 
             {/* ══════════════════════════════════════
             MOBILE HEADER
-        ══════════════════════════════════════ */}
+            ══════════════════════════════════════ */}
             {isMobile && (
                 <MobileHeader
                     avatarSrc={currentAvatarSrc}
@@ -533,43 +584,24 @@ export default function ProfilePage({ type }) {
 
             {/* ══════════════════════════════════════
             MOBILE DRAWER
-        ══════════════════════════════════════ */}
+            ══════════════════════════════════════ */}
             {isMobile && mobileMenuOpen && (
-                <div style={{ position: "fixed", inset: 0, zIndex: 9998 }}>
-                    <div style={{
-                        position: "absolute", inset: 0,
-                        background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)"
-                    }} onClick={() => setMobileMenuOpen(false)} />
+                <div className={styles.mobileDrawerOverlay}>
+                    <div className={styles.mobileDrawerBackdrop} onClick={() => setMobileMenuOpen(false)} />
                     <div
                         ref={mobileMenuRef}
-                        style={{
-                            position: "absolute", left: 0, top: 0,
-                            height: "100%", width: "80vw", maxWidth: 435,
-                            background: "linear-gradient(135deg, var(--bg-main), var(--bg-secondary))",
-                            borderRight: "1px solid rgba(255,255,255,0.1)",
-                            display: "flex", flexDirection: "column", overflow: "hidden",
-                            boxShadow: "4px 0 30px rgba(0,0,0,0.6)"
-                        }}
+                        className={styles.mobileDrawer}
                         onClick={e => e.stopPropagation()}
                     >
-                        <button style={{
-                            position: "absolute", top: 14, right: 14, zIndex: 10,
-                            width: 32, height: 32, borderRadius: "50%",
-                            background: "rgba(255,255,255,0.1)", border: "none",
-                            display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
-                        }} onClick={() => setMobileMenuOpen(false)}>
+                        <button className={styles.mobileDrawerCloseBtn} onClick={() => setMobileMenuOpen(false)}>
                             <X size={16} color="white" />
                         </button>
 
-                        <div style={{
-                            display: "flex", alignItems: "center", gap: 10,
-                            padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)"
-                        }}>
-
-                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1 }}>CAMPUS</span>
+                        <div className={styles.mobileDrawerHeader}>
+                            <span className={styles.mobileDrawerTitle}>CAMPUS</span>
                         </div>
 
-                        <div style={{ flex: 1, overflowY: "auto" }}>
+                        <div className={styles.mobileDrawerNav}>
                             <SideBarNav
                                 variant={isOwnProfile ? "profile" : "default"}
                                 currentUser={currentUser}
@@ -582,7 +614,7 @@ export default function ProfilePage({ type }) {
 
             {/* ══════════════════════════════════════
             DESKTOP HEADER
-        ══════════════════════════════════════ */}
+            ══════════════════════════════════════ */}
             {!isMobile && (
                 <div className={`${styles.header} ${styles.page}`}>
                     <Header theme={theme} toggleTheme={toggleTheme} user={currentUser} />
@@ -591,10 +623,8 @@ export default function ProfilePage({ type }) {
 
             {/* ══════════════════════════════════════
             DESKTOP LAYOUT
-        ══════════════════════════════════════ */}
-
+            ══════════════════════════════════════ */}
             {!isMobile && (
-
                 <div className={`${styles.page} ${styles.content}`}>
                     <SideBarNav
                         variant={isOwnProfile ? "profile" : "default"}
@@ -607,8 +637,7 @@ export default function ProfilePage({ type }) {
                         ) : isBlocked ? (
                             <div className={styles.profileCard}>
                                 <div className={styles.coverWrap}>
-                                    <div className={styles.coverPlaceholder} style={{ filter: "grayscale(1)", opacity: 0.3 }} />
-
+                                    <div className={`${styles.coverPlaceholder} ${styles.blockedCoverPlaceholder}`} />
                                 </div>
                                 <div className={styles.profileHeaderRow}>
                                     <div className={styles.avatarWrap}>
@@ -625,35 +654,23 @@ export default function ProfilePage({ type }) {
                                         <div className={styles.nameRow}>
                                             <h2 className={styles.username} style={{ opacity: 0.5 }}>{username}</h2>
                                         </div>
-                                        <div style={{ marginTop: 8, color: "rgba(255,255,255,0.4)", fontSize: "0.85rem" }}>
+                                        <div className={styles.blockedSubtitle} style={{ marginTop: 8, textAlign: "left" }}>
                                             You've blocked this user. Their content is hidden.
                                         </div>
                                     </div>
                                     <div className={styles.profileActions}>
-                                        <button
-                                            onClick={handleBlock}
-                                            style={{
-                                                background: "rgba(255,255,255,0.08)",
-                                                border: "1px solid rgba(255,255,255,0.15)",
-                                                borderRadius: 20, padding: "8px 20px",
-                                                color: "rgba(255,255,255,0.7)", fontWeight: 600,
-                                                fontSize: "0.9rem", cursor: "pointer"
-                                            }}
-                                        >
+                                        <button onClick={handleBlock} className={styles.unblockBtn}>
                                             Unblock
                                         </button>
                                     </div>
                                 </div>
                                 <div className={styles.hr} />
-                                <div style={{
-                                    display: "flex", flexDirection: "column", alignItems: "center",
-                                    justifyContent: "center", padding: "60px 20px", gap: 16
-                                }}>
-                                    <Ban size={48} color="rgba(255,255,255,0.2)" />
-                                    <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "1rem", margin: 0 }}>
+                                <div className={styles.blockedBody}>
+                                    <Ban size={48} className={styles.blockedIcon} />
+                                    <p className={styles.blockedTitle}>
                                         This profile is blocked
                                     </p>
-                                    <p style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.85rem", margin: 0, textAlign: "center" }}>
+                                    <p className={styles.blockedSubtitle}>
                                         Unblock to see their posts, photos, and other content.
                                     </p>
                                 </div>
@@ -663,49 +680,25 @@ export default function ProfilePage({ type }) {
                                 <div className={styles.coverWrap}>
                                     {coverUrl ? <img className={styles.coverImage} src={coverUrl} alt="cover" /> : <div className={styles.coverPlaceholder} />}
                                     {!isOwnProfile && (
-                                        <div ref={menuRef} style={{ position: "absolute", top: 14, right: 14, zIndex: 10 }}>
+                                        <div ref={menuRef} className={styles.coverMenuWrap}>
                                             <button
                                                 onClick={() => setMenuOpen(prev => !prev)}
-                                                className={styles.messageBtn}
-                                                style={{ width: 38, height: 38, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                                className={`${styles.messageBtn} ${styles.coverMenuBtn}`}
                                             >
                                                 <MoreHorizontal size={18} />
                                             </button>
                                             {menuOpen && (
-                                                <div style={{
-                                                    position: "absolute", top: "calc(100% + 8px)", right: 0,
-                                                    background: "#2c2c2c", border: "1px solid rgba(255,255,255,0.1)",
-                                                    borderRadius: 14, padding: "6px 0", minWidth: 160,
-                                                    boxShadow: "0 8px 24px rgba(0,0,0,0.5)", zIndex: 100,
-                                                }}>
+                                                <div className={styles.coverDropdown}>
                                                     <button
                                                         onClick={() => { handleBlock(); setMenuOpen(false); }}
-                                                        style={{
-                                                            display: "flex", alignItems: "center", gap: 10,
-                                                            width: "100%", padding: "10px 16px",
-                                                            background: "transparent", border: "none",
-                                                            color: isBlocked ? "#f87171" : "rgba(255,255,255,0.8)",
-                                                            fontSize: "0.88rem", fontWeight: 500, cursor: "pointer",
-                                                        }}
-                                                        onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                                                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                                        className={`${styles.coverDropdownItem} ${isBlocked ? styles.coverDropdownItemDanger : styles.coverDropdownItemNormal}`}
                                                     >
                                                         <Ban size={15} />
                                                         {isBlocked ? "Unblock user" : "Block user"}
                                                     </button>
-
-
                                                     <button
                                                         onClick={() => { setMenuOpen(false); /* handleReport() */ }}
-                                                        style={{
-                                                            display: "flex", alignItems: "center", gap: 10,
-                                                            width: "100%", padding: "10px 16px",
-                                                            background: "transparent", border: "none",
-                                                            color: "#f87171",
-                                                            fontSize: "0.88rem", fontWeight: 500, cursor: "pointer",
-                                                        }}
-                                                        onMouseEnter={e => e.currentTarget.style.background = "rgba(248,113,113,0.08)"}
-                                                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                                        className={`${styles.coverDropdownItem} ${styles.coverDropdownItemDanger}`}
                                                     >
                                                         <AlertCircle size={15} />
                                                         Report user
@@ -730,17 +723,17 @@ export default function ProfilePage({ type }) {
                                     <div className={styles.profileMeta}>
                                         {user?.type === 'page' ? (
                                             <>
-                                                <div className={styles.nameRow} style={{ justifyContent: "normal" }}>
+                                                <div className={`${styles.nameRow} ${styles.pageNameRow}`}>
                                                     <h2 className={styles.username}>{username}</h2>
                                                     {user?.is_verified && (
                                                         <img
                                                             src={VerifiedBadge}
                                                             alt="verified"
-                                                            style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', marginLeft: 3 }}
+                                                            className={styles.pageVerifiedBadge}
                                                         />
                                                     )}
                                                 </div>
-                                                <div className={styles.subRow} style={{ gap: "10px" }}>
+                                                <div className={`${styles.subRow} ${styles.pageFollowersMeta}`}>
                                                     {user?.category && <span className={styles.department}>{user.category}</span>}
                                                     {user?.category && <span className={styles.dot} />}
                                                     <span className={styles.friendsCount}>{followersCount.toLocaleString()} followers</span>
@@ -835,59 +828,18 @@ export default function ProfilePage({ type }) {
                                                     )}
                                                     {friendStatus === "sent" && <button className={styles.pendingBtn}>⏳ Request Sent</button>}
                                                     {friendStatus === "received" && (
-                                                        <div style={{ display: "flex", gap: 8 }}>
-                                                            <button
-                                                                onClick={handleAccept}
-                                                                style={{
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                    gap: 6,
-                                                                    padding: "9px 20px",
-                                                                    borderRadius: 22,
-                                                                    background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))",
-                                                                    border: "none",
-                                                                    color: "#fff",
-                                                                    fontWeight: 600,
-                                                                    fontSize: "0.88rem",
-                                                                    cursor: "pointer",
-                                                                    transition: "opacity 0.15s, transform 0.1s",
-                                                                }}
-                                                                onMouseEnter={e => e.currentTarget.style.opacity = "0.88"}
-                                                                onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-                                                                onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"}
-                                                                onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
-                                                            >
+                                                        <div className={styles.friendRequestBtns}>
+                                                            <button onClick={handleAccept} className={styles.acceptRequestBtn}>
                                                                 <Check size={15} />
                                                                 Accept
                                                             </button>
-                                                            <button
-                                                                onClick={handleDecline}
-                                                                style={{
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                    gap: 6,
-                                                                    padding: "9px 20px",
-                                                                    borderRadius: 22,
-                                                                    background: "rgba(255,255,255,0.07)",
-                                                                    border: "1px solid rgba(255,255,255,0.13)",
-                                                                    color: "rgba(255,255,255,0.7)",
-                                                                    fontWeight: 600,
-                                                                    fontSize: "0.88rem",
-                                                                    cursor: "pointer",
-                                                                    transition: "background 0.15s, transform 0.1s",
-                                                                }}
-                                                                onMouseEnter={e => e.currentTarget.style.background = "rgba(248,113,113,0.15)"}
-                                                                onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
-                                                                onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"}
-                                                                onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
-                                                            >
+                                                            <button onClick={handleDecline} className={styles.declineRequestBtn}>
                                                                 <X size={15} />
                                                                 Reject
                                                             </button>
                                                         </div>
                                                     )}
                                                     {friendStatus === "friends" && <button className={styles.friendsBtn} onClick={() => setUnfriendPopup(true)}>Friends</button>}
-
                                                 </>
                                             )}
                                         </div>
@@ -904,7 +856,7 @@ export default function ProfilePage({ type }) {
                                             : ['Posts', 'Photos', 'Friends']
                                     ).map(tab => (
                                         tab === 'Activities' && isOwnProfile ? (
-                                            <div key="Activities" ref={activitiesDropdownRef} style={{ position: 'relative' }}>
+                                            <div key="Activities" ref={activitiesDropdownRef} className={styles.activitiesDropdownWrap}>
                                                 <button
                                                     className={`${styles.tabBtn} ${activeTab === 'Activities' ? styles.tabActive : ''}`}
                                                     onClick={() => {
@@ -916,15 +868,7 @@ export default function ProfilePage({ type }) {
                                                     Activities
                                                 </button>
                                                 {activitiesDropdownOpen && activeTab === 'Activities' && (
-                                                    <div style={{
-                                                        position: 'absolute', top: '110%', left: '50%',
-                                                        transform: 'translateX(-50%)',
-                                                        background: 'var(--bg-secondary, #1e1e2e)',
-                                                        border: '1px solid rgba(255,255,255,0.1)',
-                                                        borderRadius: 12, padding: '6px 0',
-                                                        minWidth: 150, zIndex: 100,
-                                                        boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
-                                                    }}>
+                                                    <div className={styles.activitiesDropdown}>
                                                         {[
                                                             { key: 'saves', icon: Save, label: 'Saves' },
                                                             { key: 'comments', icon: Comment, label: 'Comments' },
@@ -933,18 +877,12 @@ export default function ProfilePage({ type }) {
                                                             <button
                                                                 key={key}
                                                                 onClick={() => { setActivitiesFilter(key); setActivitiesDropdownOpen(false); }}
+                                                                className={styles.activitiesDropdownItem}
                                                                 style={{
-                                                                    display: 'flex', alignItems: 'center', gap: 10,
-                                                                    width: '100%', padding: '10px 18px',
                                                                     background: activitiesFilter === key ? 'rgba(221, 219, 224, 0.11)' : 'transparent',
-                                                                    border: 'none', cursor: 'pointer',
                                                                     color: activitiesFilter === key ? '#f0e7f8' : 'rgba(255,255,255,0.8)',
-                                                                    fontSize: '0.9rem', fontWeight: activitiesFilter === key ? 600 : 400,
-                                                                    transition: 'background 0.15s',
-                                                                    borderRadius: 6,
+                                                                    fontWeight: activitiesFilter === key ? 600 : 400,
                                                                 }}
-                                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
-                                                                onMouseLeave={e => e.currentTarget.style.background = activitiesFilter === key ? 'rgba(139,45,255,0.15)' : 'transparent'}
                                                             >
                                                                 <img
                                                                     src={icon}
@@ -1017,7 +955,7 @@ export default function ProfilePage({ type }) {
                                                             openComments={openComments}
                                                             isOwnProfile={
                                                                 currentUser?.id === (post.author?.id || post.author_id)
-                                                            } // ← only true if current user actually authored this post
+                                                            }
                                                         />
                                                     ))
                                                     : <div className={styles.notice}>
@@ -1035,23 +973,20 @@ export default function ProfilePage({ type }) {
                                 {activeTab === 'Events' && (
                                     <div className={styles.postsSection}>
                                         {pageEvents.length > 0 ? pageEvents.map(event => (
-                                            <div key={event.id} style={{
-                                                background: "rgba(255,255,255,0.04)", borderRadius: 16,
-                                                overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)"
-                                            }}>
+                                            <div key={event.id} className={styles.eventCard}>
                                                 {event.banner && (
                                                     <img src={event.banner.startsWith("http") ? event.banner : `${API}${event.banner}`}
-                                                        alt="" style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
+                                                        alt="" className={styles.eventCardBanner} />
                                                 )}
-                                                <div style={{ padding: "14px 16px" }}>
-                                                    <div style={{ color: "white", fontWeight: 700, fontSize: "1rem" }}>{event.title}</div>
+                                                <div className={styles.eventCardBody}>
+                                                    <div className={styles.eventCardTitle}>{event.title}</div>
                                                     {event.start_date && (
-                                                        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem", marginTop: 4 }}>
+                                                        <div className={styles.eventCardDate}>
                                                             {event.start_date} {event.end_date ? `→ ${event.end_date}` : ""}
                                                         </div>
                                                     )}
                                                     {event.description && (
-                                                        <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.85rem", marginTop: 8, lineHeight: 1.5 }}>
+                                                        <p className={styles.eventCardDesc}>
                                                             {event.description}
                                                         </p>
                                                     )}
@@ -1067,38 +1002,22 @@ export default function ProfilePage({ type }) {
                     <div className={styles.rightSection}>
                         {isOwnProfile && user?.role === 'instructor' ? (
                             <>
-                                {/* Recently Contacted — always shows */}
                                 <FriendsSuggestion />
-
-                                {/* Reminders — own container */}
-                                <div style={{
-                                    background: "rgba(61,60,60,0.45)", borderRadius: 20,
-                                    padding: "20px 20px 16px", border: "1px solid rgba(255,255,255,0.08)",
-                                    backdropFilter: "blur(10px)", margin: "-10% 0 -10%", boxShadow: " 0 18px 40px rgba(0, 0, 0, 0.35)"
-                                }}>
-                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
-                                        <img src={Events} alt="events" style={{
-                                            width: 30, height: 30, flexShrink: 0,
-                                            filter: "brightness(0) saturate(100%) invert(22%) sepia(80%) saturate(1300%) hue-rotate(280deg) brightness(90%)"
-                                        }} />
-                                        <span style={{ color: "white", fontWeight: 700, fontSize: "1.5rem", marginLeft: 8 }}>
+                                <div className={styles.remindersWidgetInstructor}>
+                                    <div className={styles.remindersWidgetHeader}>
+                                        <img src={Events} alt="events" className={styles.remindersWidgetIcon} />
+                                        <span className={styles.remindersWidgetTitle}>
                                             Reminders set
                                         </span>
                                         <span
                                             onClick={() => setShowRemindersMonthPicker(p => !p)}
-                                            style={{
-                                                color: "rgba(255,255,255,0.45)", fontSize: "0.85rem", marginLeft: "auto",
-                                                borderBottom: "1.5px solid #A6279C", cursor: "pointer",
-                                                userSelect: "none", transition: "color 0.15s"
-                                            }}
-                                            onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.75)"}
-                                            onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.45)"}
+                                            className={styles.remindersMonthToggle}
                                         >
                                             {remindersMonth.toLocaleString('default', { month: 'long' })} {remindersMonth.getFullYear()}
                                         </span>
                                     </div>
 
-                                    <div style={{ width: "75%", height: 1, background: "#666666", margin: "0 auto 16px" }} />
+                                    <div className={styles.remindersDivider} />
 
                                     {(() => {
                                         const upcoming = reminders
@@ -1108,21 +1027,20 @@ export default function ProfilePage({ type }) {
                                         const next = upcoming[0];
                                         const daysLeft = next ? Math.ceil((next._d - new Date()) / 86400000) : null;
                                         return (
-                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                                <div style={{ display: "flex", flexDirection: "column", gap: 4, marginLeft: 5 }}>
-                                                    <span style={{ color: "#999999", fontSize: "0.85rem", fontWeight: 500 }}>
+                                            <div className={styles.remindersNextRow}>
+                                                <div className={styles.remindersNextLeft}>
+                                                    <span className={styles.remindersNextLabel}>
                                                         {daysLeft !== null ? `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left` : 'No upcoming events'}
                                                     </span>
                                                     {next && (
-                                                        <span style={{ color: "white", fontSize: "1rem", fontWeight: 600 }}>
+                                                        <span className={styles.remindersNextTitle}>
                                                             Upcoming event on {next._d.getDate()}{['st', 'nd', 'rd'][((next._d.getDate() + 90) % 100 - 10) % 10 - 1] || 'th'}
                                                         </span>
                                                     )}
                                                 </div>
                                                 {next && (
-                                                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                                        {/* Stacked avatars */}
-                                                        <div style={{ display: "flex", alignItems: "center" }}>
+                                                    <div className={styles.remindersNextRight}>
+                                                        <div className={styles.remindersAvatarStack}>
                                                             {upcoming.slice(0, 3).map((event, i) => {
                                                                 const avatar = event.page?.avatar || event.host?.avatar;
                                                                 return avatar ? (
@@ -1130,27 +1048,14 @@ export default function ProfilePage({ type }) {
                                                                         key={event.id}
                                                                         src={resolveUrl(avatar)}
                                                                         alt=""
-                                                                        style={{
-                                                                            width: 40, height: 40, borderRadius: "50%",
-                                                                            objectFit: "cover",
-                                                                            border: "2.5px solid rgba(61,60,60,0.9)",
-                                                                            marginLeft: i === 0 ? 0 : -16,
-                                                                            zIndex: upcoming.slice(0, 3).length - i,
-                                                                            position: "relative"
-                                                                        }}
+                                                                        className={styles.remindersStackAvatar}
+                                                                        style={{ marginLeft: i === 0 ? 0 : -16, zIndex: upcoming.slice(0, 3).length - i }}
                                                                     />
                                                                 ) : (
                                                                     <div
                                                                         key={event.id || i}
-                                                                        style={{
-                                                                            width: 46, height: 46, borderRadius: "50%",
-                                                                            background: "rgba(255,255,255,0.08)",
-                                                                            border: "2.5px solid rgba(61,60,60,0.9)",
-                                                                            display: "flex", alignItems: "center", justifyContent: "center",
-                                                                            marginLeft: i === 0 ? 0 : -16,
-                                                                            zIndex: upcoming.slice(0, 3).length - i,
-                                                                            position: "relative"
-                                                                        }}
+                                                                        className={styles.remindersStackPlaceholder}
+                                                                        style={{ marginLeft: i === 0 ? 0 : -16, zIndex: upcoming.slice(0, 3).length - i }}
                                                                     >
                                                                         <User size={18} color="rgba(255,255,255,0.4)" />
                                                                     </div>
@@ -1161,7 +1066,7 @@ export default function ProfilePage({ type }) {
                                                             src={ArrowRight}
                                                             alt=""
                                                             onClick={() => navigate('/events', { state: { highlightId: next.id } })}
-                                                            style={{ width: 15, height: 15, filter: "brightness(0) invert(0.9)", cursor: "pointer" }}
+                                                            className={styles.remindersArrow}
                                                         />
                                                     </div>
                                                 )}
@@ -1170,22 +1075,14 @@ export default function ProfilePage({ type }) {
                                     })()}
                                 </div>
 
-                                {/* Your Picks — own container */}
-                                <div style={{
-                                    background: "rgba(61,60,60,0.45)", borderRadius: 25,
-                                    padding: "23px 20px 23px", border: "1px solid rgba(255,255,255,0.08)",
-                                    backdropFilter: "blur(10px)", marginTop: 0, boxShadow: " 0 18px 40px rgba(0, 0, 0, 0.35)"
-                                }}>
-                                    <div style={{ display: "flex", alignItems: "center" }}>
-                                        <img src={Community} alt="" style={{
-                                            width: 30, height: 20, flexShrink: 0,
-                                            filter: "brightness(0) saturate(100%) invert(23%) sepia(85%) saturate(1200%) hue-rotate(280deg) brightness(90%)"
-                                        }} />
-                                        <span style={{ color: "white", fontWeight: 700, fontSize: "1.3rem", marginLeft: 8 }}>
+                                <div className={styles.picksWidgetWrap}>
+                                    <div className={styles.picksWidgetHeader}>
+                                        <img src={Community} alt="" className={styles.picksWidgetIcon} />
+                                        <span className={styles.picksWidgetTitle}>
                                             Your Picks
                                         </span>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: "auto" }}>
-                                            <span style={{ color: "#999999", fontSize: "0.85rem", fontWeight: 500 }}>
+                                        <div className={styles.picksWidgetMeta}>
+                                            <span className={styles.picksWidgetCount}>
                                                 {(user?.community_picks || []).length}/3
                                             </span>
                                             <button
@@ -1204,13 +1101,7 @@ export default function ProfilePage({ type }) {
                                                     } catch (e) { console.error(e); }
                                                     finally { setPicksLoading(false); }
                                                 }}
-                                                style={{
-                                                    background: '#4D4D4D', border: 'none', borderRadius: 20,
-                                                    padding: '8px 20px', color: '#CCCCCC', fontSize: '0.9rem',
-                                                    fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
-                                                }}
-                                                onMouseEnter={e => e.currentTarget.style.background = '#666666'}
-                                                onMouseLeave={e => e.currentTarget.style.background = '#4D4D4D'}
+                                                className={styles.picksManageBtn}
                                             >
                                                 Manage
                                             </button>
@@ -1238,64 +1129,42 @@ export default function ProfilePage({ type }) {
                                     for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
                                     return (
-                                        <div style={{
-                                            background: "rgba(61,60,60,0.45)", borderRadius: 20,
-                                            padding: "14px 16px 12px", border: "1px solid rgba(255,255,255,0.08)",
-                                            backdropFilter: "blur(10px)", marginTop: -30, position: "relative", boxShadow: " 0 18px 40px rgba(0, 0, 0, 0.35)"
-                                        }}>
-                                            <div style={{ display: "flex", alignItems: "center", marginBottom: 16, }}>
-                                                <img src={Events} alt="events" style={{ width: 30, height: 30, flexShrink: 0, filter: "brightness(0) saturate(100%) invert(22%) sepia(80%) saturate(1300%) hue-rotate(280deg) brightness(90%)" }} />
-                                                <span style={{ color: "white", fontWeight: 700, fontSize: "1.6rem", marginLeft: 8 }}>
+                                        <div className={styles.calendarWidget}>
+                                            <div className={styles.calendarWidgetHeader}>
+                                                <img src={Events} alt="events" className={styles.calendarWidgetIcon} />
+                                                <span className={styles.calendarWidgetTitle}>
                                                     Reminders set
                                                 </span>
                                                 <span
                                                     onClick={() => setShowRemindersMonthPicker(p => !p)}
-                                                    style={{
-                                                        color: "rgba(255,255,255,0.45)", fontSize: "0.85rem", marginLeft: "auto",
-                                                        borderBottom: "1.5px solid #A6279C", cursor: "pointer",
-                                                        userSelect: "none", transition: "color 0.15s"
-                                                    }}
-                                                    onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.75)"}
-                                                    onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.45)"}
+                                                    className={styles.remindersMonthToggle}
                                                 >
                                                     {monthName} {year}
                                                 </span>
                                             </div>
                                             {showRemindersMonthPicker && (
-                                                <div style={{
-                                                    position: "absolute", top: 56, left: 0, right: 0, zIndex: 50,
-                                                    background: "#252525", border: "1px solid rgba(255,255,255,0.1)",
-                                                    borderRadius: 16, padding: 14, boxShadow: "0 16px 40px rgba(0,0,0,0.6)"
-                                                }}>
-                                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                                                <div className={styles.monthPickerDropdown}>
+                                                    <div className={styles.monthPickerNav}>
                                                         <button
                                                             onClick={() => setRemindersMonth(new Date(year - 1, month, 1))}
                                                             disabled={year <= 2026}
-                                                            style={{ background: "transparent", border: "none", color: year <= 2026 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)", fontSize: "1.2rem", cursor: year <= 2026 ? "not-allowed" : "pointer", width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                                            className={styles.monthPickerNavBtn}
                                                         >‹</button>
-                                                        <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem" }}>{year}</span>
+                                                        <span className={styles.monthPickerYear}>{year}</span>
                                                         <button
                                                             onClick={() => setRemindersMonth(new Date(year + 1, month, 1))}
                                                             disabled={year >= new Date().getFullYear() + 2}
-                                                            style={{ background: "transparent", border: "none", color: year >= new Date().getFullYear() + 2 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)", fontSize: "1.2rem", cursor: year >= new Date().getFullYear() + 2 ? "not-allowed" : "pointer", width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                                            className={styles.monthPickerNavBtn}
                                                         >›</button>
                                                     </div>
-                                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+                                                    <div className={styles.monthGrid}>
                                                         {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => {
                                                             const isSelected = i === month;
                                                             return (
                                                                 <button
                                                                     key={m}
                                                                     onClick={() => { setRemindersMonth(new Date(year, i, 1)); setShowRemindersMonthPicker(false); }}
-                                                                    style={{
-                                                                        background: isSelected ? "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))" : "transparent",
-                                                                        border: "none", borderRadius: 10,
-                                                                        color: isSelected ? "#fff" : "rgba(255,255,255,0.7)",
-                                                                        padding: "8px 4px", fontSize: "0.8rem",
-                                                                        fontWeight: isSelected ? 700 : 400, cursor: "pointer", transition: "background 0.15s"
-                                                                    }}
-                                                                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
-                                                                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
+                                                                    className={`${styles.monthBtn} ${isSelected ? styles.monthBtnActive : styles.monthBtnInactive}`}
                                                                 >{m}</button>
                                                             );
                                                         })}
@@ -1303,7 +1172,7 @@ export default function ProfilePage({ type }) {
                                                 </div>
                                             )}
 
-                                            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
+                                            <div className={styles.calendarGrid}>
                                                 {cells.map((day, i) => {
                                                     const hasEvent = day && eventDays.has(day);
                                                     return (
@@ -1317,17 +1186,7 @@ export default function ProfilePage({ type }) {
                                                                 });
                                                                 setRemindersPopup({ day, monthName, events: eventsOnDay });
                                                             }}
-                                                            style={{
-                                                                display: "flex", alignItems: "center", justifyContent: "center",
-                                                                width: 30, height: 30, margin: "2px auto", borderRadius: "50%",
-                                                                background: hasEvent ? "#A4279C" : "transparent",
-                                                                color: day ? (hasEvent ? "white" : "rgba(255,255,255,0.7)") : "transparent",
-                                                                fontSize: "0.78rem", fontWeight: hasEvent ? 700 : 400,
-                                                                cursor: hasEvent ? "pointer" : "default",
-                                                                transition: "background 0.15s, transform 0.15s",
-                                                            }}
-                                                            onMouseEnter={e => { if (hasEvent) e.currentTarget.style.transform = "scale(1.1)"; }}
-                                                            onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+                                                            className={`${styles.calendarDay} ${!day ? styles.calendarDayEmpty : (hasEvent ? styles.calendarDayEvent : styles.calendarDayNormal)}`}
                                                         >
                                                             {day || ""}
                                                         </div>
@@ -1342,37 +1201,32 @@ export default function ProfilePage({ type }) {
                             <>
                                 <UserDetails user={user} />
                                 {user?.type === 'page' && !isOwnProfile && (
-                                    <div style={{
-                                        background: "rgba(61,60,60,0.45)", borderRadius: 20,
-                                        padding: "20px 24px", border: "1px solid rgba(255,255,255,0.08)",
-                                        backdropFilter: "blur(10px)", marginTop: 16
-                                    }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 30, marginLeft: 20 }}>
-                                            <img src={Star} alt="star" style={{ width: "2rem", height: "2rem", filter: "brightness(0) saturate(100%) invert(23%) sepia(76%) saturate(1200%) hue-rotate(280deg) brightness(95%)" }} />
-                                            <span style={{ color: "white", fontWeight: 700, fontSize: "1.15rem" }}>Add a Review</span>
+                                    <div className={styles.reviewWidget}>
+                                        <div className={styles.reviewWidgetHeader}>
+                                            <img src={Star} alt="star" className={styles.reviewWidgetIcon} />
+                                            <span className={styles.reviewWidgetTitle}>Add a Review</span>
                                         </div>
-                                        <div style={{ display: "flex", justifyContent: "space-around" }}>
+                                        <div className={styles.reviewStarsRow}>
                                             {[1, 2, 3, 4, 5].map(star => (
                                                 <button
                                                     key={star}
                                                     onMouseEnter={() => setHoverRating(star)}
                                                     onMouseLeave={() => setHoverRating(0)}
                                                     onClick={() => handleReview(star)}
-                                                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, transition: "filter 0.15s, transform 0.15s", transform: star <= (hoverRating || reviewRating) ? "scale(1.1)" : "scale(1)" }}
+                                                    className={styles.reviewStarBtn}
+                                                    style={{ transform: star <= (hoverRating || reviewRating) ? "scale(1.1)" : "scale(1)" }}
                                                 >
                                                     <img
                                                         src={Star}
                                                         alt="star"
-                                                        style={{
-                                                            width: "1.9rem", height: "1.9rem", display: "block",
-                                                            filter: star <= (hoverRating || reviewRating) ? "brightness(0) invert(1) opacity(0.72)" : "brightness(0) invert(1) opacity(0.28)"
-                                                        }}
+                                                        className={styles.reviewStarImg}
+                                                        style={{ filter: star <= (hoverRating || reviewRating) ? "brightness(0) invert(1) opacity(0.72)" : "brightness(0) invert(1) opacity(0.28)" }}
                                                     />
                                                 </button>
                                             ))}
                                         </div>
                                         {reviewRating > 0 && (
-                                            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem", marginTop: 10 }}>
+                                            <p className={styles.reviewRatingText}>
                                                 You rated this {reviewRating}/5
                                             </p>
                                         )}
@@ -1424,11 +1278,11 @@ export default function ProfilePage({ type }) {
                                     </div>
                                 )}
                                 {picksPopup && createPortal(
-                                    <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setPicksPopup(null)}>
-                                        <div style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 32, width: "90%", maxWidth: 500, position: "relative", boxShadow: "0 10px 40px rgba(0,0,0,0.5)" }} onClick={e => e.stopPropagation()}>
-                                            <button onClick={() => setPicksPopup(null)} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 20, cursor: "pointer" }}>✕</button>
-                                            <h3 style={{ color: "#fff", fontSize: 24, fontWeight: 800, margin: "0 0 16px" }}>{picksPopup.name}</h3>
-                                            <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 15, lineHeight: 1.6, margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{picksPopup.description}</p>
+                                    <div className={styles.picksPopupOverlay} onClick={() => setPicksPopup(null)}>
+                                        <div className={styles.picksPopupBox} onClick={e => e.stopPropagation()}>
+                                            <button onClick={() => setPicksPopup(null)} className={styles.picksPopupCloseBtn}>✕</button>
+                                            <h3 className={styles.picksPopupTitle}>{picksPopup.name}</h3>
+                                            <p className={styles.picksPopupDesc}>{picksPopup.description}</p>
                                         </div>
                                     </div>,
                                     document.body
@@ -1441,16 +1295,12 @@ export default function ProfilePage({ type }) {
 
             {/* ══════════════════════════════════════
             MOBILE LAYOUT
-        ══════════════════════════════════════ */}
+            ══════════════════════════════════════ */}
             {isMobile && (
-                <div style={{ display: "flex", flexDirection: "column", width: "100%", boxSizing: "border-box" }}>
-                    <div style={{
-                        background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))",
-                        paddingTop: 6
-                    }}>
+                <div className={styles.mobileWrapper}>
+                    <div className={styles.mobileGradientWrap}>
                         {isEditing ? (
                             <MobileEditView styles={styles} edit={edit} setIsEditing={setIsEditing} />
-
                         ) : (
                             <MobileProfileView
                                 styles={styles}
@@ -1475,7 +1325,6 @@ export default function ProfilePage({ type }) {
                                 handleMessage={handleMessage}
                                 handleAddFriend={handleAddFriend} handleAccept={handleAccept} handleDecline={handleDecline} onEditClick={() => edit.setIsEditing(true)} edit={edit}
                             />)}
-
                     </div>
                 </div>
             )}
@@ -1485,115 +1334,145 @@ export default function ProfilePage({ type }) {
             )}
             {remindersPopup && createPortal(
                 <div
-                    style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    className={styles.remindersPopupOverlay}
                     onClick={() => { setRemindersPopup(null); setEventMenuOpen(null); }}
                 >
                     <div
-                        className={styles.popupScrollContainer}
-                        style={{ background: "#383838", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 24, padding: "24px 20px", width: "92%", maxWidth: 480, maxHeight: "85vh", overflowY: "auto", position: "relative", boxShadow: "0 10px 40px rgba(0,0,0,0.7)" }}
+                        className={`${styles.popupScrollContainer} ${styles.remindersPopupBox}`}
                         onClick={e => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
-                            <img src={Events} alt="events" style={{ width: 22, height: 22, filter: "brightness(0) invert(1)" }} />
-                            <h3 style={{ color: "white", fontSize: "1.15rem", fontWeight: 700, margin: 0 }}>
+                        <div className={styles.remindersPopupHeader}>
+                            <img src={Events} alt="events" className={styles.remindersPopupHeaderIcon} />
+                            <h3 className={styles.remindersPopupTitle}>
                                 Events on {remindersPopup.monthName} {remindersPopup.day}{[1, 21, 31].includes(remindersPopup.day) ? 'st' : [2, 22].includes(remindersPopup.day) ? 'nd' : [3, 23].includes(remindersPopup.day) ? 'rd' : 'th'}
                             </h3>
                             <button
                                 onClick={() => setRemindersPopup(null)}
-                                style={{ marginLeft: "auto", background: "none", border: "none", color: "#e84d70", fontSize: "0.9rem", fontWeight: 600, cursor: "pointer", padding: 0 }}
+                                className={styles.remindersPopupCancelBtn}
                             >
                                 Cancel
                             </button>
                         </div>
-                        <div style={{ height: "1px", background: "rgba(255, 255, 255, 0.1)", marginBottom: 20 }} />
+                        <div className={styles.remindersPopupDivider} />
 
 
-                        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                        <div className={styles.remindersEventList}>
                             {remindersPopup.events.map((event, index) => (
                                 <div key={event.id}>
 
                                     {index > 0 && (
-                                        <div style={{ width: "40%", height: 1, background: "rgba(255,255,255,0.1)", margin: "0 auto 20px auto" }} />
+                                        <div className={styles.remindersEventSeparator} />
                                     )}
 
                                     {/* Host row */}
-                                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                                    <div className={styles.remindersHostRow}>
                                         {event.page?.avatar || event.host?.avatar
                                             ? <img src={(event.page?.avatar || event.host?.avatar).startsWith("http") ? (event.page?.avatar || event.host?.avatar) : `${API}${event.page?.avatar || event.host?.avatar}`}
-                                                alt="" style={{ width: 42, height: 42, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "2px solid rgba(255,255,255,0.1)" }} />
-                                            : <div style={{ width: 42, height: 42, borderRadius: "50%", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><User size={20} color="rgba(255,255,255,0.4)" /></div>
+                                                alt="" className={styles.remindersHostAvatar} />
+                                            : <div className={styles.remindersHostAvatarPlaceholder}><User size={20} color="rgba(255,255,255,0.4)" /></div>
                                         }
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                                                <span style={{ color: "white", fontWeight: 700, fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                        <div className={styles.remindersHostMeta}>
+                                            <div className={styles.remindersHostNameRow}>
+                                                <span className={styles.remindersHostName}>
                                                     {event.page?.name || event.host?.name || event.host?.username || "Unknown Host"}
                                                 </span>
                                                 {(event.page?.is_verified || event.host?.is_verified) && (
-                                                    <img src={VerifiedBadge} alt="verified" style={{ width: 14, height: 14, filter: "brightness(0) invert(1)", flexShrink: 0 }} />
+                                                    <img src={VerifiedBadge} alt="verified" className={styles.remindersHostVerified} />
                                                 )}
                                             </div>
                                             {(event.page?.description || event.host?.bio) && (
-                                                <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                <span className={styles.remindersHostBio}>
                                                     {event.page?.description || event.host?.bio}
                                                 </span>
                                             )}
                                         </div>
-                                        <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: "50%", width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginRight: 6 }}>
-                                            <Bell size={14} color="rgba(255,255,255,0.8)" />
-                                        </div>
-                                        <button style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 20, color: "white", fontSize: "0.75rem", fontWeight: 600, padding: "6px 16px", cursor: "pointer", flexShrink: 0 }}>
-                                            Followed
+                                        <button
+                                            onClick={() => {
+                                                const pid = event.page?.page_id ?? event.page?.id;
+                                                pid && handleReminderPageNotify(pid);
+                                            }}
+                                            className={styles.remindersBellWrap}
+                                            title={pageNotifyStatus[event.page?.page_id ?? event.page?.id] ? 'Mute notifications' : 'Enable notifications'}
+                                        >
+                                            <img
+                                                src={pageNotifyStatus[event.page?.page_id ?? event.page?.id] ? BellOn : BellOff}
+                                                alt="notifications"
+                                                width={pageNotifyStatus[event.page?.page_id ?? event.page?.id] ? 17 : 20}
+                                                height={pageNotifyStatus[event.page?.page_id ?? event.page?.id] ? 20 : 20}
+                                                style={{ filter: 'brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)' }}
+                                            />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const pid = event.page?.page_id ?? event.page?.id;
+                                                pid && handleReminderPageFollow(pid);
+                                            }}
+                                            className={pageFollowStatus[event.page?.page_id ?? event.page?.id] ? styles.remindersFollowedBtn : styles.remindersFollowBtn}
+                                        >
+                                            {pageFollowStatus[event.page?.page_id ?? event.page?.id] ? 'Followed' : 'Follow'}
                                         </button>
                                     </div>
 
 
-                                    <div style={{ borderRadius: 24, overflow: "hidden", position: "relative", minHeight: 160 }}>
+                                    <div className={styles.remindersEventCard}>
 
                                         {event.banner
-                                            ? <img src={event.banner.startsWith("http") ? event.banner : `${API}${event.banner}`} alt=""
-                                                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-                                            : <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.05)" }} />
+                                            ? <img src={event.banner.startsWith("http") ? event.banner : `${API}${event.banner}`} alt="" className={styles.remindersEventBanner} />
+                                            : <div className={styles.remindersEventBannerPlaceholder} />
                                         }
 
                                         {/* Dark gradient overlay covering the card to ensure text is visible */}
-                                        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.85) 100%)" }} />
+                                        <div className={styles.remindersEventGradient} />
 
                                         {/* 3-dot menu floating at top right */}
-                                        <div style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }}>
+                                        <div className={styles.eventCardMenuWrap}>
                                             <button
                                                 onClick={e => { e.stopPropagation(); setEventMenuOpen(eventMenuOpen === event.id ? null : event.id); }}
-                                                style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)", border: "none", borderRadius: "50%", cursor: "pointer", color: "white", padding: 6, display: "flex", alignItems: "center", justifyContent: "center" }}
+                                                className={styles.eventCardMenuBtn}
                                             >
-                                                <MoreHorizontal size={18} />
+                                                <MoreHorizontal size={30} strokeWidth={3} />
                                             </button>
                                             {eventMenuOpen === event.id && (
                                                 <div
-                                                    style={{ position: "absolute", right: 0, top: "115%", zIndex: 200, background: "#222224", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "8px 0", minWidth: 160, boxShadow: "0 8px 24px rgba(0,0,0,0.8)" }}
+                                                    className={styles.eventCardDropdown}
                                                     onClick={e => e.stopPropagation()}
                                                 >
-                                                    {[
-                                                        { icon: <Upload size={14} />, label: "Share event", color: "white" },
-                                                        { icon: <Trash2 size={14} />, label: "Delete event", color: "#e84d70" },
-                                                        { icon: <HelpCircle size={14} />, label: "Report event", color: "#e84d70" },
-                                                    ].map(({ icon, label, color }) => (
-                                                        <button
-                                                            key={label}
-                                                            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 16px", background: "transparent", border: "none", cursor: "pointer", color: color, fontSize: "0.85rem", fontWeight: 500, transition: "background 0.15s" }}
-                                                            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                                                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                                                        >
-                                                            {icon}{label}
-                                                        </button>
-                                                    ))}
+                                                    {/* Share event */}
+                                                    <button className={styles.eventCardDropdownItem}>
+                                                        <img src={Share} alt="share" width={14} height={14} className={`${styles.eventCardDropdownIcon} ${styles.eventCardDropdownIconNormal}`} />
+                                                        <span style={{ color: "#CCCCCC" }}>Share event</span>
+                                                    </button>
+
+                                                    {/* Divider */}
+                                                    <div className={styles.eventCardDropdownDivider}>
+                                                        <div className={styles.eventCardDropdownDividerLine} />
+                                                    </div>
+
+                                                    {/* Delete event */}
+                                                    <button className={styles.eventCardDropdownItem}>
+                                                        <img src={Bin} alt="delete" width={14} height={14} className={`${styles.eventCardDropdownIcon} ${styles.eventCardDropdownIconDanger}`} />
+                                                        <span style={{ color: "#e84d70" }}>Delete event</span>
+                                                    </button>
+
+                                                    {/* Divider */}
+                                                    <div className={styles.eventCardDropdownDivider}>
+                                                        <div className={styles.eventCardDropdownDividerLine} />
+                                                    </div>
+
+                                                    {/* Report event */}
+                                                    <button className={styles.eventCardDropdownItem}>
+                                                        <img src={Info} alt="report" width={14} height={14} className={`${styles.eventCardDropdownIcon} ${styles.eventCardDropdownIconDanger}`} />
+                                                        <span style={{ color: "#e84d70" }}>Report event</span>
+                                                    </button>
                                                 </div>
                                             )}
                                         </div>
 
                                         {/* Content at the bottom */}
-                                        <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "flex-end", gap: 16, padding: "20px 16px 16px 16px", minHeight: 160 }}>
+                                        <div className={styles.remindersEventContent}>
                                             {/* Left: title + desc + read more */}
-                                            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, minWidth: 0, overflow: "hidden" }}>
+                                            <div className={styles.remindersEventLeft}>
 
                                                 {/* New Marquee Logic for Title */}
                                                 {event.title?.length > 20 ? (
@@ -1604,30 +1483,30 @@ export default function ProfilePage({ type }) {
                                                         </span>
                                                     </div>
                                                 ) : (
-                                                    <span style={{ color: "white", fontWeight: 800, fontSize: "1.05rem" }}>
+                                                    <span className={styles.remindersEventTitle}>
                                                         {event.title}
                                                     </span>
                                                 )}
 
                                                 {event.description && (
-                                                    <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.8rem", margin: 0, lineHeight: 1.4, fontStyle: "italic", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                                                    <p className={styles.remindersEventDesc}>
                                                         {event.description}
                                                     </p>
                                                 )}
                                                 {event.description?.length > 80 && (
-                                                    <button style={{ background: "none", border: "none", color: "white", textDecoration: "underline", fontSize: "0.75rem", cursor: "pointer", padding: 0, fontWeight: 500, textAlign: "left", marginTop: 2 }}>
+                                                    <button className={styles.remindersEventReadMore}>
                                                         read more
                                                     </button>
                                                 )}
                                             </div>
 
                                             {(event.start_date || event.location) && (
-                                                <div style={{ width: 140, flexShrink: 0, padding: "12px", background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", borderRadius: 14, display: "flex", flexDirection: "column", gap: 10 }}>
-                                                    <span style={{ color: "white", fontSize: "0.6rem", fontWeight: 600 }}>Information</span>
+                                                <div className={styles.remindersInfoBox}>
+                                                    <span className={styles.remindersInfoLabel}>Information</span>
                                                     {event.start_date && (
-                                                        <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
-                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e84d70" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                                            <span style={{ color: "white", fontSize: "0.65rem", lineHeight: 1.3 }}>
+                                                        <div className={styles.remindersInfoRow}>
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6823A3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                                            <span className={styles.remindersInfoText}>
                                                                 {new Date(event.start_date) <= new Date()
                                                                     ? "Happening Now!"
                                                                     : `The event starts in ${Math.ceil((new Date(event.start_date) - new Date()) / 3600000)} hours`}
@@ -1635,9 +1514,9 @@ export default function ProfilePage({ type }) {
                                                         </div>
                                                     )}
                                                     {event.location && (
-                                                        <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
-                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e84d70" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                                                            <span style={{ color: "white", fontSize: "0.65rem", lineHeight: 1.3 }}>{event.location}</span>
+                                                        <div className={styles.remindersInfoRow}>
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6823A3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                                            <span className={styles.remindersInfoText}>{event.location}</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1652,66 +1531,42 @@ export default function ProfilePage({ type }) {
                 document.body
             )}
             {unfriendPopup && createPortal(
-                <div style={{
-                    position: "fixed", inset: 0, zIndex: 10000,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    background: "rgba(0,0,0,0.65)", backdropFilter: "blur(5px)"
-                }}
+                <div
+                    className={styles.unfriendOverlay}
                     onClick={() => setUnfriendPopup(false)}
                 >
-                    <div style={{
-                        position: "relative",
-                        background: "linear-gradient(145deg, #1e1e2e, #252535)",
-                        border: "1px solid rgba(255,255,255,0.09)",
-                        borderRadius: 20, padding: "28px 28px 24px",
-                        width: 360, boxShadow: "0 24px 60px rgba(0,0,0,0.7)"
-                    }}
+                    <div
+                        className={styles.unfriendModal}
                         onClick={e => e.stopPropagation()}
                     >
-                        <button onClick={() => setUnfriendPopup(false)} style={{
-                            position: "absolute", top: 14, right: 14,
-                            background: "rgba(255,255,255,0.07)", border: "none",
-                            borderRadius: "50%", width: 30, height: 30,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            cursor: "pointer", color: "rgba(255,255,255,0.6)"
-                        }}>
+                        <button onClick={() => setUnfriendPopup(false)} className={styles.unfriendCloseBtn}>
                             <X size={15} />
                         </button>
 
-                        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
+                        <div className={styles.unfriendUserRow}>
                             <img
                                 src={avatarUrl || ProfilePicture}
                                 alt=""
-                                style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                                className={styles.unfriendAvatar}
                             />
                             <div>
-                                <div style={{ color: "#fff", fontWeight: 700, fontSize: "1rem" }}>{username}</div>
-                                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.78rem", marginTop: 2 }}>
+                                <div className={styles.unfriendUsername}>{username}</div>
+                                <div className={styles.unfriendFriendsCount}>
                                     {user?.friends_count || 0} friends
                                 </div>
                             </div>
                         </div>
 
-                        <div style={{
-                            background: "rgba(248,113,113,0.07)",
-                            border: "1px solid rgba(248,113,113,0.2)",
-                            borderRadius: 12, padding: "12px 14px", marginBottom: 22
-                        }}>
-                            <p style={{ margin: 0, color: "rgba(255,255,255,0.75)", fontSize: "0.875rem", lineHeight: 1.5 }}>
-                                Are you sure you want to unfriend <strong style={{ color: "#fff" }}>{username}</strong>? You'll have to send a new friend request if you change your mind.
+                        <div className={styles.unfriendWarning}>
+                            <p className={styles.unfriendWarningText}>
+                                Are you sure you want to unfriend <strong className={styles.unfriendWarningName}>{username}</strong>? You'll have to send a new friend request if you change your mind.
                             </p>
                         </div>
 
-                        <div style={{ display: "flex", gap: 10 }}>
+                        <div className={styles.unfriendActions}>
                             <button
                                 onClick={() => setUnfriendPopup(false)}
-                                style={{
-                                    flex: 1, background: "rgba(255,255,255,0.06)",
-                                    border: "1px solid rgba(255,255,255,0.1)",
-                                    borderRadius: 12, padding: "11px 0",
-                                    color: "rgba(255,255,255,0.7)", fontWeight: 600,
-                                    fontSize: "0.9rem", cursor: "pointer"
-                                }}
+                                className={styles.unfriendCancelBtn}
                             >
                                 Cancel
                             </button>
@@ -1720,12 +1575,7 @@ export default function ProfilePage({ type }) {
                                     await handleUnfriend();
                                     setUnfriendPopup(false);
                                 }}
-                                style={{
-                                    flex: 2,
-                                    background: "linear-gradient(-90deg, rgba(248,113,113,0.9), rgba(220,38,38,0.9))",
-                                    border: "none", borderRadius: 12, padding: "11px 0",
-                                    color: "#fff", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer"
-                                }}
+                                className={styles.unfriendConfirmBtn}
                             >
                                 Yes, Unfriend
                             </button>
@@ -1735,49 +1585,31 @@ export default function ProfilePage({ type }) {
                 document.body
             )}
             {showPicksModal && createPortal(
-                <div style={{
-                    position: 'fixed', inset: 0, zIndex: 9999,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-                }}
+                <div
+                    className={styles.picksModalOverlay}
                     onClick={() => setShowPicksModal(false)}
                 >
-                    <div style={{
-                        position: 'relative', background: '#333333', borderRadius: 24,
-                        padding: 32, width: '90%', maxWidth: 650,
-                        maxHeight: '60vh', display: 'flex', flexDirection: 'column',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.4)', boxSizing: 'border-box',
-                        overflowY: 'auto',
-                        scrollbarWidth: 'thin',
-                        scrollbarColor: 'rgba(255,255,255,0.15) transparent',
-                    }}
+                    <div
+                        className={styles.picksModalBox}
                         onClick={e => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div style={{
-                            display: 'flex', justifyContent: 'space-between',
-                            alignItems: 'center', marginBottom: 24,
-                            paddingBottom: 16, borderBottom: '1px solid #4D4D4D'
-                        }}>
+                        <div className={styles.picksModalHeader}>
                             <div>
-                                <h2 style={{ margin: 0, color: '#E6E6E6', fontSize: '1.4rem', fontWeight: 600 }}>
+                                <h2 className={styles.picksModalHeading}>
                                     Community Picks
                                 </h2>
-                                <p style={{ margin: '4px 0 0', color: '#808080', fontSize: '0.8rem' }}>
+                                <p className={styles.picksModalSubtext}>
                                     Select up to 3 communities to feature on your profile
                                 </p>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                                <span style={{ color: '#B3B3B3', fontSize: '0.9rem', fontWeight: 500 }}>
+                            <div className={styles.picksModalHeaderRight}>
+                                <span className={styles.picksModalCount}>
                                     {(modalPicks).length}/3
                                 </span>
                                 <button
                                     onClick={() => setShowPicksModal(false)}
-                                    style={{
-                                        background: 'none', border: 'none',
-                                        color: '#808080', fontSize: '1.5rem',
-                                        cursor: 'pointer', lineHeight: 1, padding: 0
-                                    }}
+                                    className={styles.picksModalCloseBtn}
                                 >
                                     ✕
                                 </button>
@@ -1785,15 +1617,11 @@ export default function ProfilePage({ type }) {
                         </div>
 
                         {/* List */}
-                        <div style={{
-                            flex: 1, overflowY: 'auto',
-                            display: 'flex', flexDirection: 'column', gap: 12,
-                            paddingRight: 8
-                        }}>
+                        <div className={styles.picksModalList}>
                             {picksLoading ? (
-                                <p style={{ color: '#808080', textAlign: 'center', marginTop: 40 }}>Loading...</p>
+                                <p className={styles.picksModalEmptyText}>Loading...</p>
                             ) : joinedCommunities.length === 0 ? (
-                                <p style={{ color: '#808080', textAlign: 'center', marginTop: 40 }}>
+                                <p className={styles.picksModalEmptyText}>
                                     You haven't joined any communities yet.
                                 </p>
                             ) : joinedCommunities.map(community => {
@@ -1803,28 +1631,15 @@ export default function ProfilePage({ type }) {
                                 return (
                                     <div key={community.id} style={{ position: 'relative' }}>
                                         {/* CommunityCard with Pick button overlay */}
-                                        <div style={{
-                                            borderRadius: 16, overflow: 'hidden',
-                                            backgroundImage: `linear-gradient(to right, rgba(25,25,25,0.95) 10%, rgba(25,25,25,0.7) 40%, rgba(25,25,25,0.2) 100%), url(${community.image})`,
-                                            backgroundSize: 'cover', backgroundPosition: 'center',
-                                            padding: '16px 20px',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                            border: isPicked ? '1px solid rgba(139,45,255,0.5)' : '1px solid transparent',
-                                        }}>
+                                        <div
+                                            className={`${styles.picksModalCommunityCard} ${isPicked ? styles.picksModalCommunityCardPicked : styles.picksModalCommunityCardUnpicked}`}
+                                            style={{ backgroundImage: `linear-gradient(to right, rgba(25,25,25,0.95) 10%, rgba(25,25,25,0.7) 40%, rgba(25,25,25,0.2) 100%), url(${community.image})` }}
+                                        >
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <h3 style={{
-                                                    margin: '0 0 4px', color: 'white',
-                                                    fontSize: '0.95rem', fontWeight: 700,
-                                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-                                                }}>
+                                                <h3 className={styles.picksModalCommunityName}>
                                                     {community.name}
                                                 </h3>
-                                                <p style={{
-                                                    margin: 0, color: 'rgba(255,255,255,0.55)',
-                                                    fontSize: '0.78rem', lineHeight: 1.4,
-                                                    display: '-webkit-box', WebkitLineClamp: 2,
-                                                    WebkitBoxOrient: 'vertical', overflow: 'hidden'
-                                                }}>
+                                                <p className={styles.picksModalCommunityDesc}>
                                                     {community.description || 'No description available.'}
                                                 </p>
                                             </div>
@@ -1839,20 +1654,7 @@ export default function ProfilePage({ type }) {
                                                     }
                                                 }}
                                                 disabled={!isPicked && atLimit}
-                                                style={{
-                                                    flexShrink: 0, marginLeft: 16,
-                                                    padding: '8px 20px', borderRadius: 20,
-                                                    fontWeight: 600, fontSize: '0.85rem',
-                                                    cursor: (!isPicked && atLimit) ? 'not-allowed' : 'pointer',
-                                                    border: 'none',
-                                                    background: isPicked
-                                                        ? 'rgba(139,45,255,0.3)'
-                                                        : (!isPicked && atLimit)
-                                                            ? 'rgba(255,255,255,0.05)'
-                                                            : 'linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))',
-                                                    color: (!isPicked && atLimit) ? 'rgba(255,255,255,0.3)' : 'white',
-                                                    transition: 'all 0.15s'
-                                                }}
+                                                className={`${styles.picksModalPickBtn} ${isPicked ? styles.picksModalPickBtnPicked : (!isPicked && atLimit ? styles.picksModalPickBtnDisabled : styles.picksModalPickBtnNormal)}`}
                                             >
                                                 {isPicked ? 'Unpick' : 'Pick'}
                                             </button>

@@ -391,6 +391,9 @@
     color: #808080;
     font-size: 20px;
     margin-left: 6px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
 .shortDivider {
@@ -406,4 +409,8 @@
     font-size: 15px;
     margin-top: 8px;
     line-height: 1.5;
+    word-break: break-all;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
 }

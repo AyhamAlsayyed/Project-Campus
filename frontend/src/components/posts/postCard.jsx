@@ -18,9 +18,14 @@ import XIcon from '../../Assets/icons/x.png';
 import BinIcon from '../../Assets/icons/bin.png';
 import LeaveIcon from '../../Assets/icons/leave.png';
 import InfoIcon from '../../Assets/icons/info.png';
-// ADDED isRequestMode, onAcceptPost, onRejectPost to props
+import HighLight from '../../Assets/icons/star.png';
+import DeletePost from '../../Assets/icons/bin.png';
+import Block from '../../Assets/icons/block.png';
+import Report from '../../Assets/icons/info.png';
+import SaveIcon from '../../Assets/icons/save-icon.png';
+
 export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPost, onPinChange, isRequestMode, onAcceptPost, onRejectPost,
-  isReportedMode, onDismiss, onReportDelete, onKick, onReportAction
+  isReportedMode, onDismiss, onReportDelete, onKick, onReportAction, isAdmin, communityContext
 }) {
   const [current, setCurrent] = useState(0);
   const [isLiked, setIsLiked] = useState(post?.is_liked || post?.has_liked || false);
@@ -352,6 +357,33 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
       setIsSharing(false);
     }
   };
+  const menuItemStyle = {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    width: "100%",
+    padding: "10px 16px",
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    textAlign: "left",
+    transition: "background 0.15s ease",
+    borderRadius: 0,
+  };
+
+  const MenuDivider = () => (
+    <div style={{
+      display: "flex",
+      justifyContent: "center",
+      padding: "2px 0"
+    }}>
+      <div style={{
+        width: "50%",
+        height: 1,
+        background: "#4D4D4D"
+      }} />
+    </div>
+  );
 
   return (
     <article className={styles.card}>
@@ -433,47 +465,171 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
                 top: menuPosition.top,
                 right: menuPosition.right,
                 zIndex: 9999,
-                background: "#2a2a2a",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "#333333",
+                border: "1px solid rgba(255,255,255,0.06)",
                 borderRadius: 14,
                 padding: "6px 0",
-                minWidth: 160,
-                boxShadow: "0 8px 24px rgba(0,0,0,0.6)"
+                minWidth: 150,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.7)"
               }}
               ref={menuRef}
             >
-              <div className={styles.menuSection}>
-                {isOwnProfile && (
-                  <button className={styles.menuItem} onClick={() => handleMenuAction('pin')}>
-                    <img src={Pin} width={16} alt="" className={styles.pinMenuIcon} />
-                    {isPinned ? "Unpin Post" : "Pin Post"}
+              {/* ── ADMIN COMMUNITY MENU ── */}
+              {isAdmin && communityContext ? (
+                <>
+                  {/* Save post */}
+                  <button
+                    className={styles.menuItem}
+                    onClick={() => handleMenuAction('save')}
+                    style={menuItemStyle}
+                    onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  >
+                    <img src={SaveIcon} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
+                    <span style={{ color: "#C2C2C2" }}>{isSaved ? "Unsave" : "Save post"}</span>
                   </button>
-                )}
-                <button className={styles.menuItem} onClick={() => handleMenuAction('save')}>
-                  <Bookmark size={16} fill={isSaved ? "currentColor" : "none"} />
-                  {isSaved ? "Unsave" : "Save"}
-                </button>
-              </div>
 
-              <div className={styles.menuDivider} />
+                  <MenuDivider />
 
-              <div className={styles.menuSection}>
-                {isOwnProfile ? (
-                  <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('delete')}>
-                    <Trash2 size={16} /> Delete Post
+                  {/* Highlight post */}
+                  <button
+                    className={styles.menuItem}
+                    onClick={() => handleMenuAction('highlight')}
+                    style={menuItemStyle}
+                    onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  >
+                    <img src={HighLight} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
+                    <span style={{ color: "#C2C2C2" }}>Highlight post</span>
                   </button>
-                ) : (
-                  <>
-                    <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => { setShowMenu(false); setShowReport(true); }}>
-                      <Flag size={16} /> Report
+
+                  <MenuDivider />
+
+                  {/* Kick member */}
+                  <button
+                    className={styles.menuItem}
+                    onClick={() => { setShowMenu(false); onKick?.(post.id || post.post_id); }}
+                    style={menuItemStyle}
+                    onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  >
+                    <img src={LeaveIcon} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
+                    <span style={{ color: "#C2C2C2" }}>Kick member</span>
+                  </button>
+
+                  <MenuDivider />
+
+                  {/* Delete post */}
+                  <button
+                    className={styles.menuItem}
+                    onClick={() => handleMenuAction('delete')}
+                    style={menuItemStyle}
+                    onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  >
+                    <img src={DeletePost} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
+                    <span style={{ color: "#C2C2C2" }}>Delete post</span>
+                  </button>
+
+                  <MenuDivider />
+
+                  {/* Block user */}
+                  <button
+                    className={styles.menuItem}
+                    onClick={() => handleMenuAction('block')}
+                    style={menuItemStyle}
+                    onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  >
+                    <img src={Block} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
+                    <span style={{ color: "#D4145A" }}>{isBlocked ? "Unblock user" : "Block user"}</span>
+                  </button>
+
+                  <MenuDivider />
+
+                  {/* Report user */}
+                  <button
+                    className={styles.menuItem}
+                    onClick={() => { setShowMenu(false); setShowReport(true); }}
+                    style={menuItemStyle}
+                    onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  >
+                    <img src={Report} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
+                    <span style={{ color: "#D4145A" }}>Report user</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* ── NORMAL MENU ── */}
+                  {isOwnProfile && (
+                    <button
+                      className={styles.menuItem}
+                      onClick={() => handleMenuAction('pin')}
+                      style={menuItemStyle}
+                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      <img src={Pin} width={14} alt="" style={{ filter: "brightness(0) saturate(100%) invert(76%)", flexShrink: 0 }} />
+                      <span style={{ color: "#C2C2C2" }}>{isPinned ? "Unpin Post" : "Pin Post"}</span>
                     </button>
-                    <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('block')}>
-                      <Ban size={16} />
-                      {isBlocked ? "Unblock" : "Block"}
+                  )}
+
+                  <button
+                    className={styles.menuItem}
+                    onClick={() => handleMenuAction('save')}
+                    style={menuItemStyle}
+                    onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  >
+                    <Bookmark size={14} fill={isSaved ? "#C2C2C2" : "none"} color="#C2C2C2" />
+                    <span style={{ color: "#C2C2C2" }}>{isSaved ? "Unsave" : "Save"}</span>
+                  </button>
+
+                  <MenuDivider />
+
+                  {isOwnProfile ? (
+                    <button
+                      className={styles.menuItem}
+                      onClick={() => handleMenuAction('delete')}
+                      style={menuItemStyle}
+                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      <Trash2 size={14} color="#D4145A" />
+                      <span style={{ color: "#D4145A" }}>Delete Post</span>
                     </button>
-                  </>
-                )}
-              </div>
+                  ) : (
+                    <>
+                      <button
+                        className={styles.menuItem}
+                        onClick={() => { setShowMenu(false); setShowReport(true); }}
+                        style={menuItemStyle}
+                        onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                      >
+
+                        <img src={InfoIcon} width={14} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
+                        <span style={{ color: "#D4145A" }}>Report</span>
+                      </button>
+
+                      <MenuDivider />
+
+                      <button
+                        className={styles.menuItem}
+                        onClick={() => handleMenuAction('block')}
+                        style={menuItemStyle}
+                        onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                      >
+                        {/* FIX: Block icon instead of Ban */}
+                        <img src={Block} width={14} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
+                        <span style={{ color: "#D4145A" }}>{isBlocked ? "Unblock" : "Block"}</span>
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
             </div>,
             document.body
           )}
@@ -642,7 +798,64 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
             {showShareMenu && createPortal(
               <div className={styles.shareOverlay} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
                 <div className={styles.shareModal} onClick={e => e.stopPropagation()} ref={shareMenuRef}>
-                  {/* Share Modal Content... */}
+
+                  <div className={styles.shareHeader}>
+                    <p className={styles.shareTitle}>Share post</p>
+                    <button className={styles.closeBtn} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
+                      <img src={XIcon} alt="close" width={14} height={14} style={{ filter: "brightness(0) invert(1)" }} />
+                    </button>
+                  </div>
+
+                  <div className={styles.shareSearchWrapper}>
+                    <div className={styles.shareSearchInner}>
+                      <input
+                        className={styles.shareInput}
+                        placeholder="Search people or chats..."
+                        value={shareSearch}
+                        onChange={e => setShareSearch(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.shareListContainer}>
+                    {isLoadingChats ? (
+                      <div className={styles.shareStatus}>Loading...</div>
+                    ) : shareTargets.filter(t =>
+                      (t.name || t.username || "").toLowerCase().includes(shareSearch.toLowerCase())
+                    ).length === 0 ? (
+                      <div className={styles.shareStatus}>No chats found</div>
+                    ) : (
+                      <>
+                        <div className={styles.sectionHeader}>Chats</div>
+                        {shareTargets
+                          .filter(t => (t.name || t.username || "").toLowerCase().includes(shareSearch.toLowerCase()))
+                          .map(target => (
+                            <button
+                              key={target.id}
+                              className={styles.shareItem}
+                              onClick={() => handleShareToTarget(target.id)}
+                              disabled={isSharing}
+                            >
+                              <div className={styles.shareAvatarWrapper}>
+                                <img
+                                  src={target.avatar}
+                                  alt=""
+                                  className={styles.shareAvatarImg}
+                                  onError={e => { e.currentTarget.src = "/default-avatar.png"; }}
+                                />
+                              </div>
+                              <span className={styles.targetName}>
+                                {target.name || target.username}
+                              </span>
+                              <span className={styles.sendLabel}>Send</span>
+                            </button>
+                          ))
+                        }
+                      </>
+                    )}
+                  </div>
+
                 </div>
               </div>,
               document.body

@@ -285,7 +285,18 @@ export default function CommunityPage() {
                     </div>
                     <div style={{ width: "100%", boxSizing: "border-box", margin: "12px 0 0 0", borderRadius: "20px 20px 0 0", background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))", paddingTop: 6 }}>
                         <div style={{ background: "#333333", borderRadius: "20px 20px 0 0", padding: "20px 10px 40px", display: "flex", flexDirection: "column", gap: 16 }}>
-                            {posts.length === 0 ? <p style={{ color: "rgba(255,255,255,0.4)", padding: "0 10px" }}>No posts yet.</p> : posts.map(post => <PostCard key={post.id} post={post} openComments={openComments} />)}
+                            {posts.length === 0
+                                ? <p style={{ color: "rgba(255,255,255,0.4)", padding: "0 10px" }}>No posts yet.</p>
+                                : posts.map(post => (
+                                    <PostCard
+                                        key={post.id}
+                                        post={post}
+                                        openComments={openComments}
+                                        isAdmin={isAdmin}
+                                        communityContext={true}
+                                    />
+                                ))
+                            }
                         </div>
                     </div>
                 </div>
@@ -372,7 +383,15 @@ export default function CommunityPage() {
                                 {posts.length > 0 ? (
                                     <div className={styles.communityPostsContainer} style={{ flex: 1, width: "100%" }}>
                                         <div className={styles.innerContainer} style={{ width: "100%" }}>
-                                            {posts.map(post => <PostCard key={post.id} post={post} openComments={openComments} />)}
+                                            {posts.map(post => (
+                                                <PostCard
+                                                    key={post.id}
+                                                    post={post}
+                                                    openComments={openComments}
+                                                    isAdmin={isAdmin}
+                                                    communityContext={true}
+                                                />
+                                            ))}
                                         </div>
                                     </div>
                                 ) : (

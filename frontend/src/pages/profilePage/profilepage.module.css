@@ -2,7 +2,6 @@ html {
   height: auto;
   min-height: auto;
   display: flow-root;
-
 }
 
 body {
@@ -18,13 +17,11 @@ body {
 .darkContainer {
   min-height: 100%;
   box-sizing: border-box;
-
   font-family: "Aktiv Grotesk", sans-serif;
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: visible;
-
 }
 
 .page {
@@ -40,9 +37,7 @@ body {
   margin-top: 2%;
   height: 110px;
   width: 100%;
-
 }
-
 
 .content {
   display: flex;
@@ -87,7 +82,6 @@ body {
   padding: 10px 0;
 }
 
-
 .coverPlaceholder {
   width: 100%;
   height: 100%;
@@ -101,7 +95,6 @@ body {
   display: block;
   filter: saturate(0.95) contrast(1.05);
 }
-
 
 .editProfileBtn {
   display: inline-flex;
@@ -120,17 +113,12 @@ body {
   margin-left: 4px;
 }
 
-
-
-
 .editPencil {
   font-size: 0.85rem;
   line-height: 1;
-
   opacity: 0.85;
 }
 
-/* Profile header row */
 .profileHeaderRow {
   display: flex;
   padding: 0 32px 24px 32px;
@@ -142,13 +130,15 @@ body {
 .profileMeta {
   flex: 1;
   margin-top: 5px;
+  min-width: 0;
+  padding-top: 44px;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .profileActions {
   display: flex;
   gap: 12px;
   margin-left: auto;
-  /* This is the magic that pushes them to the right */
   margin-top: 65px;
 }
 
@@ -168,12 +158,6 @@ body {
 
 .addFriendBtn:hover {
   opacity: 0.9;
-}
-
-@screen sm {
-  .addFriendBtn {
-    padding: 8px 20px;
-  }
 }
 
 .friendsCount {
@@ -258,18 +242,68 @@ body {
   font-weight: 500;
 }
 
+/* Accept / Decline friend request buttons */
+.acceptRequestBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  border-radius: 22px;
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.acceptRequestBtn:hover {
+  opacity: 0.88;
+}
+
+.acceptRequestBtn:active {
+  transform: scale(0.97);
+}
+
+.declineRequestBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.declineRequestBtn:hover {
+  background: rgba(248, 113, 113, 0.15);
+}
+
+.declineRequestBtn:active {
+  transform: scale(0.97);
+}
+
+.friendRequestBtns {
+  display: flex;
+  gap: 8px;
+}
+
 /* --- Friends Tab Styling --- */
 
 .friendsGrid {
   display: grid;
-  /* This automatically creates as many columns as will fit, making it responsive */
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 20px;
   padding: 30px;
   width: 85%;
   margin: 0 auto;
   background-color: #2a2a2a;
-  /* Matches your Photos tab background */
   border-radius: 25px;
   box-sizing: border-box;
 }
@@ -290,7 +324,6 @@ body {
 .friendCard:hover {
   transform: translateY(-4px);
   background: rgba(255, 255, 255, 0.08);
-  /* Subtle purple border glow on hover to match your theme */
   border-color: rgba(124, 58, 237, 0.5);
 }
 
@@ -300,7 +333,6 @@ body {
   border-radius: 50%;
   object-fit: cover;
   background: rgba(0, 0, 0, 0.3);
-  /* Dark fallback for transparent images */
   border: 3px solid rgba(255, 255, 255, 0.1);
   padding: 3px;
 }
@@ -336,16 +368,9 @@ body {
   object-fit: cover;
 }
 
-.profileMeta {
-  min-width: 0;
-  padding-top: 44px;
-  color: rgba(255, 255, 255, 0.92);
-}
-
 .nameRow {
   display: flex;
   align-items: baseline;
-
   justify-content: space-between;
   gap: 8px;
 }
@@ -366,7 +391,6 @@ body {
   align-self: flex-end;
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.5);
- 
 }
 
 .subRow {
@@ -375,11 +399,13 @@ body {
   gap: 45px;
   flex-wrap: wrap;
 }
-.info{
+
+.info {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
+
 .uniInfo {
   display: flex;
   align-items: center;
@@ -394,7 +420,6 @@ body {
 .uni {
   white-space: nowrap;
 }
-
 
 .dot {
   width: 6px;
@@ -412,7 +437,6 @@ body {
   line-height: 1.35rem;
 }
 
-/* Divider */
 .hr {
   height: 1px;
   width: 92%;
@@ -420,7 +444,6 @@ body {
   background: rgba(255, 255, 255, 0.14);
 }
 
-/* Tabs */
 .tabs {
   display: flex;
   justify-content: space-evenly;
@@ -443,7 +466,6 @@ body {
   color: rgba(255, 255, 255, 0.95);
   background: rgba(255, 255, 255, 0.08);
 }
-
 
 .pinned {
   opacity: 0.75;
@@ -481,14 +503,11 @@ body {
   background-color: #2a2a2a;
   margin: 0 auto;
   border-radius: 25px;
-
-
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   padding: 20px;
   width: 85%;
   box-sizing: border-box;
-  /* This ensures rows are created as needed */
   grid-auto-flow: dense;
 }
 
@@ -502,7 +521,6 @@ body {
 }
 
 .photoLarge {
-  /* Takes up 2 columns and 2 rows on the left */
   grid-column: span 2;
   grid-row: span 2;
   border-radius: 18px;
@@ -512,7 +530,6 @@ body {
   transform: scale(1.02);
   filter: brightness(1.1);
 }
-
 
 .postMedia {
   border-radius: 18px;
@@ -569,192 +586,1337 @@ body {
   margin-left: 6px;
 }
 
+/* ── Cover menu (three-dot on cover) ── */
+.coverMenuWrap {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+}
 
-.department {
+.coverMenuBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coverDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #2c2c2c;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 6px 0;
+  min-width: 160px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+
+.coverDropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.coverDropdownItem:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.coverDropdownItemDanger {
+  color: #f87171;
+}
+
+.coverDropdownItemNormal {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ── Blocked profile state ── */
+.blockedCoverPlaceholder {
+  filter: grayscale(1);
+  opacity: 0.3;
+}
+
+.unblockBtn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 8px 20px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
   font-size: 0.9rem;
-  color: #ccc;
+  cursor: pointer;
+}
+
+.blockedBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.blockedIcon {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.blockedTitle {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 1rem;
+  margin: 0;
+}
+
+.blockedSubtitle {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.85rem;
+  margin: 0;
+  text-align: center;
+}
+
+/* ── Page profile meta ── */
+.pageNameRow {
+  justify-content: normal;
+}
+
+.pageFollowersMeta {
+  display: flex;
+  gap: 10px;
+}
+
+.pageVerifiedBadge {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+  margin-left: 3px;
+}
+
+/* ── Activities dropdown ── */
+.activitiesDropdownWrap {
+  position: relative;
+}
+
+.activitiesDropdown {
+  position: absolute;
+  top: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-secondary, #1e1e2e);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 6px 0;
+  min-width: 150px;
+  z-index: 100;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.activitiesDropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 18px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s;
+  border-radius: 6px;
+}
+
+/* ── Events tab ── */
+.eventCard {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.eventCardBanner {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+
+.eventCardBody {
+  padding: 14px 16px;
+}
+
+.eventCardTitle {
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.eventCardDate {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.eventCardDesc {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* ── Mobile layout wrapper ── */
+.mobileWrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mobileGradientWrap {
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
+  padding-top: 6px;
+}
+
+/* ── Mobile drawer ── */
+.mobileDrawerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+}
+
+.mobileDrawerBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.mobileDrawer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 80vw;
+  max-width: 435px;
+  background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 4px 0 30px rgba(0, 0, 0, 0.6);
+}
+
+.mobileDrawerCloseBtn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.mobileDrawerHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mobileDrawerTitle {
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+}
+
+.mobileDrawerNav {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ── Reminders widget (instructor) ── */
+.remindersWidgetInstructor {
+  background: rgba(61, 60, 60, 0.45);
+  border-radius: 20px;
+  padding: 20px 20px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  margin: -10% 0 -10%;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.remindersWidgetHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.remindersWidgetIcon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  filter: brightness(0) saturate(100%) invert(22%) sepia(80%) saturate(1300%) hue-rotate(280deg) brightness(90%);
+}
+
+.remindersWidgetTitle {
+  color: white;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-left: 8px;
+}
+
+.remindersMonthToggle {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.85rem;
+  margin-left: auto;
+  border-bottom: 1.5px solid #A6279C;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.remindersMonthToggle:hover {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.remindersDivider {
+  width: 75%;
+  height: 1px;
+  background: #666666;
+  margin: 0 auto 16px;
+}
+
+.remindersNextRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.remindersNextLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: 5px;
+}
+
+.remindersNextLabel {
+  color: #999999;
+  font-size: 0.85rem;
   font-weight: 500;
 }
 
-.employmentType {
+.remindersNextTitle {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.remindersNextRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.remindersAvatarStack {
+  display: flex;
+  align-items: center;
+}
+
+.remindersStackAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2.5px solid rgba(61, 60, 60, 0.9);
+  position: relative;
+}
+
+.remindersStackPlaceholder {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2.5px solid rgba(61, 60, 60, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.remindersArrow {
+  width: 15px;
+  height: 15px;
+  filter: brightness(0) invert(0.9);
+  cursor: pointer;
+}
+
+/* ── Your Picks widget (instructor) ── */
+.picksWidgetWrap {
+  background: rgba(61, 60, 60, 0.45);
+  border-radius: 25px;
+  padding: 23px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  margin-top: 0;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.picksWidgetHeader {
+  display: flex;
+  align-items: center;
+}
+
+.picksWidgetIcon {
+  width: 30px;
+  height: 20px;
+  flex-shrink: 0;
+  filter: brightness(0) saturate(100%) invert(23%) sepia(85%) saturate(1200%) hue-rotate(280deg) brightness(90%);
+}
+
+.picksWidgetTitle {
+  color: white;
+  font-weight: 700;
+  font-size: 1.3rem;
+  margin-left: 8px;
+}
+
+.picksWidgetMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.picksWidgetCount {
+  color: #999999;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.picksManageBtn {
+  background: #4D4D4D;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  color: #CCCCCC;
   font-size: 0.9rem;
-  color: #aaa;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
 }
 
-
-.picksCard {
-    background: #2a2a2a; /* Main container color */
-    border-radius: 32px;
-    padding: 24px;
-    width: 100%;
-    max-width: 500px; /* Adjust based on your layout */
+.picksManageBtn:hover {
+  background: #666666;
 }
 
-.picksHeader {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-    padding-left: 8px;
+/* ── Calendar widget (non-instructor own profile) ── */
+.calendarWidget {
+  background: rgba(61, 60, 60, 0.45);
+  border-radius: 20px;
+  padding: 14px 16px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  margin-top: -30px;
+  position: relative;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
 }
 
-.picksIconPng {
-    width: 28px;
-    height: auto;
+.calendarWidgetHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
-.picksTitle {
-    color: #ffffff;
-    font-size: 1.5rem;
-    font-weight: 700;
-    font-family: "Aktiv Grotesk", sans-serif;
+.calendarWidgetIcon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  filter: brightness(0) saturate(100%) invert(22%) sepia(80%) saturate(1300%) hue-rotate(280deg) brightness(90%);
 }
 
-/* Inner card with background image */
-.pickItemCard {
-    height: 150px;
-    background-size: cover;
-    background-position: center;
-    border-radius: 24px;
-    overflow: hidden;
-    position: relative;
+.calendarWidgetTitle {
+  color: white;
+  font-weight: 700;
+  font-size: 1.6rem;
+  margin-left: 8px;
 }
 
-.pickOverlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6); /* Darkens image for text contrast */
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: 30px;
+.monthPickerDropdown {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: #252525;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
 }
 
-.pickContentTop {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.pickTextGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 4px; /* Lower this number to make the space even smaller */
-}
-.pickTitleGroup {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.monthPickerNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
 }
 
-.pickName {
-    color: white;
-    font-size: 1.4rem;
-    font-weight: 800;
-    margin: 0;
+.monthPickerNavBtn {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.pickViewBtn {
-    background: #3a3a3c;
-    color: #d1d1d6;
-    border: none;
-    padding: 6px 18px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    cursor: pointer;
+.monthPickerNavBtn:disabled {
+  color: rgba(255, 255, 255, 0.2);
+  cursor: not-allowed;
 }
 
-.pickContentBottom {
-    position: relative;
-    padding-right: 80px; /* Space for 'read more' */
+.monthPickerNavBtn:not(:disabled) {
+  color: rgba(255, 255, 255, 0.6);
 }
 
-.pickDescription {
-    color: #e5e5e7;
-    font-size: 0.9rem;
-    line-height: 1.4;
-    margin: 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+.monthPickerYear {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
 }
 
-.readMore {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    background: none;
-    border: none;
-    color: #a1a1a1;
-    text-decoration: underline;
-    font-size: 0.8rem;
-    cursor: pointer;
-    padding: 0;
+.monthGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
 }
 
-/* Pagination Row */
-.paginationRow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 24px;
+.monthBtn {
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s;
 }
 
-.navArrow {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.monthBtnActive {
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.9), rgba(49, 32, 169, 0.9));
+  color: #fff;
+  font-weight: 700;
 }
 
-.navArrow:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
+.monthBtnInactive {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
 }
 
-/* Custom CSS Triangles for the arrows in design */
-.arrowLeft {
-    width: 0; 
-    height: 0; 
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent; 
-    border-right: 8px solid white; 
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
 }
 
-.arrowRight {
-    width: 0; 
-    height: 0; 
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
-    border-left: 8px solid white;
+.calendarDay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: 2px auto;
+  border-radius: 50%;
+  font-size: 0.78rem;
+  transition: background 0.15s, transform 0.15s;
 }
 
-.picksDots {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+.calendarDayEmpty {
+  color: transparent;
+  cursor: default;
+  background: transparent;
 }
 
-.picksDot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    transition: all 0.2s;
+.calendarDayNormal {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
+  cursor: default;
+  background: transparent;
 }
 
-.picksDotActive {
-    background: #ffffff;
-    transform: scale(1.5); /* Makes the current dot larger like the design */
+.calendarDayEvent {
+  background: #A4279C;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
 }
+
+.calendarDayEvent:hover {
+  transform: scale(1.1);
+}
+
+/* ── Review widget ── */
+.reviewWidget {
+  background: rgba(61, 60, 60, 0.45);
+  border-radius: 20px;
+  padding: 20px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  margin-top: 16px;
+}
+
+.reviewWidgetHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 30px;
+  margin-left: 20px;
+}
+
+.reviewWidgetIcon {
+  width: 2rem;
+  height: 2rem;
+  filter: brightness(0) saturate(100%) invert(23%) sepia(76%) saturate(1200%) hue-rotate(280deg) brightness(95%);
+}
+
+.reviewWidgetTitle {
+  color: white;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.reviewStarsRow {
+  display: flex;
+  justify-content: space-around;
+}
+
+.reviewStarBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: filter 0.15s, transform 0.15s;
+}
+
+.reviewStarImg {
+  width: 1.9rem;
+  height: 1.9rem;
+  display: block;
+}
+
+.reviewRatingText {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  margin-top: 10px;
+}
+
+/* ── Reminders popup modal ── */
+.remindersPopupOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remindersPopupBox {
+  background: #333333;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  padding: 24px 20px;
+  width: 92%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+}
+
+.remindersPopupHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.remindersPopupHeaderIcon {
+  width: 25px;
+  height: 25px;
+  filter: brightness(0) invert(1);
+}
+
+.remindersPopupTitle {
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.remindersPopupCancelBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #e84d70;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.remindersPopupDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
+}
+
+.remindersEventList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.remindersEventSeparator {
+  width: 40%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 auto 20px auto;
+}
+
+/* Host row inside popup */
+.remindersHostRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.remindersHostAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.remindersHostAvatarPlaceholder {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.remindersHostMeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.remindersHostNameRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.remindersHostName {
+  color: white;
+  font-weight: 700;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.remindersHostVerified {
+  width: 14px;
+  height: 14px;
+  filter: brightness(0) invert(1);
+  flex-shrink: 0;
+}
+
+.remindersHostBio {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.75rem;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.remindersBellWrap {
+  background: #4A4A4A;
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+
+.remindersFollowedBtn {
+  background: #4A4A4A;
+  border: none;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 10px 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.remindersFollowBtn {
+  background: #4A4A4A;
+  border: none;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 10px 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+
+}
+
+/* Event card inside popup */
+.remindersEventCard {
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+  min-height: 160px;
+}
+
+.remindersEventBanner {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remindersEventBannerPlaceholder {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.remindersEventGradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.85) 100%);
+}
+
+/* Three-dot menu on event card */
+.eventCardMenuWrap {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+}
+
+.eventCardMenuBtn {
+  background: transparent;
+  backdrop-filter: blur(4px);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: white;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eventCardMenuBtn:hover {
+  background-color: #505459;
+
+}
+
+.eventCardDropdown {
+  position: absolute;
+  right: 0;
+  top: 115%;
+  z-index: 200;
+  background: #333333;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 4px 0;
+  min-width: 160px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+}
+
+.eventCardDropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.eventCardDropdownItem:hover {
+  background: #4F5359;
+}
+
+.eventCardDropdownDivider {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0;
+}
+
+.eventCardDropdownDividerLine {
+  width: 50%;
+  height: 1px;
+  background: #4D4D4D;
+}
+
+.eventCardDropdownIcon {
+  flex-shrink: 0;
+}
+
+.eventCardDropdownIconNormal {
+  filter: brightness(0) saturate(100%) invert(80%);
+}
+
+.eventCardDropdownIconDanger {
+  filter: brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg);
+}
+
+/* Event card content */
+.remindersEventContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 20px 16px 16px 16px;
+  min-height: 160px;
+}
+
+.remindersEventLeft {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.remindersEventTitle {
+  color: white;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.remindersEventDesc {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.8rem;
+  margin: 0;
+  line-height: 1.4;
+  font-style: italic;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.remindersEventReadMore {
+  background: none;
+  border: none;
+  color: white;
+  text-decoration: underline;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 500;
+  text-align: left;
+  margin-top: 2px;
+}
+
+.remindersInfoBox {
+  width: 140px;
+  flex-shrink: 0;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.remindersInfoLabel {
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 600;
+}
+
+.remindersInfoRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.remindersInfoText {
+  color: white;
+  font-size: 0.65rem;
+  line-height: 1.3;
+}
+
+/* ── Unfriend popup ── */
+.unfriendOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(5px);
+}
+
+.unfriendModal {
+  position: relative;
+  background: linear-gradient(145deg, #1e1e2e, #252535);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  padding: 28px 28px 24px;
+  width: 360px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+}
+
+.unfriendCloseBtn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.unfriendUserRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.unfriendAvatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.unfriendUsername {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.unfriendFriendsCount {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+
+.unfriendWarning {
+  background: rgba(248, 113, 113, 0.07);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 22px;
+}
+
+.unfriendWarningText {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.unfriendWarningName {
+  color: #fff;
+}
+
+.unfriendActions {
+  display: flex;
+  gap: 10px;
+}
+
+.unfriendCancelBtn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 11px 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.unfriendConfirmBtn {
+  flex: 2;
+  background: linear-gradient(-90deg, rgba(248, 113, 113, 0.9), rgba(220, 38, 38, 0.9));
+  border: none;
+  border-radius: 12px;
+  padding: 11px 0;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* ── Picks popup (read more) ── */
+.picksPopupOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.picksPopupBox {
+  background: #1e1e1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 32px;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.picksPopupCloseBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.picksPopupTitle {
+  color: #fff;
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 16px;
+}
+
+.picksPopupDesc {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── Picks modal (manage) ── */
+.picksModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.picksModalBox {
+  position: relative;
+  background: #333333;
+  border-radius: 24px;
+  padding: 32px;
+  width: 90%;
+  max-width: 650px;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.picksModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #4D4D4D;
+}
+
+.picksModalHeading {
+  margin: 0;
+  color: #E6E6E6;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.picksModalSubtext {
+  margin: 4px 0 0;
+  color: #808080;
+  font-size: 0.8rem;
+}
+
+.picksModalHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.picksModalCount {
+  color: #B3B3B3;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.picksModalCloseBtn {
+  background: none;
+  border: none;
+  color: #808080;
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.picksModalList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 8px;
+}
+
+.picksModalEmptyText {
+  color: #808080;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.picksModalCommunityCard {
+  border-radius: 16px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.picksModalCommunityCardPicked {
+  border: 1px solid rgba(139, 45, 255, 0.5);
+}
+
+.picksModalCommunityCardUnpicked {
+  border: 1px solid transparent;
+}
+
+.picksModalCommunityName {
+  margin: 0 0 4px;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.picksModalCommunityDesc {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.picksModalPickBtn {
+  flex-shrink: 0;
+  margin-left: 16px;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  transition: all 0.15s;
+}
+
+.picksModalPickBtnPicked {
+  background: rgba(139, 45, 255, 0.3);
+  color: white;
+  cursor: pointer;
+}
+
+.picksModalPickBtnDisabled {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.3);
+  cursor: not-allowed;
+}
+
+.picksModalPickBtnNormal {
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.9), rgba(49, 32, 169, 0.9));
+  color: white;
+  cursor: pointer;
+}
+
 /* ══════════════════════════════════════
    EDIT PROFILE CARD
 ══════════════════════════════════════ */
@@ -774,7 +1936,6 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 28px 28px 20px 28px;
-  
   margin-bottom: 28px;
 }
 
@@ -845,10 +2006,7 @@ body {
 
 .savePill:hover {
   background: #5A5A5A;
-  
 }
-
-/* ── Media Area ── */
 
 .editMediaArea {
   display: flex;
@@ -992,8 +2150,6 @@ body {
   background: #333;
 }
 
-/* ── Edit Form ── */
-
 .editForm {}
 
 .inputsAndBioWrapper {
@@ -1074,14 +2230,10 @@ body {
   color: rgba(255, 255, 255, 0.3);
 }
 
-/* ── Divider ── */
-
 .detailsTopDivider {
   border-top: 1px solid #2a2a2a;
   margin: 28px 0 24px;
 }
-
-/* ── Details Header ── */
 
 .detailsTitleHeaderFlex {
   display: flex;
@@ -1107,14 +2259,11 @@ body {
   margin: 6px 0 0;
 }
 
-/* ── Inset Fields Panel ── */
-
 .insetFieldsPanel {
   background: #262626;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   padding: 8px 24px 24px;
-
 }
 
 .sectionLabelDivider {
@@ -1138,7 +2287,6 @@ body {
   display: flex;
   align-items: center;
   padding: 14px 0;
-
   gap: 12px;
 }
 
@@ -1420,10 +2568,6 @@ body {
   opacity: 0.88;
 }
 
-/* ══════════════════════════════════════
-   EDIT COVER BUTTON (on profile card)
-══════════════════════════════════════ */
-
 .editCoverBtn {
   position: absolute;
   right: 16px;
@@ -1443,8 +2587,6 @@ body {
 .editCoverBtn:hover {
   background: rgba(0, 0, 0, 0.65);
 }
-
-
 
 @media (max-width: 1200px) {
   .inputsAndBioWrapper {
@@ -1487,82 +2629,84 @@ body {
 .avatarEditGroup:hover .editAvatarCircle {
   border-color: rgba(255, 255, 255, 0.4);
 }
-/* Modal Overlay to darken the background and center the box */
+
 .modalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999; /* Ensures it sits on top of absolutely everything */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
 }
 
-/* The actual pop-up box */
 .confirmModal {
-    background: #262626;
-    border: 1px solid #444;
-    border-radius: 16px;
-    padding: 24px;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    animation: popIn 0.2s ease-out forwards;
+  background: #262626;
+  border: 1px solid #444;
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  animation: popIn 0.2s ease-out forwards;
 }
 
-/* Button Styles */
 .modalCancelBtn {
-    background: transparent;
-    color: white;
-    border: 1px solid #444;
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-weight: 500;
+  background: transparent;
+  color: white;
+  border: 1px solid #444;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
 }
 
 .modalCancelBtn:hover {
-    background: #333;
+  background: #333;
 }
 
 .modalConfirmBtn {
-    background: #ff4b4b; /* A standard destructive red */
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-weight: 500;
+  background: #ff4b4b;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
 }
 
 .modalConfirmBtn:hover {
-    background: #e03e3e;
+  background: #e03e3e;
 }
-
 
 @keyframes popIn {
-    0% { transform: scale(0.95); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
+
 .popupScrollContainer {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
-
 .popupScrollContainer::-webkit-scrollbar-button {
   display: none;
 }
 
-
 .popupScrollContainer::-webkit-scrollbar {
   width: 6px;
 }
-
 
 .popupScrollContainer::-webkit-scrollbar-track {
   background: transparent;
@@ -1572,60 +2716,240 @@ body {
   background-color: rgba(255, 255, 255, 0.15);
   border-radius: 10px;
 }
+
 .titleMarqueeWrapper {
-    overflow: hidden;
-    position: relative;
-    max-width: 100%;
+  overflow: hidden;
+  position: relative;
+  max-width: 100%;
 }
 
 .titleMarqueeWrapper::before,
 .titleMarqueeWrapper::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 40px;
-    z-index: 2;
-    pointer-events: none;
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .titleMarqueeWrapper::before {
-    left: 0;
-    background: linear-gradient(to right, rgba(0,0,0,0.8), transparent);
+  left: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.8), transparent);
 }
 
 .titleMarqueeWrapper::after {
-    right: 0;
-    background: linear-gradient(to left, rgba(0,0,0,0.8), transparent);
+  right: 0;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent);
 }
 
 .titleMarquee {
-    display: inline-block;
-    white-space: nowrap;
-    animation: marquee 8s linear infinite;
-    color: white;
-    font-size: 2.2rem;
-    font-weight: 800;
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 8s linear infinite;
+  color: white;
+  font-size: 2.2rem;
+  font-weight: 800;
 }
 
 @keyframes marquee {
-    0%   { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
+  0% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
 }
-/* Picks modal scrollbar */
+
 .picksModalInner::-webkit-scrollbar {
-    width: 5px;
+  width: 5px;
 }
 
 .picksModalInner::-webkit-scrollbar-track {
-    background: transparent;
+  background: transparent;
 }
 
 .picksModalInner::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.15);
-    border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
 }
 
 .picksModalInner::-webkit-scrollbar-thumb:hover {
-    background: rgba(255,255,255,0.25);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ── Picks card (other user view) ── */
+.picksCard {
+  background: #2a2a2a;
+  border-radius: 32px;
+  padding: 24px;
+  width: 100%;
+  max-width: 500px;
+}
+
+.picksHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-left: 8px;
+}
+
+.picksIconPng {
+  width: 28px;
+  height: auto;
+}
+
+.picksTitle {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: "Aktiv Grotesk", sans-serif;
+}
+
+.pickItemCard {
+  height: 150px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+}
+
+.pickOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 30px;
+}
+
+.pickContentTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pickTextGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pickTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pickName {
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.pickViewBtn {
+  background: #3a3a3c;
+  color: #d1d1d6;
+  border: none;
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.pickContentBottom {
+  position: relative;
+  padding-right: 80px;
+}
+
+.pickDescription {
+  color: #e5e5e7;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.readMore {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  background: none;
+  border: none;
+  color: #a1a1a1;
+  text-decoration: underline;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.paginationRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.navArrow {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navArrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.arrowLeft {
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-right: 8px solid white;
+}
+
+.arrowRight {
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 8px solid white;
+}
+
+.picksDots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.picksDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.picksDotActive {
+  background: #ffffff;
+  transform: scale(1.5);
 }

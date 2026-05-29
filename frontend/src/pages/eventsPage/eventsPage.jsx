@@ -4,7 +4,8 @@ import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import VerifiedBadge from '../../Assets/icons/verified-mark.png';
-
+import BellOn from '../../Assets/icons/notifications.png'
+import BellOff from '../../Assets/icons/mute.png'
 import { createPortal } from 'react-dom';
 export default function EventsPage() {
     const API = "http://localhost:8000";
@@ -17,6 +18,7 @@ export default function EventsPage() {
     const [reminders, setReminders] = useState({});
     const [popupEvent, setPopupEvent] = useState(null);
     const location = useLocation();
+    const [pageNotifyStatus, setPageNotifyStatus] = useState({});
     const navigate = useNavigate();
     const [highlightId, setHighlightId] = useState(location.state?.highlightId || null);
     useEffect(() => {
@@ -32,15 +34,24 @@ export default function EventsPage() {
             }
         }
     }, [highlightId, events]);
+
     const handlePageNotification = async (pageId) => {
         const token = localStorage.getItem("access");
+        const prev = pageNotifyStatus[pageId];
+        setPageNotifyStatus(s => ({ ...s, [pageId]: !prev })); // optimistic
         try {
-            await fetch(`${API}/api/pages/${pageId}/notify/`, {
+            const res = await fetch(`${API}/api/pages/${pageId}/notify/`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` }
             });
-        } catch (err) {
-            console.error("Failed to toggle page notification", err);
+            if (res.ok) {
+                const data = await res.json();
+                setPageNotifyStatus(s => ({ ...s, [pageId]: data.is_notified }));
+            } else {
+                setPageNotifyStatus(s => ({ ...s, [pageId]: prev })); // rollback
+            }
+        } catch {
+            setPageNotifyStatus(s => ({ ...s, [pageId]: prev }));
         }
     };
 
@@ -97,11 +108,13 @@ export default function EventsPage() {
                             ? (event.banner.startsWith("http") ? event.banner : `${API}${event.banner}`)
                             : "",
                         isFollowed: event.is_followed,
+                        isNotified: event.is_notified || false,
                         startDate: event.start_date,
                         isReminded: event.is_reminded,
                         endDate: event.end_date,
                         title: event.title,
                         description: event.description,
+                        isNotified: event.is_notified || false,
                         pageType: event.page_type,
                     });
 
@@ -112,10 +125,13 @@ export default function EventsPage() {
                     setRecommendedEvents(formattedRec);
 
                     const initialReminders = {};
+                    const initialNotify = {};
                     [...formatted, ...formattedRec].forEach(e => {
                         initialReminders[e.id] = e.isReminded || false;
+                        initialNotify[e.pageId] = e.isNotified || false;
                     });
                     setReminders(initialReminders);
+                    setPageNotifyStatus(initialNotify);
                 }
 
             } catch (err) {
@@ -208,15 +224,14 @@ export default function EventsPage() {
                                             <button
                                                 className={styles.bellBtn}
                                                 onClick={() => handlePageNotification(event.pageId)}
-                                                style={{
-                                                    background: reminders[event.id] ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)",
-                                                    transition: "background 0.2s"
-                                                }}
                                             >
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill={reminders[event.id] ? "white" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                                                </svg>
+                                                <img
+                                                    src={pageNotifyStatus[event.pageId] ? BellOn : BellOff}
+                                                    alt="notifications"
+                                                    width={pageNotifyStatus[event.pageId] ? 20 : 20}
+                                                    height={pageNotifyStatus[event.pageId] ? 24 : 20}
+                                                    style={{ filter: 'brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)' }}
+                                                />
                                             </button>
                                         )}
                                         <button
@@ -312,17 +327,15 @@ export default function EventsPage() {
                                                         <button
                                                             className={styles.bellBtn}
                                                             onClick={() => handlePageNotification(rec.pageId)}
-                                                            style={{
-                                                                background: reminders[rec.id] ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)",
-                                                                transition: "background 0.2s",
-                                                                width: 28,
-                                                                height: 28,
-                                                            }}
+                                                            style={{ width: 28, height: 28 }}
                                                         >
-                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill={reminders[rec.id] ? "white" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                                                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                                                            </svg>
+                                                            <img
+                                                                src={pageNotifyStatus[rec.pageId] ? BellOn : BellOff}
+                                                                alt="notifications"
+                                                                width={pageNotifyStatus[rec.pageId] ? 15 : 16}
+                                                                height={pageNotifyStatus[rec.pageId] ? 18 : 16}
+                                                                style={{ filter: 'brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)' }}
+                                                            />
                                                         </button>
                                                     )}
                                                     <button

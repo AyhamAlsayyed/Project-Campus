@@ -798,7 +798,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
         <div className={styles.notificationWrapper} ref={notifRef}>
           <button className={styles.bellButton} type="button" onClick={() => setShowNotifications(!showNotifications)}>
             <div className={styles.bellIconContainer}>
-              <img src={unreadCount > 0 ? BellActive : Bell} width={27} height={29} alt="Notifications" style={{ filter: "invert(1)" }} />
+              <img src={unreadCount > 0 ? BellActive : Bell} width={24} height={29} alt="Notifications" style={{ filter: "invert(1)" }} />
               {unreadCount > 0 && <span className={styles.redDotIndicator} />}
             </div>
             {displayCount > 0 && <span className={styles.rightBadge}>{displayCount}</span>}
