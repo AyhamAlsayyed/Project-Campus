@@ -19,6 +19,30 @@ export default function RequestModal({ onClose }) {
 
     const isStep1NextReady = communityName.trim().length > 0 && description.trim().length > 0;
     const isStep2NextReady = justification.trim().length > 0;
+    const handleSubmit = async () => {
+        try {
+            const res = await fetch(`http://localhost:8000/api/communities/request/`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('access')}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: communityName,
+                    description: description,
+                    privacy: privacy,
+                    justification: justification,
+                }),
+            });
+            if (res.ok) {
+                onClose();
+            } else {
+                console.error('Failed to submit request');
+            }
+        } catch (err) {
+            console.error('Error submitting request:', err);
+        }
+    };
 
     return (
         <div className={styles.modalOverlay}>
@@ -61,21 +85,16 @@ export default function RequestModal({ onClose }) {
                         {step === 3 ? (
                             <button
                                 className={styles.submitBtn}
-                                onClick={() => {
-                                    // Handle final submission here
-                                    console.log("Submitted request");
-                                    onClose();
-                                }}
+                                onClick={handleSubmit}
                             >
                                 Submit
                             </button>
                         ) : (
                             <button
-                                className={`${styles.nextBtn} ${
-                                    (step === 1 && isStep1NextReady) || (step === 2 && isStep2NextReady)
-                                        ? styles.nextActive
-                                        : ''
-                                }`}
+                                className={`${styles.nextBtn} ${(step === 1 && isStep1NextReady) || (step === 2 && isStep2NextReady)
+                                    ? styles.nextActive
+                                    : ''
+                                    }`}
                                 disabled={
                                     (step === 1 && !isStep1NextReady) || (step === 2 && !isStep2NextReady)
                                 }
@@ -234,7 +253,7 @@ export default function RequestModal({ onClose }) {
                             <div>
                                 <span className={styles.label}>Privacy: </span>
                                 <span className={styles.reviewValue}>{privacy}</span>
-                                <p className={styles.hintText} style={{ marginTop: '8px', fontSize:"0.8rem" }}>
+                                <p className={styles.hintText} style={{ marginTop: '8px', fontSize: "0.8rem" }}>
                                     note: privacy can be changed any time later.
                                 </p>
                             </div>

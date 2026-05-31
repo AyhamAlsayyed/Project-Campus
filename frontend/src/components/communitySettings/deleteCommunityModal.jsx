@@ -13,11 +13,26 @@ const DeleteCommunityModal = ({ isOpen, onClose, onDelete }) => {
             onDelete();
         }
     };
+    const handleDeleteCommunity = async () => {
+        try {
+            const res = await fetch(`${API}/api/communities/${id || community?.id}/`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                navigate('/communities');
+            } else {
+                console.error("Failed to delete community");
+            }
+        } catch (err) {
+            console.error("Error deleting community:", err);
+        }
+    };
 
     return (
         <div className={styles.modalOverlay} onClick={onClose}>
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-                
+
                 {/* Header */}
                 <div className={styles.modalHeader}>
                     <h2 className={styles.headerTitle}>Delete Community</h2>
@@ -29,15 +44,15 @@ const DeleteCommunityModal = ({ isOpen, onClose, onDelete }) => {
                     <div className={styles.warningBox}>
                         <h3 className={styles.warningTitle}>⚠️ This action is permanent</h3>
                         <p className={styles.warningText}>
-                            Once you delete this community, all posts, members, and data will be permanently removed. 
+                            Once you delete this community, all posts, members, and data will be permanently removed.
                             <strong> This cannot be undone.</strong>
                         </p>
                     </div>
 
                     {/* Confirmation Checkbox */}
                     <label className={styles.checkboxLabel}>
-                        <input 
-                            type="checkbox" 
+                        <input
+                            type="checkbox"
                             className={styles.customCheckbox}
                             checked={isConfirmed}
                             onChange={(e) => setIsConfirmed(e.target.checked)}
@@ -51,8 +66,8 @@ const DeleteCommunityModal = ({ isOpen, onClose, onDelete }) => {
                     <button className={styles.cancelBtn} onClick={onClose}>
                         Cancel
                     </button>
-                    <button 
-                        className={styles.deleteBtn} 
+                    <button
+                        className={styles.deleteBtn}
                         onClick={handleDeleteClick}
                         disabled={!isConfirmed}
                     >
