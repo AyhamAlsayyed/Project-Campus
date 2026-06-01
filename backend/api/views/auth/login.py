@@ -34,25 +34,35 @@ def login(request):
     refresh = RefreshToken.for_user(user)
     access = refresh.access_token
 
-    profile = getattr(user, "profile", None)
+    is_page = hasattr(user, "page") and user.page is not None
 
     avatar = None
-    if profile and getattr(profile, "profile_image", None):
-        try:
-            avatar = request.build_absolute_uri(profile.profile_image.url)
-        except Exception:
-            avatar = None
+    if is_page:
+        user_type = "page"
+        if getattr(user.page, "profile_image", None):
+            try:
+                avatar = request.build_absolute_uri(user.page.profile_image.url)
+            except Exception:
+                avatar = None
+    else:
+        user_type = "user"
+        profile = getattr(user, "profile", None)
+        if profile and getattr(profile, "profile_image", None):
+            try:
+                avatar = request.build_absolute_uri(profile.profile_image.url)
+            except Exception:
+                avatar = None
 
     return Response(
         {
             "message": "Login successful",
-            # This is the JWT token
             "access": str(access),
             "refresh": str(refresh),
             "user": {
                 "id": user.id,
                 "username": user.username,
                 "avatar": avatar,
+                "user_type": user_type,
             },
         },
         status=status.HTTP_200_OK,

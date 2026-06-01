@@ -1,0 +1,31 @@
+/api/communities/{id}/update/  ====== Save community info
+====================================================
+Fetch post settings ==== /api/communities/{id}/post-settings/
+Save post approval toggle /api/communities/{id}/post-settings/
+Fetch highlights /api/communities/{id}/highlights/
+Remove a highlight  /api/communities/{id}/highlights/{postId}/remove/
+Fetch reported posts   /api/communities/{id}/reported-posts/
+Dismiss a report /api/communities/{id}/reported-posts/{postId}/dismiss/
+Delete a reported post /api/posts/{postId}/
+Kick a user (from reported)  api/communities/{id}/kick/ == I SEND YOU THE USER ID
+Report a post  /api/posts/{postId}/report/
+====================================================
+**MEMBERS TAB SETTINGS**
+Fetch all members   /api/communities/{id}/members/
+Make member admin /api/communities/{id}/make-admin/{memberId}/
+Kick member   /api/communities/{id}/kick/{memberId}/
+Block member /api/communities/{id}/block/{memberId}/
+Report member /api/communities/{id}/report/{memberId}/
+=====================================================
+**REQUESTS TAB**
+Fetch post requests  /api/groups/{groupId}/post-requests/
+Fetch join requests /api/groups/{groupId}/join-requests/
+Approve post request   /api/groups/{groupId}/post-requests/{postId}/approve/
+Reject post request   /api/groups/{groupId}/post-requests/{postId}/reject/
+Approve join request  /api/groups/{groupId}/join-requests/{userId}/approve/
+Reject join request    /api/groups/{groupId}/join-requests/{userId}/reject/
+Report a user  /api/users/{userId}/report/ i send you the reason
+Block a user  /api/users/{userId}/block/
+
+=====
+Delete community  /api/communities/{id}/

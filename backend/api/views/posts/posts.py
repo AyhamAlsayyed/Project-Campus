@@ -146,6 +146,10 @@ def feed(request, community_id=None):
         ).values_list("user2_id", flat=True)
         accepted_users, blocked_users = get_friendship_sets(user)
         uni_page = _get_user_university(user)
+        if uni_page is not None:
+            uni_page_user_id = uni_page.user.id
+        else:
+            uni_page_user_id = None
 
         # exclude own and blocked users posts
         qs = qs.exclude(author_id=user.id)
@@ -158,7 +162,7 @@ def feed(request, community_id=None):
             qs = (
                 qs.annotate(
                     p_university=Case(
-                        When(author_id=uni_page.user.id, then=Value(50)),
+                        When(author_id=uni_page_user_id, then=Value(50)),
                         default=Value(0),
                         output_field=IntegerField(),
                     ),

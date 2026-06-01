@@ -1,8 +1,6 @@
 from django.urls import path
 
 from .views.auth.login import login
-
-# from .views.auth.page import page_login, page_logout, page_me, page_register
 from .views.auth.signup.send_code import send_code
 from .views.auth.signup.signup import signup
 from .views.auth.signup.verify_code import verify_code
@@ -46,9 +44,10 @@ from .views.conversation.conversation_member_action import (
     remove_member_from_group,
     toggle_group_admin,
 )
-from .views.conversation.edit_conversation import (  # update_group_privacy_settings,
+from .views.conversation.edit_conversation import (
     edit_group_details,
     edit_group_image,
+    update_group_privacy_settings,
 )
 from .views.event.event_action import toggle_event_reminder
 from .views.event.events import events  # , cancel_event, create_event, edit_event
@@ -150,9 +149,10 @@ urlpatterns += [
     path("communities/<int:community_id>/request/", request_join_community),
     path("communities/<int:community_id>/join/", join_community),
     path("communities/<int:pk>/leave/", leave_community),
-    # comunity_action
+    # community_action
+    # wewe path("communities/{id}/update/", )
     path("communities/<int:pk>/notify/", toggle_community_notifications),
-    # comunity_action_instructor
+    # community_action_instructor
     path("users/<int:instructor_id>/community-picks/", instructor_community_picks),
     path("<int:instructor_id>/toggle_picks/", toggle_pick),
 ]
@@ -183,6 +183,7 @@ urlpatterns += [
     path("groups/<int:conv_id>/add-member/", add_member_to_group),
     path("groups/<int:conv_id>/remove-member/", remove_member_from_group),
     path("groups/<int:conv_id>/toggle-admin/", toggle_group_admin),
+    path("groups/<int:conv_id>/privacy-settings/", update_group_privacy_settings),
 ]
 # page
 urlpatterns += [
@@ -227,12 +228,7 @@ urlpatterns += [
     path("", edit_event),
     path("", cancel_event),
     #chat_group
-    path("", update_group_privacy_settings),
     #page_user
-    path("auth/page/register/", page_register),
-    path("auth/page/login/", page_login),
-    path("auth/page/logout/", page_logout),
-    path("auth/page/me/", page_me),
     path("page/profile/update/", update_page_profile),
 
     path("", ),
