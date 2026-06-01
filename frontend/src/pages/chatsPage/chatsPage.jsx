@@ -6,7 +6,7 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
-    Search, MoreHorizontal, Pin, BellOff, Mail, MinusCircle,
+    Search, MoreHorizontal, Pin2, BellOff, Mail, MinusCircle,
     Trash2, Ban, Reply, AlertCircle, ChevronLeft, Info, CheckSquare,
     Paperclip, Send, FileText,
 } from 'lucide-react';
@@ -16,6 +16,14 @@ import CommentModal from '../../components/comments/commentsModal';
 import GroupInfoPanel from '../../components/chatPageComponents/groupInfoPanel';
 import CreateGroupIcon from '../../Assets/icons/create-group.png'
 import GroupCreationFlow from '../../components/chatPageComponents/GroupCreationFlow';
+import Pin from '../../Assets/icons/pin.png';
+import Mute from '../../Assets/icons/mute.png';
+import Unread from '../../Assets/icons/unread-message.png';
+import clear from '../../Assets/icons/clear.png';
+import deleteIcon from '../../Assets/icons/bin.png';
+import block from '../../Assets/icons/block.png';
+import Report from '../../Assets/icons/info.png';
+
 function MarqueeText({ text, className }) {
     const wrapperRef = useRef(null);
     const textRef = useRef(null);
@@ -725,7 +733,6 @@ export default function ChatsPage() {
                                                                 No message requests
                                                             </div>
                                                         ) : chatRequests.map((req, index) => {
-                                                            // Resolve avatar url safely if the backend provides it
                                                             const reqAvatar = req.sender_avatar || req.avatar;
                                                             const avatarUrl = reqAvatar ? (reqAvatar.startsWith('http') ? reqAvatar : `${API}${reqAvatar}`) : null;
                                                             const isCurrentMenuOpen = openMenuId === req.conversation_id;
@@ -747,24 +754,13 @@ export default function ChatsPage() {
                                                                         <div className={styles.chatItemLeft}>
                                                                             <div className={styles.avatarWrapper}>
                                                                                 {avatarUrl ? (
-                                                                                    <img
-                                                                                        src={avatarUrl}
-                                                                                        alt={req.sender_username}
-                                                                                        className={styles.chatAvatar}
-                                                                                    />
+                                                                                    <img src={avatarUrl} alt={req.sender_username} className={styles.chatAvatar} />
                                                                                 ) : (
-                                                                                    <div
-                                                                                        className={styles.chatAvatar}
-                                                                                        style={{
-                                                                                            background: "rgba(255,255,255,0.08)",
-                                                                                            display: "flex",
-                                                                                            alignItems: "center",
-                                                                                            justifyContent: "center",
-                                                                                            color: "rgba(255,255,255,0.5)",
-                                                                                            fontSize: "1.1rem",
-                                                                                            fontWeight: 700
-                                                                                        }}
-                                                                                    >
+                                                                                    <div className={styles.chatAvatar} style={{
+                                                                                        background: "rgba(255,255,255,0.08)", display: "flex",
+                                                                                        alignItems: "center", justifyContent: "center",
+                                                                                        color: "rgba(255,255,255,0.5)", fontSize: "1.1rem", fontWeight: 700
+                                                                                    }}>
                                                                                         {req.sender_username?.[0]?.toUpperCase() || "?"}
                                                                                     </div>
                                                                                 )}
@@ -778,81 +774,116 @@ export default function ChatsPage() {
                                                                             </div>
                                                                         </div>
 
+
                                                                         <div className={styles.chatItemRight}>
                                                                             <div className={styles.chatDetails}>
-                                                                                <span className={styles.chatPreview}>{req.message_preview}</span>
-                                                                                <span className={styles.chatTime}>{req.time}</span>
+                                                                                <div className={styles.chatDetailsTop}>
+                                                                                    <span className={styles.chatPreview}>{req.preview}</span>
+                                                                                    <div className={styles.chatIndicators}>
+                                                                                        {req.is_pinned && (
+                                                                                            <div style={{
+                                                                                                width: '18px', height: '18px', backgroundColor: '#CCCCCC',
+                                                                                                maskImage: `url(${Pin})`, WebkitMaskImage: `url(${Pin})`,
+                                                                                                maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                                                                maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                                                                maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                                                                flexShrink: 0,
+                                                                                            }} />
+                                                                                        )}
+                                                                                        {req.is_muted && (
+                                                                                            <div style={{
+                                                                                                width: '18px', height: '18px', backgroundColor: '#CCCCCC',
+                                                                                                maskImage: `url(${Mute})`, WebkitMaskImage: `url(${Mute})`,
+                                                                                                maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                                                                maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                                                                maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                                                                flexShrink: 0,
+                                                                                            }} />
+                                                                                        )}
+                                                                                    </div>
+                                                                                    <span className={styles.chatTime}>{req.time}</span>
+                                                                                </div>
                                                                             </div>
 
-                                                                            {/* The three-dot dropdown menu matching the primary chat items */}
-                                                                            <div className={styles.chatActions} ref={isCurrentMenuOpen ? menuRef : null}>
-                                                                                <button
-                                                                                    className={styles.moreButton}
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        const rect = e.currentTarget.getBoundingClientRect();
-                                                                                        const dropdownHeight = 110; // Slightly smaller height for request items
-                                                                                        const spaceBelow = window.innerHeight - rect.bottom;
-                                                                                        const top = spaceBelow < dropdownHeight
-                                                                                            ? rect.top - dropdownHeight + 35
-                                                                                            : rect.bottom + 8;
-                                                                                        setMenuPosition({ top, right: window.innerWidth - rect.right });
-                                                                                        setOpenMenuId(openMenuId === req.conversation_id ? null : req.conversation_id);
-                                                                                    }}
-                                                                                >
-                                                                                    <MoreHorizontal size={16} />
-                                                                                </button>
+                                                                            <div className={styles.chatActions}>
+                                                                                <div className={styles.menuWrapper} ref={isCurrentMenuOpen ? menuRef : null}>
+                                                                                    <button
+                                                                                        className={styles.moreButton}
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                                                            const dropdownHeight = 110;
+                                                                                            const spaceBelow = window.innerHeight - rect.bottom;
+                                                                                            const top = spaceBelow < dropdownHeight
+                                                                                                ? rect.top - dropdownHeight + 35
+                                                                                                : rect.bottom + 8;
+                                                                                            setMenuPosition({ top, right: window.innerWidth - rect.right });
+                                                                                            setOpenMenuId(openMenuId === req.conversation_id ? null : req.conversation_id);
+                                                                                        }}
+                                                                                    >
+                                                                                        <MoreHorizontal size={16} />
+                                                                                    </button>
 
-                                                                                {isCurrentMenuOpen && (
-                                                                                    <div className={styles.dropdownMenu} style={{ top: menuPosition.top, right: menuPosition.right }}>
-                                                                                        <button
-                                                                                            className={styles.menuItem}
-                                                                                            onClick={(e) => {
+                                                                                    {isCurrentMenuOpen && (
+                                                                                        <div className={styles.dropdownMenu} style={{
+                                                                                            top: menuPosition.top,
+                                                                                            right: menuPosition.right,
+                                                                                            background: '#333333',
+                                                                                        }}>
+                                                                                            <button className={styles.menuItem} onClick={(e) => {
                                                                                                 e.stopPropagation();
                                                                                                 acceptRequest(req.conversation_id);
                                                                                                 setOpenMenuId(null);
-                                                                                            }}
-                                                                                        >
-                                                                                            <CheckSquare size={14} /> Accept request
-                                                                                        </button>
+                                                                                            }}>
+                                                                                                <CheckSquare size={14} /> Accept request
+                                                                                            </button>
+                                                                                            <div style={{ width: '65%', height: '1px', background: '#4D4D4D', margin: '0 auto' }} />
 
-                                                                                        <div className={styles.menuDivider} />
-
-
-                                                                                        <button
-                                                                                            className={styles.menuItem}
-                                                                                            onClick={async (e) => {
+                                                                                            <button className={styles.menuItem} onClick={async (e) => {
                                                                                                 e.stopPropagation();
-
                                                                                                 await deleteChat(req.conversation_id);
-
                                                                                                 setChatRequests(prev => prev.filter(r => r.conversation_id !== req.conversation_id));
                                                                                                 setRequestsCount(prev => prev - 1);
                                                                                                 setOpenMenuId(null);
-                                                                                            }}
-                                                                                        >
-                                                                                            <Trash2 size={14} /> Delete chat
-                                                                                        </button>
+                                                                                            }}>
+                                                                                                <div style={{
+                                                                                                    width: '14px', height: '14px', backgroundColor: '#CCCCCC',
+                                                                                                    maskImage: `url(${deleteIcon})`, WebkitMaskImage: `url(${deleteIcon})`,
+                                                                                                    maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                                                                    maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                                                                    maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                                                                    flexShrink: 0,
+                                                                                                }} />
+                                                                                                Delete chat
+                                                                                            </button>
+                                                                                            <div style={{ width: '65%', height: '1px', background: '#4D4D4D', margin: '0 auto' }} />
 
-                                                                                        <button
-                                                                                            className={`${styles.menuItem} ${styles.destructive}`}
-                                                                                            onClick={(e) => {
+                                                                                            <button className={`${styles.menuItem} ${styles.destructive}`} onClick={(e) => {
                                                                                                 e.stopPropagation();
                                                                                                 blockRequest(req.conversation_id);
                                                                                                 setOpenMenuId(null);
-                                                                                            }}
-                                                                                        >
-                                                                                            <Ban size={14} /> Block sender
-                                                                                        </button>
-                                                                                    </div>
-                                                                                )}
+                                                                                            }}>
+                                                                                                <div style={{
+                                                                                                    width: '14px', height: '14px', backgroundColor: '#D4145A',
+                                                                                                    maskImage: `url(${block})`, WebkitMaskImage: `url(${block})`,
+                                                                                                    maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                                                                    maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                                                                    maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                                                                    flexShrink: 0,
+                                                                                                }} />
+                                                                                                Block sender
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
                                                                     {index !== chatRequests.length - 1 && <div className={styles.chatDivider} />}
                                                                 </div>
                                                             );
-                                                        })}
+                                                        })
+                                                        }
                                                     </div>
                                                 </div>
                                             </div>
@@ -881,9 +912,9 @@ export default function ChatsPage() {
                                                                 headers: { Authorization: `Bearer ${token}` },
                                                             });
                                                             const data = await res.json();
-                                                            console.log("RECEIVER MESSAGES:", JSON.stringify(data, null, 2));
                                                             setMessages(data);
                                                         }} style={{ cursor: 'pointer' }}>
+
                                                             <div className={styles.chatItemLeft}>
                                                                 <div className={styles.avatarWrapper}>
                                                                     <img
@@ -911,14 +942,39 @@ export default function ChatsPage() {
                                                                     </div>
                                                                 </div>
                                                             </div>
+
                                                             <div className={styles.chatItemRight}>
+                                                                <div className={styles.chatIndicators}>
+                                                                    {chat.is_pinned && (
+                                                                        <div style={{
+                                                                            width: '25px', height: '25px', backgroundColor: '#CCCCCC',
+                                                                            maskImage: `url(${Pin})`, WebkitMaskImage: `url(${Pin})`,
+                                                                            maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                                            maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                                            maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                                            flexShrink: 0,
+                                                                        }} />
+                                                                    )}
+                                                                    {chat.is_muted && (
+                                                                        <div style={{
+                                                                            width: '25px', height: '25px', backgroundColor: '#CCCCCC',
+                                                                            maskImage: `url(${Mute})`, WebkitMaskImage: `url(${Mute})`,
+                                                                            maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                                            maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                                            maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                                            flexShrink: 0,
+                                                                        }} />
+                                                                    )}
+                                                                </div>
                                                                 <div className={styles.chatDetails}>
                                                                     <span className={styles.chatPreview}>{chat.preview}</span>
-                                                                    <span className={styles.chatTime}>{chat.time}</span>
+                                                                    <div className={styles.chatDetailsTop}>
+
+                                                                        <span className={styles.chatTime}>{chat.time}</span>
+                                                                    </div>
                                                                 </div>
+
                                                                 <div className={styles.chatActions}>
-                                                                    {chat.is_pinned && <Pin size={14} className={styles.actionIcon} />}
-                                                                    {chat.is_muted && <BellOff size={14} className={styles.actionIcon} />}
                                                                     {chat.unread_count > 0 && (
                                                                         <span className={styles.unreadBadge}>{chat.unread_count}</span>
                                                                     )}
@@ -939,31 +995,105 @@ export default function ChatsPage() {
                                                                         >
                                                                             <MoreHorizontal size={16} />
                                                                         </button>
+
                                                                         {openMenuId === chat.id && (
-                                                                            <div className={styles.dropdownMenu} style={{ top: menuPosition.top, right: menuPosition.right }}>
+                                                                            <div className={styles.dropdownMenu} style={{
+                                                                                top: menuPosition.top,
+                                                                                right: menuPosition.right,
+                                                                                background: '#333333',
+                                                                            }}>
                                                                                 <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); togglePin(chat.id); setOpenMenuId(null); }}>
-                                                                                    <Pin size={14} /> {chat.is_pinned ? 'Unpin chat' : 'Pin chat'}
+                                                                                    <div style={{
+                                                                                        width: '18px', height: '18px', backgroundColor: '#CCCCCC',
+                                                                                        maskImage: `url(${Pin})`, WebkitMaskImage: `url(${Pin})`,
+                                                                                        maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                                                        maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                                                        maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                                                        flexShrink: 0,
+                                                                                    }} />
+                                                                                    {chat.is_pinned ? 'Unpin chat' : 'Pin chat'}
                                                                                 </button>
+                                                                                <div style={{ width: '65%', height: '1px', background: '#4D4D4D', margin: '0 auto' }} />
+
                                                                                 <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); toggleMute(chat.id); setOpenMenuId(null); }}>
-                                                                                    <BellOff size={14} /> Mute notifications
+                                                                                    <div style={{
+                                                                                        width: '18px', height: '18px', backgroundColor: '#CCCCCC',
+                                                                                        maskImage: `url(${Mute})`, WebkitMaskImage: `url(${Mute})`,
+                                                                                        maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                                                        maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                                                        maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                                                        flexShrink: 0,
+                                                                                    }} />
+                                                                                    Mute notifications
                                                                                 </button>
+                                                                                <div style={{ width: '65%', height: '1px', background: '#4D4D4D', margin: '0 auto' }} />
+
                                                                                 {chat.preview && (
-                                                                                    <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); markUnread(chat.id); setOpenMenuId(null); }}>
-                                                                                        <Mail size={14} /> {chat.unread_count > 0 ? 'Mark as read' : 'Mark as unread'}
-                                                                                    </button>
+                                                                                    <>
+                                                                                        <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); markUnread(chat.id); setOpenMenuId(null); }}>
+                                                                                            <div style={{
+                                                                                               width: '18px', height: '18px', backgroundColor: '#CCCCCC',
+                                                                                                maskImage: `url(${Unread})`, WebkitMaskImage: `url(${Unread})`,
+                                                                                                maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                                                                maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                                                                maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                                                                flexShrink: 0,
+                                                                                            }} />
+                                                                                            {chat.unread_count > 0 ? 'Mark as read' : 'Mark as unread'}
+                                                                                        </button>
+                                                                                        <div style={{ width: '65%', height: '1px', background: '#4D4D4D', margin: '0 auto' }} />
+                                                                                    </>
                                                                                 )}
+
                                                                                 <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); clearChat(chat.id); setOpenMenuId(null); }}>
-                                                                                    <Trash2 size={14} /> Clear chat
+                                                                                    <div style={{
+                                                                                       width: '18px', height: '18px', backgroundColor: '#CCCCCC',
+                                                                                        maskImage: `url(${clear})`, WebkitMaskImage: `url(${clear})`,
+                                                                                        maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                                                        maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                                                        maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                                                        flexShrink: 0,
+                                                                                    }} />
+                                                                                    Clear chat
                                                                                 </button>
+                                                                                <div style={{ width: '65%', height: '1px', background: '#4D4D4D', margin: '0 auto' }} />
+
                                                                                 <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); deleteChat(chat.id); setOpenMenuId(null); }}>
-                                                                                    <Trash2 size={14} /> Delete chat
+                                                                                    <div style={{
+                                                                                        width: '18px', height: '18px', backgroundColor: '#CCCCCC',
+                                                                                        maskImage: `url(${deleteIcon})`, WebkitMaskImage: `url(${deleteIcon})`,
+                                                                                        maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                                                        maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                                                        maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                                                        flexShrink: 0,
+                                                                                    }} />
+                                                                                    Delete chat
                                                                                 </button>
-                                                                                <div className={styles.menuDivider} />
+                                                                                <div style={{ width: '65%', height: '1px', background: '#4D4D4D', margin: '0 auto' }} />
+
                                                                                 <button className={`${styles.menuItem} ${styles.destructive}`} onClick={(e) => { e.stopPropagation(); blockUser(chat.id); setOpenMenuId(null); }}>
-                                                                                    <Ban size={14} /> {chat.is_blocked ? 'Unblock user' : 'Block user'}
+                                                                                    <div style={{
+                                                                                        width: '18px', height: '18px', backgroundColor: '#D4145A',
+                                                                                        maskImage: `url(${block})`, WebkitMaskImage: `url(${block})`,
+                                                                                        maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                                                        maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                                                        maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                                                        flexShrink: 0,
+                                                                                    }} />
+                                                                                    {chat.is_blocked ? 'Unblock user' : 'Block user'}
                                                                                 </button>
+                                                                                <div style={{ width: '65%', height: '1px', background: '#4D4D4D', margin: '0 auto' }} />
+
                                                                                 <button className={`${styles.menuItem} ${styles.destructive}`} onClick={(e) => { e.stopPropagation(); reportUser(chat.id); setOpenMenuId(null); }}>
-                                                                                    <AlertCircle size={14} /> Report user
+                                                                                    <div style={{
+                                                                                        width: '18px', height: '18px', backgroundColor: '#D4145A',
+                                                                                        maskImage: `url(${Report})`, WebkitMaskImage: `url(${Report})`,
+                                                                                        maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                                                        maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                                                        maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                                                        flexShrink: 0,
+                                                                                    }} />
+                                                                                    Report user
                                                                                 </button>
                                                                             </div>
                                                                         )}
@@ -971,7 +1101,7 @@ export default function ChatsPage() {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        {index !== sortedChats.length - 1 && <div className={styles.chatDivider}></div>}
+                                                        {index !== sortedChats.length - 1 && <div className={styles.chatDivider} />}
                                                     </div>
                                                 ))}
                                             </div>

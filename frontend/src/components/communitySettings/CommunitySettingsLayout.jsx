@@ -4,8 +4,9 @@ import styles from './communitySettingsLayout.module.css';
 import CommunitySettingsNav from './CommunitySettingsNav';
 import CommunityInfoPanel from './CommunityInfoPanel';
 import MembersTab from './membersTab';
-import requestsTab from './requestsTab'; // Note: update casing if needed to match file name
-import DeleteCommunityModal from './deleteCommunityModal'; 
+import RequestsTab from './requestsTab';
+import CommunityPosts from './CommunityPosts';
+import DeleteCommunityModal from './deleteCommunityModal';
 
 export default function CommunitySettingsLayout({ community }) {
     const [activeTab, setActiveTab] = useState('Settings');
@@ -16,7 +17,6 @@ export default function CommunitySettingsLayout({ community }) {
     const token = localStorage.getItem("access");
     const API = "http://localhost:8000";
 
-    // Track the last active tab that wasn't 'Delete' to keep as the background view
     useEffect(() => {
         if (activeTab !== 'Delete') {
             setPrevTab(activeTab);
@@ -30,7 +30,7 @@ export default function CommunitySettingsLayout({ community }) {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
-                navigate('/communities'); // Route away after successful deletion
+                navigate('/communities');
             } else {
                 console.error("Failed to delete community");
             }
@@ -39,42 +39,46 @@ export default function CommunitySettingsLayout({ community }) {
         }
     };
 
-    // Decide which panel to display in the background context
     const displayedTab = activeTab === 'Delete' ? prevTab : activeTab;
+    const communityId = id || community?.id;
 
     return (
         <div className={styles.layoutContainer}>
-            {/* The Sidebar Nav on the right */}
             <CommunitySettingsNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
-            {/* The Main Content area on the left */}
             <div className={styles.mainContent}>
-                {/* 1. Show Info Panel when state is 'Settings' OR explicitly clicked to 'Community info' */}
                 {(displayedTab === 'Settings' || displayedTab === 'Community info') && (
                     <CommunityInfoPanel community={community} />
                 )}
-                
+
                 {displayedTab === 'Members' && (
-                    <MembersTab 
-                        communityId={id || community?.id} 
-                        onBack={() => setActiveTab('Community info')} 
+                    <MembersTab
+                        communityId={communityId}
+                        onBack={() => setActiveTab('Community info')}
                     />
                 )}
 
                 {displayedTab === 'Requests' && (
-                    <div style={{ padding: '32px', color: '#808080' }}>Requests Panel Coming Soon...</div>
+                    <RequestsTab
+                        groupId={communityId}
+                        token={token}
+                        onBack={() => setActiveTab('Community info')}
+                        isPublic={community?.isPublic !== false}
+                    />
                 )}
-                
+
                 {displayedTab === 'Posts' && (
-                    <div style={{ padding: '32px', color: '#808080' }}>Posts Panel Coming Soon...</div>
+                    <CommunityPosts
+                        communityId={communityId}
+                        onBack={() => setActiveTab('Community info')}
+                    />
                 )}
             </div>
 
-            {/* ── STANDALONE OVERLAY MODAL LAYER ── */}
             {activeTab === 'Delete' && (
                 <DeleteCommunityModal
                     isOpen={true}
-                    onClose={() => setActiveTab(prevTab)} // Drops back to whatever view they were looking at
+                    onClose={() => setActiveTab(prevTab)}
                     onDelete={handleDeleteCommunity}
                 />
             )}

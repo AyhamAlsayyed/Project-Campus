@@ -561,18 +561,21 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
                 </>
               ) : (
                 <>
-                  {/* ── NORMAL MENU ── */}
+
                   {isOwnProfile && (
-                    <button
-                      className={styles.menuItem}
-                      onClick={() => handleMenuAction('pin')}
-                      style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                    >
-                      <img src={Pin} width={14} alt="" style={{ filter: "brightness(0) saturate(100%) invert(76%)", flexShrink: 0 }} />
-                      <span style={{ color: "#C2C2C2" }}>{isPinned ? "Unpin Post" : "Pin Post"}</span>
-                    </button>
+                    <>
+                      <button
+                        className={styles.menuItem}
+                        onClick={() => handleMenuAction('pin')}
+                        style={menuItemStyle}
+                        onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                      >
+                        <img src={Pin} width={14} alt="" style={{ filter: "brightness(0) saturate(100%) invert(76%)", flexShrink: 0 }} />
+                        <span style={{ color: "#C2C2C2" }}>{isPinned ? "Unpin Post" : "Pin Post"}</span>
+                      </button>
+                      <MenuDivider />
+                    </>
                   )}
 
                   <button

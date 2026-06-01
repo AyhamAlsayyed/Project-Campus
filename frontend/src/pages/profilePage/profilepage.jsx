@@ -30,6 +30,7 @@ import Info from '../../Assets/icons/info.png';
 import ProfilePicture from '../../Assets/icons/default-pfp.png'
 import BellOn from '../../Assets/icons/notifications.png'
 import BellOff from '../../Assets/icons/mute.png'
+import Edit from '../../Assets/icons/edit.png';
 import { AlertCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
@@ -768,7 +769,25 @@ export default function ProfilePage({ type }) {
                                                             <h2 className={styles.username}>{username}</h2>
                                                             <span className={styles.role}>/{role}</span>
                                                         </div>
-                                                        <button className={styles.editProfileBtn} onClick={() => setIsEditing(true)}>Edit ✎</button>
+                                                        <button className={styles.editProfileBtn} onClick={() => setIsEditing(true)}>
+                                                            <span className={styles.editText}>Edit</span>
+
+                                                            <div
+                                                                style={{
+                                                                    width: '20px',
+                                                                    height: '20px',
+                                                                    backgroundColor: '#999999',
+                                                                    maskImage: `url(${Edit})`,
+                                                                    WebkitMaskImage: `url(${Edit})`,
+                                                                    maskSize: 'contain',
+                                                                    WebkitMaskSize: 'contain',
+                                                                    maskRepeat: 'no-repeat',
+                                                                    WebkitMaskRepeat: 'no-repeat',
+                                                                    maskPosition: 'center',
+                                                                    WebkitMaskPosition: 'center',
+                                                                }}
+                                                            />
+                                                        </button>
                                                     </div>
                                                     <div className={styles.subRow}>
                                                         <span className={styles.fullName}>{fullName}</span>

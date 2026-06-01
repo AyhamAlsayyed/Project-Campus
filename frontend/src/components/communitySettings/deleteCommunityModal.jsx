@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import styles from './DeleteCommunityModal.module.css';
 
 const DeleteCommunityModal = ({ isOpen, onClose, onDelete }) => {
-    // State to track if the user has checked the confirmation box
+
     const [isConfirmed, setIsConfirmed] = useState(false);
 
-    // If modal is not open, don't render anything
+
     if (!isOpen) return null;
 
     const handleDeleteClick = () => {
@@ -13,21 +13,7 @@ const DeleteCommunityModal = ({ isOpen, onClose, onDelete }) => {
             onDelete();
         }
     };
-    const handleDeleteCommunity = async () => {
-        try {
-            const res = await fetch(`${API}/api/communities/${id || community?.id}/`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                navigate('/communities');
-            } else {
-                console.error("Failed to delete community");
-            }
-        } catch (err) {
-            console.error("Error deleting community:", err);
-        }
-    };
+
 
     return (
         <div className={styles.modalOverlay} onClick={onClose}>

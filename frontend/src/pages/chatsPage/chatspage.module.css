@@ -41,7 +41,7 @@
 
 .mainContent {
     flex: 1;
-    
+
     align-items: flex-start;
     display: flex;
     flex-direction: column;
@@ -348,33 +348,72 @@
 /* Right Side (Preview + Time + Actions) */
 .chatItemRight {
     display: flex;
+    flex-direction: row;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
 }
 
 .chatDetails {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 2px;
+}
+
+.chatDetailsTop {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.chatIndicators {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
 }
 
 .chatPreview {
-    font-size: 13px;
-    color: #999;
-    font-weight: 400;
-    margin-top: 2px;
-    text-align: right;
-    max-width: 200px;
+    font-size: 14px;
+    color: #ccc;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 180px;
 }
 
 .chatTime {
-    font-size: 11px;
-    color: #666;
-    text-transform: lowercase;
+    font-size: 13px;
+    color: #888;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.chatDetails {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px; /* gap between preview and time */
+}
+.chatPreview {
+    font-size: 14px;
+    color: #ccc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+    text-align: right;
+}
+.chatName {
+    font-size: 20px;
+    color: #eee;
+    font-weight: 500;
+}
+
+.chatStatusText {
+    font-size: 13px;
+    /* up from 11px */
+    color: #888;
+    margin-bottom: 2px;
 }
 
 .chatActions {
@@ -417,7 +456,7 @@
 
     background-color: #2a2a2a;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: 20px;
     padding: 8px 0;
     width: 200px;
     z-index: 100;
@@ -1421,6 +1460,7 @@
         transform: translateX(-100%);
     }
 }
+
 .mediaAttachment {
     display: flex;
     flex-direction: column;
@@ -1436,22 +1476,27 @@
     transition: opacity 0.15s;
 }
 
-.mediaImage:hover { opacity: 0.88; }
+.mediaImage:hover {
+    opacity: 0.88;
+}
 
 .mediaVideo {
     width: 100%;
     border-radius: 10px;
     max-width: 260px;
 }
+
 /* ── Chat File Attachment ── */
 /* ── File Attachment (Inside Bubble) ── */
 .fileAttachment {
     display: flex;
     align-items: center;
-    background: rgba(28, 28, 28, 0.85); /* Dark translucent card inside the bubble */
+    background: rgba(28, 28, 28, 0.85);
+    /* Dark translucent card inside the bubble */
     border-radius: 16px;
     padding: 12px 16px;
-    margin-bottom: 8px; /* Adds space if there is text below it */
+    margin-bottom: 8px;
+    /* Adds space if there is text below it */
     text-decoration: none;
     gap: 16px;
     width: 100%;
@@ -1467,7 +1512,7 @@
 .fileIconWrapper {
     width: 42px;
     height: 52px;
-    background: #E53935; 
+    background: #E53935;
     border-radius: 6px;
     position: relative;
     display: flex;
@@ -1485,7 +1530,7 @@
     border-width: 0 14px 14px 0;
     border-style: solid;
     /* This matches the dark card background to simulate a cut corner */
-    border-color: #1C1C1C #1C1C1C rgba(255,255,255,0.3) rgba(255,255,255,0.3);
+    border-color: #1C1C1C #1C1C1C rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.3);
     border-bottom-left-radius: 4px;
 }
 
@@ -1493,7 +1538,7 @@
     color: #ffffff;
     font-size: 0.75rem;
     font-weight: 800;
-    margin-top: 10px; 
+    margin-top: 10px;
     letter-spacing: 0.5px;
 }
 
@@ -1503,7 +1548,7 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    min-width: 0; 
+    min-width: 0;
 }
 
 .fileName {
@@ -1529,8 +1574,10 @@
     padding-left: 4px;
     flex-shrink: 0;
 }
+
 .createGroup {
-    border-radius: 50%; /* Changed from 50px for a perfect circle */
+    border-radius: 50%;
+    /* Changed from 50px for a perfect circle */
     display: flex;
     align-items: center;
     justify-content: center;

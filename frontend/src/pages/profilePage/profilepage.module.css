@@ -112,7 +112,11 @@ body {
   align-self: center;
   margin-left: 4px;
 }
+.editText{
+  color:#999999;
+  font-size: 0.9rem;
 
+}
 .editPencil {
   font-size: 0.85rem;
   line-height: 1;
@@ -455,10 +459,11 @@ body {
 .tabBtn {
   border: none;
   background: transparent;
+  font-size:1rem;
   cursor: pointer;
   color: rgba(255, 255, 255, 0.6);
   font-weight: 700;
-  padding: 10px 18px;
+  padding: 10px 20px;
   border-radius: 14px;
 }
 
