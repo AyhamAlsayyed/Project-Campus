@@ -15,6 +15,7 @@ import JoinedCommunities from './pages/joinedCommunities/joinedCommunities';
 import Universities from "./pages/universtities/universities";
 import EventsPage from "./pages/eventsPage/eventsPage";
 import SearchResultsPage from './pages/searchResultPage/searchResults.jsx'
+import Subscriptions from "./pages/subscriptions/subscriptions";
 
 function App() {
   return (
@@ -122,6 +123,14 @@ function App() {
           element={
             <ProtectedRoute>
               <SearchResultsPage />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/subscriptions"
+          element={
+            <ProtectedRoute>
+              <Subscriptions />
             </ProtectedRoute>
           }
         />

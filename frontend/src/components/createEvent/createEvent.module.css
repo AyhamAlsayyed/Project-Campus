@@ -1,0 +1,452 @@
+/* Layout Configurations */
+.createEventPageLayout {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    min-height: 100%;
+    width: 100%;
+    gap: 24px; /* Added gap to properly space the middle and right sections side-by-side */
+}
+
+/* =========================================================
+                     MIDDLE CONTAINER STYLES
+   ========================================================= */
+.createEventMiddleContainer {
+    background-color: #333333;
+    border-radius: 35px 35px 0 0;
+    flex: 1;
+    padding: 32px 0;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+.eventFormHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 32px;
+}
+
+.eventHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.titleText {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.formBackBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0;
+}
+
+.backArrowImg {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) invert(1);
+    object-fit: contain;
+}
+
+.formMainHeaderTitle {
+    color: #FFFFFF;
+    font-size: 25px;
+    margin: 0;
+    font-weight: 600;
+}
+
+.eventHeaderRight {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* ================= BUTTON STYLES ================= */
+.gradientCreateBtn {
+    background: linear-gradient(90deg, #6223A4 0%, #9E279D 100%);
+    color: #FFFFFF;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.gradientCreateBtn:hover {
+    opacity: 0.9;
+}
+
+/* New style for when fields are missing */
+.disabledCreateBtn {
+    background: #4D4D4D;
+    color: #888888;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: not-allowed;
+    transition: all 0.2s ease;
+}
+
+.formHelpBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.helpIconImg {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+}
+
+/* Width Line Dividers */
+.divider75 {
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 32px auto;
+    width: 75%;
+}
+
+.divider50 {
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 20px auto;
+    width: 50%;
+}
+
+.formInnerBody {
+    padding: 0 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 10px; 
+}
+
+.formFieldGroup {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.labelWithStarRow {
+    display: flex;
+    align-items: center;  
+    gap: 6px;
+    margin-bottom: 14px; 
+}
+
+.formLabelField {
+    color: #CCCCCC;
+    font-size: 25px; 
+    font-weight: 600;
+}
+
+.formRequiredStarField {
+    color: #D4145A;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.formHintSubtitle {
+    color: #777777;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+/* Banner Display UI */
+.bannerUploadPreviewWrapper {
+    position: relative;
+    width: 75%;
+    height: 160px;
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.bannerImageDisplay {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cameraTriggerFloatingBtn {
+    position: absolute;
+    bottom: 12px;
+    right: 16px;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.cameraTriggerFloatingBtn:hover {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.cameraIconImg {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) invert(1);
+}
+
+/* Form Inputs UI Elements middle container */
+.eventTextInputMiddle {
+    background-color: #262626;
+    border: 1px solid transparent;
+    border-radius: 25px;
+    padding: 16px 20px;
+    color: #FFFFFF;
+    font-size: 13px;
+    width: 70%;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.textareaCounterWrapperBlock {
+    position: relative;
+    width: 90%;
+}
+
+.eventTextAreaMiddle {
+    background-color: #262626;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    padding: 16px 20px 40px 20px;
+    color: #FFFFFF;
+    font-size: 13px;
+    width: 100%;
+    min-height: 110px;
+    box-sizing: border-box;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+}
+
+.eventTextInputMiddle:focus,
+.eventTextAreaMiddle:focus {
+    border-color: #4D4D4D;
+}
+
+.floatingCharCounterDisplay {
+    position: absolute;
+    bottom: 14px;
+    right: 20px;
+    color: #555555;
+    font-size: 12px;
+}
+
+/* =========================================================
+                     RIGHT CONTAINER STYLES
+   ========================================================= */
+.createEventRightWrapper {
+    position: relative;
+    min-width: 320px;
+    max-width: 380px; /* Optional: Sets a clean boundary for the right panel */
+}
+
+/* Floating Badged Pill Element */
+.durationPillHeaderBadge {
+    position: absolute;
+    top: -36px;
+    left: 16px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    border-radius: 14px 14px 0 0;
+    font-weight: 800;
+    height: 38px;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.92);
+    background-color: #424243;
+}
+
+.createEventRightContainer {
+    background-color: #333333;
+    border-radius: 24px;
+    padding: 28px 24px;
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    height: 100%;
+}
+
+.logisticsFieldGroup {
+    display: flex;
+    flex-direction: column;
+}
+
+.logisticsSectionTitle {
+    color: #FFFFFF;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* Manual Date Input Pill Segment Classes */
+.manualDateSegmentsRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+.segmentedInputControl {
+    background-color: #262626;
+    border: none;
+    border-radius: 20px; 
+    padding: 10px 0;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 500;
+    width: 58px;
+    box-sizing: border-box;
+    outline: none;
+    text-align: center;
+}
+
+.segmentedInputControlYear {
+    background-color: #262626;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 0;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 500;
+    width: 82px;
+    box-sizing: border-box;
+    outline: none;
+    text-align: center;
+}
+
+/* Custom Separator Adjustments */
+.dateSeparator {
+    color: #666666;
+    font-weight: 400; 
+    font-size: 24px; 
+    line-height: 1;
+}
+
+.timeSeparator {
+    color: #666666;
+    font-weight: 900; 
+    font-size: 18px; 
+    line-height: 1;
+    padding-bottom: 3px; 
+}
+
+/* Time Row Styles */
+.timeRowFlexSelector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin-top: 4px;
+}
+
+.atTimePrefixLabel {
+    color: #888888;
+    font-size: 14px;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.manualTimeSegmentsContainer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Custom AM/PM Dropdowns */
+.amPmOuterDropdownSelectorBlock {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.amPmActiveBoxSelection {
+    background-color: #262626;
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    user-select: none;
+    min-width: 36px;
+    text-align: center;
+}
+
+.amPmExternalArrowIcon {
+    width: 10px;
+    height: 10px;
+    filter: brightness(0) invert(0.8);
+    transform: rotate(-90deg);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.arrowFlippedUp {
+    transform: rotate(90deg);
+}
+
+.amPmDropdownFloatingMenu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    background-color: #262626;
+    border: 1px solid #4D4D4D;
+    border-radius: 12px;
+    width: 72px;
+    z-index: 100;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.amPmDropdownFloatingMenu div {
+    color: #FFFFFF;
+    font-size: 12px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.amPmDropdownFloatingMenu div:hover {
+    background-color: #383838;
+}
+
+/* Address input config */
+.darkLogisticsAddressInput {
+    background-color: #262626;
+    border: 1px solid transparent;
+    border-radius: 25px;
+    padding: 14px 16px;
+    color: #FFFFFF;
+    font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.darkLogisticsAddressInput:focus {
+    border-color: #4D4D4D;
+}

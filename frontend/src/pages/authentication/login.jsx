@@ -41,17 +41,19 @@ export default function Login() {
                 return;
 
             }
-           
+
             if (data.access && data.refresh) {
                 localStorage.setItem("access", data.access);
                 localStorage.setItem("refresh", data.refresh);
+                localStorage.setItem("user_type", data.user.user_type ?? '');
+                localStorage.setItem("login_user", JSON.stringify(data.user));
             } else {
                 setError("No tokens returned from server");
                 return;
             }
 
             navigate('/home');
-           
+
         }
         catch (error) {
             setError('An error occurred. Please try again later.');

@@ -26,11 +26,20 @@ import Events from '../../Assets/icons/event.png';
 import Share from '../../Assets/icons/share.png';
 import Bin from '../../Assets/icons/bin.png';
 import ArrowRight from '../../Assets/icons/arrow-right.png'
+import ArrowLeft from '../../Assets/icons/arrow-left.png'
 import Info from '../../Assets/icons/info.png';
 import ProfilePicture from '../../Assets/icons/default-pfp.png'
 import BellOn from '../../Assets/icons/notifications.png'
 import BellOff from '../../Assets/icons/mute.png'
 import Edit from '../../Assets/icons/edit.png';
+import { useCreateEvent } from '../../components/createEvent/useCreateEvent';
+
+
+
+import CreateEventForm from '../../components/createEvent/CreateEventForm';
+import CreateEventRightSidebar from '../../components/createEvent/CreateEventRightSidebar';
+
+import AdIcon from '../../Assets/icons/ad.png';
 import { AlertCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
@@ -47,6 +56,8 @@ export default function ProfilePage({ type }) {
     const [friendStatus, setFriendStatus] = useState("none");
     const [currentUser, setCurrentUser] = useState(null);
     const token = localStorage.getItem("access");
+    const userType = localStorage.getItem("user_type");
+
     const [userLoading, setUserLoading] = useState(true);
     const [userError, setUserError] = useState("");
     const [selectedPost, setSelectedPost] = useState(null);
@@ -87,6 +98,12 @@ export default function ProfilePage({ type }) {
     const [modalPicks, setModalPicks] = useState([]);
     const [pageFollowStatus, setPageFollowStatus] = useState({});
     const [pageNotifyStatus, setPageNotifyStatus] = useState({});
+    const [showManageEvents, setShowManageEvents] = useState(false);
+    const [activeEventTab, setActiveEventTab] = useState('upcoming');
+    const [manageEventsDate, setManageEventsDate] = useState(new Date());
+    const [showManageMonthPicker, setShowManageMonthPicker] = useState(false);
+    const [showCreateEvent, setShowCreateEvent] = useState(false);
+    const createEvent = useCreateEvent();
 
     useEffect(() => {
         const close = (e) => {
@@ -209,8 +226,11 @@ export default function ProfilePage({ type }) {
 
     const loadCurrentUser = async () => {
         try {
-            const res = await fetch(`${API}/api/auth/me/`, { headers: { Authorization: `Bearer ${token}` } });
+            const res = await fetch(`${API}/api/auth/me/`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             const data = await res.json();
+            console.log("currentUser data:", data);
             setCurrentUser(data);
         } catch (e) { console.error(e); }
     };
@@ -481,6 +501,11 @@ export default function ProfilePage({ type }) {
 
     const isOwnProfile = currentUser?.id === Number(userId);
 
+    const isPageUser = isOwnProfile && (
+        userType === 'page' ||
+        user?.type === 'page'
+    );
+
     useEffect(() => {
         loadCurrentUser();
         loadProfileUser();
@@ -633,7 +658,12 @@ export default function ProfilePage({ type }) {
                     />
 
                     <div className={styles.profileContent}>
-                        {isEditing ? (
+                        {showCreateEvent ? (
+                            <CreateEventForm
+                                {...createEvent.formProps}
+                                onBack={() => setShowCreateEvent(false)}
+                            />
+                        ) : isEditing ? (
                             <ProfileEditCard styles={styles} edit={edit} setIsEditing={setIsEditing} user={user} API={API} token={token} />
                         ) : isBlocked ? (
                             <div className={styles.profileCard}>
@@ -1019,295 +1049,370 @@ export default function ProfilePage({ type }) {
                         {userLoading && <div className={styles.notice}>Loading profile...</div>}
                     </div>
                     <div className={styles.rightSection}>
-                        {isOwnProfile && user?.role === 'instructor' ? (
-                            <>
-                                <FriendsSuggestion />
-                                <div className={styles.remindersWidgetInstructor}>
-                                    <div className={styles.remindersWidgetHeader}>
-                                        <img src={Events} alt="events" className={styles.remindersWidgetIcon} />
-                                        <span className={styles.remindersWidgetTitle}>
-                                            Reminders set
-                                        </span>
-                                        <span
-                                            onClick={() => setShowRemindersMonthPicker(p => !p)}
-                                            className={styles.remindersMonthToggle}
-                                        >
-                                            {remindersMonth.toLocaleString('default', { month: 'long' })} {remindersMonth.getFullYear()}
-                                        </span>
+
+                        {showCreateEvent ?
+                            <CreateEventRightSidebar {...createEvent.sidebarProps} />
+                            : isOwnProfile && isPageUser ? (
+                                <>
+                                    <div className={styles.yourEventsWidgetWrap}>
+                                        <div className={styles.yourEventsPill}>
+                                            <p>YOUR EVENTS</p>
+                                        </div>
+
+                                        <div className={styles.yourEventsWrapper}>
+                                            <div className={styles.yourEventsHeader}>
+                                                <div className={styles.eventsIconColored} />
+                                                <span className={styles.yourEventsTitle}>
+                                                    Upcoming Events of <span className={styles.uppercaseText}>YOURS</span>
+                                                </span>
+                                            </div>
+
+                                            <div className={styles.eventsDivider} />
+
+                                            <div className={styles.eventCardContainer}>
+                                                {/* Dynamic background passed inline, everything else in CSS */}
+                                                <div
+                                                    className={styles.eventCardBg}
+                                                    style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800)' }}
+                                                >
+                                                    <div className={styles.eventTimeBox}>
+                                                        Starts 07/6/2026 - 3:00 PM<br />
+                                                        Ends - 07/6/2026 - 6:00 PM
+                                                    </div>
+
+                                                    <div className={styles.eventDetailsBottom}>
+                                                        <div className={styles.eventTextContent}>
+                                                            <div className={styles.eventTitle}>Lorem ipsum</div>
+                                                            <div className={styles.eventDescWrapper}>
+                                                                <span className={styles.eventDesc}>
+                                                                    Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore
+                                                                </span>
+                                                                <span className={styles.readMoreText}>read more</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className={styles.eventsDivider} />
+
+                                            <div className={styles.eventsActionRow}>
+                                                <button className={styles.manageEventsBtn} onClick={() => setShowManageEvents(true)} >Manage Events</button>
+                                                <button className={styles.createEventBtn} onClick={() => setShowCreateEvent(true)} >Create</button>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div className={styles.remindersDivider} />
+                                    {/* ══════════════════════════════════════
+                PROMOTIONS WIDGET (PAGE ONLY)
+            ══════════════════════════════════════ */}
+                                    <div className={styles.promotionsContainer}>
+                                        <div className={styles.promoHeaderRow}>
+                                            <div className={styles.promoIconColored} />
+                                            <span className={styles.promoTitle}>Promotions</span>
+                                        </div>
 
-                                    {(() => {
-                                        const upcoming = reminders
-                                            .map(e => ({ ...e, _d: new Date(e.start_date || e.date || e.event_date) }))
-                                            .filter(e => e._d >= new Date())
-                                            .sort((a, b) => a._d - b._d);
-                                        const next = upcoming[0];
-                                        const daysLeft = next ? Math.ceil((next._d - new Date()) / 86400000) : null;
-                                        return (
-                                            <div className={styles.remindersNextRow}>
-                                                <div className={styles.remindersNextLeft}>
-                                                    <span className={styles.remindersNextLabel}>
-                                                        {daysLeft !== null ? `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left` : 'No upcoming events'}
-                                                    </span>
-                                                    {next && (
-                                                        <span className={styles.remindersNextTitle}>
-                                                            Upcoming event on {next._d.getDate()}{['st', 'nd', 'rd'][((next._d.getDate() + 90) % 100 - 10) % 10 - 1] || 'th'}
+                                        <div className={styles.promoContentRow}>
+                                            <p className={styles.promoDesc}>
+                                                Track, manage, and review your active promotions and history.
+                                            </p>
+                                            <button className={styles.promoManageBtn}>Manage</button>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : isOwnProfile && user?.role === 'instructor' ? (
+                                <>
+                                    <FriendsSuggestion />
+                                    <div className={styles.remindersWidgetInstructor}>
+                                        <div className={styles.remindersWidgetHeader}>
+                                            <img src={Events} alt="events" className={styles.remindersWidgetIcon} />
+                                            <span className={styles.remindersWidgetTitle}>
+                                                Reminders set
+                                            </span>
+                                            <span
+                                                onClick={() => setShowRemindersMonthPicker(p => !p)}
+                                                className={styles.remindersMonthToggle}
+                                            >
+                                                {remindersMonth.toLocaleString('default', { month: 'long' })} {remindersMonth.getFullYear()}
+                                            </span>
+                                        </div>
+
+                                        <div className={styles.remindersDivider} />
+
+                                        {(() => {
+                                            const upcoming = reminders
+                                                .map(e => ({ ...e, _d: new Date(e.start_date || e.date || e.event_date) }))
+                                                .filter(e => e._d >= new Date())
+                                                .sort((a, b) => a._d - b._d);
+                                            const next = upcoming[0];
+                                            const daysLeft = next ? Math.ceil((next._d - new Date()) / 86400000) : null;
+                                            return (
+                                                <div className={styles.remindersNextRow}>
+                                                    <div className={styles.remindersNextLeft}>
+                                                        <span className={styles.remindersNextLabel}>
+                                                            {daysLeft !== null ? `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left` : 'No upcoming events'}
                                                         </span>
+                                                        {next && (
+                                                            <span className={styles.remindersNextTitle}>
+                                                                Upcoming event on {next._d.getDate()}{['st', 'nd', 'rd'][((next._d.getDate() + 90) % 100 - 10) % 10 - 1] || 'th'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {next && (
+                                                        <div className={styles.remindersNextRight}>
+                                                            <div className={styles.remindersAvatarStack}>
+                                                                {upcoming.slice(0, 3).map((event, i) => {
+                                                                    const avatar = event.page?.avatar || event.host?.avatar;
+                                                                    return avatar ? (
+                                                                        <img
+                                                                            key={event.id}
+                                                                            src={resolveUrl(avatar)}
+                                                                            alt=""
+                                                                            className={`${styles.remindersStackAvatar} ${styles[`avatarStackIndex${i}`]}`}
+                                                                        />
+                                                                    ) : (
+                                                                        <div
+                                                                            key={event.id || i}
+                                                                            className={`${styles.remindersStackPlaceholder} ${styles[`avatarStackIndex${i}`]}`}
+                                                                        >
+                                                                            <User size={18} className={styles.placeholderUserIcon} />
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                            <img
+                                                                src={ArrowRight}
+                                                                alt=""
+                                                                onClick={() => navigate('/events', { state: { highlightId: next.id } })}
+                                                                className={styles.remindersArrow}
+                                                            />
+                                                        </div>
                                                     )}
                                                 </div>
-                                                {next && (
-                                                    <div className={styles.remindersNextRight}>
-                                                        <div className={styles.remindersAvatarStack}>
-                                                            {upcoming.slice(0, 3).map((event, i) => {
-                                                                const avatar = event.page?.avatar || event.host?.avatar;
-                                                                return avatar ? (
-                                                                    <img
-                                                                        key={event.id}
-                                                                        src={resolveUrl(avatar)}
-                                                                        alt=""
-                                                                        className={styles.remindersStackAvatar}
-                                                                        style={{ marginLeft: i === 0 ? 0 : -16, zIndex: upcoming.slice(0, 3).length - i }}
-                                                                    />
-                                                                ) : (
-                                                                    <div
-                                                                        key={event.id || i}
-                                                                        className={styles.remindersStackPlaceholder}
-                                                                        style={{ marginLeft: i === 0 ? 0 : -16, zIndex: upcoming.slice(0, 3).length - i }}
-                                                                    >
-                                                                        <User size={18} color="rgba(255,255,255,0.4)" />
-                                                                    </div>
+                                            );
+                                        })()}
+                                    </div>
+
+                                    <div className={styles.picksWidgetWrap}>
+                                        <div className={styles.picksWidgetHeader}>
+                                            <img src={Community} alt="" className={styles.picksWidgetIcon} />
+                                            <span className={styles.picksWidgetTitle}>
+                                                Your Picks
+                                            </span>
+                                            <div className={styles.picksWidgetMeta}>
+                                                <span className={styles.picksWidgetCount}>
+                                                    {(user?.community_picks || []).length}/3
+                                                </span>
+                                                <button
+                                                    onClick={async () => {
+                                                        setModalPicks(user?.community_picks || []);
+                                                        setShowPicksModal(true);
+                                                        setPicksLoading(true);
+                                                        try {
+                                                            const res = await fetch(`${API}/api/communities/?filter=joined`, {
+                                                                headers: { Authorization: `Bearer ${token}` }
+                                                            });
+                                                            if (res.ok) {
+                                                                const data = await res.json();
+                                                                setJoinedCommunities(data.map(c => ({ ...c, bgImage: c.image })));
+                                                            }
+                                                        } catch (e) { console.error(e); }
+                                                        finally { setPicksLoading(false); }
+                                                    }}
+                                                    className={styles.picksManageBtn}
+                                                >
+                                                    Manage
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : isOwnProfile ? (
+                                <>
+                                    <FriendsSuggestion />
+                                    {(() => {
+                                        const year = remindersMonth.getFullYear();
+                                        const month = remindersMonth.getMonth();
+                                        const monthName = remindersMonth.toLocaleString('default', { month: 'long' });
+                                        const firstDay = new Date(year, month, 1).getDay();
+                                        const daysInMonth = new Date(year, month + 1, 0).getDate();
+                                        const eventDays = new Set(
+                                            reminders.map(e => {
+                                                const d = new Date(e.start_date || e.date || e.event_date);
+                                                return (d.getFullYear() === year && d.getMonth() === month) ? d.getDate() : null;
+                                            }).filter(Boolean)
+                                        );
+                                        const cells = [];
+                                        for (let i = 0; i < firstDay; i++) cells.push(null);
+                                        for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+                                        return (
+                                            <div className={styles.calendarWidget}>
+                                                <div className={styles.calendarWidgetHeader}>
+                                                    <img src={Events} alt="events" className={styles.calendarWidgetIcon} />
+                                                    <span className={styles.calendarWidgetTitle}>
+                                                        Reminders set
+                                                    </span>
+                                                    <span
+                                                        onClick={() => setShowRemindersMonthPicker(p => !p)}
+                                                        className={styles.remindersMonthToggle}
+                                                    >
+                                                        {monthName} {year}
+                                                    </span>
+                                                </div>
+                                                {showRemindersMonthPicker && (
+                                                    <div className={styles.monthPickerDropdown}>
+                                                        <div className={styles.monthPickerNav}>
+                                                            <button
+                                                                onClick={() => setRemindersMonth(new Date(year - 1, month, 1))}
+                                                                disabled={year <= 2026}
+                                                                className={styles.monthPickerNavBtn}
+                                                            >‹</button>
+                                                            <span className={styles.monthPickerYear}>{year}</span>
+                                                            <button
+                                                                onClick={() => setRemindersMonth(new Date(year + 1, month, 1))}
+                                                                disabled={year >= new Date().getFullYear() + 2}
+                                                                className={styles.monthPickerNavBtn}
+                                                            >›</button>
+                                                        </div>
+                                                        <div className={styles.monthGrid}>
+                                                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => {
+                                                                const isSelected = i === month;
+                                                                return (
+                                                                    <button
+                                                                        key={m}
+                                                                        onClick={() => { setRemindersMonth(new Date(year, i, 1)); setShowRemindersMonthPicker(false); }}
+                                                                        className={`${styles.monthBtn} ${isSelected ? styles.monthBtnActive : styles.monthBtnInactive}`}
+                                                                    >{m}</button>
                                                                 );
                                                             })}
                                                         </div>
-                                                        <img
-                                                            src={ArrowRight}
-                                                            alt=""
-                                                            onClick={() => navigate('/events', { state: { highlightId: next.id } })}
-                                                            className={styles.remindersArrow}
-                                                        />
                                                     </div>
                                                 )}
+
+                                                <div className={styles.calendarGrid}>
+                                                    {cells.map((day, i) => {
+                                                        const hasEvent = day && eventDays.has(day);
+                                                        return (
+                                                            <div
+                                                                key={i}
+                                                                onClick={() => {
+                                                                    if (!hasEvent) return;
+                                                                    const eventsOnDay = reminders.filter(e => {
+                                                                        const d = new Date(e.start_date || e.date || e.event_date);
+                                                                        return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
+                                                                    });
+                                                                    setRemindersPopup({ day, monthName, events: eventsOnDay });
+                                                                }}
+                                                                className={`${styles.calendarDay} ${!day ? styles.calendarDayEmpty : (hasEvent ? styles.calendarDayEvent : styles.calendarDayNormal)}`}
+                                                            >
+                                                                {day || ""}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
                                         );
                                     })()}
-                                </div>
-
-                                <div className={styles.picksWidgetWrap}>
-                                    <div className={styles.picksWidgetHeader}>
-                                        <img src={Community} alt="" className={styles.picksWidgetIcon} />
-                                        <span className={styles.picksWidgetTitle}>
-                                            Your Picks
-                                        </span>
-                                        <div className={styles.picksWidgetMeta}>
-                                            <span className={styles.picksWidgetCount}>
-                                                {(user?.community_picks || []).length}/3
-                                            </span>
-                                            <button
-                                                onClick={async () => {
-                                                    setModalPicks(user?.community_picks || []);
-                                                    setShowPicksModal(true);
-                                                    setPicksLoading(true);
-                                                    try {
-                                                        const res = await fetch(`${API}/api/communities/?filter=joined`, {
-                                                            headers: { Authorization: `Bearer ${token}` }
-                                                        });
-                                                        if (res.ok) {
-                                                            const data = await res.json();
-                                                            setJoinedCommunities(data.map(c => ({ ...c, bgImage: c.image })));
-                                                        }
-                                                    } catch (e) { console.error(e); }
-                                                    finally { setPicksLoading(false); }
-                                                }}
-                                                className={styles.picksManageBtn}
-                                            >
-                                                Manage
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        ) : isOwnProfile ? (
-                            <>
-                                <FriendsSuggestion />
-                                {(() => {
-                                    const year = remindersMonth.getFullYear();
-                                    const month = remindersMonth.getMonth();
-                                    const monthName = remindersMonth.toLocaleString('default', { month: 'long' });
-                                    const firstDay = new Date(year, month, 1).getDay();
-                                    const daysInMonth = new Date(year, month + 1, 0).getDate();
-                                    const eventDays = new Set(
-                                        reminders.map(e => {
-                                            const d = new Date(e.start_date || e.date || e.event_date);
-                                            return (d.getFullYear() === year && d.getMonth() === month) ? d.getDate() : null;
-                                        }).filter(Boolean)
-                                    );
-                                    const cells = [];
-                                    for (let i = 0; i < firstDay; i++) cells.push(null);
-                                    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-
-                                    return (
-                                        <div className={styles.calendarWidget}>
-                                            <div className={styles.calendarWidgetHeader}>
-                                                <img src={Events} alt="events" className={styles.calendarWidgetIcon} />
-                                                <span className={styles.calendarWidgetTitle}>
-                                                    Reminders set
-                                                </span>
-                                                <span
-                                                    onClick={() => setShowRemindersMonthPicker(p => !p)}
-                                                    className={styles.remindersMonthToggle}
-                                                >
-                                                    {monthName} {year}
-                                                </span>
+                                </>
+                            ) : (
+                                <>
+                                    <UserDetails user={user} />
+                                    {user?.type === 'page' && !isOwnProfile && (
+                                        <div className={styles.reviewWidget}>
+                                            <div className={styles.reviewWidgetHeader}>
+                                                <img src={Star} alt="star" className={styles.reviewWidgetIcon} />
+                                                <span className={styles.reviewWidgetTitle}>Add a Review</span>
                                             </div>
-                                            {showRemindersMonthPicker && (
-                                                <div className={styles.monthPickerDropdown}>
-                                                    <div className={styles.monthPickerNav}>
-                                                        <button
-                                                            onClick={() => setRemindersMonth(new Date(year - 1, month, 1))}
-                                                            disabled={year <= 2026}
-                                                            className={styles.monthPickerNavBtn}
-                                                        >‹</button>
-                                                        <span className={styles.monthPickerYear}>{year}</span>
-                                                        <button
-                                                            onClick={() => setRemindersMonth(new Date(year + 1, month, 1))}
-                                                            disabled={year >= new Date().getFullYear() + 2}
-                                                            className={styles.monthPickerNavBtn}
-                                                        >›</button>
-                                                    </div>
-                                                    <div className={styles.monthGrid}>
-                                                        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => {
-                                                            const isSelected = i === month;
-                                                            return (
-                                                                <button
-                                                                    key={m}
-                                                                    onClick={() => { setRemindersMonth(new Date(year, i, 1)); setShowRemindersMonthPicker(false); }}
-                                                                    className={`${styles.monthBtn} ${isSelected ? styles.monthBtnActive : styles.monthBtnInactive}`}
-                                                                >{m}</button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <div className={styles.calendarGrid}>
-                                                {cells.map((day, i) => {
-                                                    const hasEvent = day && eventDays.has(day);
+                                            <div className={styles.reviewStarsRow}>
+                                                {[1, 2, 3, 4, 5].map(star => {
+                                                    const isActive = star <= (hoverRating || reviewRating);
                                                     return (
-                                                        <div
-                                                            key={i}
-                                                            onClick={() => {
-                                                                if (!hasEvent) return;
-                                                                const eventsOnDay = reminders.filter(e => {
-                                                                    const d = new Date(e.start_date || e.date || e.event_date);
-                                                                    return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
-                                                                });
-                                                                setRemindersPopup({ day, monthName, events: eventsOnDay });
-                                                            }}
-                                                            className={`${styles.calendarDay} ${!day ? styles.calendarDayEmpty : (hasEvent ? styles.calendarDayEvent : styles.calendarDayNormal)}`}
+                                                        <button
+                                                            key={star}
+                                                            onMouseEnter={() => setHoverRating(star)}
+                                                            onMouseLeave={() => setHoverRating(0)}
+                                                            onClick={() => handleReview(star)}
+                                                            className={`${styles.reviewStarBtn} ${isActive ? styles.reviewStarBtnActive : styles.reviewStarBtnInactive}`}
                                                         >
-                                                            {day || ""}
-                                                        </div>
+                                                            <img
+                                                                src={Star}
+                                                                alt="star"
+                                                                className={`${styles.reviewStarImg} ${isActive ? styles.reviewStarImgActive : styles.reviewStarImgInactive}`}
+                                                            />
+                                                        </button>
                                                     );
                                                 })}
                                             </div>
+                                            {reviewRating > 0 && (
+                                                <p className={styles.reviewRatingText}>
+                                                    You rated this {reviewRating}/5
+                                                </p>
+                                            )}
                                         </div>
-                                    );
-                                })()}
-                            </>
-                        ) : (
-                            <>
-                                <UserDetails user={user} />
-                                {user?.type === 'page' && !isOwnProfile && (
-                                    <div className={styles.reviewWidget}>
-                                        <div className={styles.reviewWidgetHeader}>
-                                            <img src={Star} alt="star" className={styles.reviewWidgetIcon} />
-                                            <span className={styles.reviewWidgetTitle}>Add a Review</span>
-                                        </div>
-                                        <div className={styles.reviewStarsRow}>
-                                            {[1, 2, 3, 4, 5].map(star => (
-                                                <button
-                                                    key={star}
-                                                    onMouseEnter={() => setHoverRating(star)}
-                                                    onMouseLeave={() => setHoverRating(0)}
-                                                    onClick={() => handleReview(star)}
-                                                    className={styles.reviewStarBtn}
-                                                    style={{ transform: star <= (hoverRating || reviewRating) ? "scale(1.1)" : "scale(1)" }}
-                                                >
-                                                    <img
-                                                        src={Star}
-                                                        alt="star"
-                                                        className={styles.reviewStarImg}
-                                                        style={{ filter: star <= (hoverRating || reviewRating) ? "brightness(0) invert(1) opacity(0.72)" : "brightness(0) invert(1) opacity(0.28)" }}
-                                                    />
-                                                </button>
-                                            ))}
-                                        </div>
-                                        {reviewRating > 0 && (
-                                            <p className={styles.reviewRatingText}>
-                                                You rated this {reviewRating}/5
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
-                                {communityPicks.length > 0 && (
-                                    <div className={styles.picksCard}>
-                                        <div className={styles.picksHeader}>
-                                            <img src={Community} alt="icon" className={styles.picksIconPng} style={{ filter: 'brightness(0) saturate(100%) invert(23%) sepia(85%) saturate(1200%) hue-rotate(280deg) brightness(90%)' }} />
-                                            <span className={styles.picksTitle}>{user?.username?.split(' ')[0]}'s Picks</span>
-                                        </div>
-                                        <div className={styles.picksSlideWrapper}>
-                                            {communityPicks[picksSlide] && (() => {
-                                                const pick = communityPicks[picksSlide];
-                                                return (
-                                                    <div className={styles.pickItemCard} style={{ backgroundImage: `url(${pick.image})` }}>
-                                                        <div className={styles.pickOverlay}>
-                                                            <div className={styles.pickContentTop}>
-                                                                <div className={styles.pickTitleGroup}>
-                                                                    <h2 className={styles.pickName}>{pick.name}</h2>
-                                                                    {pick.is_verified && <img src={VerifiedBadge} alt="Verified" width={18} height={18} style={{ filter: "brightness(0) invert(1)" }} />}
+                                    )}
+                                    {communityPicks.length > 0 && (
+                                        <div className={styles.picksCard}>
+                                            <div className={styles.picksHeader}>
+                                                <img
+                                                    src={Community}
+                                                    alt="icon"
+                                                    className={`${styles.picksIconPng} ${styles.picksIconFilter}`}
+                                                />
+                                                <span className={styles.picksTitle}>{user?.username?.split(' ')[0]}'s Picks</span>
+                                            </div>
+                                            <div className={styles.picksSlideWrapper}>
+                                                {communityPicks[picksSlide] && (() => {
+                                                    const pick = communityPicks[picksSlide];
+                                                    return (
+                                                        <div className={styles.pickItemCard}>
+                                                            <img src={pick.image} alt={pick.name} className={styles.pickItemImageBg} />
+                                                            <div className={styles.pickOverlay}>
+                                                                <div className={styles.pickContentTop}>
+                                                                    <div className={styles.pickTitleGroup}>
+                                                                        <h2 className={styles.pickName}>{pick.name}</h2>
+                                                                        {pick.is_verified && <img src={VerifiedBadge} alt="Verified" width={18} height={18} className={styles.verifiedBadgeIcon} />}
+                                                                    </div>
+                                                                    <button className={styles.pickViewBtn} onClick={() => navigate(`/communities/${pick.id}`)}>view</button>
                                                                 </div>
-                                                                <button className={styles.pickViewBtn} onClick={() => navigate(`/communities/${pick.id}`)}>view</button>
-                                                            </div>
-                                                            <div className={styles.pickContentBottom}>
-                                                                <p className={styles.pickDescription}>{pick.description}</p>
-                                                                {pick.description?.length > 80 && (
-                                                                    <button className={styles.readMore} onClick={() => setPicksPopup(pick)}>read more</button>
-                                                                )}
+                                                                <div className={styles.pickContentBottom}>
+                                                                    <p className={styles.pickDescription}>{pick.description}</p>
+                                                                    {pick.description?.length > 80 && (
+                                                                        <button className={styles.readMore} onClick={() => setPicksPopup(pick)}>read more</button>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                );
-                                            })()}
-                                        </div>
-                                        <div className={styles.paginationRow}>
-                                            <button className={styles.navArrow} onClick={() => setPicksSlide(prev => Math.max(0, prev - 1))} disabled={picksSlide === 0}>
-                                                <div className={styles.arrowLeft} />
-                                            </button>
-                                            <div className={styles.picksDots}>
-                                                {communityPicks.map((_, i) => (
-                                                    <button key={i} className={`${styles.picksDot} ${i === picksSlide ? styles.picksDotActive : ''}`} onClick={() => setPicksSlide(i)} />
-                                                ))}
+                                                    );
+                                                })()}
                                             </div>
-                                            <button className={styles.navArrow} onClick={() => setPicksSlide(prev => Math.min(communityPicks.length - 1, prev + 1))} disabled={picksSlide === communityPicks.length - 1}>
-                                                <div className={styles.arrowRight} />
-                                            </button>
+                                            <div className={styles.paginationRow}>
+                                                <button className={styles.navArrow} onClick={() => setPicksSlide(prev => Math.max(0, prev - 1))} disabled={picksSlide === 0}>
+                                                    <div className={styles.arrowLeft} />
+                                                </button>
+                                                <div className={styles.picksDots}>
+                                                    {communityPicks.map((_, i) => (
+                                                        <button key={i} className={`${styles.picksDot} ${i === picksSlide ? styles.picksDotActive : ''}`} onClick={() => setPicksSlide(i)} />
+                                                    ))}
+                                                </div>
+                                                <button className={styles.navArrow} onClick={() => setPicksSlide(prev => Math.min(communityPicks.length - 1, prev + 1))} disabled={picksSlide === communityPicks.length - 1}>
+                                                    <div className={styles.arrowRight} />
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                                {picksPopup && createPortal(
-                                    <div className={styles.picksPopupOverlay} onClick={() => setPicksPopup(null)}>
-                                        <div className={styles.picksPopupBox} onClick={e => e.stopPropagation()}>
-                                            <button onClick={() => setPicksPopup(null)} className={styles.picksPopupCloseBtn}>✕</button>
-                                            <h3 className={styles.picksPopupTitle}>{picksPopup.name}</h3>
-                                            <p className={styles.picksPopupDesc}>{picksPopup.description}</p>
-                                        </div>
-                                    </div>,
-                                    document.body
-                                )}
-                            </>
-                        )}
+                                    )}
+                                    {picksPopup && createPortal(
+                                        <div className={styles.picksPopupOverlay} onClick={() => setPicksPopup(null)}>
+                                            <div className={styles.picksPopupBox} onClick={e => e.stopPropagation()}>
+                                                <button onClick={() => setPicksPopup(null)} className={styles.picksPopupCloseBtn}>✕</button>
+                                                <h3 className={styles.picksPopupTitle}>{picksPopup.name}</h3>
+                                                <p className={styles.picksPopupDesc}>{picksPopup.description}</p>
+                                            </div>
+                                        </div>,
+                                        document.body
+                                    )}
+                                </>
+                            )}
                     </div>
                 </div>
             )}
@@ -1686,6 +1791,166 @@ export default function ProfilePage({ type }) {
                 </div>
                 , document.body)}
 
+            {showManageEvents && createPortal(
+                <div className={styles.manageModalOverlay} onClick={() => setShowManageEvents(false)}>
+                    <div className={styles.manageModalBox} onClick={e => e.stopPropagation()}>
+
+                        {/* Header */}
+                        <div className={styles.manageModalHeader}>
+                            <button className={styles.manageModalBackBtn} onClick={() => setShowManageEvents(false)}>
+                                <img src={ArrowLeft} alt="back" className={styles.iconSmallBack} />
+                            </button>
+                            <div className={styles.manageHeaderTitleGroup}>
+                                <img src={Events} alt="events" className={styles.iconBigEvents} />
+                                <h2 className={styles.manageModalTitle}>Event Management</h2>
+                            </div>
+                        </div>
+
+                        {/* 90% Horizontal Line */}
+                        <div className={styles.manageModalDivider} />
+
+                        {/* Tabs */}
+                        <div className={styles.manageTabsContainer}>
+                            <button
+                                className={`${styles.manageTabBtn} ${activeEventTab === 'upcoming' ? styles.manageTabActive : ''}`}
+                                onClick={() => setActiveEventTab('upcoming')}
+                            >
+                                Upcoming
+                            </button>
+                            <div className={styles.manageVerticalLine} />
+                            <button
+                                className={`${styles.manageTabBtn} ${activeEventTab === 'history' ? styles.manageTabActive : ''}`}
+                                onClick={() => setActiveEventTab('history')}
+                            >
+                                History
+                            </button>
+                        </div>
+
+                        {/* Content Body */}
+                        <div className={styles.manageContentBody}>
+
+                            {/* Header Row: Title Left, Date Picker Right */}
+                            <div className={styles.manageEventsHeaderRow}>
+                                <h3 className={styles.manageEventsMonth}>
+                                    Events of <strong>{manageEventsDate.toLocaleString('default', { month: 'long' }).toUpperCase()}</strong>
+                                </h3>
+
+                                {/* Dynamic Date Picker Control */}
+                                <div className={styles.manageMonthPickerWrapper}>
+                                    <button
+                                        onClick={() => setShowManageMonthPicker(p => !p)}
+                                        className={styles.manageMonthToggle}
+                                    >
+                                        {manageEventsDate.toLocaleString('default', { month: 'long' })} {manageEventsDate.getFullYear()} ▾
+                                    </button>
+
+                                    {showManageMonthPicker && (
+                                        <div className={styles.manageMonthDropdown}>
+                                            <div className={styles.manageMonthNav}>
+                                                <button
+                                                    onClick={() => setManageEventsDate(new Date(manageEventsDate.getFullYear() - 1, manageEventsDate.getMonth(), 1))}
+                                                    className={styles.manageMonthNavBtn}
+                                                    disabled={manageEventsDate.getFullYear() <= new Date().getFullYear()}
+                                                >
+                                                    ‹
+                                                </button>
+                                                <span className={styles.manageMonthYear}>{manageEventsDate.getFullYear()}</span>
+                                                <button
+                                                    onClick={() => setManageEventsDate(new Date(manageEventsDate.getFullYear() + 1, manageEventsDate.getMonth(), 1))}
+                                                    className={styles.manageMonthNavBtn}
+                                                    disabled={manageEventsDate.getFullYear() >= new Date().getFullYear() + 2}
+                                                >
+                                                    ›
+                                                </button>
+                                            </div>
+                                            <div className={styles.manageMonthGrid}>
+                                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => {
+                                                    const isSelected = i === manageEventsDate.getMonth();
+                                                    return (
+                                                        <button
+                                                            key={m}
+                                                            onClick={() => {
+                                                                setManageEventsDate(new Date(manageEventsDate.getFullYear(), i, 1));
+                                                                setShowManageMonthPicker(false);
+                                                            }}
+                                                            className={`${styles.manageMonthBtn} ${isSelected ? styles.manageMonthBtnActive : styles.manageMonthBtnInactive}`}
+                                                        >
+                                                            {m}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Scrollable Event List */}
+                            <div className={styles.manageScrollArea}>
+                                {(() => {
+                                    // Dynamically filter reminders based on the chosen month and year
+                                    const filteredEvents = reminders.filter(e => {
+                                        const d = new Date(e.start_date || e.date || e.event_date);
+                                        return d.getFullYear() === manageEventsDate.getFullYear() && d.getMonth() === manageEventsDate.getMonth();
+                                    });
+
+                                    if (filteredEvents.length === 0) {
+                                        return <p className={styles.noEventsText}>No events found for {manageEventsDate.toLocaleString('default', { month: 'long' })} {manageEventsDate.getFullYear()}.</p>;
+                                    }
+
+                                    return filteredEvents.map((event, index) => (
+                                        <div key={event.id || index} className={styles.manageEventItemBlock}>
+                                            <div className={styles.manageEventItem}>
+                                                <div className={styles.eventCardContainer}>
+                                                    <div
+                                                        className={styles.eventCardBg}
+                                                        style={{ backgroundImage: `url(${event.image || event.banner || 'https://via.placeholder.com/400x200'})` }}
+                                                    >
+                                                        <div className={styles.eventTimeBox}>
+                                                            Starts {new Date(event.start_date).toLocaleDateString()} - 3:00 PM<br />
+                                                            Ends - {new Date(event.end_date || event.start_date).toLocaleDateString()} - 6:00 PM
+                                                        </div>
+                                                        <div className={styles.eventDetailsBottom}>
+                                                            <div className={styles.eventTextContent}>
+                                                                <div className={styles.eventTitle}>{event.title || 'Lorem ipsum'}</div>
+                                                                <div className={styles.eventDescWrapper}>
+                                                                    <span className={styles.eventDesc}>
+                                                                        {event.description || 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit...'}
+                                                                    </span>
+                                                                    <span className={styles.readMoreText}>read more</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Actions Row */}
+                                                <div className={styles.manageActionsRow}>
+                                                    <button className={styles.manageActionBtnDelete}>
+                                                        <img src={Bin} alt="delete" className={`${styles.manageActionIcon} ${styles.iconRed}`} />
+                                                        Delete
+                                                    </button>
+                                                    <div className={styles.manageVerticalLine} />
+                                                    <button className={styles.manageActionBtnUpdate}>
+                                                        <img src={Edit} alt="update" className={`${styles.manageActionIcon} ${styles.iconWhite}`} />
+                                                        Update
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* 50% Divider: Only render if it's NOT the last item */}
+                                            {index !== filteredEvents.length - 1 && (
+                                                <div className={styles.eventItemDivider} />
+                                            )}
+                                        </div>
+                                    ));
+                                })()}
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 }

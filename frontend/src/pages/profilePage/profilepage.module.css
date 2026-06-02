@@ -54,12 +54,12 @@ body {
   background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
   flex: 1;
   border-radius: 30px;
-  min-height: 100vh;
+  min-height: 60vh;
   z-index: 1;
   min-width: 900px;
   position: relative;
   margin: 2% 0 0 0;
-  padding-top: 10px;
+  padding-top: 5px;
 }
 
 .profileCard {
@@ -69,6 +69,7 @@ body {
   z-index: 1;
   overflow: hidden;
   flex: 1;
+  min-height: 77.8vh;
   height: auto;
 }
 
@@ -2957,4 +2958,587 @@ body {
 .picksDotActive {
   background: #ffffff;
   transform: scale(1.5);
+}
+/* =========================================
+   YOUR EVENTS WIDGET
+========================================= */
+.yourEventsWidgetWrap {
+    position: relative;
+    width: 100%;
+   
+   
+}
+
+.yourEventsPill {
+    position: absolute;
+    top: -45px;
+    left: 10px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 18px 18px 0 0;
+    font-weight: 800;
+    height: 25px;
+    width: auto;
+    letter-spacing: 0.6px;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.92);
+    background-color: #424243;
+    border: 1px solid #424243;
+}
+
+.yourEventsWrapper {
+    position: relative;
+    border-radius: 26px;
+    padding: 24px;
+    background: #333333;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    z-index: 2;
+}
+
+.yourEventsHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.eventsIconColored {
+    width: 24px;
+    height: 24px;
+    background-color: #A6279C;
+    mask-image: url('../../Assets/icons/event.png');
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-image: url('../../Assets/icons/event.png');
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+}
+
+.yourEventsTitle {
+    color: #ffffff;
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.uppercaseText {
+    text-transform: uppercase;
+}
+
+.eventsDivider {
+    width: 75%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 16px auto;
+}
+
+/* Event Banner Image Inside */
+.eventCardContainer {
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    margin: 15px 0;
+}
+
+.eventCardBg {
+    position: relative;
+    width: 100%;
+    min-height: 190px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.eventTimeBox {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background-color: #19191A;
+    opacity: 0.85; /* See-through property */
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #ffffff;
+    text-align: right;
+    line-height: 1.5;
+}
+
+.eventDetailsBottom {
+    padding: 30px 16px 16px 16px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+}
+
+.eventTextContent {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.eventTitle {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #ffffff;
+}
+
+.eventDescWrapper {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.eventDesc {
+    font-weight: normal;
+    font-size: 0.8rem;
+    color: #ffffff;
+    display: inline;
+    line-height: 1.4;
+}
+
+.readMoreText {
+    color: #CCCCCC;
+    cursor: pointer;
+    font-size: 0.8rem;
+    text-decoration: underline;
+    margin-left: 6px;
+    display: inline;
+}
+
+/* Bottom Event Buttons */
+.eventsActionRow {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.manageEventsBtn {
+    background-color: #616161;
+    color: #ffffff;
+    padding: 10px 20px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.manageEventsBtn:hover {
+    background-color: #757575;
+}
+
+.createEventBtn {
+     background: linear-gradient(90deg, #701a8a, #a0279d); 
+    color: #ffffff;
+    padding: 10px 24px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* =========================================
+   PROMOTIONS WIDGET
+========================================= */
+.promotionsContainer {
+    background-color: #333333; 
+     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    border-radius: 32px;       
+    padding: 32px 36px;        
+    display: flex;
+    flex-direction: column;    
+}
+
+/* Header row alignment */
+.promoHeaderRow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 27px;       
+}
+.promoIconColored {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(to right, #8125A0, #A4279C);
+    mask-image: url('../../Assets/icons/ad.png');
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-image: url('../../Assets/icons/ad.png');
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+}
+
+.promoTitle {
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.promoContentRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;   
+    gap: 20px;
+    width: 100%;
+}
+
+/* 2. CRITICAL: Fixed width to break the sentence right after the word "active" */
+.promoDesc {
+    font-size: 15px;
+    color: #a6a6a6;           
+    font-weight: 400;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 270px;          /* Prevents text from expanding; forces "promotions" to line 2 */
+}
+
+/* Rounded pill button */
+.promoManageBtn {
+    background: linear-gradient(90deg, #701a8a, #a0279d); 
+    color: #ffffff;
+    border: none;
+    border-radius: 100px;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-top: -2px;          /* Micro-adjustment to perfectly center horizontally with line 1 */
+    transition: transform 0.2s ease;
+}
+
+.promoManageBtn:hover {
+    transform: scale(1.02);
+}
+/* ---- Overlay & Modal Box ---- */
+.manageModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.manageModalBox {
+    background-color: #333333;
+    width: 520px;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 20px;
+}
+
+/* ---- Header Spacing & Icons ---- */
+.manageModalHeader {
+    display: flex;
+    align-items: center;
+    padding: 20px 5% 4px 5%; /* Minimized bottom padding to pull divider up */
+    gap: 24px; /* Distinct gap between back arrow and title group */
+}
+
+.manageHeaderTitleGroup {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.iconSmallBack {
+    filter: brightness(0) invert(1);
+    width: 12px; /* Very small */
+    height: 12px;
+    object-fit: contain;
+}
+
+.iconBigEvents {
+    filter: brightness(0) invert(1);
+    width: 26px; /* Bigger */
+    height: 26px;
+    object-fit: contain;
+}
+
+.manageModalTitle {
+    font-size: 18px;
+    color: #ffffff;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* ---- Dividers & Tabs ---- */
+.manageModalDivider {
+    width: 90%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 12px auto; /* Tighter margin pulling everything together */
+}
+
+.manageTabsContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 80%;
+    margin: 0 auto;
+    border-radius: 12px;
+}
+
+.manageTabBtn {
+    flex: 1;
+    background-color: transparent;
+    color: #ffffff;
+    border: none;
+    padding: 8px 0;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: background-color 0.2s;
+}
+
+.manageTabActive {
+    background-color: #464646;
+}
+
+.manageVerticalLine {
+    width: 1px;
+    height: 18px;
+    background-color: #4D4D4D;
+    margin: 0 16px;
+}
+
+/* ---- Body & Header Row ---- */
+.manageContentBody {
+    padding: 12px 6% 0 10%; /* Significantly reduced top padding */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.manageEventsHeaderRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    padding-right: 14px;
+}
+
+.manageEventsMonth {
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 700; /* Fully bold */
+    margin: 0;
+}
+
+/* ---- Date Picker (Month/Year) ---- */
+.manageMonthPickerWrapper {
+    position: relative;
+}
+
+.manageMonthToggle {
+    background-color: #595959;
+    color: #ffffff;
+    padding: 6px 18px; /* Proper pill padding */
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.manageMonthToggle:hover {
+    background-color: #6a6a6a;
+}
+
+.manageMonthDropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 220px;
+    background-color: #242424;
+    border: 1px solid #4D4D4D;
+    border-radius: 14px;
+    padding: 12px;
+    z-index: 10000;
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.manageMonthNav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.manageMonthNavBtn {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.manageMonthYear {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.manageMonthGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.manageMonthBtn {
+    background: none;
+    border: none;
+    font-size: 12px;
+    padding: 6px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    text-align: center;
+}
+
+.manageMonthBtnActive {
+    background-color: #464646;
+    color: #ffffff;
+}
+
+.manageMonthBtnInactive {
+    color: #a6a6a6;
+}
+
+.manageMonthBtnInactive:hover {
+    background-color: #2d2d2d;
+    color: #ffffff;
+}
+
+.noEventsText {
+    color: #8a8a8a;
+    font-size: 14px;
+    text-align: center;
+    padding: 40px 0;
+    margin: 0;
+    font-style: italic;
+}
+
+/* ---- Scroll Area & Event Items ---- */
+.manageScrollArea {
+    max-height: 400px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+    display: flex;
+    flex-direction: column;
+    padding-right: 8px; /* Keep scrollbar from touching content */
+}
+
+.manageScrollArea::-webkit-scrollbar {
+    width: 6px;
+}
+
+.manageScrollArea::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.manageScrollArea::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 999px;
+}
+
+.manageScrollArea::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.manageEventItemBlock {
+    display: flex;
+    flex-direction: column;
+}
+
+.manageEventItem {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.eventItemDivider {
+    width: 50%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 12px auto; /* Centers the 50% line between events */
+}
+
+/* ---- Bottom Actions Row ---- */
+.manageActionsRow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+    margin-bottom: 8px;
+}
+
+.manageActionBtnDelete,
+.manageActionBtnUpdate {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.manageActionBtnDelete {
+    color: #e62058; /* Red text for Delete */
+}
+
+.manageActionBtnUpdate {
+    color: #ffffff; /* White text for Update */
+}
+
+.manageActionIcon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+/* Icon Color Overrides */
+.iconRed {
+    filter: invert(24%) sepia(85%) saturate(3015%) hue-rotate(334deg) brightness(94%) contrast(95%);
+}
+
+.iconWhite {
+    filter: brightness(0) invert(1);
+}
+.manageModalBackBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0;
+}
+
+/* Keeps the exact small scale for the arrow triangle */
+.iconSmallBack {
+    width: 14px; 
+    height: 14px;
+    object-fit: contain;
+    /* Keeps it pure white #F2F2F2 without any weird discoloration */
+    filter: brightness(0) saturate(100%) invert(98%) sepia(3%) saturate(225%) hue-rotate(193deg) brightness(115%) contrast(88%);
 }

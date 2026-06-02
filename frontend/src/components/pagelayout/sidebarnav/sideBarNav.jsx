@@ -14,6 +14,7 @@ import Community from '../../../Assets/icons/community.png'
 import Settings from '../../../Assets/icons/setting.png'
 import PrivacyPolicy from '../../../Assets/icons/privacy-policy.png'
 import FollowedPages from '../../../Assets/icons/followed-pages.png'
+import Verified from '../../../Assets/icons/verified-mark.png'
 import {
   User,
   UserPlus,
@@ -33,6 +34,8 @@ export default function SidebarNav({ variant = "default", currentUser }) {
     }
     return pathname === path || pathname.startsWith(path + "/");
   };
+  const userType = localStorage.getItem("user_type");
+  const isPage = currentUser?.user_type === 'page' || currentUser?.role === 'cafe' || userType === 'page';
 
   const defaultMainItems = [
     { label: "Home page", path: "/home", icon: Home },
@@ -41,12 +44,14 @@ export default function SidebarNav({ variant = "default", currentUser }) {
     { label: "Events", path: "/events", icon: Events },
   ];
 
-  const defaultFooterItems = [
+
+  const defaultFooterItems =  [
     { label: "About us", path: "/about", icon: About },
-    { label: "Privacy Policy", path: "/privacy", icon: Privacy },
+    isPage
+      ? { label: "Subscriptions", path: "/subscriptions", icon: Verified }
+      : { label: "Privacy Policy", path: "/privacy", icon: Privacy },
     { label: "Help", path: "/help", icon: Help },
   ];
-
   const profileMainItems = [
     { label: "Profile", path: `/profile/${currentUser?.id}`, icon: Profile },
     { label: "Friends", path: `/profile/${currentUser?.id}/friends`, icon: Friends },
@@ -56,7 +61,9 @@ export default function SidebarNav({ variant = "default", currentUser }) {
 
   const profileFooterItems = [
     { label: "Settings", path: "/settings", icon: Settings },
-    { label: "Privacy Policy", path: "/language", icon: PrivacyPolicy },
+    isPage
+      ? { label: "Subscriptions", path: "/subscriptions", icon: Verified }
+      : { label: "Privacy Policy", path: "/language", icon: PrivacyPolicy },
     { label: "Help", path: "/help", icon: Help },
   ];
 

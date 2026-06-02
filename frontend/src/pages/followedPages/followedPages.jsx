@@ -24,8 +24,7 @@ export default function FollowedPages() {
     const [userLoading, setUserLoading] = useState(true);
     const token = localStorage.getItem("access");
     const [posts, setPosts] = useState([]);
-    
-    // ✅ CHANGED: We removed the old dotsRef and added dynamic coordinate tracking
+ 
     const [menuCoords, setMenuCoords] = useState({ top: 0, left: 0 });
     
     const [pages, setPages] = useState([]);
@@ -37,7 +36,7 @@ export default function FollowedPages() {
         setIsCommentsOpen(true);
     };
 
-    // ✅ FIXED: Takes the active target element directly from the click event
+    
     const handleToggleMenu = (e, menuId) => {
         e.stopPropagation(); 
 
