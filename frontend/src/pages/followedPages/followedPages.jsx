@@ -8,6 +8,10 @@ import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import CommentsModal from '../../components/comments/commentsModal'
 import Search from '../../Assets/icons/search.png';
+import VerifiedBadge from '../../Assets/icons/verified-mark.png';
+import X from '../../Assets/icons/x.png';
+import Info from '../../Assets/icons/info.png';
+import Block from '../../Assets/icons/block.png';
 
 export default function FollowedPages() {
     const navigate = useNavigate();
@@ -23,10 +27,12 @@ export default function FollowedPages() {
     const [userError, setUserError] = useState("");
     const [userLoading, setUserLoading] = useState(true);
     const token = localStorage.getItem("access");
+    const [showAllRec, setShowAllRec] = useState(false);
+
     const [posts, setPosts] = useState([]);
- 
+
     const [menuCoords, setMenuCoords] = useState({ top: 0, left: 0 });
-    
+
     const [pages, setPages] = useState([]);
     const [recommendedPages, setRecommendedPages] = useState([]);
     const [currentSlide, setCurrentSlide] = useState(0);
@@ -36,16 +42,16 @@ export default function FollowedPages() {
         setIsCommentsOpen(true);
     };
 
-    
+
     const handleToggleMenu = (e, menuId) => {
-        e.stopPropagation(); 
+        e.stopPropagation();
 
         if (activeMenuId === menuId) {
             setActiveMenuId(null);
         } else {
             // Grab the dimensions of the exact 3-dot button that was clicked
             const rect = e.currentTarget.getBoundingClientRect();
-            
+
             setMenuCoords({
                 top: rect.bottom + window.scrollY + 4, // Handles modal/page scrolling offsets
                 left: rect.right + window.scrollX - 140 // Aligns cleanly with a 140px dropdown width
@@ -216,9 +222,56 @@ export default function FollowedPages() {
                     currentUser={currentUser}
                 />
                 <div className={styles.followedPagesPosts}>
-                    <h1 className={styles.title}>
-                        <span className={styles.highlight}>Pages</span>  You Follow
-                    </h1>
+
+
+                    <div className={styles.recommendedHeaderRow}>
+                        <div className={styles.recommendedTitle}>
+                            <span className={styles.highlightText}>Recommended</span>
+                            <span className={styles.normalText}> pages</span>
+                        </div>
+                        <button
+                            className={styles.viewAllBtn}
+                            onClick={() => setShowAllRec(prev => !prev)}
+                        >
+                            {showAllRec ? 'Show less' : 'View all'}
+                        </button>
+                    </div>
+
+                    {recommendedPages.length > 0 && (
+                        <div className={styles.recCardsContainer}>
+                            {(showAllRec ? recommendedPages : recommendedPages.slice(0, 3)).map(page => (
+                                <div
+                                    key={page.id}
+                                    className={styles.recCard}
+                                    onClick={() => navigate(`/page/${page.id}`)}
+                                >
+                                    <img
+                                        src={page.avatar}
+                                        alt={page.name}
+                                        className={styles.recCardImg}
+                                    />
+                                    <div className={styles.recCardInfo}>
+                                        <span className={styles.recCardName}>
+                                            {page.name || page.page_name}
+                                        </span>
+                                        <img
+                                            src={VerifiedBadge}
+                                            alt="Verified"
+                                            className={styles.verifiedIcon}
+                                            style={{
+                                                filter: "invert(87%) sepia(5%) saturate(297%) hue-rotate(185deg) brightness(96%) contrast(85%)"
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* ── Section Divider ── */}
+                    <div className={styles.sectionDivider}></div>
+
+                    {/* ── Posts ── */}
                     {posts.length > 0 ? (
                         <div className={styles.postContainer}>
                             <div className={styles.innerContainer}>
@@ -242,32 +295,40 @@ export default function FollowedPages() {
                         </div>
                     )}
                 </div>
+
+                {/* ── Right Section ── */}
                 <div className={styles.rightSection}>
 
-                    {/* Block 1 - Followed Pages */}
+                    {/* YOU FOLLOW block */}
                     <div className={styles.rightSectionWrapper}>
                         <div className={styles.pill}>FOLLOWED PAGES</div>
 
                         <div className={styles.rightCard}>
+                            <div className={styles.followedHeaderRow} style={{ marginBottom: '12px' }}>
 
-                            <button
-                                className={styles.viewAllBtn}
-                                onClick={() => setShowAllPopup(true)}
-                            >
-                                View All
-                            </button>
 
-                            <div className={styles.searchContactWrap}>
-                                <img src={Search} alt="Search" className={styles.searchIcon} />
+                                <div className={styles.searchContactWrap}>
+                                    <img src={Search} alt="Search" className={styles.searchIcon} />
 
-                                <input
-                                    type="text"
-                                    placeholder="Search followed pages..."
-                                    className={styles.searchInput}
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
+                                    <input
+                                        type="text"
+                                        placeholder="Search followed pages..."
+                                        className={styles.searchInput}
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                                <button
+                                    className={styles.viewAllBtn}
+                                    style={{ marginBottom: "20px", padding: "13px 30px" }}
+                                    onClick={() => setShowAllPopup(true)}
+                                >
+                                    View All
+                                </button>
+
+
                             </div>
+
 
                             <div className={styles.rightList}>
                                 {pages
@@ -303,7 +364,7 @@ export default function FollowedPages() {
 
                                                 <div className={styles.pageActions}>
                                                     <div className={styles.dropdownContainer}>
-                                                        {/* ✅ FIXED: Pass the raw event handler down */}
+
                                                         <button
                                                             className={styles.actionBtn}
                                                             onClick={(e) => handleToggleMenu(e, page.id)}
@@ -323,34 +384,6 @@ export default function FollowedPages() {
                         </div>
                     </div>
 
-                    {/* Block 2 - Recommended Pages */}
-                    {recommendedPages.length > 0 && (
-                        <div className={styles.rightSectionWrapper}>
-                            <div className={styles.rightCard}>
-                                <div className={styles.rightList}>
-                                    <span className={styles.recommendedHeader}>Recommended Pages</span>
-                                    {recommendedPages.map((page, index, arr) => (
-                                        <div key={page.id} className={styles.pageWrapper}>
-                                            <div
-                                                className={styles.pageItem}
-                                                onClick={() => navigate(`/page/${page.id}`)}
-                                                style={{ cursor: 'pointer' }}
-                                            >
-                                                <div className={styles.pageAvatarWrapper}>
-                                                    <img src={page.avatar} alt={page.name} className={styles.pageAvatar} />
-                                                </div>
-                                                <div className={styles.pageInfo}>
-                                                    <span className={styles.pageName}>{page.page_name}</span>
-                                                    <span className={styles.pageCategory}>{page.page_category}</span>
-                                                </div>
-                                            </div>
-                                            {index !== arr.length - 1 && <div className={styles.divider} />}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                 </div>
             </div>
@@ -424,7 +457,6 @@ export default function FollowedPages() {
 
                                             <div className={styles.pageActions}>
                                                 <div className={styles.dropdownContainer}>
-                                                    {/* ✅ FIXED: Pass custom unique ID string to avoid conflicts with background list */}
                                                     <button
                                                         className={styles.actionBtn}
                                                         onClick={(e) => handleToggleMenu(e, `popup-${page.id}`)}
@@ -441,19 +473,37 @@ export default function FollowedPages() {
                 </div>
             )}
 
-          
+
             {activeMenuId && createPortal(
                 <div
                     className={styles.dropdownMenu}
-                    style={{
-                        top: `${menuCoords.top}px`,
-                        left: `${menuCoords.left}px`
-                    }}
-                    onClick={(e) => e.stopPropagation()} 
+                    style={{ top: `${menuCoords.top}px`, left: `${menuCoords.left}px` }}
+                    onClick={(e) => e.stopPropagation()}
                 >
-                    <button onClick={() => setActiveMenuId(null)}>Unfollow</button>
-                    <button onClick={() => setActiveMenuId(null)}>Report</button>
-                    <button className={styles.blockBtn} onClick={() => setActiveMenuId(null)}>Block</button>
+                    <button onClick={() => setActiveMenuId(null)}>
+                        <img src={X} alt="Unfollow" style={{
+                            filter: "invert(87%) sepia(5%) saturate(297%) hue-rotate(185deg) brightness(96%) contrast(85%)"
+                        }} className={styles.dropdownIcon} />
+                        Unfollow
+                    </button>
+
+                    <div className={styles.dropdownDivider} />
+
+                    <button onClick={() => setActiveMenuId(null)}>
+                        <img src={Info} alt="Report" style={{
+                            filter: "invert(87%) sepia(5%) saturate(297%) hue-rotate(185deg) brightness(96%) contrast(85%)"
+                        }} className={styles.dropdownIcon} />
+                        Report
+                    </button>
+
+                    <div className={styles.dropdownDivider} />
+
+                    <button className={styles.blockBtn} onClick={() => setActiveMenuId(null)}>
+                        <img src={Block} alt="Block" style={{
+                            filter: "invert(27%) sepia(90%) saturate(700%) hue-rotate(330deg) brightness(110%) contrast(120%)"
+                        }} className={styles.dropdownIcon} />
+                        Block
+                    </button>
                 </div>,
                 document.body
             )}
