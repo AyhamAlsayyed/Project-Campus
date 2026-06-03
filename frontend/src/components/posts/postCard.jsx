@@ -48,6 +48,7 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
   const [adReaction, setAdReaction] = useState(post?.ad_reaction || null);
   const [showReport, setShowReport] = useState(false);
   const [commenterAvatars, setCommenterAvatars] = useState([]);
+  const [isHighlighted, setIsHighlighted] = useState(!!post?.is_highlighted);
 
   const CHAR_LIMIT = 150;
 
@@ -260,7 +261,10 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
       return;
     }
 
+
+
     if (actionType === 'save') setIsSaved(prev => !prev);
+    if (actionType === 'highlight') setIsHighlighted(prev => !prev);
 
     try {
       const postId = post.id || post.post_id;
@@ -271,6 +275,7 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
       if (!res.ok) {
         if (actionType === 'pin') setIsPinned(prev => !prev);
         if (actionType === 'save') setIsSaved(prev => !prev);
+        if (actionType === 'highlight') setIsHighlighted(prev => !prev);
       }
     } catch (err) { console.error(`Failed to ${actionType} post`); }
   };
@@ -500,7 +505,9 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                   >
                     <img src={HighLight} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
-                    <span style={{ color: "#C2C2C2" }}>Highlight post</span>
+                    <span style={{ color: "#C2C2C2" }}>
+                      {isHighlighted ? "Remove highlight" : "Highlight post"}
+                    </span>
                   </button>
 
                   <MenuDivider />

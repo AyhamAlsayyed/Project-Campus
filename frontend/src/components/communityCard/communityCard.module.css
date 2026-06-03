@@ -12,13 +12,14 @@
   border: 1px solid rgba(255, 255, 255, 0.04);
   min-height: 110px;
 }
-
+.fullWidth {
+  width: 100%;
+}
 .overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(to right,
       rgba(25, 25, 25, 0.95) 10%,
-      /* much stronger on the left */
       rgba(25, 25, 25, 0.7) 40%,
       rgba(25, 25, 25, 0.2) 100%);
 }
@@ -190,7 +191,12 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   animation: popIn 0.2s ease-out;
 }
-
+.right{
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+}
 .closeBtn {
   position: absolute;
   top: 16px;
