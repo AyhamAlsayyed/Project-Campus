@@ -141,7 +141,7 @@ const CommunityPosts = ({ onBack, communityId }) => {
 
     const handleReportDelete = async (postId) => {
         try {
-            await fetch(`${API}/api/posts/${postId}/`, {
+            await fetch(`${API}/api/posts/${postId}/admin_delete/`, {
                 method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
             });
             setReportedPosts(prev => prev.filter(p => (p.id || p.post_id) !== postId));
@@ -294,10 +294,10 @@ const CommunityPosts = ({ onBack, communityId }) => {
                                 <div key={post.id || post.post_id}>
                                     <PostCard
                                         post={post}
-                                        openComments={() => {}}
+                                        openComments={() => { }}
                                         isOwnProfile={false}
                                         hasPinnedPost={false}
-                                        onPinChange={() => {}}
+                                        onPinChange={() => { }}
                                         isReportedMode={false}
                                     />
                                     <button
@@ -340,10 +340,10 @@ const CommunityPosts = ({ onBack, communityId }) => {
                                 <div key={post.id || post.post_id}>
                                     <PostCard
                                         post={post}
-                                        openComments={() => {}}
+                                        openComments={() => { }}
                                         isOwnProfile={false}
                                         hasPinnedPost={false}
-                                        onPinChange={() => {}}
+                                        onPinChange={() => { }}
                                         isReportedMode={true}
                                         onDismiss={handleDismiss}
                                         onReportDelete={handleReportDelete}
