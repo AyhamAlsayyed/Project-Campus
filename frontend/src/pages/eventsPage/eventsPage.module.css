@@ -21,9 +21,7 @@
   margin-top: 2%;
   height: 110px;
   width: 100%;
-
 }
-
 
 .content {
   display: flex;
@@ -54,8 +52,6 @@
   min-width: 0;
 }
 
-
-
 .eventsContainer {
   display: flex;
   flex-direction: column;
@@ -72,45 +68,51 @@
 }
 
 .titleMarqueeWrapper {
-    overflow: hidden;
-    position: relative;
-    max-width: 100%;
+  overflow: hidden;
+  position: relative;
+  max-width: 100%;
 }
 
 .titleMarqueeWrapper::before,
 .titleMarqueeWrapper::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 40px;
-    z-index: 2;
-    pointer-events: none;
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .titleMarqueeWrapper::before {
-    left: 0;
-    background: linear-gradient(to right, rgba(0,0,0,0.8), transparent);
+  left: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.8), transparent);
 }
 
 .titleMarqueeWrapper::after {
-    right: 0;
-    background: linear-gradient(to left, rgba(0,0,0,0.8), transparent);
+  right: 0;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent);
 }
 
 .titleMarquee {
-    display: inline-block;
-    white-space: nowrap;
-    animation: marquee 8s linear infinite;
-    color: white;
-    font-size: 2.2rem;
-    font-weight: 800;
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 8s linear infinite;
+  color: white;
+  font-size: 2.2rem;
+  font-weight: 800;
 }
 
 @keyframes marquee {
-    0%   { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
+  0% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
 }
+
 .cardHeader {
   display: flex;
   justify-content: space-between;
@@ -183,16 +185,13 @@
   justify-content: center;
 }
 
-
 .followBtn {
   background: linear-gradient(135deg, #5B2598, #962892);
   color: white;
   border: none;
   border-radius: 20px;
   padding: 8px 20px;
-  /* match the same padding as .followedBtn */
   font-size: 0.85rem;
-  /* match font size */
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
@@ -219,7 +218,6 @@
 .bannerContainer {
   position: relative;
   width: 100%;
-
   border-radius: 30px;
   overflow: hidden;
 }
@@ -237,7 +235,6 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  /* push everything to bottom */
   padding: 16px;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.75));
   pointer-events: none;
@@ -265,7 +262,6 @@
   cursor: pointer;
   padding-bottom: 5px;
 }
-
 
 .dateWidget {
   position: absolute;
@@ -304,7 +300,7 @@
 
 .rightSection {
   position: relative;
-  flex: 0 0 380px;
+  flex: 0 0 420px;
   padding-left: 60px;
   width: 55%;
   margin: 5% 3% 0 0;
@@ -312,8 +308,6 @@
   display: flex;
   flex-direction: column;
 }
-
-
 
 .rightCard::-webkit-scrollbar {
   width: 6px;
@@ -327,14 +321,15 @@
 .rightCard::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .rightCard::-webkit-scrollbar-button {
-    display: none;
+  display: none;
 }
 
 .pill {
   position: absolute;
   top: -40px;
-  left: 70px;
+  left: 16px;
   z-index: 1;
   display: flex;
   align-items: center;
@@ -342,13 +337,19 @@
   border-radius: 18px 18px 0 0;
   font-weight: 600;
   height: 25px;
-  width: 35%;
   letter-spacing: 0.6px;
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.92);
-  background-color: rgba(61, 60, 60, 0.95);
+  background-color: #424243;
   border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+}
+
+.pillContainer {
+  position: relative;
+  margin-bottom: -64px;
+
+  z-index: 1;
 }
 
 .rightCard {
@@ -365,14 +366,13 @@
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
-   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
 }
 
 .rightList {
   display: flex;
   flex-direction: column;
   align-items: center;
-  
 }
 
 .recItemWrapper {
@@ -406,7 +406,6 @@
   justify-content: space-between;
 }
 
-/* Recommended Header */
 .recHeader {
   display: flex;
   justify-content: space-between;
@@ -418,15 +417,12 @@
   gap: 10px;
   align-items: center;
   min-width: 0;
-  /* ← lets flex shrink it properly */
   flex: 1;
-  /* ← takes available space, leaves room for button */
   overflow: hidden;
 }
 
 .recOrgText {
   min-width: 0;
-  /* ← needed for children to truncate */
   overflow: hidden;
 }
 
@@ -442,7 +438,6 @@
   align-items: center;
   gap: 5px;
   flex-wrap: nowrap;
-  /* ← badge stays on same line as name */
 }
 
 .recNameRow h4 {
@@ -453,7 +448,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  /* ← long names truncate instead of wrap */
 }
 
 .verifyBadgeSmall {
@@ -473,7 +467,6 @@
   font-size: 0.65rem;
   color: rgba(255, 255, 255, 0.6);
 }
-
 
 .followBtnSmall {
   background: linear-gradient(30deg, #c72cff, #8b2dff);
@@ -495,7 +488,6 @@
   font-size: 0.75rem;
   cursor: pointer;
 }
-
 
 .recBody {
   display: flex;
@@ -526,7 +518,6 @@
   white-space: nowrap;
 }
 
-/* Separator Line */
 .separator {
   width: 40%;
   height: 1px;
@@ -551,4 +542,639 @@
 .highlighted {
   animation: highlightPulse 1.5s ease-out;
   border-color: rgba(158, 39, 157, 0.6) !important;
+}
+
+/* =========================================
+   PAGE VIEW SPECIFIC CLASSES
+========================================= */
+
+/* --- Your EVENTS Section --- */
+.yourEventsWrapper {
+  margin-bottom: 10px;
+  margin-top: 20px;
+}
+
+.yourEventsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.yourEventsTitleText {
+  font-size: 46px;
+  font-weight: normal;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+.yourEventsBtns {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.manageEventsBtn {
+  background-color: #5F5F5F;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.createEventBtn {
+  background: linear-gradient(to right, #5D2296, #8C2590);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.manageEventsBtn:hover,
+.createEventBtn:hover {
+  opacity: 0.85;
+}
+
+.yourEventsCardsRow {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+
+.yourEventsCardsRow::-webkit-scrollbar {
+  display: none;
+}
+
+.yourEventCardWrapper {
+  position: relative;
+  min-width: 320px;
+  flex: 1;
+  height: 180px;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.yourEventBannerImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.yourEventDateBadge {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  top: 15px;
+  right: 15px;
+  background-color: rgba(25, 25, 26, 0.60);
+  backdrop-filter: blur(8px);
+  padding: 15px 20px;
+  border-radius: 12px;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.yourEventDateBadge p {
+  margin: 0;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.yourEventBottomOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.85));
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 15px;
+}
+
+.yourEventBottomOverlay h3 {
+  color: white;
+  margin: 0 0 4px 0;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.yourEventBottomOverlay p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: normal;
+  line-height: 1.3;
+}
+
+.yourEventReadMore {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+/* NEW 50% WIDTH DIVIDER */
+.middleDivider {
+  width: 50%;
+  height: 1px;
+  background-color: #4D4D4D;
+  margin: 10px auto 10px auto;
+}
+
+/* --- ON-HOLD Container --- */
+.onHoldContainer {
+  background-color: #333333;
+  margin-bottom: -30px;
+  border-radius: 30px;
+  padding: 40px 35px;
+  z-index: 2;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+}
+
+.pendingText {
+  color: #CCCCCC;
+  font-size: 1.5rem;
+  font-weight: normal;
+  margin-top: 5px;
+}
+
+.onHoldDivider {
+  width: 75%;
+  height: 1px;
+  background-color: #4D4D4D;
+  margin: 18px auto;
+}
+
+.checkoutList {
+  display: flex;
+  flex-direction: column;
+  max-height: 250px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.checkoutList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.checkoutList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.checkoutItemWrap {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+}
+
+.checkoutCard {
+  width: 100%;
+  min-height: 50px;
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.8), rgba(40, 40, 40, 0.8));
+  border-radius: 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.checkoutCardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.checkoutTitle {
+  color: white;
+  font-weight: bold;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.detailsBtn {
+  background-color: #474748;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 10px 20px;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.checkoutDesc {
+  color: white;
+  font-weight: normal;
+  font-size: 0.75rem;
+  margin: 8px 0 0 0;
+  opacity: 0.8;
+}
+
+.checkoutSubInfo {
+  width: 85%;
+  margin: 8px auto 0;
+  display: flex;
+  gap: 20px;
+}
+
+.checkoutSubInfo span {
+  color: #ADADAD;
+  font-size: 0.7rem;
+}
+
+.checkoutBannerImg {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  display: block;
+}
+
+.checkoutOverlay {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  gap: 10px;
+}
+
+.checkoutOverlayLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.checkoutTitle {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkoutDesc {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 11px;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkoutBottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding: 0 10px;
+}
+
+.totalText {
+  color: #CCCCCC;
+  font-size: 1.25rem;
+}
+
+.proceedBtn {
+  background: linear-gradient(to right, #622598, #942892);
+  color: white;
+  border: none;
+  border-radius: 24px;
+  padding: 16px 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* --- Event Promotion Container --- */
+.promoContainer {
+  background-color: #333333;
+  border-radius: 24px;
+  padding: 40px 30px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.promoHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 35px;
+}
+
+.promoIconColored {
+  width: 35px;
+  height: 35px;
+  background: linear-gradient(to right, #8125A0, #A4279C);
+  mask-image: url('../../Assets/icons/ad.png');
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url('../../Assets/icons/ad.png');
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.promoTitle {
+  color: white;
+  font-size: 1.35rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.promoBody {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.promoText {
+  color: #CCCCCC;
+  font-size: 0.8rem;
+  margin: 0;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.promoManageBtn {
+  background: linear-gradient(to right, #5D2296, #8C2590);
+  color: white;
+  border: none;
+  border-radius: 24px;
+  padding: 10px 24px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+/* =========================================
+   EVENTS PROMOTION MODAL
+========================================= */
+
+.promoModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(2px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.promoModalContent {
+  background-color: #2D2D2E;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 580px;
+  padding: 30px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  font-family: "Aktiv Grotesk", sans-serif;
+}
+
+/* Header */
+.pmHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.pmHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pmBackIcon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  filter: invert(0.7);
+  transition: filter 0.2s;
+}
+
+.pmBackIcon:hover {
+  filter: invert(1);
+}
+
+.pmAdIcon {
+  width: 30px;
+  height: 30px;
+  filter: invert(0.7);
+}
+
+.pmTitle {
+  color: #ffffff;
+  font-size: 1.7rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.pmHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.pmCancelBtn {
+  color: #FF4D4D; /* Red cancel */
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.pmCancelBtn:hover {
+  opacity: 0.8;
+}
+
+.pmDoneBtn {
+  background-color: #404040;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pmDoneBtn:hover {
+  background-color: #555555;
+}
+
+/* Divider & Description aligned in one block */
+.pmDividerSection {
+  width: 95%; /* Divider aligns with text start/end approximately */
+  margin: 0; /* Kept left aligned with rest of content based on request */
+}
+
+.pmDivider {
+  width: 100%;
+  height: 1px;
+  background-color: #555555; /* The filling */
+  margin-bottom: 15px;
+}
+
+.pmSubText {
+  color: #999999;
+  font-size: 0.75rem; /* Small text */
+  margin: 0 0 40px 0;
+  line-height: 1.5;
+}
+
+/* Typography Title */
+.pmSectionTitle {
+  color: #CCCCCC;
+  font-size: 1.5rem; /* Quite a big font size */
+  font-weight: 600;
+  margin: 0 0 40px 0;
+}
+
+/* Slider Section */
+.pmSliderWrapper {
+  position: relative;
+  width: calc(100% - 60px); /* Padding for the absolute positioned labels */
+  margin: 0 30px 0 30px; 
+  height: 45px; /* Added structural height so layout doesn't collapse and overlap */
+}
+
+.pmInvisibleSlider {
+  position: absolute;
+  top: -15px;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  opacity: 0; /* Keeps it purely functionally draggable over our UI */
+  z-index: 10;
+  cursor: pointer;
+}
+
+.pmSliderTrack {
+  position: absolute;
+  top: 5px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #555555;
+  border-radius: 2px;
+  z-index: 1;
+}
+
+.pmSliderFill {
+  height: 100%;
+  background-color: #B533A9;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.pmSliderDotsContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 10px;
+  z-index: 2;
+  pointer-events: none; 
+}
+.pmDotWrapper {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+}
+
+.pmDot {
+width: 24px;  height: 24px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  margin-top: -5px; /* Re-centered vertically onto the track line */
+}
+
+.pmDotFilled {
+  background-color: #B533A9;
+}
+
+.pmDotActive {
+  width: 24px; 
+  height: 24px;
+  background-color: #B533A9;
+  margin-top: -7px; 
+  box-shadow: 0 0 0 6px rgba(181, 51, 169, 0.2); /* Soft highlight aura */
+}
+
+.pmDotLabel {
+  margin-top: 18px;
+  font-size: 0.75rem;
+  color: #CCCCCC;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.pmLabelActive {
+  font-size: 0.95rem; /* Gets bigger */
+  color: #F2F2F2;
+  font-weight: 600;
+  margin-top: 14px;
+}
+
+/* Footer Section */
+.pmTotalCost {
+  color: #CCCCCC; /* Set total text color to #CCCCCC */
+  margin-top: 45px; /* Pushes the total section safely below the slider labels */
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.pmCostValue {
+  color: #CCCCCC; /* Set price value color to #CCCCCC */
+  font-weight: 700;
+}
+
+/* Helper fixes for existing page UI conflicting classes */
+.promoHeaderContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 35px;
+}
+
+.promoBodyContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 }

@@ -58,7 +58,7 @@ export default function Homepage() {
         setContent(""); setImages([]); setFiles([]); setPollOptions(["", ""]); setIsPollOpen(false);
     };
 
-    const API = "https://mv8f3wcb-8000.euw.devtunnels.ms"
+    const API = "http://localhost:8000"
     const token = localStorage.getItem("access")
 
 
