@@ -9,6 +9,12 @@ import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
 import Palette from '../../Assets/icons/palette.png'
 import Arrow from '../../Assets/icons/arrow-right.png'
 import RequestModal from '../../components/CommunityRequest/RequestModal'
+import CommunityInfoPanel from '../../components/communitySettings/CommunityInfoPanel';
+import CommunitySettingsNav from '../../components/communitySettings/CommunitySettingsNav';
+import MembersTab from '../../components/communitySettings/membersTab';
+import RequestsTab from '../../components/communitySettings/requestsTab';
+import CommunityPosts from '../../components/communitySettings/CommunityPosts';
+import DeleteCommunityModal from '../../components/communitySettings/deleteCommunityModal';
 export default function Community() {
     const [theme, setTheme] = useState('dark');
     const [loading, setLoading] = useState(true)
@@ -20,10 +26,46 @@ export default function Community() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const mobileMenuRef = useRef(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    
+    const [ownedCommunities, setOwnedCommunities] = useState([]);
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [activeCommunity, setActiveCommunity] = useState(null);
+    const [activeTab, setActiveTab] = useState('Community info');
+    const [requestSent, setRequestSent] = useState(
+        () => localStorage.getItem("community_request_sent") === "true"
+    );
+    const [prevTab, setPrevTab] = useState('Community info');
+    const displayedTab = activeTab === 'Delete' ? prevTab : activeTab;
+
+    useEffect(() => {
+        if (activeTab !== 'Delete') {
+            setPrevTab(activeTab);
+        }
+    }, [activeTab]);
+
+
 
     const API = "http://localhost:8000";
     const token = localStorage.getItem("access");
+    useEffect(() => {
+        const fetchOwned = async () => {
+            try {
+                const res = await fetch(`${API}/api/communities/?filter=owned`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const data = await res.json();
+                setOwnedCommunities(data.map(c => ({
+                    ...c,
+                    isJoined: c.is_joined,
+                    isVerified: c.is_verified,
+                    isPrivate: c.is_private,
+                    requestSent: c.request_sent
+                })));
+            } catch (err) {
+                console.error("Error fetching owned communities:", err);
+            }
+        };
+        fetchOwned();
+    }, []);
 
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 1024);
@@ -260,80 +302,204 @@ export default function Community() {
                 <div className={`${styles.content} ${styles.page}`}>
                     <SideBarNav theme={theme} toggleTheme={toggleTheme} user={user} />
                     <div className={styles.mainContent}>
-                        <h1 className={styles.title}>
-                            Looking for - <br /> <span className={styles.highlight}>COMMUNITIES</span> to be part of?
-                        </h1>
-                        <div className={styles.filters}>
-                            {desktopFilters.map(f => (
-                                <button
-                                    key={f.key}
-                                    className={`${styles.filterBtn} ${filter === f.key ? styles.active : ""}`}
-                                    onClick={() => setFilter(f.key)}
-                                >
-                                    {f.label}
-                                </button>
-                            ))}
-                        </div>
-                        <div className={styles.communitiesContainer}>
-                            <div className={styles.innerContainer}>
-                                {communities.map((community, index) => (
-                                    <div key={index} className={styles.itemWrapper}>
-                                        <CommunityCard community={community} setCommunities={setCommunities} />
-                                        {index !== communities.length - 1 && <div className={styles.divider} />}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                    <div className={styles.rightSection}>
-                        <div className={styles.pill}>FRIENDS RELATED</div>
-                        <div className={styles.rightCard}>
-                            <div className={styles.rightList}>
-                                {friendsCommunities.map((community, index) => (
-                                    <CommunityCard
-                                        key={index}
-                                        community={community}
-                                        setCommunities={setFriendsCommunities}
-                                        variant="small"
+                        {settingsOpen ? (
+                            <div className={styles.communitiesContainer} style={{ marginTop: "4%" }}>
+                                {(displayedTab === 'Settings' || displayedTab === 'Community info') && (
+                                    <CommunityInfoPanel
+                                        community={activeCommunity}
+                                        onBack={() => setSettingsOpen(false)}
                                     />
-                                ))}
-                            </div>
-                        </div>
+                                )}
+                                {displayedTab === 'Members' && (
+                                    <MembersTab
+                                        communityId={activeCommunity?.id}
+                                        onBack={() => setActiveTab('Community info')}
+                                    />
+                                )}
+                                {displayedTab === 'Requests' && (
+                                    <RequestsTab
+                                        groupId={activeCommunity?.id}
+                                        token={token}
+                                        onBack={() => setActiveTab('Community info')}
+                                        isPublic={activeCommunity?.is_public}
+                                    />
+                                )}
+                                {displayedTab === 'Posts' && (
+                                    <CommunityPosts
+                                        onBack={() => setActiveTab('Community info')}
+                                        communityId={activeCommunity?.id}
+                                        token={token}
+                                    />
+                                )}
 
-                        {/* New Community Request Block */}
-                        <div className={styles.communityRequest}>
-
-                            <div className={styles.requestHeader}>
-                                {/* MUST be an empty div, do not use <img src={Palette} /> */}
-                                <div
-                                    className={styles.paletteIcon}
-                                    style={{
-                                        maskImage: `url(${Palette})`,
-                                        WebkitMaskImage: `url(${Palette})`
-                                    }}
-                                />
-                                <h3 className={styles.requestTitle}>Request a community</h3>
-                            </div>
-
-                            <div className={styles.requestBody}>
-                                <p className={styles.requestText}>
-                                    Can't find your community?<br />
-                                    Request one and we'll review it.
-                                </p>
-                                <button
-                                    className={styles.applyButton}
-                                    onClick={() => setIsModalOpen(true)}
-                                >
-                                    Apply
-                                </button>
                             </div>
 
-                        </div>
+                        ) : (
+                            <>
+                                <h1 className={styles.title}>
+                                    Your <span className={styles.highlight}>COMMUNITIES</span>
+                                </h1>
+
+                                <div className={styles.ownedCommunitiesContainer} style={{ minHeight: "unset", padding: "30px 0" }}>
+                                    {ownedCommunities.length === 0 ? (
+                                        <p style={{
+                                            color: "rgba(255,255,255,0.35)",
+                                            textAlign: "center",
+                                            fontSize: "0.95rem",
+                                            margin: "20px 0"
+                                        }}>
+                                            You haven't created any communities yet.
+                                        </p>
+                                    ) : (
+                                        ownedCommunities.map((community, index) => (
+                                            <div key={index} className={styles.itemWrapper}>
+                                                <div style={{ width: "100%", maxWidth: "100%" }}>
+                                                    <CommunityCard
+                                                        community={community}
+                                                        setCommunities={setOwnedCommunities}
+                                                        fullWidth
+                                                        isOwned
+                                                        onSettingsClick={(c) => { setActiveCommunity(c); setSettingsOpen(true); setActiveTab('Community info'); }}
+                                                    />
+                                                </div>
+                                                {index !== ownedCommunities.length - 1 && <div className={styles.divider} style={{ width: "50%", margin: "16px auto " }} />}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                                <div className={styles.divider} style={{ width: "50%", margin: "16px auto ", backgroundColor: "#747475" }} />
+
+                                <h1 className={styles.title}>
+                                    Looking for - <br /> <span className={styles.highlight}>COMMUNITIES</span> to be part of?
+                                </h1>
+                                <div className={styles.filters}>
+                                    {desktopFilters.map(f => (
+                                        <button
+                                            key={f.key}
+                                            className={`${styles.filterBtn} ${filter === f.key ? styles.active : ""}`}
+                                            onClick={() => setFilter(f.key)}
+                                        >
+                                            {f.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className={styles.communitiesContainer}>
+                                    <div className={styles.innerContainer}>
+                                        {communities.map((community, index) => (
+                                            <div key={index} className={styles.itemWrapper}>
+                                                <CommunityCard community={community} setCommunities={setCommunities} />
+                                                {index !== communities.length - 1 && <div className={styles.divider} />}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+
+                        )}
+
+                    </div>
+                    <div className={styles.rightSection} style={{ marginTop: settingsOpen ? "2%" : "4%" }}>
+                        {settingsOpen ? (
+                            <CommunitySettingsNav
+                                activeTab={activeTab}
+                                setActiveTab={setActiveTab}
+                            />
+
+                        ) : (<>
+                            <div className={styles.pill}>FRIENDS RELATED</div>
+                            <div className={styles.rightCard}>
+                                <div className={styles.rightList}>
+                                    {friendsCommunities.map((community, index) => (
+                                        <CommunityCard
+                                            key={index}
+                                            community={community}
+                                            setCommunities={setFriendsCommunities}
+                                            variant="small"
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+
+                            <div className={styles.communityRequest} style={{ position: "relative", overflow: "hidden" }} style={{ position: "relative", overflow: "hidden" }}>
+                                {requestSent && (
+                                    <div style={{
+                                        position: "absolute",
+                                        inset: 0,
+                                        background: "rgba(35, 35, 36, 0.4)",
+                                        borderRadius: "inherit",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 8,
+                                        zIndex: 10,
+                                        backdropFilter: "blur(0.9px)",
+                                    }}>
+
+                                    </div>
+                                )}
+
+
+                                <div className={styles.requestHeader}>
+
+                                    <div
+                                        className={styles.paletteIcon}
+                                        style={{
+                                            maskImage: `url(${Palette})`,
+                                            WebkitMaskImage: `url(${Palette})`
+                                        }}
+                                    />
+                                    <h3 className={styles.requestTitle}>Request a community</h3>
+                                </div>
+
+                                <div className={styles.requestBody}>
+                                    <p className={styles.requestText}>
+                                        Can't find your community?<br />
+                                        Request one and we'll review it.
+                                    </p>
+                                    {requestSent ? (
+                                        <span style={{ color: "white", fontSize: "0.85rem", fontWeight: 500, letterSpacing: 1 }}>
+                                            Waiting...
+                                        </span>
+                                    ) : (
+                                        <button
+                                            className={styles.applyButton}
+                                            onClick={() => setIsModalOpen(true)}
+                                        >
+                                            Apply
+                                        </button>
+                                    )}
+                                </div>
+
+                            </div>
+                        </>
+
+                        )}
+
+
                     </div>
                 </div>
             )}
+            {activeTab === 'Delete' && (
+                <DeleteCommunityModal
+                    isOpen={true}
+                    onClose={() => setActiveTab(prevTab)}
+                    onDelete={() => {
+                        setSettingsOpen(false);
+                        setOwnedCommunities(prev => prev.filter(c => c.id !== activeCommunity.id));
+                    }}
+                />
+            )}
             {isModalOpen && (
-                <RequestModal onClose={() => setIsModalOpen(false)} />
+                <RequestModal
+                    onClose={() => setIsModalOpen(false)}
+                    onSuccess={() => {
+                        setRequestSent(true);
+                        localStorage.setItem("community_request_sent", "true");
+                        setIsModalOpen(false);
+                    }}
+                />
             )}
         </div>
     );

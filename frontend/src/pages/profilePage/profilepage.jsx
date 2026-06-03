@@ -1103,9 +1103,7 @@ export default function ProfilePage({ type }) {
                                         </div>
                                     </div>
 
-                                    {/* ══════════════════════════════════════
-                PROMOTIONS WIDGET (PAGE ONLY)
-            ══════════════════════════════════════ */}
+                                 
                                     <div className={styles.promotionsContainer}>
                                         <div className={styles.promoHeaderRow}>
                                             <div className={styles.promoIconColored} />

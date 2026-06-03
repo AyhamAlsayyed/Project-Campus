@@ -2,7 +2,8 @@ import styles from './communityCard.module.css'
 import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { createPortal } from 'react-dom';
-export default function CommunityCard({ community, variant = "large", setCommunities }) {
+import Settings from '../../Assets/icons/setting.png';
+export default function CommunityCard({ community, variant = "large", setCommunities, fullWidth, isOwned, onSettingsClick  }) {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const navigate = useNavigate();
     const handleReadMoreClick = (e) => {
@@ -64,7 +65,7 @@ export default function CommunityCard({ community, variant = "large", setCommuni
     return (
         <>
             <div
-                className={`${styles.communityItem} ${variant === "small" ? styles.small : ""}`}
+                className={`${styles.communityItem} ${variant === "small" ? styles.small : ""} ${fullWidth ? styles.fullWidth : ""}`}
                 style={{
                     backgroundImage: `linear-gradient(to right, rgba(25, 25, 25, 0.95) 10%, rgba(25, 25, 25, 0.7) 40%, rgba(25, 25, 25, 0.2) 100%), url(${community.image})`
                 }}
@@ -89,13 +90,26 @@ export default function CommunityCard({ community, variant = "large", setCommuni
                             )}
                         </p>
                     </div>
-                    <button
-                        className={`${styles.actionBtn} ${community.is_joined || community.request_sent ? styles.viewBtn : styles.joinBtn} ${community.request_sent ? styles.requestedDisabled : ''}`}
-                        disabled={community.is_requested}
-                        onClick={() => !community.is_requested && handleAction(community)}
-                    >
-                        {community.is_joined ? "View" : community.request_sent ? "Requested" : "Join"}
-                    </button>
+                    <div className={styles.right}>
+                        <button
+                            className={`${styles.actionBtn} ${community.is_joined || community.request_sent ? styles.viewBtn : styles.joinBtn} ${community.request_sent ? styles.requestedDisabled : ''}`}
+                            disabled={community.is_requested}
+                            onClick={() => !community.is_requested && handleAction(community)}
+                        >
+                            {community.is_joined ? "View" : community.request_sent ? "Requested" : "Join"}
+                        </button>
+                        {isOwned && (
+                            <img
+                                src={Settings}
+                                alt="settings"
+                                width={20}
+                                height={20}
+                                 onClick={(e) => { e.stopPropagation(); onSettingsClick?.(community); }}
+                                style={{ filter: "brightness(0) saturate(100%) invert(80%)", cursor: "pointer", flexShrink: 0 }}
+                            />
+                        )}
+                    </div>
+
                 </div>
             </div>
 

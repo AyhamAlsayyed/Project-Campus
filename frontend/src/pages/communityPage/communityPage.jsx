@@ -306,7 +306,7 @@ export default function CommunityPage() {
             {!isMobile && (
                 <div className={`${styles.content} ${styles.page}`}>
 
-                    {/* Always keep the universal left navigation */}
+                   
                     <SideBarNav theme={theme} toggleTheme={toggleTheme} user={user} />
 
                     {isSettingsOpen ? (
@@ -339,7 +339,7 @@ export default function CommunityPage() {
                                         />
                                     )}
 
-                                    {/* REMOVE THE DELETE MODAL FROM HERE */}
+                                    
                                 </div>
                             </div>
 

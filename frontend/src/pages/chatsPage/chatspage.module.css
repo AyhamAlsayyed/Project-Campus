@@ -575,8 +575,7 @@
 .rightCard {
     display: flex;
     flex-direction: column;
-
-    background: rgba(61, 60, 60, 0.45);
+    background: #333333;
     border-radius: 24px;
     padding: 16px;
 

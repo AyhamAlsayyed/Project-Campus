@@ -4,9 +4,12 @@ import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import VerifiedBadge from '../../Assets/icons/verified-mark.png';
-import BellOn from '../../Assets/icons/notifications.png'
-import BellOff from '../../Assets/icons/mute.png'
+import BellOn from '../../Assets/icons/notifications.png';
+import BellOff from '../../Assets/icons/mute.png';
+import ArrowLeftIcon from '../../Assets/icons/arrow-left.png';
+import AdIcon from '../../Assets/icons/ad.png';
 import { createPortal } from 'react-dom';
+
 export default function EventsPage() {
     const API = "http://localhost:8000";
     const [user, setUser] = useState(null);
@@ -17,10 +20,22 @@ export default function EventsPage() {
     const [loading, setLoading] = useState(true);
     const [reminders, setReminders] = useState({});
     const [popupEvent, setPopupEvent] = useState(null);
+    const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
+    const [promoDurationIdx, setPromoDurationIdx] = useState(2); // Default to 3 months
+    
     const location = useLocation();
-    const [pageNotifyStatus, setPageNotifyStatus] = useState({});
     const navigate = useNavigate();
+    const [pageNotifyStatus, setPageNotifyStatus] = useState({});
     const [highlightId, setHighlightId] = useState(location.state?.highlightId || null);
+
+    const durationOptions = [
+        { label: '1 week', cost: 4.99 },
+        { label: '1 month', cost: 9.99 },
+        { label: '3 months', cost: 14.99 },
+        { label: '6 months', cost: 24.99 },
+        { label: '1 year', cost: 49.99 }
+    ];
+
     useEffect(() => {
         if (highlightId && events.length > 0) {
             const el = document.getElementById(`event-${highlightId}`);
@@ -38,7 +53,7 @@ export default function EventsPage() {
     const handlePageNotification = async (pageId) => {
         const token = localStorage.getItem("access");
         const prev = pageNotifyStatus[pageId];
-        setPageNotifyStatus(s => ({ ...s, [pageId]: !prev })); // optimistic
+        setPageNotifyStatus(s => ({ ...s, [pageId]: !prev })); 
         try {
             const res = await fetch(`${API}/api/pages/${pageId}/notify/`, {
                 method: "POST",
@@ -48,7 +63,7 @@ export default function EventsPage() {
                 const data = await res.json();
                 setPageNotifyStatus(s => ({ ...s, [pageId]: data.is_notified }));
             } else {
-                setPageNotifyStatus(s => ({ ...s, [pageId]: prev })); // rollback
+                setPageNotifyStatus(s => ({ ...s, [pageId]: prev })); 
             }
         } catch {
             setPageNotifyStatus(s => ({ ...s, [pageId]: prev }));
@@ -66,13 +81,13 @@ export default function EventsPage() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!res.ok) {
-                // Revert on fail
                 setReminders(prev => ({ ...prev, [eventId]: isSet }));
             }
         } catch {
             setReminders(prev => ({ ...prev, [eventId]: isSet }));
         }
     };
+
     useEffect(() => {
         const fetchData = async () => {
             const token = localStorage.getItem("access");
@@ -90,8 +105,6 @@ export default function EventsPage() {
                 if (userRes.ok) {
                     const userData = await userRes.json();
                     setUser(userData);
-                } else {
-                    console.warn("User profile could not be fetched.");
                 }
 
                 if (eventsRes.ok) {
@@ -114,7 +127,6 @@ export default function EventsPage() {
                         endDate: event.end_date,
                         title: event.title,
                         description: event.description,
-                        isNotified: event.is_notified || false,
                         pageType: event.page_type,
                     });
 
@@ -143,6 +155,7 @@ export default function EventsPage() {
 
         fetchData();
     }, []);
+
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
         const d = new Date(dateStr);
@@ -151,9 +164,11 @@ export default function EventsPage() {
         const year = d.getFullYear();
         return `${day}/${month}/${year}`;
     };
+
     const handleFollow = async (eventId, pageId) => {
         const token = localStorage.getItem("access");
-        const event = events.find(e => e.id === eventId);
+        const event = events.find(e => e.id === eventId) || recommendedEvents.find(e => e.id === eventId);
+        if (!event) return;
         const wasFollowed = event.isFollowed;
 
         setEvents(prev => prev.map(e =>
@@ -183,6 +198,8 @@ export default function EventsPage() {
         }
     };
 
+    const isUserPage = localStorage.getItem("user_type") === "page";
+
     return (
         <div className={styles.darkContainer}>
             <div className={`${styles.header} ${styles.page}`}>
@@ -191,7 +208,52 @@ export default function EventsPage() {
             <div className={`${styles.content} ${styles.page}`}>
                 <SideBarNav />
                 <div className={styles.mainContent}>
-                    <h1 className={styles.title}>
+
+                    {isUserPage && (
+                        <>
+                            <div className={styles.yourEventsWrapper}>
+                                <div className={styles.yourEventsHeader}>
+                                    <h2 className={styles.yourEventsTitleText}>
+                                        Your <span className={styles.highlight}>EVENTS</span>
+                                    </h2>
+                                    <div className={styles.yourEventsBtns}>
+                                        <button className={styles.manageEventsBtn}>Manage Events</button>
+                                        <button className={styles.createEventBtn}>Create</button>
+                                    </div>
+                                </div>
+                                <div className={styles.yourEventsCardsRow}>
+                                    {events.slice(0, 2).map((event) => (
+                                        <div key={event.id} className={styles.yourEventCardWrapper}>
+                                            <img
+                                                src={event.banner || event.avatar}
+                                                className={styles.yourEventBannerImg}
+                                                alt="Event Banner"
+                                            />
+                                            <div className={styles.yourEventDateBadge}>
+                                                <p>Starts {formatDate(event.startDate)}</p>
+                                                <p>Ends {formatDate(event.endDate)}</p>
+                                            </div>
+                                            <div className={styles.yourEventBottomOverlay}>
+                                                <h3>{event.title}</h3>
+                                                <p>
+                                                    {event.description?.substring(0, 80)}
+                                                    {event.description?.length > 80 && (
+                                                        <span className={styles.yourEventReadMore} onClick={() => setPopupEvent(event)}>
+                                                            {' '}read more
+                                                        </span>
+                                                    )}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className={styles.middleDivider}></div>
+                        </>
+                    )}
+
+                    <h1 className={styles.title} style={{ marginTop: isUserPage ? '30px' : '0' }}>
                         Looking for - <br /> <span className={styles.highlight}>EVENTS</span> to participate in?
                     </h1>
 
@@ -219,7 +281,6 @@ export default function EventsPage() {
                                         </div>
                                     </div>
                                     <div className={styles.headerActions}>
-                                        {/* Bell only shows when followed */}
                                         {event.isFollowed && (
                                             <button
                                                 className={styles.bellBtn}
@@ -245,7 +306,6 @@ export default function EventsPage() {
 
                                 {event.banner && (
                                     <div className={styles.bannerContainer}>
-                                        {/* No fixed height — image defines its own height */}
                                         <img
                                             src={event.banner}
                                             className={styles.bannerImg}
@@ -260,10 +320,9 @@ export default function EventsPage() {
                                                 className={styles.reminderBtn}
                                                 onClick={() => handleReminder(event.id)}
                                                 style={{
-                                                    // Using reminders[event.id] ensures the UI updates immediately
                                                     background: reminders[event.id]
-                                                        ? "rgba(255,255,255,0.2)" // Style for "Set"
-                                                        : "#7b1fa2",               // Style for "Not Set"
+                                                        ? "rgba(255,255,255,0.2)"
+                                                        : "#7b1fa2",
                                                     transition: "background 0.2s"
                                                 }}
                                             >
@@ -295,91 +354,152 @@ export default function EventsPage() {
                 </div>
 
                 <div className={styles.rightSection}>
-                    <div className={styles.pill}>RECOMMENDED</div>
-                    <div className={styles.rightCard}>
-                        <div className={styles.rightList}>
-                            {recommendedEvents.map((rec, index) => (
-                                <div key={rec.id} className={styles.recItemWrapper}>
-                                    <div className={styles.recCard}>
-                                        <img src={rec.banner} className={styles.recBanner} alt="" />
-                                        <div className={styles.recOverlay}>
-                                            <div className={styles.recHeader}>
-                                                <div className={styles.recOrgInfo}
-                                                    onClick={() => navigate(`/profile/${rec.pageId}`)}
-                                                    style={{ cursor: 'pointer' }}
-                                                >
-                                                    <img src={rec.avatar} className={styles.recAvatar} alt="" />
-                                                    <div className={styles.recOrgText}>
-                                                        <div className={styles.recNameRow}>
-                                                            <h4>{rec.orgName}</h4>
-                                                            <img
-                                                                src={VerifiedBadge}
-                                                                alt="verified"
-                                                                style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', marginLeft: 3 }}
-                                                            />
+                    {isUserPage ? (
+                        <>
+                            <div className={styles.pillContainer}>
+                                <div className={styles.pill}>ON-HOLD</div>
+                            </div>
+
+                            <div className={styles.onHoldContainer}>
+                                <div className={styles.pendingText}>1 Pending checkout</div>
+                                <div className={styles.onHoldDivider}></div>
+
+                                <div className={styles.checkoutList}>
+                                    {events.slice(0, 2).map(item => (
+                                        <div key={item.id} className={styles.checkoutItemWrap}>
+                                            <div className={styles.checkoutCard}>
+                                                <img
+                                                    src={item.banner || item.avatar}
+                                                    alt={item.title}
+                                                    className={styles.checkoutBannerImg}
+                                                />
+                                                <div className={styles.checkoutOverlay}>
+                                                    <div className={styles.checkoutOverlayLeft}>
+                                                        <h4 className={styles.checkoutTitle}>{item.title}</h4>
+                                                        <p className={styles.checkoutDesc}>
+                                                            {item.description?.substring(0, 50)}...
+                                                        </p>
+                                                    </div>
+                                                    <button className={styles.detailsBtn}>Details</button>
+                                                </div>
+                                            </div>
+                                            <div className={styles.checkoutSubInfo}>
+                                                <span>Details: 3 months promotion plan</span>
+                                                <span>Price: $14.99</span>
+                                            </div>
+                                            <div className={styles.onHoldDivider}></div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className={styles.checkoutBottom}>
+                                    <span className={styles.totalText}>Total: $14.99</span>
+                                    <button className={styles.proceedBtn}>Proceed to check-out</button>
+                                </div>
+                            </div>
+
+                            <div className={styles.promoContainer}>
+                                <div className={styles.promoHeaderContainer}>
+                                    <div className={styles.promoIconColored}></div>
+                                    <h3 className={styles.promoTitle}>Event Promotion</h3>
+                                </div>
+                                <div className={styles.promoBodyContainer}>
+                                    <p className={styles.promoText}>Manage your promotion plan and get more users to notice your event.</p>
+                                    <button className={styles.promoManageBtn} onClick={() => setIsPromoModalOpen(true)}>Manage</button>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className={styles.pill}>RECOMMENDED</div>
+                            <div className={styles.rightCard}>
+                                <div className={styles.rightList}>
+                                    {recommendedEvents.map((rec, index) => (
+                                        <div key={rec.id} className={styles.recItemWrapper}>
+                                            <div className={styles.recCard}>
+                                                <img src={rec.banner} className={styles.recBanner} alt="" />
+                                                <div className={styles.recOverlay}>
+                                                    <div className={styles.recHeader}>
+                                                        <div className={styles.recOrgInfo}
+                                                            onClick={() => navigate(`/profile/${rec.pageId}`)}
+                                                            style={{ cursor: 'pointer' }}
+                                                        >
+                                                            <img src={rec.avatar} className={styles.recAvatar} alt="" />
+                                                            <div className={styles.recOrgText}>
+                                                                <div className={styles.recNameRow}>
+                                                                    <h4>{rec.orgName}</h4>
+                                                                    <img
+                                                                        src={VerifiedBadge}
+                                                                        alt="verified"
+                                                                        style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', marginLeft: 3 }}
+                                                                    />
+                                                                </div>
+                                                                <p>{rec.pageType}</p>
+                                                            </div>
                                                         </div>
-                                                        <p>{rec.pageType}</p>
+
+                                                        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                                                            {rec.isFollowed && (
+                                                                <button
+                                                                    className={styles.bellBtn}
+                                                                    onClick={() => handlePageNotification(rec.pageId)}
+                                                                    style={{ width: 28, height: 28 }}
+                                                                >
+                                                                    <img
+                                                                        src={pageNotifyStatus[rec.pageId] ? BellOn : BellOff}
+                                                                        alt="notifications"
+                                                                        width={pageNotifyStatus[rec.pageId] ? 15 : 16}
+                                                                        height={pageNotifyStatus[rec.pageId] ? 18 : 16}
+                                                                        style={{ filter: 'brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)' }}
+                                                                    />
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                className={rec.isFollowed ? styles.followedBtnSmall : styles.followBtnSmall}
+                                                                onClick={() => handleFollow(rec.id, rec.pageId)}
+                                                            >
+                                                                {rec.isFollowed ? 'Followed' : 'Follow'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className={styles.recBody}>
+                                                        <div style={{ overflow: "hidden", width: "100%" }}>
+                                                            {rec.title?.length > 15 ? (
+                                                                <div className={styles.titleMarqueeWrapper}>
+                                                                    <span style={{
+                                                                        display: "inline-block",
+                                                                        whiteSpace: "nowrap",
+                                                                        animation: "marquee 8s linear infinite",
+                                                                        color: "white",
+                                                                        fontSize: "1.1rem",
+                                                                        fontWeight: 700
+                                                                    }}>{rec.title}</span>
+                                                                </div>
+                                                            ) : (
+                                                                <h5>{rec.title}</h5>
+                                                            )}
+                                                            <p>
+                                                                {rec.description?.length > 30
+                                                                    ? <>{rec.description.substring(0, 60)}... <span className={styles.readMoreSmall} onClick={(e) => { e.stopPropagation(); setPopupEvent(rec); }} style={{ cursor: "pointer" }}>read more</span></>
+                                                                    : rec.description
+                                                                }
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
-
-                                                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                                                    {rec.isFollowed && (
-                                                        <button
-                                                            className={styles.bellBtn}
-                                                            onClick={() => handlePageNotification(rec.pageId)}
-                                                            style={{ width: 28, height: 28 }}
-                                                        >
-                                                            <img
-                                                                src={pageNotifyStatus[rec.pageId] ? BellOn : BellOff}
-                                                                alt="notifications"
-                                                                width={pageNotifyStatus[rec.pageId] ? 15 : 16}
-                                                                height={pageNotifyStatus[rec.pageId] ? 18 : 16}
-                                                                style={{ filter: 'brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)' }}
-                                                            />
-                                                        </button>
-                                                    )}
-                                                    <button
-                                                        className={rec.isFollowed ? styles.followedBtnSmall : styles.followBtnSmall}
-                                                        onClick={() => handleFollow(rec.id, rec.pageId)}
-                                                    >
-                                                        {rec.isFollowed ? 'Followed' : 'Follow'}
-                                                    </button>
-                                                </div>
                                             </div>
-
-                                            <div className={styles.recBody}>
-                                                <div style={{ overflow: "hidden", width: "100%" }}>
-                                                    {rec.title?.length > 15 ? (
-                                                        <div className={styles.titleMarqueeWrapper}>
-                                                            <span style={{
-                                                                display: "inline-block",
-                                                                whiteSpace: "nowrap",
-                                                                animation: "marquee 8s linear infinite",
-                                                                color: "white",
-                                                                fontSize: "1.1rem",
-                                                                fontWeight: 700
-                                                            }}>{rec.title}</span>
-                                                        </div>
-                                                    ) : (
-                                                        <h5>{rec.title}</h5>
-                                                    )}
-                                                    <p>
-                                                        {rec.description?.length > 30
-                                                            ? <>{rec.description.substring(0, 60)}... <span className={styles.readMoreSmall} onClick={(e) => { e.stopPropagation(); setPopupEvent(rec); }} style={{ cursor: "pointer" }}>read more</span></>
-                                                            : rec.description
-                                                        }
-                                                    </p>
-                                                </div>
-                                            </div>
+                                            {index !== recommendedEvents.length - 1 && <div className={styles.separator} />}
                                         </div>
-                                    </div>
-                                    {index !== recommendedEvents.length - 1 && <div className={styles.separator} />}
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
-                    </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
+
+            {/* Existing Generic Popup */}
             {popupEvent && createPortal(
                 <div
                     style={{
@@ -409,6 +529,81 @@ export default function EventsPage() {
                         <p style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.6, margin: 0 }}>
                             {popupEvent.description}
                         </p>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* Events Promotion Modal */}
+            {isPromoModalOpen && createPortal(
+                <div className={styles.promoModalOverlay} onClick={() => setIsPromoModalOpen(false)}>
+                    <div className={styles.promoModalContent} onClick={e => e.stopPropagation()}>
+                        
+                        {/* Header */}
+                        <div className={styles.pmHeader}>
+                            <div className={styles.pmHeaderLeft}>
+                                <img src={ArrowLeftIcon} alt="Back" className={styles.pmBackIcon} onClick={() => setIsPromoModalOpen(false)} />
+                                <div className={styles.pmAdIconWrapper}>
+                                    <img src={AdIcon} alt="Ad" className={styles.pmAdIcon} />
+                                </div>
+                                <h2 className={styles.pmTitle}>Events Promotion</h2>
+                            </div>
+                            <div className={styles.pmHeaderRight}>
+                                <span className={styles.pmCancelBtn} onClick={() => setIsPromoModalOpen(false)}>Cancel</span>
+                                <button className={styles.pmDoneBtn} onClick={() => setIsPromoModalOpen(false)}>Done</button>
+                            </div>
+                        </div>
+
+                        {/* Middle Content */}
+                        <div className={styles.pmBody}>
+                            <div className={styles.pmDividerSection}>
+                                <div className={styles.pmDivider}></div>
+                                <p className={styles.pmSubText}>
+                                    Choose a promotion for your community ad by that, your community will start to appear more for users!
+                                </p>
+                            </div>
+
+                            <h3 className={styles.pmSectionTitle}>Select duration</h3>
+                            
+                            {/* Draggable/Clickable Stepped Slider */}
+                            <div className={styles.pmSliderWrapper}>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max={durationOptions.length - 1}
+                                    step="1"
+                                    value={promoDurationIdx}
+                                    onChange={(e) => setPromoDurationIdx(Number(e.target.value))}
+                                    className={styles.pmInvisibleSlider}
+                                />
+                                <div className={styles.pmSliderTrack}>
+                                    <div 
+                                        className={styles.pmSliderFill} 
+                                        style={{ width: `${(promoDurationIdx / (durationOptions.length - 1)) * 100}%` }}
+                                    ></div>
+                                </div>
+                                <div className={styles.pmSliderDotsContainer}>
+                                    {durationOptions.map((opt, i) => {
+                                        const isActive = i === promoDurationIdx;
+                                        const isFilled = i <= promoDurationIdx;
+                                        const leftPos = (i / (durationOptions.length - 1)) * 100;
+                                        
+                                        return (
+                                            <div key={i} className={styles.pmDotWrapper} style={{ left: `${leftPos}%` }}>
+                                                <div className={`${styles.pmDot} ${isActive ? styles.pmDotActive : isFilled ? styles.pmDotFilled : ''}`}></div>
+                                                <span className={`${styles.pmDotLabel} ${isActive ? styles.pmLabelActive : ''}`}>{opt.label}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Total Cost */}
+                            <div className={styles.pmTotalCost}>
+                                Total cost: <span className={styles.pmCostValue}>${durationOptions[promoDurationIdx].cost.toFixed(2)}</span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>,
                 document.body
