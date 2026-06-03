@@ -17,12 +17,10 @@ from .models import (
     PageRating,
     Post,
     PostMedia,
-    PostReaction,
-    SavedPost,
     UserDegree,
     UserProfile,
 )
-from .utils.blocked_users import get_all_blocked_relationships, is_normal_post
+from .utils.blocked_users import is_normal_post
 from .utils.user_type import get_user_avatar
 
 User = get_user_model()
@@ -527,16 +525,10 @@ class PostSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField()
 
     def get_is_saved(self, obj):
-        request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            return SavedPost.objects.filter(user=request.user, post=obj).exists()
-        return False
+        return getattr(obj, "is_saved", False)
 
     def get_is_liked(self, obj):
-        request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            return PostReaction.objects.filter(user=request.user, post=obj).exists()
-        return False
+        return getattr(obj, "is_liked", False)
 
     def get_is_commented(self, obj):
         request = self.context.get("request")
@@ -546,32 +538,13 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_likes_count(self, obj):
         if not is_normal_post(obj):
-            # Community post - show all likes
             return obj.reactions.count()
-
-        # Normal post - exclude blocked users
-        if obj.author_id:  # for this serves nothing but i might need it when i do the page block system
-            blocked_map = get_all_blocked_relationships()
-            blocked_users = blocked_map.get(obj.author_id, set()) if obj.author_id else set()
-
-            if blocked_users:
-                return obj.reactions.exclude(user_id__in=blocked_users).count()
-
-        return obj.reactions.count()
+        return getattr(obj, "reactions_count", obj.reactions.count())
 
     def get_comments_count(self, obj):
         if not is_normal_post(obj):
             return obj.comments.count()
-
-        # Normal post - exclude blocked users
-        if obj.author_id:
-            blocked_map = get_all_blocked_relationships()
-            blocked_users = blocked_map.get(obj.author_id, set())
-
-            if blocked_users:
-                return Comment.objects.filter(post=obj).exclude(author_id__in=blocked_users).count()
-
-        return Comment.objects.filter(post=obj).count()
+        return getattr(obj, "comments_count", Comment.objects.filter(post=obj).count())
 
     def get_author(self, obj):
         user = obj.author
@@ -728,6 +701,41 @@ class CommunitySerializer(serializers.ModelSerializer):
         if ret.get("members_count") is None:
             ret["members_count"] = CommunityMember.objects.filter(community=instance, status="approved").count()
         return ret
+
+
+class CommunityMemberSerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField(source="user.id")
+    username = serializers.ReadOnlyField(source="user.username")
+    avatar = serializers.SerializerMethodField()
+    profile_role = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CommunityMember
+        fields = [
+            "id",
+            "username",
+            "avatar",
+            "profile_role",
+            "role",
+            "status",
+            "joined_at",
+        ]
+
+    def get_avatar(self, obj):
+        request = self.context.get("request")
+        return get_user_avatar(request, obj.user)
+
+    def get_profile_role(self, obj):
+        user = obj.user
+        if hasattr(user, "page") and user.page:
+            return user.page.page_type
+        if hasattr(user, "student_profile"):
+            return "student"
+        if hasattr(user, "instructor_profile"):
+            return "instructor"
+        if hasattr(user, "admin_profile"):
+            return "admin"
+        return "unknown"
 
 
 class EventSerializer(serializers.ModelSerializer):

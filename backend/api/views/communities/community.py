@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import (
     Case,
     Count,
@@ -18,8 +19,10 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Community, CommunityMember, Friendship, Instructor
-from ...serializers import CommunitySerializer
+from ...models import Community, CommunityMember, Friendship, Post, Report
+from ...serializers import CommunitySerializer, PostSerializer
+from ...utils.community import ensure_community_admin
+from ...utils.feed import base_annotations
 from ...utils.notifications import send_global_notification
 
 
@@ -180,6 +183,49 @@ def community_detail(request, community_id):
     )
 
 
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def community_post_settings(request, community_id):
+    ensure_community_admin(request.user, community_id)
+    community = get_object_or_404(Community, pk=community_id)
+
+    if request.method == "POST":
+        requires_approval = request.data.get("requires_post_approval")
+        if requires_approval is not None:
+            community.requires_post_approval = bool(requires_approval)
+            community.save(update_fields=["requires_post_approval"])
+            return Response(
+                {
+                    "message": "Settings updated successfully.",
+                    "requires_post_approval": community.requires_post_approval,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        return Response({"error": "Missing requires_post_approval parameter."}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({"requires_post_approval": community.requires_post_approval}, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def fetch_community_highlights(request, community_id):
+    user = request.user
+
+    community = get_object_or_404(Community, community_id=community_id)
+
+    posts = (
+        Post.objects.filter(community=community, is_highlighted=True)
+        .annotate(**base_annotations(user))
+        .select_related("author__profile")
+        .prefetch_related("media")
+        .order_by("-highlighted_at")[:5]
+    )
+
+    serializer = PostSerializer(posts, many=True, context={"request": request})
+    return Response(serializer.data)
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def join_community(request, community_id):
@@ -293,24 +339,17 @@ def process_join_request(request, community_id):
 
 
 @api_view(["GET"])
-def instructor_community_picks(request, instructor_id):
-    instructor = get_object_or_404(Instructor, pk=instructor_id)
-    picks = instructor.community_picks.all()
-
-    serializer = CommunitySerializer(picks, many=True, context={"request": request})
-
-    return Response(serializer.data)
-
-
-@api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def toggle_pick(request, community_id):
-    instructor = request.user.instructor_profile
-    community = get_object_or_404(Community, pk=community_id)
+def get_reported_posts(request, community_id):
+    ensure_community_admin(request.user, community_id)
 
-    if community in instructor.featured_communities.all():
-        instructor.featured_communities.remove(community)
-        return Response({"message": "Removed from picks"})
-    else:
-        instructor.featured_communities.add(community)
-        return Response({"message": "Added to picks"})
+    post_content_type = ContentType.objects.get_for_model(Post)
+
+    reported_post_ids = Report.objects.filter(
+        content_type_obj=post_content_type, final_action="", university_page_id=id
+    ).values_list("object_id", flat=True)
+
+    reported_posts = Post.objects.filter(pk__in=reported_post_ids, community_id=id).distinct().select_related("author")
+
+    serializer = PostSerializer(reported_posts, many=True, context={"request": request})
+    return Response(serializer.data, status=status.HTTP_200_OK)

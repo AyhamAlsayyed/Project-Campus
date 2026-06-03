@@ -1,4 +1,4 @@
-def _get_user_university(user):
+def get_user_university(user):
     student = getattr(user, "student_profile", None)
     if student and student.university_page:
         return student.university_page

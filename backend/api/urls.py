@@ -8,14 +8,25 @@ from .views.comment.comments import comment_list, create_comment
 from .views.communities.community import (  # process_join_request,
     communities,
     community_detail,
-    instructor_community_picks,
+    community_post_settings,
+    fetch_community_highlights,
+    get_reported_posts,
     join_community,
     request_join_community,
-    toggle_pick,
 )
 from .views.communities.community_action import (
+    delete_reported_post,
+    dismiss_post_report,
+    instructor_community_picks,
     leave_community,
+    remove_community_highlight,
     toggle_community_notifications,
+    toggle_pick,
+)
+from .views.communities.community_member_action import (
+    get_community_members,
+    kick_community_member,
+    toggle_community_admin,
 )
 from .views.conversation.conversation import (
     create_dm,
@@ -67,6 +78,7 @@ from .views.posts.post_action import (
     delete_post,
     save_post,
     send_post,
+    toggle_community_highlight,
     toggle_like,
     toggle_pin_post,
 )
@@ -139,22 +151,33 @@ urlpatterns += [
     path("posts/<int:post_id>/pin/", toggle_pin_post),
     path("posts/<int:post_id>/", delete_post),
     path("posts/<int:post_id>/block/", toggle_block_user),
+    path("posts/<int:post_id>/highlight/", toggle_community_highlight),
 ]
 # community
 urlpatterns += [
     path("communities/", communities),
     path("communities/<int:community_id>/", community_detail),
+    path("communities/<int:community_id>/post-settings/", community_post_settings),
+    path("communities/<int:community_id>/highlights/", fetch_community_highlights),
+    path("communities/<int:community_id>/reported-posts/", get_reported_posts),
     path("communities/<int:community_id>/posts/", feed),
     # community_join
     path("communities/<int:community_id>/request/", request_join_community),
     path("communities/<int:community_id>/join/", join_community),
-    path("communities/<int:pk>/leave/", leave_community),
+    # community_member_action
+    path("communities/<int:community_id>/members/", get_community_members),
+    path("communities/<int:community_id>/make-admin/<int:member_id>/", toggle_community_admin),
+    path("communities/<int:community_id>/kick/<int:member_id>/", kick_community_member),
+    path("communities/<int:community_id>/report/<int:member_id>/", create_report),
     # community_action
-    # wewe path("communities/{id}/update/", )
-    path("communities/<int:pk>/notify/", toggle_community_notifications),
-    # community_action_instructor
     path("users/<int:instructor_id>/community-picks/", instructor_community_picks),
     path("<int:instructor_id>/toggle_picks/", toggle_pick),
+    path("communities/<int:community_id>/highlight/<int:post_id>/remove", remove_community_highlight),
+    path("communities/<int:community_id>/reported-posts/<int:post_id>/dismiss/", dismiss_post_report),
+    path("communities/<int:pk>/notify/", toggle_community_notifications),
+    path("communities/<int:pk>/leave/", leave_community),
+    path("posts/<int:post_id>/admin_delete", delete_reported_post),
+    # path("communities/<int:community_id>/kick/", ),
 ]
 # chat / conversation
 urlpatterns += [
@@ -227,7 +250,6 @@ urlpatterns += [
     path("", create_event),
     path("", edit_event),
     path("", cancel_event),
-    #chat_group
     #page_user
     path("page/profile/update/", update_page_profile),
 
