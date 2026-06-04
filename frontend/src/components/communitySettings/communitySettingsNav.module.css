@@ -47,7 +47,9 @@
 
 .settingsNavText {
   font-size: 1.15rem;
+  transition: transform 0.2s ease, color 0.2s ease, opacity 0.2s ease;
 }
+
 
 .navTextActive {
   font-weight: 600;
@@ -71,7 +73,6 @@
   align-items: center;
 }
 
-/* Gradient Mask for the Active Arrow */
 .activeGradientArrow {
   width: 14px;
   height: 14px;
@@ -86,4 +87,16 @@
   mask-position: center;
   transform: rotate(180deg);
   display: inline-block;
+  animation: arrowSlideIn 0.2s ease forwards;
+}
+
+@keyframes arrowSlideIn {
+  from {
+    opacity: 0;
+    transform: rotate(180deg) translateX(6px);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(180deg) translateX(0);
+  }
 }

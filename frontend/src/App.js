@@ -126,11 +126,19 @@ function App() {
             </ProtectedRoute>
           }
         />
-         <Route
+        <Route
           path="/subscriptions"
           element={
             <ProtectedRoute>
               <Subscriptions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pages"
+          element={
+            <ProtectedRoute>
+              <FollowedPages />
             </ProtectedRoute>
           }
         />

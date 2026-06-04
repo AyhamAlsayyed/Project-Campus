@@ -11,6 +11,7 @@ import Search from '../../Assets/icons/search.png';
 import VerifiedBadge from '../../Assets/icons/verified-mark.png';
 import X from '../../Assets/icons/x.png';
 import Info from '../../Assets/icons/info.png';
+import { useParams } from "react-router-dom";
 import Block from '../../Assets/icons/block.png';
 
 export default function FollowedPages() {
@@ -24,6 +25,8 @@ export default function FollowedPages() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isCommentsOpen, setIsCommentsOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
+    const { userId } = useParams();
+
     const [userError, setUserError] = useState("");
     const [userLoading, setUserLoading] = useState(true);
     const token = localStorage.getItem("access");
@@ -218,7 +221,7 @@ export default function FollowedPages() {
             </div>
             <div className={`${styles.page} ${styles.content}`}>
                 <SideBarNav
-                    variant="profile"
+                    variant={userId ? "profile" : "default"}
                     currentUser={currentUser}
                 />
                 <div className={styles.followedPagesPosts}>

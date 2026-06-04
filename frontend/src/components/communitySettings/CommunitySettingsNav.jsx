@@ -54,7 +54,7 @@ export default function CommunitySettingsNav({ activeTab, setActiveTab }) {
             <div
               key={item.key}
               onClick={() => setActiveTab(item.key)}
-              className={styles.settingsNavItem}
+             className={`${styles.settingsNavItem} ${isActive ? styles.settingsNavItemActive : ''}`}
             >
               {isActive && (
                 <div className={styles.activeArrowWrapper}>

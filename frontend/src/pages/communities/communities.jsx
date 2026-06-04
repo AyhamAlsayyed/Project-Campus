@@ -14,7 +14,15 @@ import CommunitySettingsNav from '../../components/communitySettings/CommunitySe
 import MembersTab from '../../components/communitySettings/membersTab';
 import RequestsTab from '../../components/communitySettings/requestsTab';
 import CommunityPosts from '../../components/communitySettings/CommunityPosts';
+import DefaultBanner from '../../Assets/Pictures/default-community-banner.png';
 import DeleteCommunityModal from '../../components/communitySettings/deleteCommunityModal';
+import { createPortal } from 'react-dom';
+import AdIcon from '../../Assets/icons/ad.png';
+import ArrowLeftIcon from '../../Assets/icons/arrow-left.png';
+import CreateCommunityIcon from '../../Assets/icons/create-group.png';
+import CreateCommunityForm from '../../components/createCommunity/CreateCommunity';
+import CommunityPermissions from '../../components/createCommunity/CommunityPermissions';
+
 export default function Community() {
     const [theme, setTheme] = useState('dark');
     const [loading, setLoading] = useState(true)
@@ -30,19 +38,29 @@ export default function Community() {
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [activeCommunity, setActiveCommunity] = useState(null);
     const [activeTab, setActiveTab] = useState('Community info');
+    const isUserPage = localStorage.getItem("user_type") === "page";
+    const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
+    const [promoDurationIdx, setPromoDurationIdx] = useState(2);
+    const [showCreateCommunityModal, setShowCreateCommunityModal] = useState(false);
+    const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
     const [requestSent, setRequestSent] = useState(
         () => localStorage.getItem("community_request_sent") === "true"
     );
     const [prevTab, setPrevTab] = useState('Community info');
     const displayedTab = activeTab === 'Delete' ? prevTab : activeTab;
+    const durationOptions = [
+        { label: '1 week', cost: 4.99 },
+        { label: '1 month', cost: 9.99 },
+        { label: '3 months', cost: 14.99 },
+        { label: '6 months', cost: 24.99 },
+        { label: '1 year', cost: 49.99 }
+    ];
 
     useEffect(() => {
         if (activeTab !== 'Delete') {
             setPrevTab(activeTab);
         }
     }, [activeTab]);
-
-
 
     const API = "http://localhost:8000";
     const token = localStorage.getItem("access");
@@ -144,7 +162,6 @@ export default function Community() {
         ? user.avatar.startsWith("http") ? user.avatar : `${API}${user.avatar}`
         : "/default-avatar.png";
 
-    // All filters including friends_related on mobile
     const mobileFilters = [
         { key: "recommended", label: "Recommended" },
         { key: "joined", label: "Joined" },
@@ -160,7 +177,6 @@ export default function Community() {
         { key: "trending", label: "Trending" },
     ];
 
-    // What to show in the main list on mobile — friends_related uses its own data
     const displayedCommunities = (isMobile && filter === "friends_related")
         ? friendsCommunities
         : communities;
@@ -241,7 +257,6 @@ export default function Community() {
                         }}>COMMUNITIES</span>?
                     </h1>
 
-                    {/* Scrollable filter row — includes Friends */}
                     <div style={{
                         display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8,
                         scrollbarWidth: "none", msOverflowStyle: "none"
@@ -265,7 +280,6 @@ export default function Community() {
                         ))}
                     </div>
 
-                    {/* Communities list */}
                     <div style={{
                         background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))",
                         paddingTop: 6, borderRadius: "20px 20px 0 0", marginTop: 12
@@ -301,9 +315,12 @@ export default function Community() {
             {!isMobile && (
                 <div className={`${styles.content} ${styles.page}`}>
                     <SideBarNav theme={theme} toggleTheme={toggleTheme} user={user} />
+
+                    {/* --- MAIN MIDDLE CONTAINER --- */}
                     <div className={styles.mainContent}>
                         {settingsOpen ? (
                             <div className={styles.communitiesContainer} style={{ marginTop: "4%" }}>
+                                <div key={displayedTab} style={{ animation: 'tabFadeIn 0.25s ease forwards' }}></div>
                                 {(displayedTab === 'Settings' || displayedTab === 'Community info') && (
                                     <CommunityInfoPanel
                                         community={activeCommunity}
@@ -331,16 +348,44 @@ export default function Community() {
                                         token={token}
                                     />
                                 )}
-
                             </div>
-
-                        ) : (
+                        ) : showCreateCommunityModal && isUserPage ? (
                             <>
-                                <h1 className={styles.title}>
-                                    Your <span className={styles.highlight}>COMMUNITIES</span>
-                                </h1>
+                                <div className={styles.communitiesContainer}>
+                                    <div style={{ animation: 'tabFadeIn 0.25s ease forwards' }}>
+                                        <CreateCommunityForm onBack={() => setShowCreateCommunityModal(false)} />
+                                    </div>
+                                </div>
 
-                                <div className={styles.ownedCommunitiesContainer} style={{ minHeight: "unset", padding: "30px 0" }}>
+
+                            </>
+                        ) : (
+                            // DEFAULT VIEW
+                            <>
+                                <div className={styles.yourCommunitiesHeader}>
+                                    <h1 className={styles.title}>
+                                        Your <span className={styles.highlight}>COMMUNITIES</span>
+                                    </h1>
+                                    {isUserPage && (
+                                        <div
+                                            className={styles.createCommunityBtn}
+                                            onClick={() => {
+                                                if (!isUserPage) return;
+                                                user?.is_premium
+                                                    ? setShowCreateCommunityModal(true)
+                                                    : setIsModalOpen(true);
+                                            }}
+                                            style={{
+                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                                padding: "8px", cursor: "pointer", transition: "background 0.2s"
+                                            }}
+                                        >
+                                            <img src={CreateCommunityIcon} alt="" style={{ width: "25px", height: "25px", filter: 'brightness(0) invert(0.9)' }} />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className={styles.ownedCommunitiesContainer} style={{ minHeight: "unset", padding: "30px 0"}}>
                                     {ownedCommunities.length === 0 ? (
                                         <p style={{
                                             color: "rgba(255,255,255,0.35)",
@@ -362,7 +407,7 @@ export default function Community() {
                                                         onSettingsClick={(c) => { setActiveCommunity(c); setSettingsOpen(true); setActiveTab('Community info'); }}
                                                     />
                                                 </div>
-                                                {index !== ownedCommunities.length - 1 && <div className={styles.divider} style={{ width: "50%", margin: "16px auto " }} />}
+                                                
                                             </div>
                                         ))
                                     )}
@@ -394,90 +439,141 @@ export default function Community() {
                                     </div>
                                 </div>
                             </>
-
                         )}
-
                     </div>
-                    <div className={styles.rightSection} style={{ marginTop: settingsOpen ? "2%" : "4%" }}>
+
+                    {/* --- RIGHT SECTION --- */}
+                    <div className={styles.rightSection} style={{ marginTop: settingsOpen ? "2%" : "4%" , flex: isUserPage ? " 0 0 420px;" : "0 0 380px"}}>
                         {settingsOpen ? (
                             <CommunitySettingsNav
                                 activeTab={activeTab}
                                 setActiveTab={setActiveTab}
                             />
+                        ) : showCreateCommunityModal && isUserPage ? (
+                            <>
 
-                        ) : (<>
-                            <div className={styles.pill}>FRIENDS RELATED</div>
-                            <div className={styles.rightCard}>
-                                <div className={styles.rightList}>
-                                    {friendsCommunities.map((community, index) => (
-                                        <CommunityCard
-                                            key={index}
-                                            community={community}
-                                            setCommunities={setFriendsCommunities}
-                                            variant="small"
-                                        />
-                                    ))}
+                                <div style={{ animation: 'tabFadeIn 0.25s ease forwards' }}>
+                                    <CommunityPermissions />
                                 </div>
-                            </div>
-
-
-                            <div className={styles.communityRequest} style={{ position: "relative", overflow: "hidden" }} style={{ position: "relative", overflow: "hidden" }}>
-                                {requestSent && (
-                                    <div style={{
-                                        position: "absolute",
-                                        inset: 0,
-                                        background: "rgba(35, 35, 36, 0.4)",
-                                        borderRadius: "inherit",
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        gap: 8,
-                                        zIndex: 10,
-                                        backdropFilter: "blur(0.9px)",
-                                    }}>
-
+                                <div className={styles.promoContainer}>
+                                    <div className={styles.promoHeaderContainer}>
+                                        <div className={styles.promoIconColored}></div>
+                                        <h3 className={styles.promoTitle}>Community Promotion</h3>
                                     </div>
-                                )}
+                                    <div className={styles.promoBodyContainer}>
+                                        <p className={styles.promoText}>Manage your promotion plan and get more users to notice your community.</p>
+                                        <button className={styles.promoManageBtn} onClick={() => setIsPromoModalOpen(true)}>Manage</button>
+                                    </div>
+                                </div>
+                            </>
+                        ) : isUserPage ? (
 
-
-                                <div className={styles.requestHeader}>
-
-                                    <div
-                                        className={styles.paletteIcon}
-                                        style={{
-                                            maskImage: `url(${Palette})`,
-                                            WebkitMaskImage: `url(${Palette})`
-                                        }}
-                                    />
-                                    <h3 className={styles.requestTitle}>Request a community</h3>
+                            <>
+                                <div className={styles.pillContainer}>
+                                    <div className={styles.pill} style={{ width: "25%", left: "7%", top: "-40px" }}>
+                                        ON-HOLD
+                                    </div>
                                 </div>
 
-                                <div className={styles.requestBody}>
-                                    <p className={styles.requestText}>
-                                        Can't find your community?<br />
-                                        Request one and we'll review it.
-                                    </p>
-                                    {requestSent ? (
-                                        <span style={{ color: "white", fontSize: "0.85rem", fontWeight: 500, letterSpacing: 1 }}>
-                                            Waiting...
-                                        </span>
-                                    ) : (
-                                        <button
-                                            className={styles.applyButton}
-                                            onClick={() => setIsModalOpen(true)}
-                                        >
-                                            Apply
-                                        </button>
+                                <div className={styles.onHoldContainer}>
+                                    <div className={styles.pendingText}>1 Pending checkout</div>
+                                    <div className={styles.onHoldDivider}></div>
+
+                                    <div className={styles.checkoutList}>
+                                        {communities.slice(0, 2).map(item => (
+                                            <div key={item.id} className={styles.checkoutItemWrap}>
+                                                <div className={styles.checkoutCard}>
+                                                    <img
+                                                        src={item.banner || item.image}
+                                                        alt={item.name}
+                                                        className={styles.checkoutBannerImg}
+                                                    />
+                                                    <div className={styles.checkoutOverlay}>
+                                                        <div className={styles.checkoutOverlayLeft}>
+                                                            <h4 className={styles.checkoutTitle}>{item.name}</h4>
+                                                            <p className={styles.checkoutDesc}>
+                                                                {item.description?.substring(0, 50)}...
+                                                            </p>
+                                                        </div>
+                                                        <button className={styles.detailsBtn}>Details</button>
+                                                    </div>
+                                                </div>
+                                                <div className={styles.checkoutSubInfo}>
+                                                    <span>Details: 3 months promotion plan</span>
+                                                    <span>Price: $14.99</span>
+                                                </div>
+                                                <div className={styles.onHoldDivider}></div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className={styles.checkoutBottom}>
+                                        <span className={styles.totalText}>Total: $14.99</span>
+                                        <button className={styles.proceedBtn}>Proceed to check-out</button>
+                                    </div>
+                                </div>
+
+                                <div className={styles.promoContainer}>
+                                    <div className={styles.promoHeaderContainer}>
+                                        <div className={styles.promoIconColored}></div>
+                                        <h3 className={styles.promoTitle}>Community Promotion</h3>
+                                    </div>
+                                    <div className={styles.promoBodyContainer}>
+                                        <p className={styles.promoText}>Manage your promotion plan and get more users to notice your community.</p>
+                                        <button className={styles.promoManageBtn} onClick={() => setIsPromoModalOpen(true)}>Manage</button>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+
+                            <>
+                                <div className={styles.pill}>FRIENDS RELATED</div>
+                                <div className={styles.rightCard}>
+                                    <div className={styles.rightList}>
+                                        {friendsCommunities.map((community, index) => (
+                                            <CommunityCard
+                                                key={index}
+                                                community={community}
+                                                setCommunities={setFriendsCommunities}
+                                                variant="small"
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className={styles.communityRequest} style={{ position: "relative", overflow: "hidden" }}>
+                                    {requestSent && (
+                                        <div style={{
+                                            position: "absolute", inset: 0,
+                                            background: "rgba(35, 35, 36, 0.4)",
+                                            borderRadius: "inherit",
+                                            display: "flex", flexDirection: "column",
+                                            alignItems: "center", justifyContent: "center",
+                                            gap: 8, zIndex: 10, backdropFilter: "blur(0.9px)",
+                                        }} />
                                     )}
+                                    <div className={styles.requestHeader}>
+                                        <div className={styles.paletteIcon} style={{ maskImage: `url(${Palette})`, WebkitMaskImage: `url(${Palette})` }} />
+                                        <h3 className={styles.requestTitle}>Request a community</h3>
+                                    </div>
+                                    <div className={styles.requestBody}>
+                                        <p className={styles.requestText}>
+                                            Can't find your community?<br />
+                                            Request one and we'll review it.
+                                        </p>
+                                        {requestSent ? (
+                                            <span style={{ color: "white", fontSize: "0.85rem", fontWeight: 500, letterSpacing: 1 }}>
+                                                Waiting...
+                                            </span>
+                                        ) : (
+                                            <button className={styles.applyButton} onClick={() => setIsModalOpen(true)}>
+                                                Apply
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-
-                            </div>
-                        </>
-
+                            </>
                         )}
-
-
                     </div>
                 </div>
             )}
@@ -500,6 +596,68 @@ export default function Community() {
                         setIsModalOpen(false);
                     }}
                 />
+            )}
+            {isPromoModalOpen && createPortal(
+                <div className={styles.promoModalOverlay} onClick={() => setIsPromoModalOpen(false)}>
+                    <div className={styles.promoModalContent} onClick={e => e.stopPropagation()}>
+                        <div className={styles.pmHeader}>
+                            <div className={styles.pmHeaderLeft}>
+                                <img src={ArrowLeftIcon} alt="Back" className={styles.pmBackIcon} onClick={() => setIsPromoModalOpen(false)} />
+                                <div className={styles.pmAdIconWrapper}>
+                                    <img src={AdIcon} alt="Ad" className={styles.pmAdIcon} />
+                                </div>
+                                <h2 className={styles.pmTitle}>Community Promotion</h2>
+                            </div>
+                            <div className={styles.pmHeaderRight}>
+                                <span className={styles.pmCancelBtn} onClick={() => setIsPromoModalOpen(false)}>Cancel</span>
+                                <button className={styles.pmDoneBtn} onClick={() => setIsPromoModalOpen(false)}>Done</button>
+                            </div>
+                        </div>
+                        <div className={styles.pmBody}>
+                            <div className={styles.pmDividerSection}>
+                                <div className={styles.pmDivider}></div>
+                                <p className={styles.pmSubText}>
+                                    Choose a promotion for your community ad, your community will start to appear more for users!
+                                </p>
+                            </div>
+                            <h3 className={styles.pmSectionTitle}>Select duration</h3>
+                            <div className={styles.pmSliderWrapper}>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max={durationOptions.length - 1}
+                                    step="1"
+                                    value={promoDurationIdx}
+                                    onChange={(e) => setPromoDurationIdx(Number(e.target.value))}
+                                    className={styles.pmInvisibleSlider}
+                                />
+                                <div className={styles.pmSliderTrack}>
+                                    <div className={styles.pmSliderFill} style={{ width: `${(promoDurationIdx / (durationOptions.length - 1)) * 100}%` }}></div>
+                                </div>
+                                <div className={styles.pmSliderDotsContainer}>
+                                    {durationOptions.map((opt, i) => {
+                                        const isActive = i === promoDurationIdx;
+                                        const isFilled = i <= promoDurationIdx;
+                                        const leftPos = (i / (durationOptions.length - 1)) * 100;
+                                        return (
+                                            <div key={i} className={styles.pmDotWrapper} style={{ left: `${leftPos}%` }}>
+                                                <div className={`${styles.pmDot} ${isActive ? styles.pmDotActive : isFilled ? styles.pmDotFilled : ''}`}></div>
+                                                <span className={`${styles.pmDotLabel} ${isActive ? styles.pmLabelActive : ''}`}>{opt.label}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                            <div className={styles.pmTotalCost}>
+                                Total cost: <span className={styles.pmCostValue}>${durationOptions[promoDurationIdx].cost.toFixed(2)}</span>
+                                <p className={styles.pmNote}>
+                                    Note: The promotion will get proceeded once making sure the community has been created successfully!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
     );
