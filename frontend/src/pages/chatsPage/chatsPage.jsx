@@ -1032,7 +1032,7 @@ export default function ChatsPage() {
                                                                                     <>
                                                                                         <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); markUnread(chat.id); setOpenMenuId(null); }}>
                                                                                             <div style={{
-                                                                                               width: '18px', height: '18px', backgroundColor: '#CCCCCC',
+                                                                                                width: '18px', height: '18px', backgroundColor: '#CCCCCC',
                                                                                                 maskImage: `url(${Unread})`, WebkitMaskImage: `url(${Unread})`,
                                                                                                 maskSize: 'contain', WebkitMaskSize: 'contain',
                                                                                                 maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
@@ -1047,7 +1047,7 @@ export default function ChatsPage() {
 
                                                                                 <button className={styles.menuItem} onClick={(e) => { e.stopPropagation(); clearChat(chat.id); setOpenMenuId(null); }}>
                                                                                     <div style={{
-                                                                                       width: '18px', height: '18px', backgroundColor: '#CCCCCC',
+                                                                                        width: '18px', height: '18px', backgroundColor: '#CCCCCC',
                                                                                         maskImage: `url(${clear})`, WebkitMaskImage: `url(${clear})`,
                                                                                         maskSize: 'contain', WebkitMaskSize: 'contain',
                                                                                         maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
@@ -1248,7 +1248,7 @@ export default function ChatsPage() {
                                                 <div className={styles.messagesScrollArea} ref={messagesScrollRef}>
                                                     {(() => {
                                                         let lastDate = null;
-                                                        return messages.map((msg) => {
+                                                        return messages.map((msg, msgIndex) => {
                                                             const isMine = msg.senderId === 'me' || msg.senderId === user?.id;
                                                             const msgDate = msg.date ? new Date(msg.date) : null;
                                                             let dateLabel = null;
@@ -1267,26 +1267,31 @@ export default function ChatsPage() {
 
                                                             const resolveUrl = (url) => url?.startsWith('http') ? url : `${API}${url}`;
 
+                                                            const prevMsg = msgIndex > 0 ? messages[msgIndex - 1] : null;
+                                                            // Grouped if same sender and no date separator breaks the chain
+                                                            const isGrouped = !dateLabel && prevMsg && prevMsg.senderId === msg.senderId;
+
                                                             return (
                                                                 <div key={msg.id} ref={(el) => (messageRefs.current[msg.id] = el)}>
                                                                     {dateLabel && (
                                                                         <div className={styles.dateSeparator}><span>{dateLabel}</span></div>
                                                                     )}
-                                                                    <div className={`${styles.messageWrapper} ${isMine ? styles.messageMineWrapper : styles.messageOtherWrapper}`}>
+                                                                    <div className={`${styles.messageWrapper} ${isMine ? styles.messageMineWrapper : styles.messageOtherWrapper} ${isGrouped ? styles.messageGrouped : ''}`}>
                                                                         {!isMine && (
-                                                                            <img
-                                                                                src={resolveUrl(msg.avatar)}
-                                                                                alt="Sender"
-                                                                                className={styles.messageAvatar}
-                                                                            />
+                                                                            isGrouped
+                                                                                ? <div className={styles.messageAvatarSpacer} />
+                                                                                : <img src={resolveUrl(msg.avatar)} alt="Sender" className={styles.messageAvatar} />
                                                                         )}
                                                                         <div className={styles.messageContentBlock}>
-                                                                            <div className={`${styles.messageMeta} ${isMine ? styles.metaRight : styles.metaLeft}`}>
-                                                                                <span className={styles.msgSenderName}>{isMine ? 'You' : msg.sender}</span>
-                                                                                <span className={styles.msgTime}>{msg.time}</span>
-                                                                            </div>
+                                                                            {!isGrouped && (
+                                                                                <div className={`${styles.messageMeta} ${isMine ? styles.metaRight : styles.metaLeft}`}>
+                                                                                    <span className={styles.msgSenderName}>{isMine ? 'You' : msg.sender}</span>
+                                                                                    <span className={styles.msgTime}>{msg.time}</span>
+                                                                                </div>
+                                                                            )}
                                                                             <div className={styles.messageRow}>
-                                                                                <div className={`${styles.messageBubble} ${isMine ? styles.bubbleMine : styles.bubbleOther}`}>
+                                                                                <div className={`${styles.messageBubble} ${msg.post ? styles.bubblePost : isMine ? styles.bubbleMine : styles.bubbleOther} ${isGrouped ? styles.bubbleGrouped : ''}`}>
+
                                                                                     {msg.reply_to_details && (
                                                                                         <div className={styles.replyQuoteBox} onClick={() => scrollToMessage(msg.reply_to_details.id)}>
                                                                                             <span className={styles.replySender}>
@@ -1488,43 +1493,57 @@ export default function ChatsPage() {
                                                 )}
 
 
-                                                <div className={styles.messageInputArea}>
+                                              
+                                                {(() => {
+                                                    const canSend = !selectedChat?.is_group ||
+                                                        !fullGroupData ||
+                                                        fullGroupData.allow_members_to_send_messages ||
+                                                        fullGroupData.members?.find(m => m.id === user?.id)?.is_admin ||
+                                                        fullGroupData.admins?.some(a => a.id === user?.id);
 
-                                                    <input ref={imageInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'image')} />
-                                                    <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.zip" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'file')} />
+                                                    return canSend ? (
+                                                        <div className={styles.messageInputArea}>
+                                                            <input ref={imageInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'image')} />
+                                                            <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.zip" multiple style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'file')} />
 
-                                                    <div className={styles.attachmentWrapper} ref={attachmentRef}>
-                                                        <button className={styles.iconBtn} onClick={() => setAttachmentMenuOpen(!attachmentMenuOpen)}>
-                                                            <Paperclip size={20} />
-                                                        </button>
-                                                        {attachmentMenuOpen && (
-                                                            <div className={styles.attachmentMenu} ref={attachmentMenuRef}>
-                                                                <button className={styles.attachmentMenuItem} onClick={() => imageInputRef.current.click()}>
-                                                                    🖼️ Image
+                                                            <div className={styles.attachmentWrapper} ref={attachmentRef}>
+                                                                <button className={styles.iconBtn} onClick={() => setAttachmentMenuOpen(!attachmentMenuOpen)}>
+                                                                    <Paperclip size={20} />
                                                                 </button>
-                                                                <button className={styles.attachmentMenuItem} onClick={() => fileInputRef.current.click()}>
-                                                                    📄 File / PDF
-                                                                </button>
-                                                                <button className={styles.attachmentMenuItem} onClick={() => { setPollOpen(true); setAttachmentMenuOpen(false); }}>
-                                                                    📊 Poll
-                                                                </button>
+                                                                {attachmentMenuOpen && (
+                                                                    <div className={styles.attachmentMenu} ref={attachmentMenuRef}>
+                                                                        <button className={styles.attachmentMenuItem} onClick={() => imageInputRef.current.click()}>
+                                                                            🖼️ Image
+                                                                        </button>
+                                                                        <button className={styles.attachmentMenuItem} onClick={() => fileInputRef.current.click()}>
+                                                                            📄 File / PDF
+                                                                        </button>
+                                                                        <button className={styles.attachmentMenuItem} onClick={() => { setPollOpen(true); setAttachmentMenuOpen(false); }}>
+                                                                            📊 Poll
+                                                                        </button>
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                        )}
-                                                    </div>
 
-
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Type a message..."
-                                                        className={styles.messageInput}
-                                                        value={inputText}
-                                                        onChange={(e) => setInputText(e.target.value)}
-                                                        onKeyDown={(e) => { if (e.key === 'Enter') handleSendMessage(); }}
-                                                    />
-                                                    <button className={styles.sendBtn} onClick={handleSendMessage}>
-                                                        <Send size={18} />
-                                                    </button>
-                                                </div>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Type a message..."
+                                                                className={styles.messageInput}
+                                                                value={inputText}
+                                                                onChange={(e) => setInputText(e.target.value)}
+                                                                onKeyDown={(e) => { if (e.key === 'Enter') handleSendMessage(); }}
+                                                            />
+                                                            <button className={styles.sendBtn} onClick={handleSendMessage}>
+                                                                <Send size={18} />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className={styles.adminsOnlyBar}>
+                                                            <Ban size={16} className={styles.adminsOnlyIcon} />
+                                                            <span>Only admins can send messages in this group</span>
+                                                        </div>
+                                                    );
+                                                })()}
                                             </div>
                                         </div>
                                     </div>

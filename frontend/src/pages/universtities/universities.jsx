@@ -29,16 +29,16 @@ export default function Universities() {
     const [openNewsDropdown, setOpenNewsDropdown] = useState(null);
     const [extendItem, setExtendItem] = useState(null);
     const [sliderStep, setSliderStep] = useState(2);
-    const [deleteConfirmItem, setDeleteConfirmItem] = useState(null); // NEW: tracks item pending deletion
+    const [deleteConfirmItem, setDeleteConfirmItem] = useState(null); 
     const navigate = useNavigate();
     const [univData, setUnivData] = useState(null);
     const [events, setEvents] = useState([]);
     const [isManageDoctorsOpen, setIsManageDoctorsOpen] = useState(false);
     const [manageDoctorsSearch, setManageDoctorsSearch] = useState('');
-    const [isInviteOpen, setIsInviteOpen] = useState(false);         // NEW: invite modal state
-    const [inviteEmail, setInviteEmail] = useState('');              // NEW: invite email input
-    const [inviteStatus, setInviteStatus] = useState(null);          // NEW: 'success' | 'error' | null
-    const [removingDoctorId, setRemovingDoctorId] = useState(null);  // NEW: tracks doctor being removed
+    const [isInviteOpen, setIsInviteOpen] = useState(false);        
+    const [inviteEmail, setInviteEmail] = useState('');              
+    const [inviteStatus, setInviteStatus] = useState(null);          
+    const [removingDoctorId, setRemovingDoctorId] = useState(null); 
     const API = "http://localhost:8000";
 
     const [loading, setLoading] = useState(true);
