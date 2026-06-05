@@ -141,11 +141,10 @@
 }
 
 .sectionTitle {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: 800;
-    margin: 0;
     letter-spacing: 1px;
-    margin: 0 0 0 2%;
+    margin: 0 0 0 4%;
     color: #ffffff;
 }
 
@@ -276,9 +275,10 @@
 .rightCard {
     display: flex;
     flex-direction: column;
-    background-color: #333;
+    background-color: #333333;
     border-radius: 25px;
     padding: 20px;
+   
     margin-top: 2%;
     position: relative;
     z-index: 2;
@@ -341,7 +341,7 @@
     gap: 12px;
     padding: 12px 14px;
     cursor: pointer;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+   
     transition: background 0.15s;
 }
 .pill {
@@ -536,4 +536,673 @@
     /* center the whole row */
     gap: 10px;
     padding: 12px 0 4px 0;
+}
+.rightCardHeader{
+    display: flex;
+    align-items: center;
+}
+.manageBtn{
+    background-color: #616161;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 20px;
+    color: #E6E6E6;
+}
+.manageBtn:hover{
+    cursor: pointer;
+    
+}
+/* ========================================= */
+/* --- UNIVERSITY POV NEWS LIST & DOCTORS --- */
+/* ========================================= */
+
+.announcementsContainer {
+    background-color: #262626;
+    width: 96%;
+    margin: 0 auto;
+    border-radius: 30px 30px 0 0;
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.announcementWrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.announcementItem {
+    display: flex;
+    padding: 20px 30px;
+    gap: 20px;
+}
+
+.announcementImg {
+    width: 220px;
+    height: 130px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.announcementContent {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    justify-content: space-between;
+}
+
+.announcementTopRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.announcementDate {
+    color: #E6E6E6;
+    font-size: 0.7rem;
+}
+
+.moreMenuWrapper {
+    position: relative;
+}
+
+.moreIcon {
+    cursor: pointer;
+    color: #ffffff;
+    transition: opacity 0.2s;
+}
+
+.moreIcon:hover {
+    opacity: 0.7;
+}
+
+.dropdownMenu {
+    position: absolute;
+    right: 0;
+    top: 30px;
+    background-color: #333333;
+    border-radius: 12px;
+    padding: 8px 0;
+    width: 200px;
+    z-index: 20;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.dropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    width: 100%;
+    cursor: pointer;
+    box-sizing: border-box;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.dropdownItem:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.deleteItem {
+    color: #ff4d4d;
+}
+
+/* Specific filter to force a black icon to become purely red */
+.binIcon {
+    width: 16px;
+    height: 16px;
+    filter: invert(36%) sepia(87%) saturate(3015%) hue-rotate(341deg) brightness(101%) contrast(106%); 
+}
+
+.dropdownDivider {
+    width: 50%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 4px 0;
+}
+
+.announcementTitle {
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin: -5px 0 8px 0;
+    color: #ffffff;
+}
+
+.announcementDesc {
+    color: #d0d0d0;
+    font-size: 0.85rem;
+    width: 50%;
+    margin: 0 0 10px 0;
+    line-height: 1.4;
+}
+
+.readMoreText {
+    color: #CCCCCC;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: underline;
+    margin-left: 5px;
+}
+.readMoreText,
+.readMore {
+    white-space: nowrap;
+}
+
+.timeRemainingRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #a0a0a0;
+    font-size: 0.8rem;
+}
+
+.newsDivider {
+    width: 50%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 10px auto;
+}
+
+/* Right Section Doctors Modifications */
+.doctorItemWrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.docDivider {
+    width: 70%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 0 auto;
+}
+
+.docDescRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0 0 0;
+    font-size: 0.73rem;
+    color: #777;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.docType {
+    color: #B3B3B3;
+}
+
+.docDot {
+    color: #777;
+}
+/* ================================================= */
+/* ── EXTEND DURATION POPUP MODAL (UNIVERSITY POV) ── */
+/* ================================================= */
+
+.extendModalOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Aktiv Grotesk", sans-serif;
+}
+
+.extendModalContent {
+    background-color: #333333;
+    border-radius: 28px;
+    width: 540px;
+    max-width: 90%;
+    padding: 24px 30px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header Row Elements */
+.extendHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.extendHeaderLeft {
+    display: flex;
+    align-items: center;
+}
+
+.extendBackBtn {
+    width: 14px;
+    height: 14px;
+    filter: brightness(0) invert(1);
+    cursor: pointer;
+    margin-right: 25px; /* distance gap from back arrow */
+    transition: transform 0.2s;
+}
+
+.extendBackBtn:hover {
+    transform: translateX(-2px);
+}
+
+.extendTimeIcon {
+    color: #ffffff;
+    margin-right: 15px; /* distance gap from icon */
+}
+
+.extendHeaderText {
+    color: #ffffff;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.extendHeaderActions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.extendCancelBtn {
+    background: none;
+    border: none;
+    color: #ff4d4d; /* Cancel text in pure red */
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.extendSaveBtn {
+    background: none;
+    border: none;
+    color: #FFFFFF; /* Save text in pure white */
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Dividers styling profiles */
+.extendMainDivider {
+    width: 100%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 18px auto; /* centered layout tracking */
+}
+
+.extendMidDivider {
+    width: 50%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 18px auto; /* centered configuration layout tracking */
+}
+
+/* Announcement Detail Preview Inner Wrapper */
+.extendDetailsSection {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* space between picture and text content block */
+    width: 100%;
+    padding: 4px 10px;
+    box-sizing: border-box;
+}
+
+.extendPreviewImg {
+    width: 180px; 
+    height: 110px; 
+    border-radius: 14px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.extendTextDetails {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+
+.extendPostTitle {
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: bold; /* Bold structural text requirement */
+    margin: 0 0 6px 0;
+}
+
+.extendPostDesc {
+    color: #b0b0b0;
+    font-size: 0.82rem;
+    line-height: 1.35;
+    margin: 0;
+    width: 50%;
+    white-space: normal;
+    word-wrap: break-word;
+    text-overflow: ellipsis;
+}
+
+/* Historic Log Text Details Layout rows */
+.extendDatesLogs {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-left: 10px;
+    margin-bottom: 25px; 
+}
+
+.dateLogLine {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.88rem;
+}
+
+.dateLogLabel {
+    color: #CCCCCC; /* Label styling rules */
+}
+
+.dateLogVal {
+    color: #808080; /* Values styling rules */
+    font-weight: 500;
+}
+
+/* Step Range Custom Slider Module Section Layouts */
+/* Step Range Custom Slider Module Section Layouts */
+.extendSliderContainer {
+    display: flex;
+    flex-direction: row; /* Aligns "Extend by" and the slider next to each other */
+    align-items: center; /* Vertically centers them */
+    gap: 20px;
+    padding: 0 10px;
+    margin-bottom: 40px; /* Increased to account for the absolute positioned labels */
+}
+
+.sliderLabelRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    flex-shrink: 0; /* Prevents the label from squishing */
+}
+
+.sliderTrackWrapper {
+    position: relative;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    flex: 1; /* Takes up the remaining horizontal space next to the label */
+}
+
+/* Invisible operational range slider track */
+.customRangeInput {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 5;
+    margin: 0;
+}
+
+.visualTrackBase {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background-color: #666666; 
+    border-radius: 2px;
+    z-index: 1;
+}
+
+.visualTrackProgress {
+    position: absolute;
+    left: 0;
+    height: 4px;
+    background-color: #B533A9; 
+    border-radius: 2px;
+    z-index: 2;
+}
+
+.sliderNodesContainer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 3;
+}
+
+.sliderStepNode {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+}
+
+.nodeDot {
+    width: 12px; /* Made the base circle bigger */
+    height: 12px; /* Made the base circle bigger */
+    border-radius: 50%;
+    background-color: #FFFFFF; 
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Fills the circles with the accent color once the slider has passed them */
+.nodePassed .nodeDot {
+    background-color: #B533A9;
+}
+
+.nodeLabelText {
+    position: absolute;
+    top: 20px; /* Adjusted to keep distance from the bigger dots */
+    font-size: 0.72rem;
+    color: #808080;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+/* Dynamic State Scaling for the actively selected node */
+.nodeActive .nodeDot {
+    width: 18px; /* Made the active circle bigger */
+    height: 18px; /* Made the active circle bigger */
+    background-color: #B533A9; 
+}
+
+.nodeActive .nodeLabelText {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+/* Future output target confirmation text segment block styles styling rules */
+.extendFutureOutputs {
+    padding-left: 10px;
+    font-size: 0.92rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+/* Manage Doctors Modal */
+.manageModalOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.manageModalContent {
+    background: #333333;
+    border-radius: 20px;
+    padding: 24px;
+    width: 90%;
+    max-width: 520px;
+    border: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.manageModalHeader {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.manageBackIcon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.manageModalHeader h2 {
+    margin: 0;
+    color: white;
+    font-size: 1.5rem;
+    flex: 1;
+    font-weight: 600;
+}
+
+.manageCounter {
+    color: #999999;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.manageDivider {
+    width: 100%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 0 auto;
+}
+
+.manageControls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 4px;
+}
+
+/* Matches rightSection search qualities */
+.manageSearchInputWrapper {
+    flex: 1;
+    background: #262626; 
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.manageSearchInputWrapper input {
+    background: transparent;
+    border: none;
+    color: white;
+    outline: none;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.manageInviteBtn {
+    background: linear-gradient(to right, #7524A1, #9F279D);
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.inviteIcon {
+    width: 18px;
+    height: 18px;
+    filter: invert(96%) sepia(4%) saturate(69%) hue-rotate(170deg) brightness(112%) contrast(89%);
+}
+
+.notifList {
+    max-height: 400px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.15) transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 10px;
+    padding-right: 8px;
+}
+
+.manageListItem {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.manageListAvatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.manageListInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.manageListName {
+    font-weight: bold;
+    color: white;
+    font-size: 1rem;
+}
+
+.manageListDesc {
+    color: #808080;
+    font-size: 0.85rem;
+    margin-top: 4px;
+}
+
+.manageListActions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Forces the Remove Person icon to be Red */
+.actionRemove {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    filter: invert(29%) sepia(93%) saturate(3015%) hue-rotate(345deg) brightness(97%) contrast(98%);
+}
+
+/* Forces the Messages icon to be White */
+.actionMessage {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    filter: brightness(0) invert(1);
+}
+.listItemDivider {
+    width: 80%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 20px auto;
 }

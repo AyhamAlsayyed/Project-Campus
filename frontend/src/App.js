@@ -16,6 +16,7 @@ import Universities from "./pages/universtities/universities";
 import EventsPage from "./pages/eventsPage/eventsPage";
 import SearchResultsPage from './pages/searchResultPage/searchResults.jsx'
 import Subscriptions from "./pages/subscriptions/subscriptions";
+import Settings from "./pages/settingsPage/Settings.jsx";
 
 function App() {
   return (
@@ -139,6 +140,14 @@ function App() {
           element={
             <ProtectedRoute>
               <FollowedPages />
+            </ProtectedRoute>
+          }
+        />
+          <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />
