@@ -42,7 +42,7 @@ def login(request):
         is_page = False
 
     avatar = None
-    if is_page:
+    if  is_page:
         user_type = "page"
         if getattr(user.page, "profile_image", None):
             try:

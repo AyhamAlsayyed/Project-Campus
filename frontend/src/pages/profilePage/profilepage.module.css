@@ -1183,58 +1183,43 @@ body {
 
 /* ── Review widget ── */
 .reviewWidget {
-  background: rgba(61, 60, 60, 0.45);
-  border-radius: 20px;
-  padding: 20px 24px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
-  margin-top: 16px;
+    background: rgba(61, 60, 60, 0.45);
+    border-radius: 20px;
+    padding: 20px 24px 50px;  /* tight top, keep sides, spacious bottom */
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
 }
 
 .reviewWidgetHeader {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 30px;
-  margin-left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 50px;
 }
 
-.reviewWidgetIcon {
-  width: 2rem;
-  height: 2rem;
-  filter: brightness(0) saturate(100%) invert(23%) sepia(76%) saturate(1200%) hue-rotate(280deg) brightness(95%);
-}
+
 
 .reviewWidgetTitle {
-  color: white;
-  font-weight: 700;
-  font-size: 1.15rem;
+    color: white;
+    font-weight: 700;
+    font-size: 1.4rem;
 }
 
 .reviewStarsRow {
-  display: flex;
-  justify-content: space-around;
+    display: flex;
+    justify-content: space-around;
 }
 
 .reviewStarBtn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: filter 0.15s, transform 0.15s;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
 }
 
-.reviewStarImg {
-  width: 1.9rem;
-  height: 1.9rem;
-  display: block;
-}
-
-.reviewRatingText {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.8rem;
-  margin-top: 10px;
-}
 
 /* ── Reminders popup modal ── */
 .remindersPopupOverlay {
@@ -2788,7 +2773,7 @@ body {
 
 /* ── Picks card (other user view) ── */
 .picksCard {
-  background: #2a2a2a;
+  background: #333333;
   border-radius: 32px;
   padding: 24px;
   width: 100%;
@@ -2904,7 +2889,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin-top: 24px;
+  margin: -50px auto 0 40%;
 }
 
 .navArrow {

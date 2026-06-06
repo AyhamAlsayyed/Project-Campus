@@ -204,12 +204,12 @@ def create_group_conversation(request):
         )
 
         ConversationMember.objects.create(
-            conversation=new_group, user=user, role=ConversationMember.Role.OWNER, status="approved"
+            conversation=new_group, user=user, role=ConversationMember.Role.OWNER
         )
 
         membership_objects = [
             ConversationMember(
-                conversation=new_group, user=invited_user, role=ConversationMember.Role.MEMBER, status="approved"
+                conversation=new_group, user=invited_user, role=ConversationMember.Role.MEMBER
             )
             for invited_user in invited_users
         ]

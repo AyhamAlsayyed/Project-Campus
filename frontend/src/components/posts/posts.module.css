@@ -535,10 +535,11 @@
 }
 
 .shareModal {
-  background: #1b1b1d;
-  /* Matches your main dark theme */
+  background: #333333;
   border-radius: 28px;
-  width: min(480px, 94vw);
+  min-height: 500px;
+  margin: auto auto auto auto;
+  width: min(480px, 92vw);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
   overflow: hidden;

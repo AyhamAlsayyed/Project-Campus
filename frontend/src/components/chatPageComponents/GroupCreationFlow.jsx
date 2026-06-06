@@ -10,7 +10,7 @@ export default function GroupCreationFlow({ closeFlow, currentUser }) {
     const [isCreating, setIsCreating] = useState(false);
     const [createError, setCreateError] = useState('');
 
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access');
     const isInstructor = currentUser?.role === 'instructor' || currentUser?.role === 'admin';
 
     // Step 1 done — store form data, move to member selection

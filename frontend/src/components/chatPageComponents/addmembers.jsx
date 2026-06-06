@@ -17,6 +17,7 @@ export default function AddMembers({
     isCreating = false,
     createError = '',
 }) {
+    
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedMembers, setSelectedMembers] = useState([]);
     const [isCopied, setIsCopied] = useState(false);
@@ -26,26 +27,31 @@ export default function AddMembers({
     const [error, setError] = useState(null);
     const groupInviteLink = `${window.location.origin}/groups/${group.id || ''}`;
     useEffect(() => {
-        if (createMode) return;
-        if (!group.id || !token) return;
+        if (!createMode && !group.id) return;
+        if (!token) return;
+
+        console.log('Fetching friends, createMode:', createMode, 'group.id:', group.id); // 👈
 
         const fetchInviteOptions = async () => {
             setIsLoading(true);
             setError(null);
             try {
-                const res = await fetch(`${API}/api/groups/${group.id}/invite-friends/`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+                const url = createMode
+                    ? `${API}/api/groups/invite-friends/`
+                    : `${API}/api/groups/${group.id}/invite-friends/`;
+
+                console.log('URL:', url); // 👈
+
+                const res = await fetch(url, {
+                    headers: { Authorization: `Bearer ${token}` },
                 });
 
-                if (!res.ok) throw new Error('Failed to fetch contacts');
-
                 const data = await res.json();
+              
+
                 setContacts(Array.isArray(data) ? data : []);
             } catch (err) {
-                console.error('Error fetching invite options:', err);
+                console.error(err);
                 setError('Could not load contacts. Please try again.');
             } finally {
                 setIsLoading(false);

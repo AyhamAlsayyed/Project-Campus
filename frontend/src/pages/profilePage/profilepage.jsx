@@ -1103,7 +1103,7 @@ export default function ProfilePage({ type }) {
                                         </div>
                                     </div>
 
-                                 
+
                                     <div className={styles.promotionsContainer}>
                                         <div className={styles.promoHeaderRow}>
                                             <div className={styles.promoIconColored} />
@@ -1319,9 +1319,19 @@ export default function ProfilePage({ type }) {
                                     {user?.type === 'page' && !isOwnProfile && (
                                         <div className={styles.reviewWidget}>
                                             <div className={styles.reviewWidgetHeader}>
-                                                <img src={Star} alt="star" className={styles.reviewWidgetIcon} />
+                                                <div style={{
+                                                    width: '35px', height: '35px',
+                                                    backgroundColor: '#A6279C',
+                                                    maskImage: `url(${Star})`,
+                                                    WebkitMaskImage: `url(${Star})`,
+                                                    maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                    maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                    maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                    flexShrink: 0,
+                                                }} />
                                                 <span className={styles.reviewWidgetTitle}>Add a Review</span>
                                             </div>
+
                                             <div className={styles.reviewStarsRow}>
                                                 {[1, 2, 3, 4, 5].map(star => {
                                                     const isActive = star <= (hoverRating || reviewRating);
@@ -1331,73 +1341,119 @@ export default function ProfilePage({ type }) {
                                                             onMouseEnter={() => setHoverRating(star)}
                                                             onMouseLeave={() => setHoverRating(0)}
                                                             onClick={() => handleReview(star)}
-                                                            className={`${styles.reviewStarBtn} ${isActive ? styles.reviewStarBtnActive : styles.reviewStarBtnInactive}`}
+                                                            className={styles.reviewStarBtn}
                                                         >
-                                                            <img
-                                                                src={Star}
-                                                                alt="star"
-                                                                className={`${styles.reviewStarImg} ${isActive ? styles.reviewStarImgActive : styles.reviewStarImgInactive}`}
-                                                            />
+                                                            <div style={{
+                                                                width: '2.3rem', height: '2.3rem',
+                                                                backgroundColor: isActive ? '#B8B8B8' : '#575757',
+                                                                maskImage: `url(${Star})`,
+                                                                WebkitMaskImage: `url(${Star})`,
+                                                                maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                                maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                                maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                                transition: 'background-color 0.15s',
+                                                            }} />
                                                         </button>
                                                     );
                                                 })}
                                             </div>
-                                            {reviewRating > 0 && (
-                                                <p className={styles.reviewRatingText}>
-                                                    You rated this {reviewRating}/5
-                                                </p>
-                                            )}
+
+                                         
                                         </div>
                                     )}
                                     {communityPicks.length > 0 && (
-                                        <div className={styles.picksCard}>
-                                            <div className={styles.picksHeader}>
-                                                <img
-                                                    src={Community}
-                                                    alt="icon"
-                                                    className={`${styles.picksIconPng} ${styles.picksIconFilter}`}
-                                                />
-                                                <span className={styles.picksTitle}>{user?.username?.split(' ')[0]}'s Picks</span>
-                                            </div>
-                                            <div className={styles.picksSlideWrapper}>
-                                                {communityPicks[picksSlide] && (() => {
-                                                    const pick = communityPicks[picksSlide];
-                                                    return (
-                                                        <div className={styles.pickItemCard}>
-                                                            <img src={pick.image} alt={pick.name} className={styles.pickItemImageBg} />
-                                                            <div className={styles.pickOverlay}>
-                                                                <div className={styles.pickContentTop}>
-                                                                    <div className={styles.pickTitleGroup}>
-                                                                        <h2 className={styles.pickName}>{pick.name}</h2>
-                                                                        {pick.is_verified && <img src={VerifiedBadge} alt="Verified" width={18} height={18} className={styles.verifiedBadgeIcon} />}
+                                        <>
+                                            <div className={styles.picksCard}>
+                                                <div className={styles.picksHeader}>
+                                                    <div style={{
+                                                        width: '40px',
+                                                        height: '40px',
+                                                        backgroundColor: '#A6279C',
+                                                        maskImage: `url(${Community})`,
+                                                        WebkitMaskImage: `url(${Community})`,
+                                                        maskSize: 'contain',
+                                                        WebkitMaskSize: 'contain',
+                                                        maskRepeat: 'no-repeat',
+                                                        WebkitMaskRepeat: 'no-repeat',
+                                                        maskPosition: 'center',
+                                                        WebkitMaskPosition: 'center',
+                                                        flexShrink: 0,
+                                                    }} />
+                                                    <span className={styles.picksTitle}>{user?.username?.split(' ')[0]}'s Picks</span>
+                                                </div>
+                                                <div className={styles.picksSlideWrapper}>
+                                                    {communityPicks[picksSlide] && (() => {
+                                                        const pick = communityPicks[picksSlide];
+                                                        return (
+                                                            <div className={styles.pickItemCard}>
+                                                                <img src={pick.image} alt={pick.name} className={styles.pickItemImageBg} />
+                                                                <div className={styles.pickOverlay}>
+                                                                    <div className={styles.pickContentTop}>
+                                                                        <div className={styles.pickTitleGroup}>
+                                                                            <h2 className={styles.pickName}>{pick.name}</h2>
+                                                                            {pick.is_verified && <img src={VerifiedBadge} alt="Verified" width={18} height={18} className={styles.verifiedBadgeIcon} />}
+                                                                        </div>
+                                                                        <button className={styles.pickViewBtn} onClick={() => navigate(`/communities/${pick.id}`)}>view</button>
                                                                     </div>
-                                                                    <button className={styles.pickViewBtn} onClick={() => navigate(`/communities/${pick.id}`)}>view</button>
-                                                                </div>
-                                                                <div className={styles.pickContentBottom}>
-                                                                    <p className={styles.pickDescription}>{pick.description}</p>
-                                                                    {pick.description?.length > 80 && (
-                                                                        <button className={styles.readMore} onClick={() => setPicksPopup(pick)}>read more</button>
-                                                                    )}
+                                                                    <div className={styles.pickContentBottom}>
+                                                                        <p className={styles.pickDescription}>{pick.description}</p>
+                                                                        {pick.description?.length > 80 && (
+                                                                            <button className={styles.readMore} onClick={() => setPicksPopup(pick)}>read more</button>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    );
-                                                })()}
+                                                        );
+                                                    })()}
+                                                </div>
+
+
+
                                             </div>
                                             <div className={styles.paginationRow}>
-                                                <button className={styles.navArrow} onClick={() => setPicksSlide(prev => Math.max(0, prev - 1))} disabled={picksSlide === 0}>
-                                                    <div className={styles.arrowLeft} />
+                                                <button
+                                                    className={styles.navArrow}
+                                                    onClick={() => setPicksSlide(prev => Math.max(0, prev - 1))}
+                                                    disabled={picksSlide === 0}
+                                                >
+                                                    <img
+                                                        src={ArrowLeft}
+                                                        alt="prev"
+                                                        style={{
+                                                            width: '18px',
+                                                            height: '18px',
+                                                            opacity: picksSlide === 0 ? 0.3 : 1,
+                                                            filter: 'invert(1)',
+                                                        }}
+                                                    />
                                                 </button>
                                                 <div className={styles.picksDots}>
                                                     {communityPicks.map((_, i) => (
-                                                        <button key={i} className={`${styles.picksDot} ${i === picksSlide ? styles.picksDotActive : ''}`} onClick={() => setPicksSlide(i)} />
+                                                        <button
+                                                            key={i}
+                                                            className={`${styles.picksDot} ${i === picksSlide ? styles.picksDotActive : ''}`}
+                                                            onClick={() => setPicksSlide(i)}
+                                                        />
                                                     ))}
                                                 </div>
-                                                <button className={styles.navArrow} onClick={() => setPicksSlide(prev => Math.min(communityPicks.length - 1, prev + 1))} disabled={picksSlide === communityPicks.length - 1}>
-                                                    <div className={styles.arrowRight} />
+                                                <button
+                                                    className={styles.navArrow}
+                                                    onClick={() => setPicksSlide(prev => Math.min(communityPicks.length - 1, prev + 1))}
+                                                    disabled={picksSlide === communityPicks.length - 1}
+                                                >
+                                                    <img
+                                                        src={ArrowRight}
+                                                        alt="next"
+                                                        style={{
+                                                            width: '18px',
+                                                            height: '18px',
+                                                            opacity: picksSlide === communityPicks.length - 1 ? 0.3 : 1,
+                                                            filter: 'invert(1)',
+                                                        }}
+                                                    />
                                                 </button>
                                             </div>
-                                        </div>
+                                        </>
                                     )}
                                     {picksPopup && createPortal(
                                         <div className={styles.picksPopupOverlay} onClick={() => setPicksPopup(null)}>
