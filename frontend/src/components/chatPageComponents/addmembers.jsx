@@ -7,13 +7,15 @@ import SearchIcon from '../../Assets/icons/search.png';
 import Share from '../../Assets/icons/share.png';
 
 
-export default function AddMembers({ 
-    onBack, 
+export default function AddMembers({
+    onBack,
     onDone,
-    // Add these props to match GroupInfoPanel's pattern
     API = '',
     token = '',
-    group = {}
+    group = {},
+    createMode = false,
+    isCreating = false,
+    createError = '',
 }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedMembers, setSelectedMembers] = useState([]);
@@ -22,11 +24,9 @@ export default function AddMembers({
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
-
     const groupInviteLink = `${window.location.origin}/groups/${group.id || ''}`;
-
-    // ── FETCH: Pull friends eligible to be added ──
     useEffect(() => {
+        if (createMode) return;
         if (!group.id || !token) return;
 
         const fetchInviteOptions = async () => {
@@ -53,10 +53,9 @@ export default function AddMembers({
         };
 
         fetchInviteOptions();
-    }, [group.id, token, API]);
+    }, [group.id, token, API, createMode]);
 
     const handleToggleMember = (contact) => {
-        // Block toggling instructors/admins if your API returns a role field
         if (contact.role === 'instructor' || contact.isInstructor) return;
 
         setSelectedMembers(prev =>
@@ -76,9 +75,13 @@ export default function AddMembers({
         }
     };
 
-    // ── SUBMIT: Add all selected members via API ──
+
     const handleDone = async () => {
         if (!selectedMembers.length) return;
+        if (createMode) {
+            onDone(selectedMembers);
+            return;
+        }
 
         setIsSubmitting(true);
         const results = { success: [], failed: [] };
@@ -134,7 +137,7 @@ export default function AddMembers({
         (contact.email || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const isDoneEnabled = selectedMembers.length > 0 && !isSubmitting;
+    const isDoneEnabled = selectedMembers.length > 0 && !isSubmitting && !isCreating;
 
     return (
         <div className={styles.pageContainer}>
@@ -164,7 +167,7 @@ export default function AddMembers({
                             disabled={!isDoneEnabled}
                             onClick={handleDone}
                         >
-                            {isSubmitting ? 'Adding...' : 'Done'}
+                            {isCreating ? 'Creating...' : isSubmitting ? 'Adding...' : 'Done'}
                         </button>
                         <img src={Help} alt="Help" className={styles.helpIconAsset} />
                     </div>

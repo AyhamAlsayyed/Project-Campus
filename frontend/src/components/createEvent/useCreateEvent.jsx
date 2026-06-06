@@ -64,10 +64,9 @@ export function useCreateEvent({ onSuccess } = {}) {
                 buildDatetime(endDay, endMonth, endYear, endHour, endMinute, endPeriod)
             );
 
-            const res = await fetch(`${API}/api/events/`, {
+            const res = await fetch(`${API}/api/events/create`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
-                // Don't set Content-Type — browser sets it automatically with boundary for FormData
                 body: formData,
             });
 

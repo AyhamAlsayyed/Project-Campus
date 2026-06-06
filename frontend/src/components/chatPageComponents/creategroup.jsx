@@ -13,13 +13,7 @@ import BackButton from '../../Assets/icons/arrow-left.png';
 import Education from '../../Assets/icons/education.png';
 import SettingsIcon from '../../Assets/icons/setting.png';
 
-export default function CreateGroup({
-    onBack,
-    onCreate,
-    isInstructor = false,
-    API = '',
-    token = '',
-}) {
+export default function CreateGroup({ onBack, onProceedToMembers, isInstructor, API, token }) {
     const [groupName, setGroupName] = useState('');
     const [groupDescription, setGroupDescription] = useState('');
     const [isAcademic, setIsAcademic] = useState(false);
@@ -44,64 +38,18 @@ export default function CreateGroup({
 
     const isCreateEnabled = groupName.trim() !== '' && groupImage !== null && !isLoading;
 
-    const handleCreate = async () => {
+    const handleCreate = () => {
         if (!isCreateEnabled) return;
-        setIsLoading(true);
-        setError('');
-        try {
-
-            const res = await fetch(`${API}/api/groups/create/`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: groupName,
-                    description: groupDescription,
-                    is_academic: isAcademic,
-                    permissions: {
-                        editSettings: canEditSettings,
-                        sendMessages: canSendMessages,
-                        addMembers: canAddMembers,
-                        approveMembers: requireApproval,
-                    },
-                }),
-            });
-
-            if (!res.ok) {
-                const errData = await res.json();
-                throw new Error(errData.error || errData.detail || 'Failed to create group');
-            }
-
-            const newGroup = await res.json();
-            const groupId = newGroup.id;
-
-            if (groupImageFile && groupId) {
-                const formData = new FormData();
-                formData.append('image', groupImageFile);
-
-                const imgRes = await fetch(`${API}/api/groups/${groupId}/edit-image/`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                    body: formData,
-                });
-
-                if (!imgRes.ok) {
-                    console.warn('Group created but image upload failed');
-                }
-            }
-
-            if (onCreate) onCreate(newGroup);
-
-        } catch (err) {
-            console.error('Create group error:', err);
-            setError(err.message || 'Something went wrong');
-        } finally {
-            setIsLoading(false);
-        }
+        onProceedToMembers({
+            name: groupName,
+            description: groupDescription,
+            isAcademic,
+            canEditSettings,
+            canSendMessages,
+            canAddMembers,
+            requireApproval,
+            groupImageFile,
+        });
     };
 
     return (
