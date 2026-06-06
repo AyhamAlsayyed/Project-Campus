@@ -523,6 +523,7 @@ class PostSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
+    top_3comments_avatar = serializers.SerializerMethodField()
 
     def get_is_saved(self, obj):
         return getattr(obj, "is_saved", False)
@@ -553,19 +554,21 @@ class PostSerializer(serializers.ModelSerializer):
 
         request = self.context.get("request")
 
-        if hasattr(user, "page"):
+        try:
             page = user.page
-            avatar = page.profile_image.url if page.profile_image else ""
-            if request and avatar:
-                avatar = request.build_absolute_uri(avatar)
-
-            return {
-                "id": page.user.id,
-                "type": "page",
-                "username": page.page_full_name,
-                "avatar": avatar,
-                "tag": page.page_type,
-            }
+            if page:
+                avatar = page.profile_image.url if page.profile_image else ""
+                if request and avatar:
+                    avatar = request.build_absolute_uri(avatar)
+                return {
+                    "id": page.user.id,
+                    "type": "page",
+                    "username": page.page_full_name,
+                    "avatar": avatar,
+                    "tag": page.page_type,
+                }
+        except Page.DoesNotExist:
+            pass
 
         profile = getattr(user, "profile", None)
         avatar = ""
@@ -581,6 +584,50 @@ class PostSerializer(serializers.ModelSerializer):
             "avatar": avatar,
             "tag": None,
         }
+
+    def get_top_3comments_avatar(self, obj):
+        request = self.context.get("request")
+
+        comments = (
+            Comment.objects.filter(post=obj, parent_comment__isnull=True)
+            .select_related("author__profile", "author__page")
+            .order_by("-created_at")[:3]
+        )
+
+        result = []
+        for comment in comments:
+            author = comment.author
+            if not author:
+                continue
+
+            try:
+                page = author.page
+                if page:
+                    avatar = page.profile_image.url if page.profile_image else ""
+                    author_name = page.page_full_name
+                else:
+                    raise Page.DoesNotExist
+            except Page.DoesNotExist:
+                profile = getattr(author, "profile", None)
+                avatar = ""
+                if profile and profile.profile_image:
+                    avatar = profile.profile_image.url
+                author_name = author.username
+
+            if request and avatar:
+                avatar = request.build_absolute_uri(avatar)
+
+            result.append(
+                {
+                    "comment_id": comment.comment_id,
+                    "author_name": author_name,
+                    "avatar": avatar,
+                    "content": comment.content,
+                    "created_at": comment.created_at,
+                }
+            )
+
+        return result
 
     class Meta:
         model = Post
@@ -598,6 +645,7 @@ class PostSerializer(serializers.ModelSerializer):
             "likes_count",
             "comments_count",
             "is_pinned",
+            "top_3comments_avatar",
         ]
 
 

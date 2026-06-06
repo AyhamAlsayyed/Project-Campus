@@ -16,6 +16,7 @@ from django.db.models.functions import Now
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -278,66 +279,6 @@ def request_join_community(request, community_id):
     return Response({"message": "Request sent"})
 
 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def process_join_request(request, community_id):
-    admin_user = request.user
-    student_id = request.data.get("user_id")
-    action = request.data.get("action")
-
-    if action not in ["approve", "reject"]:
-        return Response({"error": "Invalid action. Use 'approve' or 'reject'."}, status=400)
-
-    try:
-        community = Community.objects.get(community_id=community_id)
-    except Community.DoesNotExist:
-        return Response({"error": "Community not found"}, status=404)
-
-    is_authorized = CommunityMember.objects.filter(
-        community=community,
-        user=admin_user,
-        role__in=[CommunityMember.Role.OWNER, CommunityMember.Role.ADMIN],
-        status="approved",
-    ).exists()
-
-    if not is_authorized:
-        return Response({"error": "You do not have permission to manage this community."}, status=403)
-
-    membership = (
-        CommunityMember.objects.filter(community=community, user_id=student_id, status="pending")
-        .select_related("user")
-        .first()
-    )
-
-    if not membership:
-        return Response({"error": "No pending join request found for this user."}, status=404)
-
-    if action == "approve":
-        membership.status = "approved"
-        membership.save()
-
-        send_global_notification(
-            sender=admin_user,
-            receiver=membership.user,
-            notification_type="community_join_status",
-            target_object=community,
-            custom_text=f"Your request to join {community.name} was approved!",
-        )
-        return Response({"message": "User approved successfully."})
-
-    else:  # action == "reject"
-        membership.delete()
-
-        send_global_notification(
-            sender=admin_user,
-            receiver=membership.user,
-            notification_type="community_join_status",
-            target_object=community,
-            custom_text=f"Your request to join {community.name} was rejected.",
-        )
-        return Response({"message": "User request rejected."})
-
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_reported_posts(request, community_id):
@@ -353,3 +294,17 @@ def get_reported_posts(request, community_id):
 
     serializer = PostSerializer(reported_posts, many=True, context={"request": request})
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_community(request, community_id):
+    member = ensure_community_admin(request.user, community_id)
+    if member.role != CommunityMember.Role.OWNER:
+        raise PermissionDenied("Only the community owner can delete this community.")
+
+    community = get_object_or_404(Community, pk=community_id)
+
+    community.delete()
+
+    return Response({"message": "Community has been successfully and permanently deleted."}, status=status.HTTP_200_OK)

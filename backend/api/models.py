@@ -496,7 +496,7 @@ class Post(models.Model):
 
     class PostType(models.TextChoices):
         ANNOUNCEMENT = "announcement", "Announcement"
-        ADVERTISMENT = "advertisement", "Advertisement"
+        ADVERTISEMENT = "advertisement", "Advertisement"
         ACADEMY = "academy", "Academy"
         NORMAL = "normal", "Normal"
 
@@ -507,6 +507,7 @@ class Post(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+    is_approved = models.BooleanField(default=False)
     is_highlighted = models.BooleanField(default=False)
     highlighted_at = models.DateTimeField(null=True, blank=True)
     is_pinned = models.BooleanField(default=False)

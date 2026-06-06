@@ -5,7 +5,7 @@ from .views.auth.signup.send_code import send_code
 from .views.auth.signup.signup import signup
 from .views.auth.signup.verify_code import verify_code
 from .views.comment.comments import comment_list, create_comment
-from .views.communities.community import (  # process_join_request,
+from .views.communities.community import (  # delete_community,
     communities,
     community_detail,
     community_post_settings,
@@ -15,15 +15,22 @@ from .views.communities.community import (  # process_join_request,
     request_join_community,
 )
 from .views.communities.community_action import (
-    delete_reported_post,
-    dismiss_post_report,
     instructor_community_picks,
     leave_community,
-    remove_community_highlight,
     toggle_community_notifications,
     toggle_pick,
 )
+from .views.communities.community_admin_action import (
+    delete_reported_post,
+    dismiss_post_report,
+    fetch_join_requests,
+    fetch_post_requests,
+    process_join_request,
+    process_post_request,
+    remove_community_highlight,
+)
 from .views.communities.community_member_action import (
+    block_user_from_community,
     get_community_members,
     kick_community_member,
     toggle_community_admin,
@@ -157,6 +164,7 @@ urlpatterns += [
 urlpatterns += [
     path("communities/", communities),
     path("communities/<int:community_id>/", community_detail),
+    # path("communities/<int:community_id>/", delete_community),
     path("communities/<int:community_id>/post-settings/", community_post_settings),
     path("communities/<int:community_id>/highlights/", fetch_community_highlights),
     path("communities/<int:community_id>/reported-posts/", get_reported_posts),
@@ -169,13 +177,19 @@ urlpatterns += [
     path("communities/<int:community_id>/make-admin/<int:member_id>/", toggle_community_admin),
     path("communities/<int:community_id>/kick/<int:member_id>/", kick_community_member),
     path("communities/<int:community_id>/report/<int:member_id>/", create_report),
+    path("communities/<int:community_id>/block/<int:member_id>/", block_user_from_community),
     # community_action
     path("users/<int:instructor_id>/community-picks/", instructor_community_picks),
     path("<int:instructor_id>/toggle_picks/", toggle_pick),
-    path("communities/<int:community_id>/highlight/<int:post_id>/remove", remove_community_highlight),
-    path("communities/<int:community_id>/reported-posts/<int:post_id>/dismiss/", dismiss_post_report),
     path("communities/<int:pk>/notify/", toggle_community_notifications),
     path("communities/<int:pk>/leave/", leave_community),
+    # community_admin_action
+    path("communities/<int:community_id>/join-requests/", fetch_join_requests),
+    path("communities/<int:community_id>/process_join_request/<int:member_id>/", process_join_request),
+    path("communities/<int:community_id>/post-requests/", fetch_post_requests),
+    path("communities/<int:community_id>/process_post-requests/<int:post_id>/", process_post_request),
+    path("communities/<int:community_id>/highlight/<int:post_id>/remove/", remove_community_highlight),
+    path("communities/<int:community_id>/reported-posts/<int:post_id>/dismiss/", dismiss_post_report),
     path("posts/<int:post_id>/admin_delete", delete_reported_post),
     # path("communities/<int:community_id>/kick/", ),
 ]

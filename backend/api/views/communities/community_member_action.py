@@ -7,6 +7,7 @@ from rest_framework.response import Response
 
 from ...models import CommunityMember
 from ...serializers import CommunityMemberSerializer
+from ...utils.community import ensure_community_admin
 
 
 @api_view(["GET"])
@@ -79,3 +80,36 @@ def kick_community_member(request, community_id, member_id):
 
     target_member.delete()
     return Response({"message": "Member was successfully kicked from the community."}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def block_user_from_community(request, community_id, user_id):
+    requesting_member = ensure_community_admin(request.user, community_id)
+
+    if int(user_id) == request.user.id:
+        return Response({"error": "You cannot block yourself from the community."}, status=status.HTTP_400_BAD_REQUEST)
+
+    target_member = CommunityMember.objects.filter(community_id=community_id, user_id=user_id).first()
+
+    if not target_member:
+        return Response({"error": "This user is not a member of this community."}, status=status.HTTP_404_NOT_FOUND)
+
+    if requesting_member.role == CommunityMember.Role.ADMIN:
+        if target_member.role in [CommunityMember.Role.OWNER, CommunityMember.Role.ADMIN]:
+            return Response(
+                {"error": "Administrators cannot block the community owner or fellow administrators."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+    if target_member.status == CommunityMember.Status.BLOCKED:
+        return Response({"message": "This user is already blocked from the community."}, status=status.HTTP_200_OK)
+
+    target_member.status = CommunityMember.Status.BLOCKED
+    target_member.role = CommunityMember.Role.MEMBER
+    target_member.save(update_fields=["status", "role"])
+
+    return Response(
+        {"status": "blocked", "message": "User has been successfully blocked from the community."},
+        status=status.HTTP_200_OK,
+    )
