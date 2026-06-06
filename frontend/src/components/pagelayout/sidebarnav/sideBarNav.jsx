@@ -39,13 +39,16 @@ export default function SidebarNav({ variant = "default", currentUser }) {
 
   const defaultMainItems = [
     { label: "Home page", path: "/home", icon: Home },
-    { label: "Communities", path: "/communities", icon: Community },
-    { label: "Universities", path: "/universities", icon: University },
+    isPage
+      ? { label: "Pages", path: "/pages", icon: FollowedPages }
+      : { label: "Communities", path: "/communities", icon: Community },
+    isPage
+      ? { label: "Communities", path: "/communities", icon: Community }
+      : { label: "Universities", path: "/universities", icon: University },
     { label: "Events", path: "/events", icon: Events },
   ];
 
-
-  const defaultFooterItems =  [
+  const defaultFooterItems = [
     { label: "About us", path: "/about", icon: About },
     isPage
       ? { label: "Subscriptions", path: "/subscriptions", icon: Verified }

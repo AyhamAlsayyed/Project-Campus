@@ -365,7 +365,7 @@ export default function CommunityPage() {
                                     </div>
                                     <div style={{ display: "flex", alignItems: "center", gap: 50 }}>
                                         <button onClick={handleToggleNotification} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                                            <img src={isNotified ? NotificationActive : NotificationInactive} alt="notifications" style={{ width: 28, height: 28, filter: "brightness(0) invert(1)" }} />
+                                            <img src={isNotified ? NotificationActive : NotificationInactive} alt="notifications" style={{ width: 23, height: 28, filter: "brightness(0) invert(1)" }} />
                                         </button>
 
                                         {isAdmin ? (

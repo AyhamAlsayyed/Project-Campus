@@ -299,8 +299,9 @@
 }
 
 .rightSection {
-  position: relative;
+  position: sticky;
   flex: 0 0 420px;
+  top: 100px;
   padding-left: 60px;
   width: 55%;
   margin: 5% 3% 0 0;
@@ -935,6 +936,7 @@
   font-weight: 500;
   cursor: pointer;
 }
+
 /* =========================================
    EVENTS PROMOTION MODAL
 ========================================= */
@@ -1008,7 +1010,8 @@
 }
 
 .pmCancelBtn {
-  color: #FF4D4D; /* Red cancel */
+  color: #FF4D4D;
+  /* Red cancel */
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
@@ -1036,20 +1039,24 @@
 
 /* Divider & Description aligned in one block */
 .pmDividerSection {
-  width: 95%; /* Divider aligns with text start/end approximately */
-  margin: 0; /* Kept left aligned with rest of content based on request */
+  width: 95%;
+  /* Divider aligns with text start/end approximately */
+  margin: 0;
+  /* Kept left aligned with rest of content based on request */
 }
 
 .pmDivider {
   width: 100%;
   height: 1px;
-  background-color: #555555; /* The filling */
+  background-color: #555555;
+  /* The filling */
   margin-bottom: 15px;
 }
 
 .pmSubText {
   color: #999999;
-  font-size: 0.75rem; /* Small text */
+  font-size: 0.75rem;
+  /* Small text */
   margin: 0 0 40px 0;
   line-height: 1.5;
 }
@@ -1057,7 +1064,8 @@
 /* Typography Title */
 .pmSectionTitle {
   color: #CCCCCC;
-  font-size: 1.5rem; /* Quite a big font size */
+  font-size: 1.5rem;
+  /* Quite a big font size */
   font-weight: 600;
   margin: 0 0 40px 0;
 }
@@ -1065,9 +1073,11 @@
 /* Slider Section */
 .pmSliderWrapper {
   position: relative;
-  width: calc(100% - 60px); /* Padding for the absolute positioned labels */
-  margin: 0 30px 0 30px; 
-  height: 45px; /* Added structural height so layout doesn't collapse and overlap */
+  width: calc(100% - 60px);
+  /* Padding for the absolute positioned labels */
+  margin: 0 30px 0 30px;
+  height: 45px;
+  /* Added structural height so layout doesn't collapse and overlap */
 }
 
 .pmInvisibleSlider {
@@ -1076,7 +1086,8 @@
   left: 0;
   width: 100%;
   height: 40px;
-  opacity: 0; /* Keeps it purely functionally draggable over our UI */
+  opacity: 0;
+  /* Keeps it purely functionally draggable over our UI */
   z-index: 10;
   cursor: pointer;
 }
@@ -1106,8 +1117,9 @@
   width: 100%;
   height: 10px;
   z-index: 2;
-  pointer-events: none; 
+  pointer-events: none;
 }
+
 .pmDotWrapper {
   position: absolute;
   display: flex;
@@ -1117,11 +1129,12 @@
 }
 
 .pmDot {
-width: 24px;  height: 24px;
+  width: 24px;
+  height: 24px;
   background-color: #ffffff;
   border-radius: 50%;
   transition: all 0.3s ease;
-  margin-top: -5px; /* Re-centered vertically onto the track line */
+  margin-top: -5px;
 }
 
 .pmDotFilled {
@@ -1129,11 +1142,12 @@ width: 24px;  height: 24px;
 }
 
 .pmDotActive {
-  width: 24px; 
+  width: 24px;
   height: 24px;
   background-color: #B533A9;
-  margin-top: -7px; 
-  box-shadow: 0 0 0 6px rgba(181, 51, 169, 0.2); /* Soft highlight aura */
+  margin-top: -7px;
+  box-shadow: 0 0 0 6px rgba(181, 51, 169, 0.2);
+  /* Soft highlight aura */
 }
 
 .pmDotLabel {
@@ -1145,7 +1159,8 @@ width: 24px;  height: 24px;
 }
 
 .pmLabelActive {
-  font-size: 0.95rem; /* Gets bigger */
+  font-size: 0.95rem;
+  /* Gets bigger */
   color: #F2F2F2;
   font-weight: 600;
   margin-top: 14px;
@@ -1153,14 +1168,17 @@ width: 24px;  height: 24px;
 
 /* Footer Section */
 .pmTotalCost {
-  color: #CCCCCC; /* Set total text color to #CCCCCC */
-  margin-top: 45px; /* Pushes the total section safely below the slider labels */
+  color: #CCCCCC;
+  /* Set total text color to #CCCCCC */
+  margin-top: 45px;
+  /* Pushes the total section safely below the slider labels */
   font-size: 1.1rem;
   font-weight: 500;
 }
 
 .pmCostValue {
-  color: #CCCCCC; /* Set price value color to #CCCCCC */
+  color: #CCCCCC;
+  /* Set price value color to #CCCCCC */
   font-weight: 700;
 }
 

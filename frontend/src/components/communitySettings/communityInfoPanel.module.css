@@ -246,7 +246,7 @@
 
 .privacyDropdown {
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   right: 0;
   margin-top: 8px;
   background-color: #292929;
