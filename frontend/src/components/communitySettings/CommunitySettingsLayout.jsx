@@ -11,36 +11,50 @@ import DeleteCommunityModal from './deleteCommunityModal';
 export default function CommunitySettingsLayout({ community }) {
     const [activeTab, setActiveTab] = useState('Settings');
     const [prevTab, setPrevTab] = useState('Settings');
+    const [myRole, setMyRole] = useState('member');
 
     const { id } = useParams();
     const navigate = useNavigate();
     const token = localStorage.getItem("access");
     const API = "http://localhost:8000";
 
+    const communityId = id || community?.id; // 👈 move this UP before the useEffect
+
     useEffect(() => {
-        if (activeTab !== 'Delete') {
-            setPrevTab(activeTab);
-        }
+        if (!communityId || !token) return;
+        fetch(`${API}/api/communities/${communityId}/members/`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+            .then(r => r.json())
+            .then(members => {
+                const loginUser = JSON.parse(localStorage.getItem('login_user'));
+                console.log('loginUser?.username:', loginUser?.username);
+                console.log('all usernames in data:', data.map(m => m.username));
+                const me = data.find(m => m.username === loginUser?.username);
+                console.log('me:', me);
+                if (me) setMyRole(me.role);
+            })
+            .catch(err => console.log('fetch failed:', err));
+    }, [communityId, token]);
+
+    useEffect(() => {
+        if (activeTab !== 'Delete') setPrevTab(activeTab);
     }, [activeTab]);
 
     const handleDeleteCommunity = async () => {
         try {
-            const res = await fetch(`${API}/api/communities/${id || community?.id}/`, {
+            const res = await fetch(`${API}/api/communities/${communityId}/`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` }
             });
-            if (res.ok) {
-                navigate('/communities');
-            } else {
-                console.error("Failed to delete community");
-            }
+            if (res.ok) navigate('/communities');
+            else console.error("Failed to delete community");
         } catch (err) {
             console.error("Error deleting community:", err);
         }
     };
 
     const displayedTab = activeTab === 'Delete' ? prevTab : activeTab;
-    const communityId = id || community?.id;
 
     return (
         <div className={styles.layoutContainer}>
@@ -55,6 +69,7 @@ export default function CommunitySettingsLayout({ community }) {
                     <MembersTab
                         communityId={communityId}
                         onBack={() => setActiveTab('Community info')}
+                        currentUserRole={myRole} // 👈 use myRole state, not community?.role
                     />
                 )}
 

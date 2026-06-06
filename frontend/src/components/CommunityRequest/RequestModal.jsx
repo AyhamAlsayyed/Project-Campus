@@ -8,13 +8,11 @@ import ArrowLeft from '../../Assets/icons/arrow-left.png';
 export default function RequestModal({ onClose }) {
     const [step, setStep] = useState(1);
 
-    // Step 1 fields
     const [communityName, setCommunityName] = useState('');
     const [description, setDescription] = useState(' ');
     const [privacy, setPrivacy] = useState('Public');
     const [privacyOpen, setPrivacyOpen] = useState(false);
 
-    // Step 2 fields
     const [justification, setJustification] = useState('');
 
     const isStep1NextReady = communityName.trim().length > 0 && description.trim().length > 0;

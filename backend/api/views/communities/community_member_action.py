@@ -84,13 +84,13 @@ def kick_community_member(request, community_id, member_id):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def block_user_from_community(request, community_id, user_id):
+def block_user_from_community(request, community_id, member_id):
     requesting_member = ensure_community_admin(request.user, community_id)
 
-    if int(user_id) == request.user.id:
+    if int(member_id) == request.user.id:
         return Response({"error": "You cannot block yourself from the community."}, status=status.HTTP_400_BAD_REQUEST)
 
-    target_member = CommunityMember.objects.filter(community_id=community_id, user_id=user_id).first()
+    target_member = CommunityMember.objects.filter(community_id=community_id, user_id=member_id).first()
 
     if not target_member:
         return Response({"error": "This user is not a member of this community."}, status=status.HTTP_404_NOT_FOUND)

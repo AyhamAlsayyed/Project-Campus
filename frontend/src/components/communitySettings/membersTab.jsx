@@ -15,42 +15,56 @@ import InfoIcon from '../../Assets/icons/info.png';
 const API = 'http://localhost:8000';
 
 const renderIcon = (src, color, width = '18px', height = '18px') => (
-    <div
-        style={{
-            width, height,
-            backgroundColor: color,
-            maskImage: `url(${src})`,
-            WebkitMaskImage: `url(${src})`,
-            maskSize: 'contain', WebkitMaskSize: 'contain',
-            maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
-            maskPosition: 'center', WebkitMaskPosition: 'center',
-            display: 'inline-block', flexShrink: 0,
-        }}
-    />
+    <div style={{
+        width, height,
+        backgroundColor: color,
+        maskImage: `url(${src})`,
+        WebkitMaskImage: `url(${src})`,
+        maskSize: 'contain', WebkitMaskSize: 'contain',
+        maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+        maskPosition: 'center', WebkitMaskPosition: 'center',
+        display: 'inline-block', flexShrink: 0,
+    }} />
 );
 
-export default function MembersTab({ communityId, onBack }) {
-    // ── Data state ──
+// ── Role helpers ──
+const getRoleTier = (member) => {
+    const r = (member.role || '').toLowerCase();
+    if (r === 'owner' || r === 'community owner') return 0;
+    if (r === 'admin' || r === 'community admin') return 1;
+    return 2;
+};
+const getDisplayRole = (member) => {
+    const r = (member.role || '').toLowerCase();
+    if (r === 'owner') return 'Community owner';
+    if (r === 'admin' || r === 'community admin') return 'Community admin';
+    return member.community_role || member.role || 'Member';
+};
+
+const isOwner = (member) => getRoleTier(member) === 0;
+const isAdmin = (member) => getRoleTier(member) === 1;
+const isMember = (member) => getRoleTier(member) === 2;
+
+// What actions can currentUserRole perform on a target member?
+const canAct = () => true;
+export default function MembersTab({ communityId, onBack, currentUserRole = 'member' }) {
+    console.log('currentUserRole prop received:', currentUserRole); // 👈
     const [allMembers, setAllMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
-    // ── UI Controls ──
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeFilters, setActiveFilters] = useState([]); // ['Admin','Instructor','Student']
-    const [sortMode, setSortMode] = useState(null); // 'date' | 'alpha'
+    const [activeFilters, setActiveFilters] = useState([]);
+    const [sortMode, setSortMode] = useState(null);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isSortOpen, setIsSortOpen] = useState(false);
     const [activeActionMenu, setActiveActionMenu] = useState(null);
-
-    // ── Action feedback ──
-    const [actionLoading, setActionLoading] = useState(null); // memberId being acted on
-    const [toast, setToast] = useState(null);   // { message, type }
+    const [actionLoading, setActionLoading] = useState(null);
+    const [toast, setToast] = useState(null);
+    const [currentRole, setCurrentRole] = useState(currentUserRole);
 
     const filterRef = useRef(null);
     const sortRef = useRef(null);
     const token = localStorage.getItem('access');
-    
 
     // ── Fetch members ──
     useEffect(() => {
@@ -65,6 +79,13 @@ export default function MembersTab({ communityId, onBack }) {
                 if (!res.ok) throw new Error('Failed to fetch members');
                 const data = await res.json();
                 setAllMembers(data);
+
+                // 👇 Add this — derive role from the fetched list directly
+                const loginUser = JSON.parse(localStorage.getItem('login_user'));
+                const me = data.find(m => m.username === loginUser?.username);
+                console.log('me:', me, 'loginUser:', loginUser);
+                if (me) setCurrentRole(me.role);
+
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -84,46 +105,45 @@ export default function MembersTab({ communityId, onBack }) {
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    // ── Toast helper ──
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 3000);
     };
 
-    // ── Filter toggle ──
     const toggleFilter = (label) => {
         setActiveFilters(prev =>
             prev.includes(label) ? prev.filter(f => f !== label) : [...prev, label]
         );
     };
 
-    // ── Derived: counts per type ──
     const counts = allMembers.reduce((acc, m) => {
-        const t = (m.type || m.role || '').toLowerCase();
-        if (t.includes('admin')) acc.Admin = (acc.Admin || 0) + 1;
-        else if (t.includes('instructor')) acc.Instructor = (acc.Instructor || 0) + 1;
-        else acc.Student = (acc.Student || 0) + 1;
+        const tier = getRoleTier(m);
+        if (tier === 0) acc.Owner = (acc.Owner || 0) + 1;
+        else if (tier === 1) acc.Admin = (acc.Admin || 0) + 1;
+        else acc.Member = (acc.Member || 0) + 1;
         return acc;
     }, {});
 
-    // ── Derived: filtered + sorted members ──
+    // ── Filtered + sorted — owner first, then admins, then members ──
     const visibleMembers = allMembers
         .filter(m => {
             const name = (m.name || m.full_name || m.username || '').toLowerCase();
-            const matchSearch = name.includes(searchQuery.toLowerCase());
-
-            if (!matchSearch) return false;
+            if (!name.includes(searchQuery.toLowerCase())) return false;
             if (activeFilters.length === 0) return true;
-
-            const t = (m.type || m.role || '').toLowerCase();
+            const tier = getRoleTier(m);
             return activeFilters.some(f => {
-                if (f === 'Admin') return t.includes('admin');
-                if (f === 'Instructor') return t.includes('instructor');
-                if (f === 'Student') return t.includes('student') || (!t.includes('admin') && !t.includes('instructor'));
+                if (f === 'Owner') return tier === 0;
+                if (f === 'Admin') return tier === 1;
+                if (f === 'Member') return tier === 2;
                 return true;
             });
         })
         .sort((a, b) => {
+            // Always sort by role tier first
+            const tierDiff = getRoleTier(a) - getRoleTier(b);
+            if (tierDiff !== 0) return tierDiff;
+
+            // Then apply user's chosen sort within same tier
             if (sortMode === 'alpha') {
                 const nameA = (a.name || a.full_name || a.username || '').toLowerCase();
                 const nameB = (b.name || b.full_name || b.username || '').toLowerCase();
@@ -141,12 +161,11 @@ export default function MembersTab({ communityId, onBack }) {
         setActionLoading(member.id);
         try {
             let endpoint = '';
-            let method = 'POST';
             let successMsg = '';
 
             if (action === 'make-admin') {
                 endpoint = `${API}/api/communities/${communityId}/make-admin/${member.id}/`;
-                successMsg = `${member.name || member.username} is now an admin.`;
+                successMsg = `${member.name || member.username} is now a Community admin.`;
             } else if (action === 'kick') {
                 endpoint = `${API}/api/communities/${communityId}/kick/${member.id}/`;
                 successMsg = `${member.name || member.username} was kicked.`;
@@ -156,23 +175,29 @@ export default function MembersTab({ communityId, onBack }) {
             } else if (action === 'report') {
                 endpoint = `${API}/api/communities/${communityId}/report/${member.id}/`;
                 successMsg = `${member.name || member.username} was reported.`;
+            } else if (action === 'remove-admin') {
+                endpoint = `${API}/api/communities/${communityId}/make-admin/${member.id}/`;  
+                successMsg = `${member.name || member.username} is no longer an admin.`;
             }
 
             const res = await fetch(endpoint, {
-                method,
+                method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
             });
 
             if (!res.ok) throw new Error('Action failed');
 
-            // Remove kicked/blocked members from list immediately
             if (action === 'kick' || action === 'block') {
                 setAllMembers(prev => prev.filter(m => m.id !== member.id));
             }
-            // Promote to admin locally
             if (action === 'make-admin') {
                 setAllMembers(prev =>
-                    prev.map(m => m.id === member.id ? { ...m, role: 'Community admin' } : m)
+                    prev.map(m => m.id === member.id ? { ...m, community_role: 'admin' } : m)
+                );
+            }
+            if (action === 'remove-admin') {
+                setAllMembers(prev =>
+                    prev.map(m => m.id === member.id ? { ...m, role: 'member' } : m)
                 );
             }
 
@@ -190,11 +215,9 @@ export default function MembersTab({ communityId, onBack }) {
         return raw.startsWith('http') ? raw : `${API}${raw}`;
     };
 
-    // ── Render ──
     return (
         <div className={styles.membersContainer}>
 
-            {/* Toast */}
             {toast && (
                 <div className={`${styles.toast} ${toast.type === 'error' ? styles.toastError : styles.toastSuccess}`}>
                     {toast.message}
@@ -218,7 +241,6 @@ export default function MembersTab({ communityId, onBack }) {
 
             {/* Search & Controls */}
             <div className={styles.controlsRow}>
-                {/* Search */}
                 <div className={styles.searchWrapper}>
                     <div className={styles.searchIcon}>
                         {renderIcon(SearchIcon, '#808080', '18px', '18px')}
@@ -250,9 +272,9 @@ export default function MembersTab({ communityId, onBack }) {
                     {isFilterOpen && (
                         <div className={styles.dropdownMenu}>
                             {[
+                                { label: 'Owner', count: counts.Owner || 0 },
                                 { label: 'Admin', count: counts.Admin || 0 },
-                                { label: 'Instructor', count: counts.Instructor || 0 },
-                                { label: 'Student', count: counts.Student || 0 },
+                                { label: 'Member', count: counts.Member || 0 },
                             ].map(({ label, count }) => (
                                 <div
                                     key={label}
@@ -266,9 +288,7 @@ export default function MembersTab({ communityId, onBack }) {
                                     <span className={styles.dropdownCount}>{count.toLocaleString()}</span>
                                 </div>
                             ))}
-
                             <div className={styles.dropdownDivider} />
-
                             <div className={styles.dropdownItem} onClick={() => setActiveFilters([])}>
                                 <div className={styles.dropdownItemLeft}>
                                     {renderIcon(XIcon, '#CCCCCC', '14px', '14px')} Clear filters
@@ -286,7 +306,6 @@ export default function MembersTab({ communityId, onBack }) {
                     >
                         {renderIcon(SortIcon, sortMode ? '#c72cff' : '#CCCCCC', '30px', '30px')}
                     </button>
-
                     {isSortOpen && (
                         <div className={styles.dropdownMenu} style={{ right: 0, left: 'auto', minWidth: 200 }}>
                             <div
@@ -304,10 +323,7 @@ export default function MembersTab({ communityId, onBack }) {
                             {sortMode && (
                                 <>
                                     <div className={styles.dropdownDivider} />
-                                    <div
-                                        className={styles.dropdownItem}
-                                        onClick={() => { setSortMode(null); setIsSortOpen(false); }}
-                                    >
+                                    <div className={styles.dropdownItem} onClick={() => { setSortMode(null); setIsSortOpen(false); }}>
                                         <div className={styles.dropdownItemLeft}>
                                             {renderIcon(XIcon, '#CCCCCC', '14px', '14px')} Clear sort
                                         </div>
@@ -321,36 +337,45 @@ export default function MembersTab({ communityId, onBack }) {
 
             {/* Member List */}
             <div className={styles.memberList}>
-                {loading && (
-                    <div className={styles.stateMsg}>Loading members...</div>
-                )}
-                {!loading && error && (
-                    <div className={styles.stateMsg} style={{ color: '#D4145A' }}>{error}</div>
-                )}
+                {loading && <div className={styles.stateMsg}>Loading members...</div>}
+                {!loading && error && <div className={styles.stateMsg} style={{ color: '#D4145A' }}>{error}</div>}
                 {!loading && !error && visibleMembers.length === 0 && (
                     <div className={styles.stateMsg}>
-                        {searchQuery || activeFilters.length > 0
-                            ? 'No members match your search or filters.'
-                            : 'No members found.'}
+                        {searchQuery || activeFilters.length > 0 ? 'No members match your search or filters.' : 'No members found.'}
                     </div>
                 )}
 
                 {!loading && visibleMembers.map((member) => {
-                    const isAdmin = (member.role || '').toLowerCase().includes('admin');
+                    const myTier = getRoleTier({ role: currentRole });
+
+                    const theirTier = getRoleTier(member);
+                    const canKick = myTier < theirTier;
+                    const canMakeAdmin = canKick && isMember(member);
+                    const canRemoveAdmin = myTier === 0 && isAdmin(member);
+                    console.log(`me: ${currentRole} (tier ${myTier}) | them: ${member.username} role="${member.role}" (tier ${theirTier}) | canKick: ${canKick} | canRemoveAdmin: ${canRemoveAdmin}`);
+
+
+                    const displayRole = getDisplayRole(member);
+                    const memberIsOwner = isOwner(member);
+                    const memberIsAdmin = isAdmin(member);
                     const memberName = member.name || member.full_name || member.username || 'Unknown';
                     const isActing = actionLoading === member.id;
 
                     return (
                         <div key={member.id} className={`${styles.memberItem} ${isActing ? styles.memberActing : ''}`}>
                             <div className={styles.memberInfoLeft}>
-                                <img src={getAvatar(member)} alt="avatar" className={styles.avatar}
-                                    onError={e => { e.target.src = DefaultPfp; }} />
+                                <img
+                                    src={getAvatar(member)}
+                                    alt="avatar"
+                                    className={styles.avatar}
+                                    onError={e => { e.target.src = DefaultPfp; }}
+                                />
                                 <div className={styles.memberDetails}>
-                                    <span className={`${styles.roleBadge} ${isAdmin ? styles.roleAdmin : styles.roleMember}`}>
-                                        {member.role || 'member'}
+                                    <span className={`${styles.roleBadge} ${(memberIsOwner || memberIsAdmin) ? styles.roleAdmin : styles.roleMember}`}>
+                                        {displayRole}
                                     </span>
                                     <div className={styles.nameRow}>
-                                        <h4 className={`${styles.memberName} ${isAdmin ? styles.nameAdmin : ''}`}>
+                                        <h4 className={`${styles.memberName} ${(memberIsOwner || memberIsAdmin) ? styles.nameAdmin : ''}`}>
                                             {memberName}
                                         </h4>
                                         <span className={styles.userType}>{member.type}</span>
@@ -376,7 +401,7 @@ export default function MembersTab({ communityId, onBack }) {
                                             {renderIcon(DefaultPfp, '#CCCCCC')} View profile
                                         </div>
                                         <div className={styles.actionDivider} />
-                                        {!isAdmin && (
+                                        {canMakeAdmin && (
                                             <>
                                                 <div className={styles.actionItem} onClick={() => handleAction('make-admin', member)}>
                                                     {renderIcon(MakeAdminIcon, '#CCCCCC')} Make admin
@@ -384,14 +409,30 @@ export default function MembersTab({ communityId, onBack }) {
                                                 <div className={styles.actionDivider} />
                                             </>
                                         )}
-                                        <div className={styles.actionItem} onClick={() => handleAction('kick', member)}>
-                                            {renderIcon(LeaveIcon, '#CCCCCC')} Kick member
-                                        </div>
-                                        <div className={styles.actionDivider} />
+
+                                        {canRemoveAdmin && (
+                                            <>
+                                                <div className={styles.actionItem} onClick={() => handleAction('remove-admin', member)}>
+                                                    {renderIcon(MakeAdminIcon, '#CCCCCC')} Remove admin
+                                                </div>
+                                                <div className={styles.actionDivider} />
+                                            </>
+                                        )}
+
+                                        {canKick && (
+                                            <>
+                                                <div className={styles.actionItem} onClick={() => handleAction('kick', member)}>
+                                                    {renderIcon(LeaveIcon, '#CCCCCC')} Kick member
+                                                </div>
+                                                <div className={styles.actionDivider} />
+                                            </>
+                                        )}
+
                                         <div className={`${styles.actionItem} ${styles.dangerText}`} onClick={() => handleAction('block', member)}>
                                             {renderIcon(BlockIcon, '#D4145A')} Block user
                                         </div>
                                         <div className={styles.actionDivider} />
+
                                         <div className={`${styles.actionItem} ${styles.dangerText}`} onClick={() => handleAction('report', member)}>
                                             {renderIcon(InfoIcon, '#D4145A')} Report user
                                         </div>

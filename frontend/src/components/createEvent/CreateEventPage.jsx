@@ -25,7 +25,6 @@ export default function CreateEventPage({ onBack }) {
     const [endMinute, setEndMinute] = useState('');
     const [endPeriod, setEndPeriod] = useState('PM');
 
-    // Validation: All required fields must be filled
     const isFormValid =
         bannerUploaded &&
         eventName.trim() !== '' &&

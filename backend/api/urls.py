@@ -217,6 +217,7 @@ urlpatterns += [
     path("groups/<int:conv_id>/members/", get_group_members),
     path("groups/<int:conv_id>/edit-details/", edit_group_details),
     path("groups/<int:conv_id>/edit-image/", edit_group_image),
+    path("groups/invite-friends/", get_friends_to_invite),
     path("groups/<int:conv_id>/invite-friends/", get_friends_to_invite),
     # chat_group_action
     path("groups/<int:conv_id>/add-member/", add_member_to_group),
