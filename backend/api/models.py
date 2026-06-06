@@ -92,7 +92,8 @@ class UserProfile(models.Model):
         db_table = "user_profile"
 
     def __str__(self):
-        return self.user.username
+        username = self.user.username if self.user else f"User {self.user_id}"
+        return f"Profile of {username}"
 
 
 class UserDegree(models.Model):
@@ -118,6 +119,10 @@ class UserDegree(models.Model):
     class Meta:
         db_table = "user_degree"
 
+    def __str__(self):
+        username = self.user.username if self.user else f"User {self.user_id}"
+        return f"{username} - {self.degree_type} in {self.major or 'General'}"
+
 
 class EmailVerification(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -141,6 +146,10 @@ class EmailVerification(models.Model):
         indexes = [
             models.Index(fields=["academic_email"]),
         ]
+
+    def __str__(self):
+        status = "Verified" if self.is_verified else "Pending"
+        return f"Verification for {self.username} ({status})"
 
 
 class Page(models.Model):
@@ -200,7 +209,65 @@ class Page(models.Model):
         return self.ratings.count()
 
     def __str__(self):
-        return self.page_full_name
+        return f"{self.page_full_name} ({self.get_page_type_display()})"
+
+
+class Subscription(models.Model):
+    class Tier(models.TextChoices):
+        BASIC = "basic", "Basic Subscription"
+        PREMIUM = "premium", "Premium Subscription"
+        UNIVERSITY = "university", "University (Custom)"
+
+    class BillingCycle(models.TextChoices):
+        MONTHLY = "monthly", "Monthly"
+        ANNUAL = "annual", "Annual"
+        CUSTOM = "custom", "Custom Contract"
+
+    subscription_id = models.BigAutoField(primary_key=True, db_column="subscription_id")
+
+    page = models.OneToOneField("Page", on_delete=models.CASCADE, related_name="subscription", db_column="page_id")
+
+    tier = models.CharField(
+        max_length=20,
+        choices=Tier.choices,
+        default=Tier.BASIC,
+    )
+
+    price = models.DecimalField(max_digits=6, decimal_places=2, help_text="The price stored in USD")
+
+    billing_cycle = models.CharField(max_length=15, choices=BillingCycle.choices, default=BillingCycle.MONTHLY)
+
+    is_active = models.BooleanField(default=True)
+    start_date = models.DateTimeField(default=timezone.now)
+    end_date = models.DateTimeField(
+        null=True, blank=True, help_text="Null means lifetime or indefinite until cancellation"
+    )
+
+    class Meta:
+        db_table = "subscription"
+
+    def __str__(self):
+        return f"{self.page.page_full_name} - {self.get_tier_display()} ({'Active' if self.is_active else 'Inactive'})"
+
+    @property
+    def has_verification_badge(self):
+        return self.is_active and self.tier in [self.Tier.PREMIUM, self.Tier.UNIVERSITY]
+
+    @property
+    def can_bypass_community_approval(self):
+        return self.is_active and self.tier in [self.Tier.PREMIUM, self.Tier.UNIVERSITY]
+
+    @property
+    def feed_priority(self):
+        """Returns standard or high priority depending on tier level."""
+        if self.is_active and self.tier in [self.Tier.PREMIUM, self.Tier.UNIVERSITY]:
+            return "high"
+        return "standard"
+
+    @property
+    def is_university_tier(self):
+        """Checks if the account has official institutional privileges."""
+        return self.is_active and self.tier == self.Tier.UNIVERSITY
 
 
 class PageRating(models.Model):
@@ -213,7 +280,9 @@ class PageRating(models.Model):
         unique_together = ("page", "user")
 
     def __str__(self):
-        return f"{self.user.username} rated {self.page.user.username}: {self.score}"
+        username = self.user.username if self.user else f"User {self.user_id}"
+        page_name = self.page.page_full_name if self.page else f"Page {self.page_id}"
+        return f"{username} rated {page_name}: {self.score} Stars"
 
 
 class UniversityDomain(models.Model):
@@ -234,6 +303,10 @@ class UniversityDomain(models.Model):
         db_table = "university_domain"
         indexes = [models.Index(fields=["domain"])]
 
+    def __str__(self):
+        page_name = self.page.page_full_name if self.page else f"Page {self.page_id}"
+        return f"@{self.domain} -> {page_name}"
+
 
 class Admin(models.Model):
     user = models.OneToOneField(
@@ -246,6 +319,10 @@ class Admin(models.Model):
 
     class Meta:
         db_table = "admin"
+
+    def __str__(self):
+        username = self.user.username if self.user else f"User {self.user_id}"
+        return f"System Admin: {username}"
 
 
 class Instructor(models.Model):
@@ -300,6 +377,11 @@ class Instructor(models.Model):
     class Meta:
         db_table = "instructor"
 
+    def __str__(self):
+        username = self.user.username if self.user else f"User {self.user_id}"
+        title = self.get_academic_title_display() if self.academic_title else "Instructor"
+        return f"{title} {username} - {self.department or 'No Department'}"
+
 
 class Student(models.Model):
     user = models.OneToOneField(
@@ -331,6 +413,11 @@ class Student(models.Model):
     class Meta:
         db_table = "student"
 
+    def __str__(self):
+        username = self.user.username if self.user else f"User {self.user_id}"
+        level = self.get_academic_level_display() if self.academic_level else "Student"
+        return f"{username} ({level} - {self.major or 'Undeclared'})"
+
 
 class Friendship(models.Model):
     class Status(models.TextChoices):
@@ -343,6 +430,7 @@ class Friendship(models.Model):
     class RelationType(models.TextChoices):
         USER_TO_USER = "user_to_user", "User To User"
         USER_TO_PAGE = "user_to_page", "User To Page"
+        PAGE_TO_PAGE = "page_to_page", "Page To Page"  # ➕ Add the choice here
 
     friendship_id = models.BigAutoField(primary_key=True, db_column="friendship_id")
 
@@ -379,6 +467,19 @@ class Friendship(models.Model):
             models.UniqueConstraint(fields=["user1", "user2"], name="uniq_friendship_pair"),
         ]
 
+    def __str__(self):
+        if hasattr(self.user1, "page"):
+            sender = f"Page: {self.user1.page.page_full_name}"
+        else:
+            sender = self.user1.username if self.user1 else f"User {self.user1_id}"
+
+        if hasattr(self.user2, "page"):
+            receiver = f"Page: {self.user2.page.page_full_name}"
+        else:
+            receiver = self.user2.username if self.user2 else f"User {self.user2_id}"
+
+        return f"[{self.get_relation_type_display()}] {sender} -> {receiver} ({self.get_status_display()})"
+
 
 class Community(models.Model):
     community_id = models.BigAutoField(primary_key=True, db_column="community_id")
@@ -400,6 +501,10 @@ class Community(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     banner_image = models.ImageField(upload_to="banners/", blank=True, null=True)
     verified = models.BooleanField(default=False)
+
+    can_pages_post = models.BooleanField(default=True, db_column="can_pages_post")
+    can_instructors_post = models.BooleanField(default=True, db_column="can_instructors_post")
+    can_students_post = models.BooleanField(default=True, db_column="can_students_post")
 
     class Meta:
         db_table = "community"
@@ -449,6 +554,62 @@ class CommunityMember(models.Model):
             models.UniqueConstraint(fields=["community", "user"], name="uniq_community_user"),
         ]
 
+    def __str__(self):
+        community_name = self.community.name if self.community else f"Community {self.community_id}"
+        username = self.user.username if self.user else f"User {self.user_id}"
+        return f"{community_name} - {username} ({self.get_role_display()})"
+
+
+class CommunityRequest(models.Model):
+    class Privacy(models.TextChoices):
+        PUBLIC = "public", "Public"
+        PRIVATE = "private", "Private"
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    request_id = models.BigAutoField(primary_key=True, db_column="request_id")
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="community_requests", db_column="user_id"
+    )
+
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    privacy = models.CharField(
+        max_length=10,
+        choices=Privacy.choices,
+        default=Privacy.PUBLIC,
+    )
+
+    purpose_statement = models.TextField(db_column="purpose_statement")
+
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+    rejection_reason = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "community_request"
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "name"],
+                condition=models.Q(status="pending"),
+                name="uniq_pending_community_request_per_user",
+            )
+        ]
+
+    def __str__(self):
+        return f"Request by {self.user.username}: {self.name} ({self.get_status_display()})"
+
 
 class Event(models.Model):
     event_id = models.BigAutoField(primary_key=True, db_column="event_id")
@@ -465,6 +626,10 @@ class Event(models.Model):
 
     class Meta:
         db_table = "event"
+
+    def __str__(self):
+        page_name = self.page.page_full_name if self.page else f"Page {self.page_id}"
+        return f"Event: {self.title} by {page_name}"
 
 
 class EventReminder(models.Model):
@@ -487,6 +652,11 @@ class EventReminder(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["event", "user"], name="uniq_event_user_time"),
         ]
+
+    def __str__(self):
+        username = self.user.username if self.user else f"User {self.user_id}"
+        event_title = self.event.title if self.event else f"Event {self.event_id}"
+        return f"Reminder for {username} - {event_title}"
 
 
 class Post(models.Model):
@@ -537,6 +707,11 @@ class Post(models.Model):
     class Meta:
         db_table = "post"
 
+    def __str__(self):
+        author_name = self.author.username if self.author else "Deleted User"
+        snippet = f": {self.content_text[:30]}..." if self.content_text else ""
+        return f"Post #{self.post_id} by {author_name}{snippet}"
+
 
 class SavedPost(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -566,6 +741,10 @@ class SavedPost(models.Model):
             models.Index(fields=["post"]),
         ]
 
+    def __str__(self):
+        username = self.user.username if self.user else f"User {self.user_id}"
+        return f"{username} saved Post #{self.post_id}"
+
 
 class PostMedia(models.Model):
     media_id = models.BigAutoField(primary_key=True, db_column="media_id")
@@ -593,6 +772,9 @@ class PostMedia(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["post", "order_index"], name="uniq_post_media_order"),
         ]
+
+    def __str__(self):
+        return f"Media #{self.media_id} ({self.get_media_type_display()}) for Post #{self.post_id}"
 
 
 class Comment(models.Model):
@@ -626,6 +808,12 @@ class Comment(models.Model):
 
     class Meta:
         db_table = "comment"
+
+    def __str__(self):
+        author_name = self.author.username if self.author else "Deleted User"
+        snippet = self.content[:30] + "..." if len(self.content) > 30 else self.content
+        prefix = "Reply" if self.parent_comment_id else "Comment"
+        return f"{prefix} by {author_name}: {snippet}"
 
 
 class PostReaction(models.Model):
@@ -667,6 +855,10 @@ class PostReaction(models.Model):
             ),
         ]
 
+    def __str__(self):
+        username = self.user.username if self.user else f"User {self.user_id}"
+        return f"{username} reacted to Post #{self.post_id}"
+
 
 class CommentReaction(models.Model):
     comment_reaction_id = models.BigAutoField(primary_key=True, db_column="comment_reaction_id")
@@ -705,6 +897,10 @@ class CommentReaction(models.Model):
                 name="uniq_comment_reaction_user",
             ),
         ]
+
+    def __str__(self):
+        username = self.user.username if self.user else f"User {self.user_id}"
+        return f"{username} reacted to Comment #{self.comment_id}"
 
 
 class Conversation(models.Model):
@@ -764,6 +960,11 @@ class Conversation(models.Model):
 
     class Meta:
         db_table = "conversation"
+
+    def __str__(self):
+        if self.is_group:
+            return f"Group Chat: {self.name or f'Group #{self.conversation_id}'}"
+        return f"Direct Chat #{self.conversation_id}"
 
 
 class ConversationMember(models.Model):
@@ -832,9 +1033,14 @@ class ConversationMember(models.Model):
             ),
         ]
 
+    def __str__(self):
+        username = self.user.username if self.user else f"User {self.user_id}"
+        chat_title = self.conversation.name or f"Chat #{self.conversation_id}"
+        return f"{chat_title} Member: {username} ({self.get_role_display()})"
+
 
 class Message(models.Model):
-    message_id = models.BigAutoField(primary_key=True, db_column="message_id")
+    message_id = models.BigAutoField(primary_key=True, db_column="media_id")  # Keeping original column mapping format
 
     conversation = models.ForeignKey(
         Conversation,
@@ -881,13 +1087,17 @@ class Message(models.Model):
             models.Index(fields=["conversation", "-sent_at"]),
         ]
 
+    def __str__(self):
+        sender_name = self.sender.username if self.sender else "System"
+        snippet = f": {self.content[:25]}..." if self.content else " [Media/Shared Content]"
+        return f"Msg #{self.message_id} from {sender_name}{snippet}"
+
 
 class MessageMedia(models.Model):
     media_id = models.BigAutoField(primary_key=True, db_column="media_id")
 
     message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="media", db_column="message_id")
 
-    # same as thing in "class PostMedia"
     class MediaType(models.TextChoices):
         IMAGE = "image", "Image"
         VIDEO = "video", "Video"
@@ -909,6 +1119,9 @@ class MessageMedia(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["message", "order_index"], name="uniq_message_media_order"),
         ]
+
+    def __str__(self):
+        return f"Media #{self.media_id} ({self.get_media_type_display()}) for Msg #{self.message_id}"
 
 
 class MessageReaction(models.Model):
@@ -953,6 +1166,10 @@ class MessageReaction(models.Model):
                 name="uniq_msg_reaction_user_type",
             ),
         ]
+
+    def __str__(self):
+        username = self.user.username if self.user else f"User {self.user_id}"
+        return f"{username} reacted {self.message_reaction_type} to Msg #{self.message_id}"
 
 
 class Report(models.Model):
@@ -1021,6 +1238,10 @@ class Report(models.Model):
     class Meta:
         db_table = "report"
 
+    def __str__(self):
+        reporter_name = self.reporter.username if self.reporter else "Anonymous"
+        return f"Report #{self.report_id} by {reporter_name} [{self.get_content_type_display()}]"
+
 
 class Notification(models.Model):
     notification_id = models.BigAutoField(primary_key=True, db_column="notification_id")
@@ -1061,7 +1282,6 @@ class Notification(models.Model):
     )
     content = models.TextField()
 
-    # referenc to
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
     object_id = models.PositiveIntegerField(null=True, blank=True)
     content_object = GenericForeignKey("content_type", "object_id")
@@ -1087,7 +1307,9 @@ class Notification(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.receiver} - {self.type}"
+        receiver_name = self.receiver.username if self.receiver else f"User {self.receiver_id}"
+        status = "Read" if self.is_read else "Unread"
+        return f"Notif for {receiver_name}: {self.get_type_display()} ({status})"
 
 
 class NotificationSetting(models.Model):
@@ -1123,4 +1345,5 @@ class NotificationSetting(models.Model):
         db_table = "user_notification_setting"
 
     def __str__(self):
-        return f"Notification Settings for {self.user.username}"
+        username = self.user.username if self.user else f"User {self.user_id}"
+        return f"Notification Settings for {username}"

@@ -9,6 +9,7 @@ from .views.communities.community import (  # delete_community,
     communities,
     community_detail,
     community_post_settings,
+    create_community_or_request,
     fetch_community_highlights,
     get_reported_posts,
     join_community,
@@ -44,7 +45,6 @@ from .views.conversation.conversation import (
 )
 from .views.conversation.conversation_action import (
     accept_chat_request,
-    block_user_from_chat,
     chat_requests,
     clear_chat,
     delete_or_leave_chat,
@@ -68,7 +68,7 @@ from .views.conversation.edit_conversation import (
     update_group_privacy_settings,
 )
 from .views.event.event_action import toggle_event_reminder
-from .views.event.events import events  # , cancel_event, create_event, edit_event
+from .views.event.events import create_event, events  # cancel_event edit_event
 from .views.notification.notification import get_notifications, notification_delete_mark
 
 # from .views.pages.page_update import update_page_profile
@@ -169,6 +169,8 @@ urlpatterns += [
     path("communities/<int:community_id>/highlights/", fetch_community_highlights),
     path("communities/<int:community_id>/reported-posts/", get_reported_posts),
     path("communities/<int:community_id>/posts/", feed),
+    path("communities/request/", create_community_or_request),
+    path("communities/create/", create_community_or_request),
     # community_join
     path("communities/<int:community_id>/request/", request_join_community),
     path("communities/<int:community_id>/join/", join_community),
@@ -206,7 +208,7 @@ urlpatterns += [
     path("chats/<int:conversation_id>/mark-unread/", mark_unread),
     path("chats/<int:conversation_id>/", delete_or_leave_chat),
     path("chats/<int:conversation_id>/clear/", clear_chat),
-    path("chats/<int:conversation_id>/block/", block_user_from_chat),
+    path("chats/<int:conversation_id>/block/", toggle_block_user),
     # chat_dm_requests
     path("chat-requests/", chat_requests),
     path("chats/<int:conversation_id>/accept/", accept_chat_request),
@@ -240,6 +242,7 @@ urlpatterns += [
 # event
 urlpatterns += [
     path("events/", events),
+    path("events/create/", create_event),
     # event_action
     path("events/<int:event_id>/remind/", toggle_event_reminder),
 ]
@@ -261,7 +264,6 @@ urlpatterns += [
     #community
     path("", process_join_request),#for the community
     #event
-    path("", create_event),
     path("", edit_event),
     path("", cancel_event),
     #page_user

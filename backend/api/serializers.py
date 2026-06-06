@@ -99,6 +99,9 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
     def _should_restrict_data(self, obj):
+        if hasattr(obj, "instructor_profile"):
+            return False
+
         request = self.context.get("request")
         if not request or not request.user or request.user.is_anonymous:
             return True
@@ -656,6 +659,7 @@ class CommunitySerializer(serializers.ModelSerializer):
     is_private = serializers.SerializerMethodField()
     is_verified = serializers.BooleanField(source="verified")
 
+    user_role = serializers.SerializerMethodField()
     is_muted = serializers.SerializerMethodField()
     is_joined = serializers.BooleanField(read_only=True)
     request_sent = serializers.BooleanField(read_only=True)
@@ -672,6 +676,7 @@ class CommunitySerializer(serializers.ModelSerializer):
             "image",
             "is_private",
             "is_verified",
+            "user_role",
             "is_joined",
             "is_muted",
             "request_sent",
@@ -688,6 +693,18 @@ class CommunitySerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.banner_image.url)
         except Exception:
             return None
+
+    def get_user_role(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
+            return None
+
+        if hasattr(obj, "user_membership_role"):
+            return getattr(obj, "user_membership_role")
+
+        membership = CommunityMember.objects.filter(community=obj, user=request.user, status="approved").first()
+
+        return membership.role if membership else None
 
     def get_is_private(self, obj):
         return obj.privacy == "private"

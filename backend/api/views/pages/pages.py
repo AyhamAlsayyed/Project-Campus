@@ -46,12 +46,28 @@ def recommended_pages(request):
 def toggle_follow_page(request, page_id):
     user = request.user
 
-    page_user = get_object_or_404(User, id=page_id)
+    target_page = get_object_or_404(Page, pk=page_id)
+    target_page_user = target_page.user
 
-    page = get_object_or_404(Page, user_id=page_id)
+    if hasattr(user, "page") and user.page == target_page:
+        return Response({"detail": "A page cannot follow itself."}, status=status.HTTP_400_BAD_REQUEST)
+
+    user_type = request.data.get("user_type", "user")
+
+    if user_type == "page":
+        if not hasattr(user, "page"):
+            return Response(
+                {"detail": "You do not have a page identity to follow with."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        initiator_user = user
+        relation_type = Friendship.RelationType.PAGE_TO_PAGE
+    else:
+        initiator_user = user
+        relation_type = Friendship.RelationType.USER_TO_PAGE
 
     friendship = Friendship.objects.filter(
-        user1=user, user2=page_user, relation_type=Friendship.RelationType.USER_TO_PAGE
+        user1=initiator_user, user2=target_page_user, relation_type=relation_type
     ).first()
 
     if friendship:
@@ -66,18 +82,19 @@ def toggle_follow_page(request, page_id):
             response_status = status.HTTP_200_OK
     else:
         Friendship.objects.create(
-            user1=user,
-            user2=page_user,
+            user1=initiator_user,
+            user2=target_page_user,
             status=Friendship.Status.FOLLOWING,
-            relation_type=Friendship.RelationType.USER_TO_PAGE,
+            relation_type=relation_type,
         )
         is_followed = True
         response_status = status.HTTP_201_CREATED
 
-    serializer = PageSerializer(page, context={"request": request})
+    serializer = PageSerializer(target_page, context={"request": request})
 
     response_data = {
         "is_followed": is_followed,
+        "followed_as": user_type,
         "status": "followed" if is_followed else "unfollowed",
         **serializer.data,
     }

@@ -19,7 +19,12 @@ User = get_user_model()
 def get_friends_to_invite(request, conv_id=None):
     user = request.user
 
-    existing_member_ids = ConversationMember.objects.filter(conversation_id=conv_id).values_list("user_id", flat=True)
+    if conv_id:
+        existing_member_ids = ConversationMember.objects.filter(conversation_id=conv_id).values_list(
+            "user_id", flat=True
+        )
+    else:
+        existing_member_ids = []
 
     friendships = Friendship.objects.filter(
         Q(user1=user) | Q(user2=user),

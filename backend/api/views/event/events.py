@@ -111,8 +111,14 @@ def create_event(request):
     if not image:
         return Response({"error": "The image is required."}, status=400)
 
-    if not title or not start_date:
-        return Response({"error": "Title and start_date are required fields."}, status=400)
+    if not title or not description:
+        return Response({"error": "Title and description are required fields."}, status=400)
+
+    if not start_date or not end_date:
+        return Response({"error": "start_date and end_date are required fields."}, status=400)
+
+    if not location:
+        return Response({"error": "The address is required."}, status=400)
 
     event = Event.objects.create(
         page=page,

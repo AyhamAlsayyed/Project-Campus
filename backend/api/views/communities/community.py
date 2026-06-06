@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 from django.db.models import (
     Case,
     Count,
@@ -20,7 +21,15 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Community, CommunityMember, Friendship, Post, Report
+from ...models import (
+    Community,
+    CommunityMember,
+    CommunityRequest,
+    Friendship,
+    Post,
+    Report,
+    Subscription,
+)
 from ...serializers import CommunitySerializer, PostSerializer
 from ...utils.community import ensure_community_admin
 from ...utils.feed import base_annotations
@@ -97,7 +106,18 @@ def communities(request):
         ),
     )
 
-    if filter_type == "joined":
+    if filter_type == "owned":
+        qs = (
+            qs.filter(
+                is_joined=True,
+                memberships__user=user,
+                memberships__role="owner",
+            )
+            .distinct()
+            .order_by("-created_at")
+        )
+
+    elif filter_type == "joined":
         qs = qs.filter(is_joined=True).order_by("-created_at")
 
     elif filter_type == "popular":
@@ -167,10 +187,15 @@ def community_detail(request, community_id):
         return Response({"error": "Community not found"}, status=status.HTTP_404_NOT_FOUND)
 
     is_muted = False
+    user_role = None
     user = request.user
 
     if user and user.is_authenticated:
         is_muted = CommunityMember.objects.filter(community=c, user=user, is_muted=True).exists()
+
+        membership = CommunityMember.objects.filter(community=c, user=user, status="approved").first()
+        if membership:
+            user_role = membership.role
 
     return Response(
         {
@@ -179,6 +204,7 @@ def community_detail(request, community_id):
             "description": c.description,
             "is_private": c.privacy == "private",
             "is_muted": is_muted,
+            "user_role": user_role,
         },
         status=status.HTTP_200_OK,
     )
@@ -294,6 +320,151 @@ def get_reported_posts(request, community_id):
 
     serializer = PostSerializer(reported_posts, many=True, context={"request": request})
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def create_community_or_request(request):
+    user = request.user
+
+    name = request.data.get("name")
+    description = request.data.get("description", "").strip()
+    privacy_raw = request.data.get("privacy", "public")
+
+    if name:
+        name = name.strip()
+    privacy = privacy_raw.lower() if isinstance(privacy_raw, str) else "public"
+
+    if not name or not description:
+        return Response(
+            {"error": "Community name and description fields are required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    can_bypass = False
+    try:
+        if hasattr(user, "page") and user.page:
+            if hasattr(user.page, "subscription") and user.page.subscription.is_active:
+                if user.page.subscription.tier in [
+                    Subscription.Tier.PREMIUM,
+                    Subscription.Tier.UNIVERSITY,
+                ]:
+                    can_bypass = True
+    except Exception:
+        pass
+
+    if can_bypass:
+        banner_image = request.FILES.get("banner_image")
+        can_pages = request.data.get("can_pages_post", True)
+        can_instructors = request.data.get("can_instructors_post", True)
+        can_students = request.data.get("can_students_post", True)
+
+        privacy = privacy_raw.lower() if isinstance(privacy_raw, str) else "public"
+
+        if not name or not description:
+            return Response({"error": "Fields are required."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            with transaction.atomic():
+                community = Community.objects.create(
+                    name=name,
+                    description=description,
+                    privacy=privacy,
+                    banner_image=banner_image,
+                    can_pages_post=can_pages,
+                    can_instructors_post=can_instructors,
+                    can_students_post=can_students,
+                )
+                CommunityMember.objects.create(
+                    community=community,
+                    user=user,
+                    role="owner",
+                    status="approved",
+                )
+        except Exception:
+            return Response(
+                {"error": "An unexpected database error occurred. Please try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        image_url = None
+        if community.banner_image:
+            try:
+                image_url = request.build_absolute_uri(community.banner_image.url)
+            except Exception:
+                image_url = None
+
+        return Response(
+            {
+                "community": {
+                    "id": community.community_id,
+                    "name": community.name,
+                    "description": community.description,
+                    "image": image_url,
+                    "is_private": community.privacy == "private",
+                    "is_verified": getattr(community, "verified", False),
+                    "is_joined": True,
+                    "is_muted": False,
+                    "request_sent": False,
+                    "members_count": 1,
+                    "friends_count": 0,
+                    "sample_members": [],
+                    "user_role": "owner",
+                },
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    else:
+        justification = request.data.get("justification")
+
+        if not justification or not justification.strip():
+            return Response(
+                {"justification": ["This field is required for standard community requests."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        has_pending_request = CommunityRequest.objects.filter(user=user, status="pending").exists()
+
+        if has_pending_request:
+            return Response(
+                {
+                    "error": "You already have an active pending community request. "
+                    "You must wait for admins to review it before submitting another."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            community_request = CommunityRequest.objects.create(
+                user=user,
+                name=name,
+                description=description,
+                privacy=privacy,
+                purpose_statement=justification.strip(),
+                status="pending",
+            )
+        except Exception:
+            return Response(
+                {"error": "An unexpected error occurred while saving your request. Please try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response(
+            {
+                "action": "requested",
+                "detail": "Your request has been successfully submitted to campus admins for approval.",
+                "request": {
+                    "request_id": community_request.request_id,
+                    "name": community_request.name,
+                    "description": community_request.description,
+                    "privacy": community_request.privacy.capitalize(),
+                    "justification": community_request.purpose_statement,
+                    "status": "pending",
+                    "created_at": community_request.created_at,
+                },
+            },
+            status=status.HTTP_202_ACCEPTED,
+        )
 
 
 @api_view(["DELETE"])

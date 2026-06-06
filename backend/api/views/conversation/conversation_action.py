@@ -62,38 +62,6 @@ def mark_unread(request, conversation_id):
     return Response({"status": "marked unread"})
 
 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def block_user_from_chat(request, conversation_id):
-    """Finds the 'other' person in a DM and blocks them via Friendship model."""
-    # for now it only work for dm's and not group chats
-    convo = get_object_or_404(Conversation, conversation_id=conversation_id, is_group=False)
-    other_member = convo.members.exclude(user=request.user).first()
-    if not other_member or not other_member.user:
-        return Response({"error": "Cannot block nothing"}, status=400)
-
-    # Update or create friendship status to 'blocked'
-    current_user = request.user
-    target_user = other_member.user
-
-    friendship = Friendship.objects.filter(
-        Q(user1=current_user, user2=target_user) | Q(user1=target_user, user2=current_user)
-    ).first()
-
-    if friendship and friendship.status == Friendship.Status.BLOCKED:
-        friendship.status = Friendship.Status.REJECTED
-        friendship.save()
-        return Response({"status": "unblocked"})
-
-    else:
-        if friendship:
-            friendship.status = Friendship.Status.BLOCKED
-            friendship.save()
-        else:
-            Friendship.objects.create(user1=current_user, user2=target_user, status=Friendship.Status.BLOCKED)
-        return Response({"status": "blocked"})
-
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def chat_requests(request):

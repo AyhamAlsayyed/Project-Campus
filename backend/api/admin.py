@@ -6,6 +6,7 @@ from .models import (
     CommentReaction,
     Community,
     CommunityMember,
+    CommunityRequest,
     Conversation,
     ConversationMember,
     EmailVerification,
@@ -41,6 +42,7 @@ admin.site.register(Student)
 admin.site.register(Friendship)
 admin.site.register(Notification)
 admin.site.register(Community)
+admin.site.register(CommunityRequest)
 admin.site.register(CommunityMember)
 admin.site.register(Event)
 admin.site.register(EventReminder)
