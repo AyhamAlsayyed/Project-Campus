@@ -1,9 +1,13 @@
 from django.contrib.contenttypes.models import ContentType
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Message, Notification, Post, PostReaction, SavedPost
+from ...models import Community, Message, Notification, Post, PostReaction, SavedPost
+from ...utils.community import ensure_community_admin
 from ...utils.notifications import send_global_notification
 
 
@@ -15,7 +19,7 @@ def toggle_like(request, post_id):
     try:
         post = Post.objects.get(post_id=post_id)
     except Post.DoesNotExist:
-        return Response({"error": "Post not found"}, status=404)
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
     existing = PostReaction.objects.filter(post=post, user=user).first()
 
@@ -42,7 +46,7 @@ def toggle_like(request, post_id):
 
     likes_count = PostReaction.objects.filter(post=post, user__isnull=False).count()
 
-    return Response({"liked": liked, "likes_count": likes_count}, status=200)
+    return Response({"liked": liked, "likes_count": likes_count}, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
@@ -53,16 +57,16 @@ def save_post(request, post_id):
     try:
         post = Post.objects.get(pk=post_id)
     except Post.DoesNotExist:
-        return Response({"error": "Post not found"}, status=404)
+        return Response({"error": "Post not found"}, status=status.HTTP_444_NOT_FOUND)
 
     saved = SavedPost.objects.filter(user=user, post=post).first()
 
     if saved:
         saved.delete()
-        return Response({"saved": False, "message": "Post unsaved"}, status=200)
+        return Response({"saved": False, "message": "Post unsaved"}, status=status.HTTP_200_OK)
     else:
         SavedPost.objects.create(user=user, post=post)
-        return Response({"saved": True, "message": "Post saved"}, status=201)
+        return Response({"saved": True, "message": "Post saved"}, status=status.HTTP_201_CREATED)
 
 
 @api_view(["POST"])
@@ -72,7 +76,7 @@ def toggle_pin_post(request, post_id):
     try:
         post = Post.objects.get(pk=post_id, author=user)
     except Post.DoesNotExist:
-        return Response({"error": "Post not found"}, status=404)
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
     if post.is_pinned:
         post.is_pinned = False
@@ -82,11 +86,7 @@ def toggle_pin_post(request, post_id):
 
     post.save(update_fields=["is_pinned"])
 
-    return Response(
-        {
-            "is_pinned": post.is_pinned,
-        }
-    )
+    return Response({"is_pinned": post.is_pinned}, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
@@ -103,10 +103,10 @@ def send_post(request):
             if not text:
                 text = "Shared a post"
         except Post.DoesNotExist:
-            return Response({"error": "Post not found"}, status=404)
+            return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
     if not text and not shared_post:
-        return Response({"error": "Empty message"}, status=400)
+        return Response({"error": "Empty message"}, status=status.HTTP_400_BAD_REQUEST)
 
     msg = Message.objects.create(
         conversation_id=request.data["recipient_id"],
@@ -124,16 +124,53 @@ def send_post(request):
             "shared_post_id": post_id,
             "time": msg.sent_at.strftime("%H:%M"),
             "senderId": "me",
-        }
+        },
+        status=status.HTTP_200_OK,
     )
 
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
-def delete_post(request, post_id):
+def delete_post(post_id):
     try:
         post = Post.objects.get(pk=post_id)
     except Post.DoesNotExist:
-        return Response({"error": "Post not found"}, status=404)
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
     post.delete()
-    return Response({"message": "Post deleted"}, status=200)
+    return Response({"message": "Post deleted"}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def toggle_community_highlight(request, community_id, post_id):
+    ensure_community_admin(request.user, community_id)
+
+    community = get_object_or_404(Community, pk=community_id)
+    post = get_object_or_404(Post, pk=post_id)
+
+    if post.community_id != community.pk:
+        return Response(
+            {"error": "You can only highlight posts that were published inside this community."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if post.is_highlighted:
+        post.is_highlighted = False
+        post.highlighted_at = None
+        post.save(update_fields=["is_highlighted", "highlighted_at"])
+
+        return Response(
+            {"is_highlighted": False, "message": "Post successfully removed from community highlights."},
+            status=status.HTTP_200_OK,
+        )
+    else:
+        post.is_highlighted = True
+        post.highlighted_at = timezone.now()
+        post.save(update_fields=["is_highlighted", "highlighted_at"])
+
+        return Response(
+            {"is_highlighted": True, "message": "Post successfully added to community highlights."},
+            status=status.HTTP_200_OK,
+        )

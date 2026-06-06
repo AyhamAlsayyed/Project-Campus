@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import (
     Case,
     Count,
@@ -15,11 +16,14 @@ from django.db.models.functions import Now
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Community, CommunityMember, Friendship, Instructor
-from ...serializers import CommunitySerializer
+from ...models import Community, CommunityMember, Friendship, Post, Report
+from ...serializers import CommunitySerializer, PostSerializer
+from ...utils.community import ensure_community_admin
+from ...utils.feed import base_annotations
 from ...utils.notifications import send_global_notification
 
 
@@ -180,6 +184,49 @@ def community_detail(request, community_id):
     )
 
 
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def community_post_settings(request, community_id):
+    ensure_community_admin(request.user, community_id)
+    community = get_object_or_404(Community, pk=community_id)
+
+    if request.method == "POST":
+        requires_approval = request.data.get("requires_post_approval")
+        if requires_approval is not None:
+            community.requires_post_approval = bool(requires_approval)
+            community.save(update_fields=["requires_post_approval"])
+            return Response(
+                {
+                    "message": "Settings updated successfully.",
+                    "requires_post_approval": community.requires_post_approval,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        return Response({"error": "Missing requires_post_approval parameter."}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({"requires_post_approval": community.requires_post_approval}, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def fetch_community_highlights(request, community_id):
+    user = request.user
+
+    community = get_object_or_404(Community, community_id=community_id)
+
+    posts = (
+        Post.objects.filter(community=community, is_highlighted=True)
+        .annotate(**base_annotations(user))
+        .select_related("author__profile")
+        .prefetch_related("media")
+        .order_by("-highlighted_at")[:5]
+    )
+
+    serializer = PostSerializer(posts, many=True, context={"request": request})
+    return Response(serializer.data)
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def join_community(request, community_id):
@@ -232,85 +279,32 @@ def request_join_community(request, community_id):
     return Response({"message": "Request sent"})
 
 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def process_join_request(request, community_id):
-    admin_user = request.user
-    student_id = request.data.get("user_id")
-    action = request.data.get("action")
-
-    if action not in ["approve", "reject"]:
-        return Response({"error": "Invalid action. Use 'approve' or 'reject'."}, status=400)
-
-    try:
-        community = Community.objects.get(community_id=community_id)
-    except Community.DoesNotExist:
-        return Response({"error": "Community not found"}, status=404)
-
-    is_authorized = CommunityMember.objects.filter(
-        community=community,
-        user=admin_user,
-        role__in=[CommunityMember.Role.OWNER, CommunityMember.Role.ADMIN],
-        status="approved",
-    ).exists()
-
-    if not is_authorized:
-        return Response({"error": "You do not have permission to manage this community."}, status=403)
-
-    membership = (
-        CommunityMember.objects.filter(community=community, user_id=student_id, status="pending")
-        .select_related("user")
-        .first()
-    )
-
-    if not membership:
-        return Response({"error": "No pending join request found for this user."}, status=404)
-
-    if action == "approve":
-        membership.status = "approved"
-        membership.save()
-
-        send_global_notification(
-            sender=admin_user,
-            receiver=membership.user,
-            notification_type="community_join_status",
-            target_object=community,
-            custom_text=f"Your request to join {community.name} was approved!",
-        )
-        return Response({"message": "User approved successfully."})
-
-    else:  # action == "reject"
-        membership.delete()
-
-        send_global_notification(
-            sender=admin_user,
-            receiver=membership.user,
-            notification_type="community_join_status",
-            target_object=community,
-            custom_text=f"Your request to join {community.name} was rejected.",
-        )
-        return Response({"message": "User request rejected."})
-
-
 @api_view(["GET"])
-def instructor_community_picks(request, instructor_id):
-    instructor = get_object_or_404(Instructor, pk=instructor_id)
-    picks = instructor.community_picks.all()
-
-    serializer = CommunitySerializer(picks, many=True, context={"request": request})
-
-    return Response(serializer.data)
-
-
-@api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def toggle_pick(request, community_id):
-    instructor = request.user.instructor_profile
+def get_reported_posts(request, community_id):
+    ensure_community_admin(request.user, community_id)
+
+    post_content_type = ContentType.objects.get_for_model(Post)
+
+    reported_post_ids = Report.objects.filter(
+        content_type_obj=post_content_type, final_action="", university_page_id=id
+    ).values_list("object_id", flat=True)
+
+    reported_posts = Post.objects.filter(pk__in=reported_post_ids, community_id=id).distinct().select_related("author")
+
+    serializer = PostSerializer(reported_posts, many=True, context={"request": request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_community(request, community_id):
+    member = ensure_community_admin(request.user, community_id)
+    if member.role != CommunityMember.Role.OWNER:
+        raise PermissionDenied("Only the community owner can delete this community.")
+
     community = get_object_or_404(Community, pk=community_id)
 
-    if community in instructor.featured_communities.all():
-        instructor.featured_communities.remove(community)
-        return Response({"message": "Removed from picks"})
-    else:
-        instructor.featured_communities.add(community)
-        return Response({"message": "Added to picks"})
+    community.delete()
+
+    return Response({"message": "Community has been successfully and permanently deleted."}, status=status.HTTP_200_OK)

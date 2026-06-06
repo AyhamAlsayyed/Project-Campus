@@ -5,6 +5,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from ...models import Page
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -34,7 +36,10 @@ def login(request):
     refresh = RefreshToken.for_user(user)
     access = refresh.access_token
 
-    is_page = hasattr(user, "page") and user.page is not None
+    try:
+        is_page = user.page is not None
+    except Page.DoesNotExist:
+        is_page = False
 
     avatar = None
     if is_page:

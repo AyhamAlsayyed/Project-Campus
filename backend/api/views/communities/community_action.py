@@ -5,7 +5,32 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Community, CommunityMember
+from ...models import Community, CommunityMember, Instructor
+from ...serializers import CommunitySerializer
+
+
+@api_view(["GET"])
+def instructor_community_picks(request, instructor_id):
+    instructor = get_object_or_404(Instructor, pk=instructor_id)
+    picks = instructor.community_picks.all()
+
+    serializer = CommunitySerializer(picks, many=True, context={"request": request})
+
+    return Response(serializer.data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def toggle_pick(request, community_id):
+    instructor = request.user.instructor_profile
+    community = get_object_or_404(Community, pk=community_id)
+
+    if community in instructor.featured_communities.all():
+        instructor.featured_communities.remove(community)
+        return Response({"message": "Removed from picks"})
+    else:
+        instructor.featured_communities.add(community)
+        return Response({"message": "Added to picks"})
 
 
 @api_view(["POST"])

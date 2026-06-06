@@ -1,18 +1,4 @@
-from datetime import timedelta
-
-from django.db.models import (
-    Case,
-    Count,
-    Exists,
-    F,
-    IntegerField,
-    OuterRef,
-    Q,
-    Value,
-    When,
-)
-from django.db.models.expressions import ExpressionWrapper
-from django.db.models.functions import Now
+from django.db.models import Case, F, IntegerField, Q, Value, When
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -27,41 +13,14 @@ from ...models import (
 )
 from ...serializers import PostSerializer
 from ...utils.blocked_users import get_blocked_user_sets
-from ...utils.uni_page import _get_user_university
-
-
-def base_annotations(user):
-    return {
-        "reactions_count": Count("reactions", filter=Q(reactions__user__isnull=False), distinct=True),
-        "comments_count": Count("comments", distinct=True),
-        "is_liked": Exists(PostReaction.objects.filter(post_id=OuterRef("post_id"), user=user)),
-        "is_saved": Exists(SavedPost.objects.filter(post_id=OuterRef("post_id"), user=user)),
-    }
-
-
-def engagement_annotations():
-    return {
-        "p_engagement": ExpressionWrapper(
-            (F("reactions_count") * Value(2)) + F("comments_count"),
-            output_field=IntegerField(),
-        ),
-        "p_engagement_capped": Case(
-            When(p_engagement__gte=20, then=Value(20)),
-            default=F("p_engagement"),
-            output_field=IntegerField(),
-        ),
-        "p_fresh": Case(
-            When(created_at__gte=Now() - timedelta(hours=6), then=Value(20)),
-            When(created_at__gte=Now() - timedelta(hours=24), then=Value(10)),
-            When(created_at__gte=Now() - timedelta(days=3), then=Value(5)),
-            default=Value(0),
-            output_field=IntegerField(),
-        ),
-    }
+from ...utils.feed import base_annotations, engagement_annotations
+from ...utils.uni_page import get_user_university
 
 
 def get_friendship_sets(user):
-    friendships = Friendship.objects.filter(Q(user1=user) | Q(user2=user)).values("user1_id", "user2_id", "status")
+    friendships = Friendship.objects.filter(
+        Q(user1=user) | Q(user2=user), relation_type=Friendship.RelationType.USER_TO_USER
+    ).values("user1_id", "user2_id", "status")
 
     accepted = set()
     blocked = set()
@@ -145,7 +104,7 @@ def feed(request, community_id=None):
             user1=user, status=Friendship.Status.FOLLOWING, relation_type=Friendship.RelationType.USER_TO_PAGE
         ).values_list("user2_id", flat=True)
         accepted_users, blocked_users = get_friendship_sets(user)
-        uni_page = _get_user_university(user)
+        uni_page = get_user_university(user)
         if uni_page is not None:
             uni_page_user_id = uni_page.user.id
         else:
@@ -195,7 +154,7 @@ def feed(request, community_id=None):
         else:
             qs = qs.order_by("-created_at")
 
-    qs = qs.select_related("author__profile", "community").prefetch_related("media")[:limit]
+    qs = qs.select_related("author__profile", "author__page", "community").prefetch_related("media")[:limit]
 
     serializer = PostSerializer(qs, many=True, context={"request": request})
     return Response(serializer.data)
@@ -219,7 +178,7 @@ def get_saved_posts(request):
     if all_blocked_users:
         posts_qs = posts_qs.exclude(Q(community__isnull=True) & Q(author_id__in=all_blocked_users))
 
-    posts_qs = posts_qs.select_related("author__profile").prefetch_related("media")
+    posts_qs = posts_qs.select_related("author__profile", "author__page").prefetch_related("media")
 
     serializer = PostSerializer(posts_qs, many=True, context={"request": request})
     return Response(serializer.data)
@@ -240,7 +199,7 @@ def get_activity_posts(request):
     posts = (
         Post.objects.filter(Q(post_id__in=liked_ids) | Q(post_id__in=commented_ids))
         .annotate(**base_annotations(user))
-        .select_related("author__profile")
+        .select_related("author__profile", "author__page")
         .prefetch_related("media")
         .order_by("-created_at")
         .distinct()

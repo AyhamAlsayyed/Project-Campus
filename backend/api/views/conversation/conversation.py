@@ -15,9 +15,11 @@ from ...models import (
     Friendship,
     Message,
     MessageMedia,
+    Post,
 )
 from ...serializers import ConversationMemberSerializer, PostSerializer
 from ...utils.blocked_users import is_blocked
+from ...utils.feed import base_annotations
 from ...utils.notifications import send_global_notification
 from ...utils.user_type import get_user_avatar
 
@@ -66,7 +68,12 @@ def get_messages(request, conversation_id):
         query = query.filter(sent_at__gt=member.cleared_at)
 
     messages = (
-        query.select_related("sender", "parent_message", "parent_message__sender")
+        query.select_related(
+            "sender",
+            "parent_message",
+            "parent_message__sender",
+            "sender__profile",
+        )
         .prefetch_related("media")
         .order_by("sent_at")
     )
@@ -118,7 +125,16 @@ def get_messages(request, conversation_id):
         }
 
         if msg.shared_post:
-            message_data["post"] = PostSerializer(msg.shared_post, context={"request": request}).data
+            annotated_post = (
+                Post.objects.filter(post_id=msg.shared_post.post_id)
+                .annotate(**base_annotations(user))
+                .select_related("author__profile")
+                .prefetch_related("media")
+                .first()
+            )
+
+            if annotated_post:
+                message_data["post"] = PostSerializer(annotated_post, context={"request": request}).data
 
         data.append(message_data)
 

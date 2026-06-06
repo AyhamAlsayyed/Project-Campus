@@ -395,6 +395,8 @@ class Community(models.Model):
         choices=Privacy.choices,
         default=Privacy.PUBLIC,
     )
+
+    requires_post_approval = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     banner_image = models.ImageField(upload_to="banners/", blank=True, null=True)
     verified = models.BooleanField(default=False)
@@ -430,6 +432,7 @@ class CommunityMember(models.Model):
     class Status(models.TextChoices):
         PENDING = "pending", "Pending"
         APPROVED = "approved", "Approved"
+        BLOCKED = "blocked", "Blocked"
 
     status = models.CharField(
         max_length=10,
@@ -493,7 +496,7 @@ class Post(models.Model):
 
     class PostType(models.TextChoices):
         ANNOUNCEMENT = "announcement", "Announcement"
-        ADVERTISMENT = "advertisement", "Advertisement"
+        ADVERTISEMENT = "advertisement", "Advertisement"
         ACADEMY = "academy", "Academy"
         NORMAL = "normal", "Normal"
 
@@ -504,6 +507,9 @@ class Post(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+    is_approved = models.BooleanField(default=False)
+    is_highlighted = models.BooleanField(default=False)
+    highlighted_at = models.DateTimeField(null=True, blank=True)
     is_pinned = models.BooleanField(default=False)
 
     author = models.ForeignKey(
@@ -994,6 +1000,7 @@ class Report(models.Model):
         ACCOUNT_DELETION = "account_deletion", "Account deletion"
         CONTENT_LABELING = "content_labeling", "Content labeling (warning / sensitive tag)"
         REPORT_AUTHORITIES = "report_authorities", "Report to authorities (for severe illegal cases)"
+        DISMISSED = "dismissed", "Dismissed / False Alarm"
 
     final_action = models.CharField(
         max_length=50,
