@@ -48,40 +48,19 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
   const [isBlocked, setIsBlocked] = useState(post?.author?.is_blocked || false);
   const [adReaction, setAdReaction] = useState(post?.ad_reaction || null);
   const [showReport, setShowReport] = useState(false);
-  const [commenterAvatars, setCommenterAvatars] = useState([]);
+  const [commenterAvatars, setCommenterAvatars] = useState(
+    (post?.top_3comments_avatar || []).map(c => {
+      const avatar = c.author_avatar || c.avatar;
+      if (!avatar) return null;
+      return avatar.startsWith("http") ? avatar : `http://localhost:8000${avatar}`;
+    }).filter(Boolean)
+  );
   const [isHighlighted, setIsHighlighted] = useState(!!post?.is_highlighted);
 
   const CHAR_LIMIT = 150;
 
-  useEffect(() => {
-    const fetchCommenters = async () => {
-      const token = localStorage.getItem("access");
-      const postId = post.id || post.post_id;
-      if (!postId || !token) return;
-      try {
-        const res = await fetch(`http://localhost:8000/api/posts/${postId}/comments/`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const comments = Array.isArray(data) ? data : (data.results || []);
-          const seen = new Set();
-          const avatars = [];
-          for (const comment of comments) {
-            const authorId = comment.user_id;
-            const avatar = comment.user_avatar;
-            if (authorId && !seen.has(authorId) && avatar) {
-              seen.add(authorId);
-              avatars.push(avatar.startsWith("http") ? avatar : `http://localhost:8000${avatar}`);
-            }
-            if (avatars.length === 3) break;
-          }
-          setCommenterAvatars(avatars);
-        }
-      } catch (e) { console.error(e); }
-    };
-    fetchCommenters();
-  }, [post.id, post.post_id]);
+
+
 
   const formatTimeAgo = (dateString) => {
     const now = new Date();

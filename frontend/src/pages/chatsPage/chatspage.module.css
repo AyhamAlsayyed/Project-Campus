@@ -652,7 +652,7 @@
 
 .academicMessagePreview {
     font-size: 12px;
-    color: #6b7280;
+    color: #CCCCCC;
     white-space: nowrap;
     max-width: 55%;
     text-align: right;
@@ -905,7 +905,7 @@
     backdrop-filter: blur(10px);
     color: black;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-bottom-left-radius: 1px;
+   
 }
 
 .bubblePost {
@@ -919,45 +919,64 @@
     display: none !important;
 }
 
-.bubbleOther::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: -10px;
-    width: 20px;
-    height: 15px;
-    background: inherit;
-    backdrop-filter: inherit;
-    clip-path: polygon(100% 0, 100% 100%, 0 100%);
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: -1;
-}
 
 .bubbleMine {
     position: relative;
-    /* Essential for the tail to attach */
     background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
     color: white;
     padding: 12px 16px;
-    /* Bottom right is sharp (0), others are rounded */
-    border-radius: 18px 18px 0px 18px;
+    border-radius: 18px 18px 18px 18px;
     align-self: flex-end;
-    /* High z-index so it stays above the pseudo-element tail if needed */
     z-index: 10;
 }
+.bubbleOther.bubbleLastInGroup {
+    /* Tail dimensions */
+    --b: 14px; /* control the base width */
+    --h: 8px;  /* control the height/extension of the tail */
+    --c: white; /* Matches the bubbleOther background */
 
-.bubbleMine::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    right: -12px;
-    width: 15px;
-    height: 15px;
-    background-color: rgba(166, 39, 156, 0.95);
-    clip-path: polygon(0 0, 0% 100%, 100% 100%);
-    z-index: -1;
+    border-bottom-left-radius: 0 !important;
+    
+    clip-path: polygon(
+        0 0, 
+        100% 0, 
+        100% 100%,
+        var(--b) 100%,
+        calc(-1 * var(--h)) calc(100% + var(--h)),
+        0 calc(100% - var(--b))
+    );
+    
+    background: var(--c);
+    border-image: conic-gradient(var(--c) 0 0) 0 0 999 999 /
+        0 0 calc(var(--h) + var(--b)) calc(var(--h) + var(--b)) / 0 0 var(--h) var(--h);
 }
 
+
+.bubbleOther.bubbleLastInGroup::after { display: none !important; }
+
+
+
+.bubbleMine.bubbleLastInGroup {
+    --b: 10px; 
+    --h: 5px;  
+   
+    --c: rgba(166, 39, 156, 0.95); 
+
+    border-bottom-right-radius: 0 !important;
+    
+    clip-path: polygon(
+        0 0, 
+        100% 0, 
+        100% calc(100% - var(--b)), 
+        calc(100% + var(--h)) calc(100% + var(--h)), 
+        calc(100% - var(--b)) 100%, 
+        0 100%
+    );
+     
+    border-image: conic-gradient(var(--c) 0 0) 0 999 999 0 / 
+        0 calc(var(--h) + var(--b)) calc(var(--h) + var(--b)) 0 / 0 var(--h) var(--h) 0;
+}
+.bubbleMine.bubbleLastInGroup::after { display: none !important; }
 .fileAttachment {
     display: flex;
     align-items: center;
@@ -1592,7 +1611,7 @@
     margin-bottom: -20px;
     flex-shrink: 0;
     visibility: hidden;
-    /* takes up space but stays invisible */
+    
 }
 
 .messageGrouped {
@@ -1602,7 +1621,9 @@
 .bubbleGrouped::after {
     display: none !important;
 }
-
+.bubbleOther.bubbleLastInGroup::after {
+    display: block !important;
+}
 .bubbleMine.bubbleGrouped {
     border-radius: 18px;
 }
@@ -1631,4 +1652,152 @@
 .adminsOnlyIcon {
     flex-shrink: 0;
     opacity: 0.5;
+}
+/* ── Header inline message search ── */
+.headerSearchExpanded {
+    flex: 1;
+    margin: 0 16px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.headerSearchInner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 24px;
+    padding: 8px 16px;
+    transition: border-color 0.2s;
+}
+
+.headerSearchInner:focus-within {
+    border-color: rgba(148, 40, 146, 0.6);
+}
+
+.headerSearchIcon {
+    color: rgba(255, 255, 255, 0.45);
+    flex-shrink: 0;
+}
+
+.headerSearchInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 0.9rem;
+    font-family: "Aktiv Grotesk", sans-serif;
+}
+
+.headerSearchInput::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.searchResultCount {
+    color: #C43BB8;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.searchNoResults {
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.headerSearchDropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: #2a2a2a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    overflow: hidden;
+    z-index: 9999;
+    max-height: 280px;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.headerSearchResultItem {
+    width: 100%;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 11px 16px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+}
+
+.headerSearchResultItem:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.headerSearchResultItem:hover {
+    background: rgba(196, 59, 184, 0.1);
+}
+
+.searchResultSender {
+    color: #C43BB8;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.searchResultText {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.83rem;
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.searchResultTime {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.72rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.iconBtnActive {
+    color: #C43BB8;
+}
+.searchNavBtn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    font-size: 0.7rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.searchNavBtn:hover {
+    color: #C43BB8;
+    background: rgba(196, 59, 184, 0.1);
+}
+.highlightMessage .messageBubble,
+.highlightMessage > div {
+    animation: messageHighlightPulse 1.5s ease-out forwards;
+}
+
+@keyframes messageHighlightPulse {
+    0%   { box-shadow: 0 0 0 3px rgba(196, 59, 184, 0.7); }
+    60%  { box-shadow: 0 0 0 6px rgba(196, 59, 184, 0.3); }
+    100% { box-shadow: 0 0 0 0px rgba(196, 59, 184, 0); }
 }

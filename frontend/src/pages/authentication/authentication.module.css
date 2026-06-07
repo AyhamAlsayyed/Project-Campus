@@ -340,3 +340,167 @@ button {
     }
 }
 
+/* ── Expired Subscription Popup ── */
+.expiredOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    gap: 32px;
+    padding: 24px;
+}
+
+.basicCard {
+    background-color: #333333;
+    border-radius: 28.8px;
+    padding: 36px 48px;
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+}
+
+.premiumCard {
+    background-color: #333333;
+    border-radius: 28.8px;
+    padding: 36px;
+    width: 100%;
+    min-width: 500px;
+    
+    box-sizing: border-box;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+.basicTitle {
+    color: #FFFFFF;
+    font-size: 28.8px;
+    font-weight: 700;
+}
+
+.premiumTitleCard {
+    color: #FFFFFF;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.subText {
+    color: #999999;
+    font-size: 16.8px;
+    font-weight: 400;
+}
+
+.featuresList {
+    list-style-type: disc;
+    padding-left: 24px;
+    margin: 0;
+    color: #FFFFFF;
+    font-size: 15.6px;
+    line-height: 2.4;
+}
+
+.featuresList li::marker {
+    color: #FFFFFF;
+    font-size: 16.8px;
+}
+
+.pinkList {
+    color: #C43BB8;
+}
+
+.pinkList li::marker {
+    color: #C43BB8;
+}
+
+.divider {
+    width: 50%;
+    height: 1.2px;
+    background-color: #4D4D4D;
+    margin: 24px auto;
+}
+
+.priceContainerBasic {
+    display: flex;
+    align-items: center;
+    gap: 9.6px;
+    margin-top: 32px;
+    justify-content: flex-end;
+}
+
+.premiumFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    align-items: flex-end;
+    margin-top: 42px;
+}
+
+.premiumPriceBox {
+    display: flex;
+    align-items: flex-end;
+    gap: 9.6px;
+}
+
+.priceColumn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4.8px;
+}
+
+.oldPrice {
+    color: #999999;
+    font-size: 13.2px;
+    text-decoration: line-through;
+}
+
+.priceBtn {
+    background: linear-gradient(90deg, #622598 0%, #952892 100%);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 24px;
+    padding: 7.2px 16.8px;
+    font-size: 14.4px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.priceBtnDisabled {
+    background: #4a4a4a;
+    color: #888888;
+    cursor: not-allowed;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.perMonthText {
+    color: #999999;
+    font-size: 15.6px;
+}
+
+.starsIconSmall {
+    width: 26.4px;
+    height: 26.4px;
+    filter: invert(37%) sepia(42%) saturate(4174%) hue-rotate(282deg) brightness(85%) contrast(89%);
+}
+
+.expiredHeading {
+    position: absolute;
+    top: -48px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: #FFFFFF;
+    font-size: 20px;
+    font-weight: 600;
+}

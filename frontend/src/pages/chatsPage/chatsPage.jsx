@@ -145,6 +145,10 @@ export default function ChatsPage() {
     const [requestMessages, setRequestMessages] = useState([]);
     const [showCreateGroup, setShowCreateGroup] = useState(false);
     const [fullGroupData, setFullGroupData] = useState(null);
+    const [chatSearchOpen, setChatSearchOpen] = useState(false);
+    const [chatSearchQuery, setChatSearchQuery] = useState('');
+    const [searchResultIndex, setSearchResultIndex] = useState(0);
+    const chatSearchRef = useRef(null);
 
 
     const { chatId } = useParams();
@@ -277,6 +281,7 @@ export default function ChatsPage() {
 
     }, [showAttachments, attachmentMenuOpen, activeChatMenuOpen, openMenuId]);
     const scrollToBottom = () => {
+        if (chatSearchOpen) return;
         setTimeout(() => {
             if (messagesScrollRef.current) {
                 messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
@@ -286,11 +291,7 @@ export default function ChatsPage() {
     useEffect(() => {
         scrollToBottom();
     }, [selectedChat?.id]);
-    useEffect(() => {
-        if (selectedChat) {
-            scrollToBottom();
-        }
-    });
+
     useEffect(() => {
         if (chatId && chats.length > 0) {
             const targetChat = chats.find(c => c.id.toString() === chatId);
@@ -575,6 +576,14 @@ export default function ChatsPage() {
     useEffect(() => {
         loadUser()
     }, [])
+    useEffect(() => {
+        if (searchedMessages.length > 0) {
+            scrollToMessage(searchedMessages[searchResultIndex]?.id);
+        }
+    }, [chatSearchQuery]);
+    const searchedMessages = chatSearchQuery.trim()
+        ? messages.filter(msg => msg.text?.toLowerCase().includes(chatSearchQuery.toLowerCase()))
+        : [];
 
 
 
@@ -1210,11 +1219,7 @@ export default function ChatsPage() {
                                                     <img
                                                         src={BackButton}
                                                         alt=""
-                                                        style={{
-                                                            width: 22,
-                                                            height: 22,
-                                                            filter: "brightness(0) invert(1) opacity(0.9)"
-                                                        }}
+                                                        style={{ width: 22, height: 22, filter: "brightness(0) invert(1) opacity(0.9)" }}
                                                     />
                                                 </button>
                                                 <img
@@ -1228,19 +1233,106 @@ export default function ChatsPage() {
                                                     }}
                                                     style={!selectedChat.is_group ? { cursor: 'pointer' } : {}}
                                                 />
-                                                <div className={styles.headerTitleInfo}>
-                                                    {selectedChat.is_group && (
-                                                        <span className={styles.professorName}>
-                                                            {selectedChat.conversations_owner}
-                                                        </span>
-                                                    )}
-                                                    <h2 className={styles.groupName}>{selectedChat.name}</h2>
-                                                    <p className={styles.memberSubtitle}>{selectedChat.members}</p>
-                                                </div>
+                                                {!chatSearchOpen && (
+                                                    <div className={styles.headerTitleInfo}>
+                                                        {selectedChat.is_group && (
+                                                            <span className={styles.professorName}>
+                                                                {selectedChat.conversations_owner}
+                                                            </span>
+                                                        )}
+                                                        <h2 className={styles.groupName}>{selectedChat.name}</h2>
+                                                        <p className={styles.memberSubtitle}>{selectedChat.members}</p>
+                                                    </div>
+                                                )}
                                             </div>
 
+                                            {chatSearchOpen && (
+                                                <div className={styles.headerSearchExpanded} ref={chatSearchRef}>
+                                                    <div className={styles.headerSearchInner}>
+                                                        <Search size={16} className={styles.headerSearchIcon} />
+                                                        <input
+                                                            autoFocus
+                                                            type="text"
+                                                            placeholder="Search messages..."
+                                                            className={styles.headerSearchInput}
+                                                            value={chatSearchQuery}
+                                                            onChange={e => {
+                                                                setChatSearchQuery(e.target.value);
+                                                                setSearchResultIndex(0);
+                                                            }}
+                                                            onKeyDown={e => {
+                                                                if (e.key === 'Escape') {
+                                                                    setChatSearchOpen(false);
+                                                                    setChatSearchQuery('');
+                                                                    setSearchResultIndex(0);
+                                                                }
+                                                                if (e.key === 'Enter' && searchedMessages.length > 0) {
+                                                                    const next = (searchResultIndex + 1) % searchedMessages.length;
+                                                                    setSearchResultIndex(next);
+                                                                    scrollToMessage(searchedMessages[next].id);
+                                                                }
+                                                            }}
+                                                        />
+
+                                                        {chatSearchQuery.trim() && (
+                                                            <span className={styles.searchResultCount}>
+                                                                {searchedMessages.length === 0
+                                                                    ? 'No results'
+                                                                    : `${searchResultIndex + 1} / ${searchedMessages.length}`}
+                                                            </span>
+                                                        )}
+
+                                                        {searchedMessages.length > 1 && (
+                                                            <>
+                                                                <button
+                                                                    className={styles.searchNavBtn}
+                                                                    onClick={() => {
+                                                                        const prev = (searchResultIndex - 1 + searchedMessages.length) % searchedMessages.length;
+                                                                        setSearchResultIndex(prev);
+                                                                        scrollToMessage(searchedMessages[prev].id);
+                                                                    }}
+                                                                    title="Previous result"
+                                                                >
+                                                                    ▲
+                                                                </button>
+                                                                <button
+                                                                    className={styles.searchNavBtn}
+                                                                    onClick={() => {
+                                                                        const next = (searchResultIndex + 1) % searchedMessages.length;
+                                                                        setSearchResultIndex(next);
+                                                                        scrollToMessage(searchedMessages[next].id);
+                                                                    }}
+                                                                    title="Next result"
+                                                                >
+                                                                    ▼
+                                                                </button>
+                                                            </>
+                                                        )}
+
+                                                        {searchedMessages.length === 1 && chatSearchQuery.trim() && (
+                                                            <button
+                                                                className={styles.searchNavBtn}
+                                                                onClick={() => scrollToMessage(searchedMessages[0].id)}
+                                                                title="Go to result"
+                                                            >
+                                                                ↵
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             <div className={styles.headerRightWrapper}>
-                                                <button className={styles.iconBtn}><Search size={30} /></button>
+                                                <button
+                                                    className={`${styles.iconBtn} ${chatSearchOpen ? styles.iconBtnActive : ''}`}
+                                                    onClick={() => {
+                                                        setChatSearchOpen(prev => !prev);
+                                                        setChatSearchQuery('');
+                                                        setSearchResultIndex(0);
+                                                    }}
+                                                >
+                                                    <Search size={30} />
+                                                </button>
                                                 <div className={styles.menuWrapper} ref={activeChatMenuRef}>
                                                     <button
                                                         ref={activeChatMenuBtnRef}
@@ -1273,7 +1365,7 @@ export default function ChatsPage() {
                                                                 onClick={() => {
                                                                     setActiveChatMenuOpen(false);
                                                                     setActiveChatMenuRect(null);
-                                                                    setShowGroupInfo(true);  // opens for both group and DM
+                                                                    setShowGroupInfo(true);
                                                                 }}
                                                             >
                                                                 <Info size={14} /> {selectedChat.is_group ? 'Group Info' : 'Chat Info'}
@@ -1322,8 +1414,14 @@ export default function ChatsPage() {
                                                             const resolveUrl = (url) => url?.startsWith('http') ? url : `${API}${url}`;
 
                                                             const prevMsg = msgIndex > 0 ? messages[msgIndex - 1] : null;
-                                                            // Grouped if same sender and no date separator breaks the chain
+                                                            const nextMsg = msgIndex < messages.length - 1 ? messages[msgIndex + 1] : null;
+
                                                             const isGrouped = !dateLabel && prevMsg && prevMsg.senderId === msg.senderId;
+                                                            const nextMsgDate = nextMsg?.date ? new Date(nextMsg.date) : null;
+                                                            const currentMsgDate = msg.date ? new Date(msg.date) : null;
+                                                            const nextHasDateSeparator = nextMsgDate && currentMsgDate &&
+                                                                nextMsgDate.toDateString() !== currentMsgDate.toDateString();
+                                                            const isLastInGroup = !nextMsg || nextMsg.senderId !== msg.senderId || nextHasDateSeparator;
 
                                                             return (
                                                                 <div key={msg.id} ref={(el) => (messageRefs.current[msg.id] = el)}>
@@ -1332,9 +1430,9 @@ export default function ChatsPage() {
                                                                     )}
                                                                     <div className={`${styles.messageWrapper} ${isMine ? styles.messageMineWrapper : styles.messageOtherWrapper} ${isGrouped ? styles.messageGrouped : ''}`}>
                                                                         {!isMine && (
-                                                                            isGrouped
-                                                                                ? <div className={styles.messageAvatarSpacer} />
-                                                                                : <img src={resolveUrl(msg.avatar)} alt="Sender" className={styles.messageAvatar} />
+                                                                            isLastInGroup
+                                                                                ? <img src={resolveUrl(msg.avatar)} alt="Sender" className={styles.messageAvatar} />
+                                                                                : <div className={styles.messageAvatarSpacer} />
                                                                         )}
                                                                         <div className={styles.messageContentBlock}>
                                                                             {!isGrouped && (
@@ -1344,8 +1442,12 @@ export default function ChatsPage() {
                                                                                 </div>
                                                                             )}
                                                                             <div className={styles.messageRow}>
-                                                                                <div className={`${styles.messageBubble} ${msg.post ? styles.bubblePost : isMine ? styles.bubbleMine : styles.bubbleOther} ${isGrouped ? styles.bubbleGrouped : ''}`}>
-
+                                                                                <div className={`
+                                                                                    ${styles.messageBubble} 
+                                                                                    ${msg.post ? styles.bubblePost : isMine ? styles.bubbleMine : styles.bubbleOther} 
+                                                                                    ${isGrouped ? styles.bubbleGrouped : ''} 
+                                                                                    ${isLastInGroup ? styles.bubbleLastInGroup : ''}
+                                                                                        `}>
                                                                                     {msg.reply_to_details && (
                                                                                         <div className={styles.replyQuoteBox} onClick={() => scrollToMessage(msg.reply_to_details.id)}>
                                                                                             <span className={styles.replySender}>
@@ -1450,9 +1552,11 @@ export default function ChatsPage() {
                                                                                         <span style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</span>
                                                                                     )}
                                                                                 </div>
-                                                                                <button className={styles.replyIconButton} onClick={() => setReplyingTo(msg)}>
-                                                                                    <Reply size={16} />
-                                                                                </button>
+                                                                                {isLastInGroup && (
+                                                                                    <button className={styles.replyIconButton} onClick={() => setReplyingTo(msg)}>
+                                                                                        <Reply size={16} />
+                                                                                    </button>
+                                                                                )}
                                                                             </div>
                                                                         </div>
                                                                     </div>
