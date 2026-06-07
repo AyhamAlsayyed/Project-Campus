@@ -23,29 +23,81 @@ import clear from '../../Assets/icons/clear.png';
 import deleteIcon from '../../Assets/icons/bin.png';
 import block from '../../Assets/icons/block.png';
 import Report from '../../Assets/icons/info.png';
-
 function MarqueeText({ text, className }) {
     const wrapperRef = useRef(null);
     const textRef = useRef(null);
     const [isOverflowing, setIsOverflowing] = useState(false);
 
-
     useEffect(() => {
-        if (wrapperRef.current && textRef.current) {
-            setIsOverflowing(textRef.current.scrollWidth > wrapperRef.current.clientWidth);
-        }
+        const check = () => {
+            if (wrapperRef.current && textRef.current) {
+                // Force a reflow before measuring
+                const scrollW = textRef.current.scrollWidth;
+                const clientW = wrapperRef.current.clientWidth;
+                setIsOverflowing(scrollW > clientW);
+            }
+        };
+
+        // Small delay to let the DOM fully paint
+        const timer = setTimeout(check, 100);
+        window.addEventListener('resize', check);
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('resize', check);
+        };
     }, [text]);
 
     return (
-        <div ref={wrapperRef} className={`${className} ${isOverflowing ? styles.marqueeWrapper : ''}`}>
+        <div
+            ref={wrapperRef}
+            className={className}
+            style={{ overflow: 'hidden', position: 'relative', maxWidth: '65%' }}
+        >
             <span
                 ref={textRef}
-                className={isOverflowing ? styles.marqueeText : styles.marqueeStatic}
+                style={isOverflowing ? {
+                    display: 'inline-block',
+                    whiteSpace: 'nowrap',
+                    paddingRight: '30px',
+                    animation: 'chatMarquee 5s linear infinite',
+                } : {
+                    display: 'block',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '100%',
+                }}
             >
                 {text}
             </span>
         </div>
     );
+}
+function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000); // seconds
+
+    if (diff < 60) return 'just now';
+    if (diff < 3600) {
+        const m = Math.floor(diff / 60);
+        return `${m} min ago`;
+    }
+    if (diff < 86400) {
+        const h = Math.floor(diff / 3600);
+        return `${h}h ago`;
+    }
+    if (diff < 604800) {
+        const d = Math.floor(diff / 86400);
+        return `${d} day${d > 1 ? 's' : ''} ago`;
+    }
+    if (diff < 2592000) {
+        const w = Math.floor(diff / 604800);
+        return `${w} week${w > 1 ? 's' : ''} ago`;
+    }
+    const mo = Math.floor(diff / 2592000);
+    return `${mo} month${mo > 1 ? 's' : ''} ago`;
 }
 export default function ChatsPage() {
     const [theme, setTheme] = useState("dark");
@@ -967,7 +1019,11 @@ export default function ChatsPage() {
                                                                     )}
                                                                 </div>
                                                                 <div className={styles.chatDetails}>
-                                                                    <span className={styles.chatPreview}>{chat.preview}</span>
+                                                                    <span className={styles.chatPreview}>
+                                                                        {chat.last_message_type === 'media' || chat.has_attachment
+                                                                            ? '📎 sent an attachment'
+                                                                            : chat.preview}
+                                                                    </span>
                                                                     <div className={styles.chatDetailsTop}>
 
                                                                         <span className={styles.chatTime}>{chat.time}</span>
@@ -1557,37 +1613,61 @@ export default function ChatsPage() {
                     <div className={styles.pill}>ACADEMIC GROUP CHATS</div>
                     <div className={styles.rightCard}>
                         <div className={styles.rightList}>
-                            {academicGroups.map((chat, index) => (
-                                <div key={chat.id} className={styles.academicChatItem} onClick={async () => {
-                                    setShowGroupInfo(false);
-                                    setSelectedChat(chat);
-                                    navigate(`/chats/${chat.id}`);
-                                    const res = await fetch(`${API}/api/chats/${chat.id}/messages/`, {
-                                        headers: { Authorization: `Bearer ${token}` },
-                                    });
-                                    const data = await res.json();
-                                    setMessages(data);
-                                }}>
-                                    <div className={styles.academicAvatarWrapper}>
-                                        <img
-                                            src={chat.avatar?.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`}
-                                            className={styles.academicAvatar}
-                                            alt=""
-                                        />
-                                    </div>
-                                    <div className={styles.academicChatInfo}>
-                                        <div className={styles.academicTopRow}>
-                                            <span className={styles.academicTeacherName}>{chat.conversations_owner}</span>
-                                            <span className={styles.academicMessagePreview}>{chat.preview}</span>
+                            {academicGroups.map((chat, index) => {
+                                const isMineSender =
+                                    chat.last_sender_id === 'me' ||
+                                    chat.last_sender_id === user?.id ||
+                                    chat.last_message_mine === true ||
+                                    chat.is_mine === true ||
+                                    chat.preview_sender === user?.username ||
+                                    chat.preview_sender === 'me';
+                                const isAttachment = chat.preview === null || chat.preview === undefined;
+                                const lastSender = chat.last_sender || chat.last_message_sender || chat.sender || '';
+                                const senderLabel = isMineSender ? 'You' : lastSender;
+
+                                console.log('chat preview fields:', chat.name, chat.last_message_type, chat.has_attachment, chat.preview, chat.type);
+
+                                return (
+                                    <div key={chat.id} className={styles.academicChatItem} onClick={async () => {
+                                        setShowGroupInfo(false);
+                                        setSelectedChat(chat);
+                                        navigate(`/chats/${chat.id}`);
+                                        const res = await fetch(`${API}/api/chats/${chat.id}/messages/`, {
+                                            headers: { Authorization: `Bearer ${token}` },
+                                        });
+                                        const data = await res.json();
+                                        setMessages(data);
+                                    }}>
+                                        <div className={styles.academicAvatarWrapper}>
+                                            <img
+                                                src={chat.avatar?.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`}
+                                                className={styles.academicAvatar}
+                                                alt=""
+                                            />
                                         </div>
-                                        <div className={styles.academicBottomRow}>
-                                            <MarqueeText text={chat.name} className={styles.academicGroupName} />
-                                            <span className={styles.academicTimestamp}>{chat.time}</span>
+                                        <div className={styles.academicChatInfo}>
+                                            <div className={styles.academicTopRow}>
+                                                <span className={styles.academicTeacherName}>{chat.conversations_owner}</span>
+                                                <MarqueeText
+                                                    text={
+                                                        isAttachment
+                                                            ? `${senderLabel}: sent an attachment`
+                                                            : isMineSender
+                                                                ? `You: ${chat.preview || ''}`
+                                                                : `${lastSender ? lastSender + ': ' : ''}${chat.preview || ''}`
+                                                    }
+                                                    className={styles.academicMessagePreview}
+                                                />
+                                            </div>
+                                            <div className={styles.academicBottomRow}>
+                                                <MarqueeText text={chat.name} className={styles.academicGroupName} />
+                                                <span className={styles.academicTimestamp}>{timeAgo(chat.last_message_time)}</span>
+                                            </div>
                                         </div>
+                                        {index !== academicGroups.length - 1 && <div className={styles.academicDivider}></div>}
                                     </div>
-                                    {index !== academicGroups.length - 1 && <div className={styles.academicDivider}></div>}
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

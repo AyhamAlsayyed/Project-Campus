@@ -388,12 +388,15 @@
     white-space: nowrap;
     flex-shrink: 0;
 }
+
 .chatDetails {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 10px; /* gap between preview and time */
+    gap: 10px;
+    /* gap between preview and time */
 }
+
 .chatPreview {
     font-size: 14px;
     color: #ccc;
@@ -403,6 +406,7 @@
     max-width: 200px;
     text-align: right;
 }
+
 .chatName {
     font-size: 20px;
     color: #eee;
@@ -651,26 +655,16 @@
 .academicMessagePreview {
     font-size: 12px;
     color: #6b7280;
-    /* Slightly darker than the teacher name */
     white-space: nowrap;
-    overflow: hidden;
-    max-width: 45%;
+    max-width: 55%;
     text-align: right;
-    /* Replicates the gradient fade-out effect from your image */
-    -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 100%);
-    mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 100%);
 }
 
 .academicGroupName {
     font-size: 16px;
     color: #f3f4f6;
     font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
     max-width: 65%;
-    /* Replicates the gradient fade-out effect */
-    -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 75%, rgba(0, 0, 0, 0) 100%);
-    mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 75%, rgba(0, 0, 0, 0) 100%);
 }
 
 .academicTimestamp {
@@ -915,6 +909,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-bottom-left-radius: 1px;
 }
+
 .bubblePost {
     background: transparent !important;
     padding: 0 !important;
@@ -925,6 +920,7 @@
 .bubblePost::after {
     display: none !important;
 }
+
 .bubbleOther::after {
     content: '';
     position: absolute;
@@ -1458,15 +1454,11 @@
     text-overflow: ellipsis;
     max-width: 100%;
 }
-
-@keyframes marqueeSlide {
-    0% {
-        transform: translateX(100%);
-    }
-
-    100% {
-        transform: translateX(-100%);
-    }
+@keyframes chatMarquee {
+    0%   { transform: translateX(0); }
+    10%  { transform: translateX(0); }
+    90%  { transform: translateX(-100%); }
+    100% { transform: translateX(-100%); }
 }
 
 .mediaAttachment {
@@ -1595,13 +1587,16 @@
 .createGroup:hover {
     background-color: #A2279C;
 }
+
 .messageAvatarSpacer {
     width: 50px;
     height: 50px;
     margin-bottom: -20px;
     flex-shrink: 0;
-    visibility: hidden; /* takes up space but stays invisible */
+    visibility: hidden;
+    /* takes up space but stays invisible */
 }
+
 .messageGrouped {
     margin-bottom: 3px;
 }
@@ -1617,6 +1612,7 @@
 .bubbleOther.bubbleGrouped {
     border-radius: 20px;
 }
+
 .adminsOnlyBar {
     display: flex;
     align-items: center;
