@@ -467,6 +467,63 @@ def create_community_or_request(request):
         )
 
 
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+def update_community_info(request, community_id):
+    user = request.user
+    try:
+        community = Community.objects.get(pk=community_id)
+    except Community.DoesNotExist:
+        return Response({"error": "Community not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    ensure_community_admin(user, community_id)
+
+    description = request.data.get("description")
+    is_public_raw = request.data.get("is_public")
+    banner_image = request.FILES.get("banner")
+
+    if description is not None:
+        community.description = description.strip()
+
+    if is_public_raw is not None:
+        if is_public_raw.lower() == "true":
+            community.privacy = Community.Privacy.PUBLIC
+        elif is_public_raw.lower() == "false":
+            community.privacy = Community.Privacy.PRIVATE
+
+    if banner_image is not None:
+        community.banner_image = banner_image
+
+    try:
+        community.save()
+    except Exception:
+        return Response(
+            {"error": "An error occurred while saving your changes."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    updated_banner_url = ""
+    if community.banner_image:
+        try:
+            updated_banner_url = request.build_absolute_uri(community.banner_image.url)
+        except Exception:
+            updated_banner_url = ""
+
+    return Response(
+        {
+            "message": "Changes saved successfully!",
+            "community": {
+                "id": community.community_id,
+                "description": community.description,
+                "privacy": community.privacy,
+                "is_private": community.privacy == Community.Privacy.PRIVATE,
+                "banner_url": updated_banner_url,
+            },
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_community(request, community_id):

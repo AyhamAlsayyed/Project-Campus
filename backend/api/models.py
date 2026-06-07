@@ -484,6 +484,13 @@ class Friendship(models.Model):
 class Community(models.Model):
     community_id = models.BigAutoField(primary_key=True, db_column="community_id")
 
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="owned_communities",
+        db_column="owner_id",
+    )
+
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
 

@@ -654,7 +654,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 class CommunitySerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source="community_id", read_only=True)
-
+    owner_name = serializers.CharField(source="owner.username", read_only=True)
     image = serializers.SerializerMethodField()
     is_private = serializers.SerializerMethodField()
     is_verified = serializers.BooleanField(source="verified")
@@ -672,6 +672,7 @@ class CommunitySerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
+            "owner_name",
             "description",
             "image",
             "is_private",
@@ -1103,7 +1104,7 @@ class ConversationSerializer(serializers.ModelSerializer):
             if first_media:
                 media_type = first_media.media_type
                 if media_type in ["image", "video", "audio"]:
-                    message_body = f"sent an {media_type}" if media_type == "audio" else f"sent a {media_type}"
+                    message_body = f"sent a {media_type}" if media_type == "video" else f"sent an {media_type}"
                 elif media_type == "file":
                     message_body = "sent an attachment"
                 else:

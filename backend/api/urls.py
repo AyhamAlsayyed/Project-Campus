@@ -14,6 +14,7 @@ from .views.communities.community import (  # delete_community,
     get_reported_posts,
     join_community,
     request_join_community,
+    update_community_info,
 )
 from .views.communities.community_action import (
     instructor_community_picks,
@@ -164,6 +165,7 @@ urlpatterns += [
 urlpatterns += [
     path("communities/", communities),
     path("communities/<int:community_id>/", community_detail),
+    path("communities/<int:community_id>/update/", update_community_info),
     # path("communities/<int:community_id>/", delete_community),
     path("communities/<int:community_id>/post-settings/", community_post_settings),
     path("communities/<int:community_id>/highlights/", fetch_community_highlights),

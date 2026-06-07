@@ -131,7 +131,7 @@ def send_post(request):
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
-def delete_post(post_id):
+def delete_post(request, post_id):
     try:
         post = Post.objects.get(pk=post_id)
     except Post.DoesNotExist:
