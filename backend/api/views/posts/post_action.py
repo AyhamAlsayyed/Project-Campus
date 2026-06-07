@@ -142,9 +142,9 @@ def delete_post(post_id):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def toggle_community_highlight(request, community_id, post_id):
+def toggle_community_highlight(request, post_id):
+    print(request.data)
+    community_id = request.data["community_id"]
     ensure_community_admin(request.user, community_id)
 
     community = get_object_or_404(Community, pk=community_id)
