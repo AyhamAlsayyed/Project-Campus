@@ -137,6 +137,46 @@ export default function Community() {
             setUser(data);
         } catch (err) { console.error("Failed to load user"); }
     };
+    useEffect(() => {
+        const checkPending = async () => {
+            try {
+                const res = await fetch(`${API}/api/communities/request/`, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: '_check_', description: '_check_', privacy: 'Public', justification: '_check_' }),
+                });
+                if (!res.ok) {
+                    const data = await res.json();
+                    if (data.error?.includes('already have an active pending')) {
+                        setRequestSent(true);
+                        localStorage.setItem("community_request_sent", "true");
+                    }
+                }
+            } catch (e) { console.error(e); }
+        };
+
+        if (!requestSent) checkPending();
+    }, []);
+    useEffect(() => {
+        const checkRequestStatus = async () => {
+            try {
+                const res = await fetch(`${API}/api/communities/request/status/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.has_pending_request) {
+                        setRequestSent(true);
+                        localStorage.setItem("community_request_sent", "true");
+                    }
+                }
+            } catch (e) { console.error(e); }
+        };
+        checkRequestStatus();
+    }, []);
 
     useEffect(() => {
         const fetchCommunities = async () => {
@@ -603,6 +643,7 @@ export default function Community() {
                         localStorage.setItem("community_request_sent", "true");
                         setIsModalOpen(false);
                     }}
+                    API={API}
                 />
             )}
             {isPromoModalOpen && createPortal(

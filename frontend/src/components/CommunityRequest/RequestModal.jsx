@@ -5,7 +5,7 @@ import Palette from '../../Assets/icons/palette.png';
 import ArrowRight from '../../Assets/icons/arrow-right.png';
 import ArrowLeft from '../../Assets/icons/arrow-left.png';
 
-export default function RequestModal({ onClose }) {
+export default function RequestModal({ onClose, onSuccess, API }) {
     const [step, setStep] = useState(1);
 
     const [communityName, setCommunityName] = useState('');
@@ -19,7 +19,7 @@ export default function RequestModal({ onClose }) {
     const isStep2NextReady = justification.trim().length > 0;
     const handleSubmit = async () => {
         try {
-            const res = await fetch(`http://localhost:8000/api/communities/request/`, {
+            const res = await fetch(`${API}/api/communities/request/`, {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('access')}`,
@@ -32,10 +32,16 @@ export default function RequestModal({ onClose }) {
                     justification: justification,
                 }),
             });
+
             if (res.ok) {
-                onClose();
+                onSuccess?.();
             } else {
-                console.error('Failed to submit request');
+                const data = await res.json();
+                if (data.error?.includes('already have an active pending')) {
+                    onSuccess?.();  // treat as success — they already requested
+                } else {
+                    console.error('Failed to submit request:', data);
+                }
             }
         } catch (err) {
             console.error('Error submitting request:', err);

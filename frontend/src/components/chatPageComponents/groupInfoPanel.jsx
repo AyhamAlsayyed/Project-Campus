@@ -857,7 +857,7 @@ export default function GroupInfoPanel({
 
                                 {extractedMedia.length > 3 && (
                                     <button className={styles.viewAllTile} onClick={() => { setActiveTab('media'); setShowMediaGallery(true); }}>
-                                        View all {extractedMedia.length}+
+                                        View all {extractedMedia.length - 3}+
                                     </button>
                                 )}
                             </div>
