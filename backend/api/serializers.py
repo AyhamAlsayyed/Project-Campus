@@ -1080,7 +1080,38 @@ class ConversationSerializer(serializers.ModelSerializer):
 
     def get_preview(self, obj):
         last_msg = obj.conversation.last_message
-        return last_msg.content if last_msg else ""
+        if not last_msg:
+            return ""
+
+        request = self.context.get("request")
+        current_user = request.user if request else None
+
+        if last_msg.sender == current_user:
+            prefix = "You: "
+        elif last_msg.sender:
+            prefix = f"{last_msg.sender.username}: "
+        else:
+            prefix = "System: "
+
+        message_body = ""
+        if last_msg.content and last_msg.content.strip():
+            message_body = last_msg.content
+        elif last_msg.shared_post_id:
+            message_body = "shared a post"
+        else:
+            first_media = last_msg.media.all().first()
+            if first_media:
+                media_type = first_media.media_type
+                if media_type in ["image", "video", "audio"]:
+                    message_body = f"sent an {media_type}" if media_type == "audio" else f"sent a {media_type}"
+                elif media_type == "file":
+                    message_body = "sent an attachment"
+                else:
+                    message_body = "sent a link"
+            else:
+                message_body = "sent a message"
+
+        return f"{prefix}{message_body}"
 
     def get_time(self, obj):
         last_msg = obj.conversation.last_message
