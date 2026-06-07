@@ -945,6 +945,9 @@ class NotificationSerializer(serializers.ModelSerializer):
         if model_class == Community:
             return obj.object_id
 
+        if model_class == Event:
+            return obj.object_id
+
         if model_class == Friendship or obj.type in ["friend_request", "follow"]:
             if obj.actor:
                 if hasattr(obj.actor, "page"):
