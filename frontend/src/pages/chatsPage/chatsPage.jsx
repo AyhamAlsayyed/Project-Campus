@@ -1493,7 +1493,7 @@ export default function ChatsPage() {
                                                 )}
 
 
-                                              
+
                                                 {(() => {
                                                     const canSend = !selectedChat?.is_group ||
                                                         !fullGroupData ||
@@ -1558,7 +1558,16 @@ export default function ChatsPage() {
                     <div className={styles.rightCard}>
                         <div className={styles.rightList}>
                             {academicGroups.map((chat, index) => (
-                                <div key={chat.id} className={styles.academicChatItem} onClick={() => setSelectedChat(chat)}>
+                                <div key={chat.id} className={styles.academicChatItem} onClick={async () => {
+                                    setShowGroupInfo(false);
+                                    setSelectedChat(chat);
+                                    navigate(`/chats/${chat.id}`);
+                                    const res = await fetch(`${API}/api/chats/${chat.id}/messages/`, {
+                                        headers: { Authorization: `Bearer ${token}` },
+                                    });
+                                    const data = await res.json();
+                                    setMessages(data);
+                                }}>
                                     <div className={styles.academicAvatarWrapper}>
                                         <img
                                             src={chat.avatar?.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`}
