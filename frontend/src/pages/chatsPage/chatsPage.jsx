@@ -121,7 +121,7 @@ export default function ChatsPage() {
     const activeChatMenuBtnRef = useRef(null);
     const messagesEndRef = useRef(null);
     const messagesScrollRef = useRef(null);
-    const academicGroups = chats.filter(chat => chat.is_group);
+    const academicGroups = chats.filter(chat => chat.is_group && chat.is_academic);
     const [attachmentMenuOpen, setAttachmentMenuOpen] = useState(false);
     const [pendingFiles, setPendingFiles] = useState([]); // files queued to send
     const [pollOpen, setPollOpen] = useState(false);
@@ -628,9 +628,7 @@ export default function ChatsPage() {
                                                 onClick={() => setShowRequests(true)}
                                                 style={{ cursor: 'pointer' }}
                                             >
-
-                                                <span>Requests</span> ({requestsCount})
-                                            </div>
+                                                <span style={{ borderBottom: '1.5px solid #F2F2F2' }}>Requests</span> ({requestsCount > 1 ? `+${requestsCount}` : requestsCount})                                         </div>
                                         </div>
 
                                     </div>

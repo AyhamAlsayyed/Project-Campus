@@ -25,7 +25,7 @@ import Report from '../../Assets/icons/info.png';
 import SaveIcon from '../../Assets/icons/save-icon.png';
 
 export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPost, onPinChange, isRequestMode, onAcceptPost, onRejectPost,
-  isReportedMode, onDismiss, onReportDelete, onKick, onReportAction, isAdmin, communityContext
+  isReportedMode, onDismiss, onReportDelete, onKick, onReportAction, isAdmin, communityContext, communityId
 }) {
   const [current, setCurrent] = useState(0);
   const [isLiked, setIsLiked] = useState(post?.is_liked || post?.has_liked || false);
@@ -41,6 +41,7 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
   const [isLoadingChats, setIsLoadingChats] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const shareMenuRef = useRef(null);
+  const [isKicked, setIsKicked] = useState(false);
   const menuRef = useRef(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
@@ -261,8 +262,6 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
       return;
     }
 
-
-
     if (actionType === 'save') setIsSaved(prev => !prev);
     if (actionType === 'highlight') setIsHighlighted(prev => !prev);
 
@@ -270,7 +269,10 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
       const postId = post.id || post.post_id;
       const res = await fetch(`http://localhost:8000/api/posts/${postId}/${actionType}/`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: actionType === 'highlight' && communityId
+          ? JSON.stringify({ community_id: communityId })
+          : null,
       });
       if (!res.ok) {
         if (actionType === 'pin') setIsPinned(prev => !prev);
@@ -490,7 +492,7 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
                     onMouseEnter={e => e.currentTarget.style.background = "#464646"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                   >
-                    <img src={SaveIcon} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
+                    <img src={SaveIcon} width={13} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
                     <span style={{ color: "#C2C2C2" }}>{isSaved ? "Unsave" : "Save post"}</span>
                   </button>
 
@@ -515,7 +517,18 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
                   {/* Kick member */}
                   <button
                     className={styles.menuItem}
-                    onClick={() => { setShowMenu(false); onKick?.(post.id || post.post_id); }}
+                    onClick={async () => {
+                      setShowMenu(false);
+                      const memberId = post.author?.id || post.author_id;
+                      if (communityId && memberId) {
+                        const token = localStorage.getItem("access");
+                        const res = await fetch(`http://localhost:8000/api/communities/${communityId}/kick/${memberId}/`, {
+                          method: "POST",
+                          headers: { Authorization: `Bearer ${token}` }
+                        });
+                        if (res.ok) setIsKicked(true);
+                      }
+                    }}
                     style={menuItemStyle}
                     onMouseEnter={e => e.currentTarget.style.background = "#464646"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}

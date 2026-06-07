@@ -304,6 +304,7 @@ export default function CommunityPage() {
                                         openComments={openComments}
                                         isAdmin={canManage}
                                         communityContext={true}
+                                        communityId={id}
                                     />
                                 ))
                             }
@@ -400,6 +401,7 @@ export default function CommunityPage() {
                                                     openComments={openComments}
                                                     isAdmin={canManage}
                                                     communityContext={true}
+                                                    communityId={id}
                                                 />
                                             ))}
                                         </div>

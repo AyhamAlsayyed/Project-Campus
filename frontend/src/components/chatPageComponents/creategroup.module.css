@@ -101,11 +101,13 @@
 /* --- DETAILS SECTION --- */
 .detailsSection {
     display: flex;
-    gap: 50px;
+    gap: 30px;
+    align-items: flex-start;
 }
 
 .photoColumn {
-    width: 25%;
+    width: 200px;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -113,7 +115,7 @@
 }
 
 .photoCircle {
-    width: 140px; 
+    width: 140px;
     height: 140px;
     background-color: #4D4D4D;
     border-radius: 50%;
@@ -141,23 +143,23 @@
     color: #FFFFFF;
     font-size: 1.1rem;
     font-weight: 700;
-    margin: 0 0 10px 0;
+    margin: 0 0 5px 0;
 }
 
 .photoSubtext {
     color: #AAAAAA;
-    font-size: 0.65rem; 
+    font-size: 0.65rem;
     line-height: 1.3;
-    margin: 0;
+    margin: 20px 0 0 100% ;
     text-align: left;
+    width: 300px;
 }
-
 .asterisk {
     color: #E043B5;
 }
 
 .inputsColumn {
-    width: 75%;
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -172,13 +174,14 @@
 .inputWrapper {
     position: relative;
     flex: 0.6;
+    border-radius: 35px;
 }
 
 .nameInput {
     width: 100%;
     background-color: #262626;
     border: none;
-    border-radius: 12px;
+    border-radius: 35px;
     padding: 18px 20px;
     color: #FFFFFF;
     font-size: 1rem;
@@ -268,9 +271,9 @@
 /* Margin-left set to 2% */
 .academicMiddle {
     width: 45%;
-    margin-left: 2%; 
+    margin-left: 2%;
     color: #CCCCCC;
-    font-size: 0.65rem; 
+    font-size: 0.65rem;
     line-height: 1.4;
 }
 
@@ -306,7 +309,7 @@
     width: 28px;
     height: 28px;
     /* Exactly the same filter color as the backbutton */
-    filter: brightness(0) invert(0.85); 
+    filter: brightness(0) invert(0.85);
 }
 
 .permissionsTitle {
@@ -318,7 +321,7 @@
 
 .permissionsSubtext {
     color: #AAAAAA;
-    font-size: 0.65rem; 
+    font-size: 0.65rem;
     margin-left: 10px;
 }
 
@@ -407,7 +410,7 @@
     width: 48px;
     height: 26px;
     /* Off state uses #1A1A1A exactly like the old active white state */
-    background-color: #1A1A1A; 
+    background-color: #1A1A1A;
     border-radius: 13px;
     position: relative;
     cursor: pointer;
@@ -424,7 +427,7 @@
     width: 22px;
     height: 22px;
     /* Thumb stays white universally */
-    background-color: #FFFFFF; 
+    background-color: #FFFFFF;
     border-radius: 50%;
     position: absolute;
     top: 2px;

@@ -114,9 +114,7 @@
 }
 
 .requestsLink span {
-    background: linear-gradient(30deg, #c72cff, #8b2dff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+   color: #B925A5;
 }
 
 
