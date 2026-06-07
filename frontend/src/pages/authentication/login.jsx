@@ -8,6 +8,7 @@ import imageOne from '../../Assets/Pictures/login-1.png'
 import imageTwo from '../../Assets/Pictures/login-2.png'
 import imageThree from '../../Assets/Pictures/login-3.png'
 import imageFour from '../../Assets/Pictures/login-4.png'
+import Stars from '../../Assets/icons/stars.png';
 export default function Login() {
     const navigate = useNavigate();
     const [language, setLanguage] = useState('en');
@@ -15,7 +16,27 @@ export default function Login() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-
+    const [showExpiredPopup, setShowExpiredPopup] = useState(false);
+    const [subscribing, setSubscribing] = useState(false);
+    const handleSubscribe = async (plan) => {
+        try {
+            setSubscribing(true);
+            const token = localStorage.getItem("access");
+            const res = await fetch('http://localhost:8000/api/subscriptions/subscribe/', {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ plan })
+            });
+            if (res.ok) {
+                setShowExpiredPopup(false);
+                navigate('/home');
+            }
+        } catch (e) { console.error(e); }
+        finally { setSubscribing(false); }
+    };
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const slides = [
@@ -41,9 +62,7 @@ export default function Login() {
             if (!response.ok) {
                 setError(data.message || 'Login failed');
                 return;
-
             }
-
             if (data.access && data.refresh) {
                 localStorage.setItem("access", data.access);
                 localStorage.setItem("refresh", data.refresh);
@@ -53,6 +72,19 @@ export default function Login() {
                 setError("No tokens returned from server");
                 return;
             }
+            const subRes = await fetch('http://localhost:8000/api/subscriptions/current/', {
+                headers: { Authorization: `Bearer ${data.access}` }
+            });
+
+            if (subRes.ok) {
+                const subData = await subRes.json();
+                const isExpired = !subData?.plan || new Date(subData?.end_date) < new Date();
+                if (isExpired) {
+                    setShowExpiredPopup(true);
+                    return;
+                }
+            }
+
 
             navigate('/home');
 
@@ -178,6 +210,80 @@ export default function Login() {
             </div>
 
             <div className={`${styles.footer}  lg:!block`}></div>
+            {showExpiredPopup && (
+                <div className={styles.expiredOverlay}>
+                    <div style={{ position: 'relative', display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
+                        <span className={styles.expiredHeading}>
+                            Your subscription has expired — choose a plan to continue
+                        </span>
+
+                        {/* Basic Card */}
+                        <div className={styles.basicCard}>
+                            <div className={styles.cardHeader}>
+                                <span className={styles.basicTitle}>BASIC</span>
+                                <span className={styles.subText}>Subscription</span>
+                            </div>
+                            <ul className={styles.featuresList}>
+                                <li>Exist on the platform</li>
+                                <li>Your own identity and content.</li>
+                                <li>Join communities.</li>
+                                <li>Create events.</li>
+                                <li>Create posts and interact with others.</li>
+                                <li>Create and run promotions.</li>
+                            </ul>
+                            <div className={styles.priceContainerBasic}>
+                                <button
+                                    onClick={() => handleSubscribe('basic')}
+                                    disabled={subscribing}
+                                    className={styles.priceBtn}
+                                >
+                                    $14.99
+                                </button>
+                                <span className={styles.perMonthText}>/month</span>
+                            </div>
+                        </div>
+
+                        {/* Premium Card */}
+                        <div className={styles.premiumCard}>
+                            <div className={styles.cardHeader}>
+                                <img src={Stars} alt="stars" className={styles.starsIconSmall} />
+                                <span className={styles.premiumTitleCard}>PREMIUM</span>
+                                <span className={styles.subText}>Subscription</span>
+                            </div>
+                            <ul className={styles.featuresList}>
+                                <li>Exist on the platform</li>
+                                <li>Your own identity and content.</li>
+                                <li>Join communities.</li>
+                                <li>Create events.</li>
+                                <li>Create posts and interact with others.</li>
+                                <li>Create and run promotions.</li>
+                            </ul>
+                            <div className={styles.divider} />
+                            <ul className={`${styles.featuresList} ${styles.pinkList}`}>
+                                <li>Verification badge.</li>
+                                <li>Instant community creation.</li>
+                                <li>Higher priority in feed.</li>
+                                <li>16% Subscription discount.</li>
+                            </ul>
+                            <div className={styles.premiumFooter}>
+                                <div className={styles.premiumPriceBox}>
+                                    <div className={styles.priceColumn}>
+                                        <span className={styles.oldPrice}>$29.99</span>
+                                        <button
+                                            onClick={() => handleSubscribe('premium')}
+                                            disabled={subscribing}
+                                            className={styles.priceBtn}
+                                        >
+                                            $24.99
+                                        </button>
+                                    </div>
+                                    <span className={styles.perMonthText}>/month</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

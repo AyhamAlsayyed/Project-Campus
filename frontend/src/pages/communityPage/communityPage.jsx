@@ -417,7 +417,7 @@ export default function CommunityPage() {
 
                             <div className={styles.rightSection}>
                                 <DesktopCreatePost user={user} avatarSrc={avatarSrc} weather={weather} setIsModalOpen={setIsModalOpen} handleMediaUpload={handleMediaUpload} handleFileUpload={handleFileUpload} setIsPollOpen={setIsPollOpen} selectedCommunity={selectedCommunity} setSelectedCommunity={setSelectedCommunity} communityDropdownOpen={communityDropdownOpen} setCommunityDropdownOpen={setCommunityDropdownOpen} joinedCommunities={joinedCommunities} API={API} defaultCommunity={community} />
-                                <WeeklyNews communityId={id} />
+                                <WeeklyNews communityId={id} useHighlights />
                             </div>
                         </>
                     )}

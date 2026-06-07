@@ -2,30 +2,29 @@ import { useState, useEffect } from "react";
 import styles from "./weeklynews.module.css";
 import { createPortal } from "react-dom";
 import ArrowRight from '../../Assets/icons/arrow-right.png'
-export default function WeeklyNews({ communityId }) {
+export default function WeeklyNews({ communityId, useHighlights }) {
     const [items, setItems] = useState([]);
     const [idx, setIdx] = useState(0);
     const [news, setNews] = useState([]);
     const [showPopup, setShowPopup] = useState(false);
-
     const fetchNews = async () => {
         try {
             let url = "";
-
             if (communityId) {
-
-                url = `http://localhost:8000/api/communities/${communityId}/news/`;
+                url = useHighlights
+                    ? `http://localhost:8000/api/communities/${communityId}/highlights/`
+                    : `http://localhost:8000/api/communities/${communityId}/news/`;
             } else {
-
                 url = `http://localhost:8000/api/news/`;
             }
 
-            const res = await fetch(url);
+            const token = localStorage.getItem("access");
+            const res = await fetch(url, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+            });
             const data = await res.json();
-
             setNews(data);
             setItems(Array.isArray(data) ? data : []);
-
         } catch (err) {
             console.error("Failed to load news");
         }
