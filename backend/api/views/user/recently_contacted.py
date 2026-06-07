@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ...models import ConversationMember, Message
-from ...serializers import ConversationMemberSerializer
+from ...serializers import ConversationSerializer
 
 
 @api_view(["GET"])
@@ -31,6 +31,6 @@ def recently_contacted(request):
         .order_by("-last_msg_time", "-conversation__created_at")
     )
 
-    serializer = ConversationMemberSerializer(memberships, many=True, context={"request": request})
+    serializer = ConversationSerializer(memberships, many=True, context={"request": request})
 
     return Response(serializer.data)

@@ -995,7 +995,7 @@ class NotificationSettingSerializer(serializers.ModelSerializer):
     """
 
 
-class ConversationMemberSerializer(serializers.ModelSerializer):
+class ConversationSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source="conversation.conversation_id", read_only=True)
     name = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
@@ -1005,6 +1005,7 @@ class ConversationMemberSerializer(serializers.ModelSerializer):
     last_message_time = serializers.SerializerMethodField()
     unread_count = serializers.SerializerMethodField()
     is_group = serializers.BooleanField(source="conversation.is_group", read_only=True)
+    is_academic = serializers.BooleanField(source="conversation.is_academic", read_only=True)
     status = serializers.SerializerMethodField()
     conversations_owner = serializers.SerializerMethodField()
     other_member_id = serializers.SerializerMethodField()
@@ -1033,6 +1034,7 @@ class ConversationMemberSerializer(serializers.ModelSerializer):
             "is_pinned",
             "is_muted",
             "is_group",
+            "is_academic",
             "status",
             "conversations_owner",
             "other_member_id",
