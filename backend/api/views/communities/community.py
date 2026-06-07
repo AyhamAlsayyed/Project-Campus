@@ -30,7 +30,11 @@ from ...models import (
     Report,
     Subscription,
 )
-from ...serializers import CommunitySerializer, PostSerializer
+from ...serializers import (
+    CommunityRequestStatusSerializer,
+    CommunitySerializer,
+    PostSerializer,
+)
 from ...utils.community import ensure_community_admin
 from ...utils.feed import base_annotations
 from ...utils.notifications import send_global_notification
@@ -210,28 +214,49 @@ def community_detail(request, community_id):
     )
 
 
-@api_view(["GET", "POST"])
+@api_view(["GET", "PATCH"])
 @permission_classes([IsAuthenticated])
 def community_post_settings(request, community_id):
     ensure_community_admin(request.user, community_id)
     community = get_object_or_404(Community, pk=community_id)
 
-    if request.method == "POST":
-        requires_approval = request.data.get("requires_post_approval")
-        if requires_approval is not None:
-            community.requires_post_approval = bool(requires_approval)
-            community.save(update_fields=["requires_post_approval"])
-            return Response(
-                {
-                    "message": "Settings updated successfully.",
-                    "requires_post_approval": community.requires_post_approval,
-                },
-                status=status.HTTP_200_OK,
-            )
+    if request.method == "PATCH":
+        data = request.data
+        fields_to_update = []
 
-        return Response({"error": "Missing requires_post_approval parameter."}, status=status.HTTP_400_BAD_REQUEST)
+        if "post_approval" in data:
+            community.requires_post_approval = bool(data.get("post_approval"))
+            fields_to_update.append("requires_post_approval")
 
-    return Response({"requires_post_approval": community.requires_post_approval}, status=status.HTTP_200_OK)
+        if "can_post_admins" in data:
+            community.can_pages_post = bool(data.get("can_post_admins"))
+            fields_to_update.append("can_pages_post")
+
+        if "can_post_instructors" in data:
+            community.can_instructors_post = bool(data.get("can_post_instructors"))
+            fields_to_update.append("can_instructors_post")
+
+        if "can_post_students" in data:
+            community.can_students_post = bool(data.get("can_post_students"))
+            fields_to_update.append("can_students_post")
+
+        if fields_to_update:
+            community.save(update_fields=fields_to_update)
+
+        return Response(
+            {"message": "Settings updated successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+    return Response(
+        {
+            "post_approval": community.requires_post_approval,
+            "can_post_admins": community.can_pages_post,
+            "can_post_instructors": community.can_instructors_post,
+            "can_post_students": community.can_students_post,
+        },
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["GET"])
@@ -313,10 +338,12 @@ def get_reported_posts(request, community_id):
     post_content_type = ContentType.objects.get_for_model(Post)
 
     reported_post_ids = Report.objects.filter(
-        content_type_obj=post_content_type, final_action="", university_page_id=id
+        content_type_obj=post_content_type, final_action="", university_page_id=community_id
     ).values_list("object_id", flat=True)
 
-    reported_posts = Post.objects.filter(pk__in=reported_post_ids, community_id=id).distinct().select_related("author")
+    reported_posts = (
+        Post.objects.filter(pk__in=reported_post_ids, community_id=community_id).distinct().select_related("author")
+    )
 
     serializer = PostSerializer(reported_posts, many=True, context={"request": request})
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -465,6 +492,32 @@ def create_community_or_request(request):
             },
             status=status.HTTP_202_ACCEPTED,
         )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def check_community_request_status(request):
+    latest_request = CommunityRequest.objects.filter(user=request.user).first()
+
+    if not latest_request:
+        return Response(
+            {
+                "has_requested": False,
+                "status": None,
+                "community_name": None,
+                "privacy": None,
+                "purpose_statement": None,
+                "rejection_reason": None,
+                "created_at": None,
+                "updated_at": None,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    latest_request.has_requested = True
+
+    serializer = CommunityRequestStatusSerializer(latest_request, context={"request": request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["PATCH"])

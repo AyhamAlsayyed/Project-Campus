@@ -6,6 +6,7 @@ from .views.auth.signup.signup import signup
 from .views.auth.signup.verify_code import verify_code
 from .views.comment.comments import comment_list, create_comment
 from .views.communities.community import (  # delete_community,
+    check_community_request_status,
     communities,
     community_detail,
     community_post_settings,
@@ -81,6 +82,9 @@ from .views.pages.pages import (
     recommended_pages,
     toggle_follow_page,
     toggle_page_notifications,
+)
+from .views.pages.subscription import (  # subscribe_to_plan,; cancel_subscription,
+    get_current_subscription,
 )
 from .views.posts.post_action import (
     delete_post,
@@ -172,6 +176,7 @@ urlpatterns += [
     path("communities/<int:community_id>/reported-posts/", get_reported_posts),
     path("communities/<int:community_id>/posts/", feed),
     path("communities/request/", create_community_or_request),
+    path("communities/request/status", check_community_request_status),
     path("communities/create/", create_community_or_request),
     # community_join
     path("communities/<int:community_id>/request/", request_join_community),
@@ -192,7 +197,7 @@ urlpatterns += [
     path("communities/<int:community_id>/process_join_request/<int:member_id>/", process_join_request),
     path("communities/<int:community_id>/post-requests/", fetch_post_requests),
     path("communities/<int:community_id>/process_post-requests/<int:post_id>/", process_post_request),
-    path("communities/<int:community_id>/highlight/<int:post_id>/remove/", remove_community_highlight),
+    path("communities/<int:community_id>/highlights/<int:post_id>/remove/", remove_community_highlight),
     path("communities/<int:community_id>/reported-posts/<int:post_id>/dismiss/", dismiss_post_report),
     path("posts/<int:post_id>/admin_delete", delete_reported_post),
     # path("communities/<int:community_id>/kick/", ),
@@ -236,6 +241,7 @@ urlpatterns += [
     path("pages/<int:page_id>/review/", rate_page),
     path("pages/<int:page_id>/events/", page_events),
     path("pages/<int:page_id>/notify/", toggle_page_notifications),
+    path("subscriptions/current/", get_current_subscription),
     # university
     path("university/news/", university_news),
     path("university/events/", university_events),

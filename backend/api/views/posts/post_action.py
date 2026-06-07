@@ -143,8 +143,13 @@ def delete_post(request, post_id):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def toggle_community_highlight(request, post_id):
-    print(request.data)
-    community_id = request.data["community_id"]
+    community_id = request.data.get("community_id")
+    if not community_id:
+        return Response(
+            {"error": "community_id is required in the request body."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     ensure_community_admin(request.user, community_id)
 
     community = get_object_or_404(Community, pk=community_id)
@@ -166,6 +171,14 @@ def toggle_community_highlight(request, post_id):
             status=status.HTTP_200_OK,
         )
     else:
+        current_highlights_count = Post.objects.filter(community_id=community.pk, is_highlighted=True).count()
+
+        if current_highlights_count >= 5:
+            return Response(
+                {"error": "Maximum limit reached. You can only highlight up to 5 posts per community."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         post.is_highlighted = True
         post.highlighted_at = timezone.now()
         post.save(update_fields=["is_highlighted", "highlighted_at"])

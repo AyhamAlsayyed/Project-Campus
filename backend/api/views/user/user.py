@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ...models import EventReminder, UserDegree
-from ...serializers import UserSerializer
+from ...serializers import PageSerializer, UserSerializer
 
 
 def get_user_academic_info(user):
@@ -45,7 +45,11 @@ def get_user_academic_info(user):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def me(request):
-    serializer = UserSerializer(request.user, context={"request": request})
+    user = request.user
+    if hasattr(user, "page") and user.page is not None:
+        serializer = PageSerializer(user.page, context={"request": request})
+    else:
+        serializer = UserSerializer(request.user, context={"request": request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 

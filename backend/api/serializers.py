@@ -6,6 +6,7 @@ from .models import (
     Comment,
     Community,
     CommunityMember,
+    CommunityRequest,
     Conversation,
     ConversationMember,
     Event,
@@ -17,6 +18,7 @@ from .models import (
     PageRating,
     Post,
     PostMedia,
+    Subscription,
     UserDegree,
     UserProfile,
 )
@@ -75,6 +77,7 @@ class UserSerializer(serializers.ModelSerializer):
     friends_count = serializers.SerializerMethodField()
     friendship_status = serializers.SerializerMethodField()
     personal_email = serializers.SerializerMethodField()
+    picked_communities_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -96,6 +99,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_restricted",
             "friends_count",
             "friendship_status",
+            "picked_communities_count",
         ]
 
     def _should_restrict_data(self, obj):
@@ -331,6 +335,15 @@ class UserSerializer(serializers.ModelSerializer):
         instructor = getattr(obj, "instructor_profile", None)
         return instructor.get_instructor_type_display() if instructor and instructor.instructor_type else ""
 
+    def get_picked_communities_count(self, obj):
+        if not hasattr(obj, "instructor_profile"):
+            return None
+
+        if self._should_restrict_data(obj):
+            return None
+
+        return CommunityMember.objects.filter(user=obj, status="approved").count()
+
 
 class UserMinimalSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
@@ -499,6 +512,21 @@ class PageSerializer(serializers.ModelSerializer):
         return 0
 
 
+class CurrentSubscriptionSerializer(serializers.ModelSerializer):
+    plan = serializers.CharField(source="tier")
+
+    class Meta:
+        model = Subscription
+        fields = [
+            "plan",
+            "price",
+            "billing_cycle",
+            "is_active",
+            "start_date",
+            "end_date",
+        ]
+
+
 class PostMediaSerializer(serializers.ModelSerializer):
     type = serializers.CharField(source="media_type")
     url = serializers.SerializerMethodField()
@@ -665,6 +693,8 @@ class CommunitySerializer(serializers.ModelSerializer):
     request_sent = serializers.BooleanField(read_only=True)
     members_count = serializers.IntegerField(read_only=True)
     friends_count = serializers.IntegerField(read_only=True)
+
+    highlighted_count = serializers.IntegerField(read_only=True)
     sample_members = serializers.SerializerMethodField()
 
     class Meta:
@@ -683,6 +713,7 @@ class CommunitySerializer(serializers.ModelSerializer):
             "request_sent",
             "members_count",
             "friends_count",
+            "highlighted_count",
             "sample_members",
         ]
 
@@ -766,7 +797,29 @@ class CommunitySerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
         if ret.get("members_count") is None:
             ret["members_count"] = CommunityMember.objects.filter(community=instance, status="approved").count()
+
+        if ret.get("highlighted_count") is None:
+            ret["highlighted_count"] = Post.objects.filter(community=instance, is_highlighted=True).count()
+
         return ret
+
+
+class CommunityRequestStatusSerializer(serializers.ModelSerializer):
+    has_requested = serializers.BooleanField(read_only=True)
+    community_name = serializers.CharField(source="name", read_only=True)
+
+    class Meta:
+        model = CommunityRequest
+        fields = [
+            "has_requested",
+            "status",
+            "community_name",
+            "privacy",
+            "purpose_statement",
+            "rejection_reason",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class CommunityMemberSerializer(serializers.ModelSerializer):
@@ -982,7 +1035,6 @@ class NotificationSettingSerializer(serializers.ModelSerializer):
         ]
 
     def get_disabled_by_master(self, obj):
-        # Tells the frontend whether to visually lock/gray out the UI sub-toggles
         return not obj.enable_all
 
     """
@@ -1008,6 +1060,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     is_group = serializers.BooleanField(source="conversation.is_group", read_only=True)
     is_academic = serializers.BooleanField(source="conversation.is_academic", read_only=True)
     status = serializers.SerializerMethodField()
+    user_status = serializers.SerializerMethodField()
     conversations_owner = serializers.SerializerMethodField()
     other_member_id = serializers.SerializerMethodField()
     allow_members_to_edit_settings = serializers.BooleanField(
@@ -1037,6 +1090,7 @@ class ConversationSerializer(serializers.ModelSerializer):
             "is_group",
             "is_academic",
             "status",
+            "user_status",
             "conversations_owner",
             "other_member_id",
             "allow_members_to_edit_settings",
@@ -1137,6 +1191,18 @@ class ConversationSerializer(serializers.ModelSerializer):
 
     def get_status(self, obj):
         return obj.conversation.status
+
+    def get_user_status(self, obj):
+        conv = obj.conversation
+        if not conv.is_group:
+            other_member_obj = self._get_other_member(obj)
+            if other_member_obj and other_member_obj.user:
+                profile = getattr(other_member_obj.user, "profile", None)
+                if profile:
+                    return profile.status
+            return "offline"
+
+        return None
 
     def get_conversations_owner(self, obj):
         conv = obj.conversation

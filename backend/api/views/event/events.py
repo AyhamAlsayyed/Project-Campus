@@ -64,12 +64,14 @@ def events(request):
 
     recommended_qs = (
         Event.objects.filter(start_date__gte=one_week_ago)
+        .exclude(page__user=user)
         .annotate(is_followed=Exists(follow_qs), attendees_count=Count("reminders"))
         .order_by("-attendees_count", "-start_date")[:5]
     )
 
     body_qs = (
         Event.objects.select_related("page")
+        .exclude(page__user=user)
         .annotate(
             is_followed=Exists(follow_qs),
             attendees_count=Count("reminders"),

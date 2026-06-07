@@ -168,6 +168,7 @@ class Page(models.Model):
 
     class PageType(models.TextChoices):
         UNIVERSITY = "university", "University"
+        COLLABORATOR = "collaborator", "Collaborator"
         EDUCATIONAL = "educational", "Educational"
         LIBRARY = "library", "Library"
         LAB = "lab", "Lab"
@@ -178,10 +179,12 @@ class Page(models.Model):
         GYM = "gym", "Gym"
         STUDENT_CLUB = "student_club", "Student Club"
         SERVICE = "service", "Service"
+        LOCAL_BUSINESS = "local_business", "Local Business"
+        YOUTH_DEVELOPMENT_ORGANIZATION = "Youth Developer Organization", "Youth Developer Organization"
         OTHER = "other", "Other"
 
     page_type = models.CharField(
-        max_length=20,
+        max_length=30,
         choices=PageType.choices,
         default=PageType.OTHER,
     )
