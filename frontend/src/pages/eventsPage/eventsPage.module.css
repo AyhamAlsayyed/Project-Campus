@@ -1196,3 +1196,631 @@
   align-items: center;
   gap: 20px;
 }
+
+/* =========================================
+   MANAGE EVENTS MODAL
+========================================= */
+.manageModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.manageModalBox {
+  background-color: #333333;
+  width: 520px;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 20px;
+}
+
+.manageModalHeader {
+  display: flex;
+  align-items: center;
+  padding: 20px 5% 4px 5%;
+  gap: 24px;
+}
+
+.manageHeaderTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.iconSmallBack {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(98%) sepia(3%) saturate(225%) hue-rotate(193deg) brightness(115%) contrast(88%);
+}
+
+.iconBigEvents {
+  filter: brightness(0) invert(1);
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.manageModalTitle {
+  font-size: 18px;
+  color: #ffffff;
+  font-weight: 600;
+  margin: 0;
+}
+
+.manageModalDivider {
+  width: 90%;
+  height: 1px;
+  background-color: #4D4D4D;
+  margin: 12px auto;
+}
+
+.manageTabsContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80%;
+  margin: 0 auto;
+  border-radius: 12px;
+}
+
+.manageTabBtn {
+  flex: 1;
+  background-color: transparent;
+  color: #ffffff;
+  border: none;
+  padding: 8px 0;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background-color 0.2s;
+}
+
+.manageTabActive {
+  background-color: #464646;
+}
+
+.manageVerticalLine {
+  width: 1px;
+  height: 18px;
+  background-color: #4D4D4D;
+  margin: 0 16px;
+}
+
+.manageContentBody {
+  padding: 12px 6% 0 10%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.manageEventsHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  padding-right: 14px;
+}
+
+.manageEventsMonth {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.manageMonthPickerWrapper {
+  position: relative;
+}
+
+.manageMonthToggle {
+  background-color: #595959;
+  color: #ffffff;
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.manageMonthToggle:hover {
+  background-color: #6a6a6a;
+}
+
+.manageMonthDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  background-color: #242424;
+  border: 1px solid #4D4D4D;
+  border-radius: 14px;
+  padding: 12px;
+  z-index: 10000;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.manageMonthNav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.manageMonthNavBtn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.manageMonthYear {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.manageMonthGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.manageMonthBtn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  padding: 6px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  text-align: center;
+}
+
+.manageMonthBtnActive {
+  background-color: #464646;
+  color: #ffffff;
+}
+
+.manageMonthBtnInactive {
+  color: #a6a6a6;
+}
+
+.manageMonthBtnInactive:hover {
+  background-color: #2d2d2d;
+  color: #ffffff;
+}
+
+.noEventsText {
+  color: #8a8a8a;
+  font-size: 14px;
+  text-align: center;
+  padding: 40px 0;
+  margin: 0;
+  font-style: italic;
+}
+
+.manageScrollArea {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  display: flex;
+  flex-direction: column;
+  padding-right: 8px;
+}
+
+.manageScrollArea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.manageScrollArea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.manageScrollArea::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+}
+
+.manageScrollArea::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.manageEventItemBlock {
+  display: flex;
+  flex-direction: column;
+}
+
+.manageEventItem {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.eventItemDivider {
+  width: 50%;
+  height: 1px;
+  background-color: #4D4D4D;
+  margin: 12px auto;
+}
+
+.manageActionsRow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+  margin-bottom: 8px;
+}
+
+.manageActionBtnDelete,
+.manageActionBtnUpdate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.manageActionBtnDelete {
+  color: #e62058;
+}
+
+.manageActionBtnUpdate {
+  color: #ffffff;
+}
+
+.manageActionIcon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.iconRed {
+  filter: invert(24%) sepia(85%) saturate(3015%) hue-rotate(334deg) brightness(94%) contrast(95%);
+}
+
+.iconWhite {
+  filter: brightness(0) invert(1);
+}
+
+.manageModalBackBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.manageEditForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 14px;
+  margin-top: 10px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.manageEditInput {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 0.9rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  color-scheme: dark;
+}
+
+.manageEditTextarea {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 0.9rem;
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.manageEditActions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.manageEditCancelBtn {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 8px 18px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.manageEditSaveBtn {
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.9), rgba(49, 32, 169, 0.9));
+  border: none;
+  border-radius: 10px;
+  padding: 8px 18px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.manageEditSegmentRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.manageEditSegment {
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 8px 0;
+  color: #fff;
+  font-size: 0.88rem;
+  outline: none;
+  width: 38px;
+  text-align: center;
+}
+
+.manageEditSegmentYear {
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 8px 0;
+  color: #fff;
+  font-size: 0.88rem;
+  outline: none;
+  width: 54px;
+  text-align: center;
+}
+
+.manageEditSep {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.manageEditSectionLabel {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.manageEditAmPm {
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-left: 4px;
+}
+
+.manageEditAmPmBtn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.manageEditAmPmActive {
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.8), rgba(49, 32, 169, 0.8));
+  color: #fff;
+  font-weight: 600;
+}
+
+/* =========================================
+   EVENT CARD SHARED (manage modal)
+========================================= */
+.eventCardContainer {
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 15px 0;
+}
+
+.eventCardBg {
+  position: relative;
+  width: 100%;
+  min-height: 190px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.eventTimeBox {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background-color: #19191A;
+  opacity: 0.85;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: right;
+  line-height: 1.5;
+}
+
+.eventDetailsBottom {
+  padding: 30px 16px 16px 16px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+}
+
+.eventTextContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eventTitle {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #ffffff;
+}
+
+.eventDescWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.eventDesc {
+  font-weight: normal;
+  font-size: 0.8rem;
+  color: #ffffff;
+  display: inline;
+  line-height: 1.4;
+}
+
+/* =========================================
+   DELETE EVENT MODAL
+========================================= */
+.deleteEventOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+}
+
+.deleteEventModal {
+  background: linear-gradient(145deg, #1e1e2e, #252535);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  padding: 28px;
+  width: 360px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.deleteEventTitle {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.deleteEventDesc {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.deleteEventActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.deleteEventCancelBtn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 11px 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.deleteEventConfirmBtn {
+  flex: 2;
+  background: rgba(232, 77, 112, 0.9);
+  border: none;
+  border-radius: 12px;
+  padding: 11px 0;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.deleteEventConfirmBtn:hover {
+  opacity: 0.85;
+}
+
+/* =========================================
+   CREATE EVENT LAYOUT (mirrors profileContent/profileCard)
+========================================= */
+.createEventContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  flex: 1;
+  min-width: 0;
+  
+}
+
+.createEventProfileContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
+  flex: 1;
+  border-radius: 30px;
+  min-height: 60vh;
+  z-index: 1;
+  min-width: 900px;
+  position: relative;
+  margin: 2.5% 0 0 0;
+  padding-top: 5px;
+}
+
+.createEventProfileCard {
+  background-color: #333333;
+  border-radius: 30px 30px 0 0;
+  width: 100%;
+  flex: 1;
+  min-height: 77.8vh;
+  height: auto;
+  overflow: hidden;
+}

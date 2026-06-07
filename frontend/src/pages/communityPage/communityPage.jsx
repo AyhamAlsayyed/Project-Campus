@@ -128,7 +128,6 @@ export default function CommunityPage() {
         const data = await res.json();
         setCommunity(data);
     };
-
     const loadUser = async () => {
         if (!token) return;
         try {
@@ -136,10 +135,21 @@ export default function CommunityPage() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
+
+            // 👇 Add this
+            if (data.role === 'university' || localStorage.getItem('user_type') === 'university') {
+                const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (pageRes.ok) {
+                    const pageData = await pageRes.json();
+                    data.avatar = pageData.profile_image;
+                }
+            }
+
             setUser(data);
         } catch (err) { console.error("Failed to load user"); }
     };
-
     useEffect(() => {
         const fetchJoinedCommunities = async () => {
             if (!token) return;
@@ -213,12 +223,12 @@ export default function CommunityPage() {
         }
     };
 
-    const rawAvatar = user?.profile?.avatar || user?.avatar;
+    const rawAvatar = user?.profile?.avatar || user?.avatar || user?.profile_image;   
     const avatarSrc = rawAvatar
         ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
         : ProfilePicture;
 
-    const isAdmin = user?.id === community?.admin;
+    const canManage = community?.user_role === 'owner' || community?.user_role === 'admin';
 
     const mobileFilters = [
         { key: "recommended", label: "Recommended" },
@@ -292,7 +302,7 @@ export default function CommunityPage() {
                                         key={post.id}
                                         post={post}
                                         openComments={openComments}
-                                        isAdmin={isAdmin}
+                                        isAdmin={canManage}
                                         communityContext={true}
                                     />
                                 ))
@@ -306,7 +316,7 @@ export default function CommunityPage() {
             {!isMobile && (
                 <div className={`${styles.content} ${styles.page}`}>
 
-                   
+
                     <SideBarNav theme={theme} toggleTheme={toggleTheme} user={user} />
 
                     {isSettingsOpen ? (
@@ -339,7 +349,7 @@ export default function CommunityPage() {
                                         />
                                     )}
 
-                                    
+
                                 </div>
                             </div>
 
@@ -368,7 +378,7 @@ export default function CommunityPage() {
                                             <img src={isNotified ? NotificationActive : NotificationInactive} alt="notifications" style={{ width: 23, height: 28, filter: "brightness(0) invert(1)" }} />
                                         </button>
 
-                                        {isAdmin ? (
+                                        {canManage ? (
                                             <button onClick={() => setIsSettingsOpen(!isSettingsOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                                                 <img src={Setting} alt="settings" style={{ width: 28, height: 28, filter: "brightness(0) invert(1)" }} />
                                             </button>
@@ -388,7 +398,7 @@ export default function CommunityPage() {
                                                     key={post.id}
                                                     post={post}
                                                     openComments={openComments}
-                                                    isAdmin={isAdmin}
+                                                    isAdmin={canManage}
                                                     communityContext={true}
                                                 />
                                             ))}

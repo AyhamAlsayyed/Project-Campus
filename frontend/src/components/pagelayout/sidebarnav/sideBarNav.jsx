@@ -75,8 +75,7 @@ export default function SidebarNav({ variant = "default", currentUser }) {
 
   if (variant === "profile" && !currentUser) return null;
 
-  // No Tailwind hidden class — visibility is controlled by the parent (Homepage)
-  // which conditionally mounts this component via isMobile JS state
+  
   return (
     <nav className={styles.sideBarNav}>
       {mainItems.map(({ label, path, icon: Icon }) => (

@@ -107,31 +107,30 @@ export default function FollowedCommunities() {
                     <h1 className={styles.title}>
                         <span className={styles.highlight}>Communities</span> You Joined
                     </h1>
-
-                    <div className={styles.postContainer}>
-                        <div className={styles.innerContainer}>
-                            {communities.length > 0 ? (
-                                communities.map((community, index) => (
+                    {communities.length > 0 ? (
+                        <div className={styles.postContainer}>
+                            <div className={styles.innerContainer}>
+                                {communities.map((community, index) => (
                                     <div key={community.id} className={styles.itemWrapper}>
                                         <CommunityCard
                                             community={community}
                                             variant="large"
                                             setCommunities={setCommunities}
                                         />
-
-
                                         {index !== communities.length - 1 && (
                                             <div className={styles.dividerOne} />
                                         )}
                                     </div>
-                                ))
-                            ) : (
-                                <p style={{ color: "#888", textAlign: "center" }}>
-                                    You haven’t joined any communities yet.
-                                </p>
-                            )}
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className={styles.emptyState}>
+                            <span className={styles.emptyIcon}>🏘️</span>
+                            <h2 className={styles.emptyTitle}>No communities yet</h2>
+                            <p className={styles.emptySubtitle}>You haven't joined any communities yet.</p>
+                        </div>
+                    )}
                 </div>
                 <div className={styles.rightSection}>
                     <div className={styles.rightSectionWrapper}>
@@ -145,7 +144,7 @@ export default function FollowedCommunities() {
                                     .map((community, index, arr) => (
                                         <div key={community.id} className={styles.communityWrapper}>
 
-                                            
+
                                             <CommunityCard
                                                 community={community}
                                                 variant="small"

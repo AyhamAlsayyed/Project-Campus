@@ -69,6 +69,16 @@ export default function Homepage() {
             const res = await fetch(`${API}/api/auth/me/`, { headers: { Authorization: `Bearer ${token}` } })
             const data = await res.json().catch(() => ({}))
             if (!res.ok) { setUserError("Failed to load user"); setUser(null); return }
+            if (data.role === 'university' || localStorage.getItem('user_type') === 'university') {
+                const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (pageRes.ok) {
+                    const pageData = await pageRes.json();
+                    data.avatar = pageData.profile_image;
+                }
+            }
+
             setUser(data)
         } catch (e) { setUserError("Something went wrong") }
         finally { setUserLoading(false) }
@@ -309,8 +319,8 @@ export default function Homepage() {
 
     }, [])
 
-    const rawAvatar = user?.profile?.avatar || user?.avatar;
-    const avatarSrc = rawAvatar
+    const rawAvatar = user?.profile?.avatar || user?.avatar || user?.profile_image;
+      const avatarSrc = rawAvatar
         ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
         : ProfilePicture;
 

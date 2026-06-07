@@ -464,8 +464,9 @@ body {
   cursor: pointer;
   color: rgba(255, 255, 255, 0.6);
   font-weight: 700;
-  padding: 10px 20px;
+  padding: 15px 20px;
   border-radius: 14px;
+  
 }
 
 .tabActive {
@@ -488,7 +489,6 @@ body {
   font-size: 0.8rem;
   font-weight: 700;
 }
-
 .moreBtn {
   border: none;
   background: transparent;
@@ -496,14 +496,12 @@ body {
   color: rgba(255, 255, 255, 0.75);
   font-size: 1.2rem;
 }
-
 .postText {
   margin: 12px 2px 12px 2px;
   color: rgba(255, 255, 255, 0.85);
   opacity: 0.9;
   line-height: 1.35rem;
 }
-
 .photosGrid {
   display: grid;
   background-color: #2a2a2a;
@@ -3526,4 +3524,225 @@ body {
     object-fit: contain;
     /* Keeps it pure white #F2F2F2 without any weird discoloration */
     filter: brightness(0) saturate(100%) invert(98%) sepia(3%) saturate(225%) hue-rotate(193deg) brightness(115%) contrast(88%);
+}
+.manageEditForm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 14px;
+    margin-top: 10px;
+     box-sizing: border-box;  
+    overflow: hidden;
+}
+
+.manageEditInput {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #fff;
+    font-size: 0.9rem;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+     min-width: 0;  
+    color-scheme: dark;
+}
+
+.manageEditTextarea {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #fff;
+    font-size: 0.9rem;
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.manageEditDateRow {
+    display: flex;
+    gap: 10px;
+}
+
+.manageEditLabel {
+    display: flex;
+    flex-direction: column;
+     min-width: 0;   
+    gap: 5px;
+    flex: 1;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.78rem;
+}
+
+.manageEditActions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.manageEditCancelBtn {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 8px 18px;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.manageEditSaveBtn {
+    background: linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9));
+    border: none;
+    border-radius: 10px;
+    padding: 8px 18px;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+.deleteEventOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+}
+
+.deleteEventModal {
+    background: linear-gradient(145deg, #1e1e2e, #252535);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 20px;
+    padding: 28px;
+    width: 360px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.deleteEventTitle {
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.deleteEventDesc {
+    color: rgba(255,255,255,0.65);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.deleteEventActions {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.deleteEventCancelBtn {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 11px 0;
+    color: rgba(255,255,255,0.7);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.deleteEventConfirmBtn {
+    flex: 2;
+    background: rgba(232,77,112,0.9);
+    border: none;
+    border-radius: 12px;
+    padding: 11px 0;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.deleteEventConfirmBtn:hover {
+    opacity: 0.85;
+}
+.manageEditSegmentRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.manageEditSegment {
+    background: #2a2a2a;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 8px 0;
+    color: #fff;
+    font-size: 0.88rem;
+    outline: none;
+    width: 38px;
+    text-align: center;
+}
+
+.manageEditSegmentYear {
+    background: #2a2a2a;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 8px 0;
+    color: #fff;
+    font-size: 0.88rem;
+    outline: none;
+    width: 54px;
+    text-align: center;
+}
+
+.manageEditSep {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.manageEditSectionLabel {
+    color: rgba(255,255,255,0.45);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.manageEditAmPm {
+    display: flex;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.12);
+    margin-left: 4px;
+}
+
+.manageEditAmPmBtn {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.5);
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.manageEditAmPmActive {
+    background: linear-gradient(-90deg, rgba(166,39,156,0.8), rgba(49,32,169,0.8));
+    color: #fff;
+    font-weight: 600;
 }

@@ -3,33 +3,35 @@ import { useState } from 'react';
 const API = 'http://localhost:8000';
 
 export function useCreateEvent({ onSuccess } = {}) {
-    const [eventName, setEventName]       = useState('');
-    const [description, setDescription]   = useState('');
-    const [bannerFile, setBannerFile]     = useState(null);
+    const [eventName, setEventName] = useState('');
+    const [description, setDescription] = useState('');
+    const [bannerFile, setBannerFile] = useState(null);
     const [bannerPreview, setBannerPreview] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitError, setSubmitError]   = useState('');
+    const [submitError, setSubmitError] = useState('');
 
     // Right Sidebar — Start Time
-    const [startDay, setStartDay]       = useState('');
-    const [startMonth, setStartMonth]   = useState('');
-    const [startYear, setStartYear]     = useState('');
-    const [startHour, setStartHour]     = useState('');
+    const [startDay, setStartDay] = useState('');
+    const [startMonth, setStartMonth] = useState('');
+    const [startYear, setStartYear] = useState('');
+    const [startHour, setStartHour] = useState('');
     const [startMinute, setStartMinute] = useState('');
     const [startPeriod, setStartPeriod] = useState('AM');
 
     // Right Sidebar — End Time
-    const [endDay, setEndDay]       = useState('');
-    const [endMonth, setEndMonth]   = useState('');
-    const [endYear, setEndYear]     = useState('');
-    const [endHour, setEndHour]     = useState('');
+    const [endDay, setEndDay] = useState('');
+    const [endMonth, setEndMonth] = useState('');
+    const [endYear, setEndYear] = useState('');
+    const [endHour, setEndHour] = useState('');
     const [endMinute, setEndMinute] = useState('');
     const [endPeriod, setEndPeriod] = useState('PM');
+    const [address, setAddress] = useState('');
 
     const isFormValid =
         !!bannerFile &&
         eventName.trim() !== '' &&
         description.trim() !== '' &&
+        address.trim() !== '' &&
         startDay && startMonth && startYear && startHour && startMinute &&
         endDay && endMonth && endYear && endHour && endMinute;
 
@@ -54,7 +56,8 @@ export function useCreateEvent({ onSuccess } = {}) {
             const formData = new FormData();
             formData.append('title', eventName.trim());
             formData.append('description', description.trim());
-            formData.append('banner', bannerFile);
+            formData.append('image', bannerFile);
+            formData.append('location', address.trim());
             formData.append(
                 'start_date',
                 buildDatetime(startDay, startMonth, startYear, startHour, startMinute, startPeriod)
@@ -64,7 +67,7 @@ export function useCreateEvent({ onSuccess } = {}) {
                 buildDatetime(endDay, endMonth, endYear, endHour, endMinute, endPeriod)
             );
 
-            const res = await fetch(`${API}/api/events/create`, {
+            const res = await fetch(`${API}/api/events/create/`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
                 body: formData,
@@ -74,8 +77,8 @@ export function useCreateEvent({ onSuccess } = {}) {
                 const data = await res.json().catch(() => ({}));
                 throw new Error(data?.detail || data?.message || 'Failed to create event.');
             }
-
-            onSuccess?.();
+            const data = await res.json()
+            onSuccess?.(data.event_id);
         } catch (err) {
             setSubmitError(err.message || 'Something went wrong. Please try again.');
         } finally {
@@ -88,6 +91,7 @@ export function useCreateEvent({ onSuccess } = {}) {
         description, setDescription,
         bannerFile, setBannerFile,
         bannerPreview, setBannerPreview,
+        address, setAddress,
         isFormValid,
         onSubmit: handleSubmit,
         isSubmitting,
@@ -107,6 +111,7 @@ export function useCreateEvent({ onSuccess } = {}) {
         endHour, setEndHour,
         endMinute, setEndMinute,
         endPeriod, setEndPeriod,
+        address, setAddress,
     };
 
     return { formProps, sidebarProps };

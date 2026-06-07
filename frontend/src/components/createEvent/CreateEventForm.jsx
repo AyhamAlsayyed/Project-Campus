@@ -74,12 +74,7 @@ export default function CreateEventForm({
                     </div>
                 </div>
 
-                {/* Error Banner */}
-                {submitError && (
-                    <div className={styles.submitErrorBanner}>
-                        {submitError}
-                    </div>
-                )}
+              
 
                 {/* 75% Upper Line Divider */}
                 <div className={styles.divider75} />

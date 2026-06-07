@@ -103,7 +103,22 @@ export default function ProfilePage({ type }) {
     const [manageEventsDate, setManageEventsDate] = useState(new Date());
     const [showManageMonthPicker, setShowManageMonthPicker] = useState(false);
     const [showCreateEvent, setShowCreateEvent] = useState(false);
-    const createEvent = useCreateEvent();
+    const [ownPageEvents, setOwnPageEvents] = useState([]);
+    const [editingEventId, setEditingEventId] = useState(null);
+    const [editEventData, setEditEventData] = useState({
+        title: '', description: '',
+        startDay: '', startMonth: '', startYear: '',
+        startHour: '', startMinute: '', startPeriod: 'AM',
+        endDay: '', endMonth: '', endYear: '',
+        endHour: '', endMinute: '', endPeriod: 'AM',
+    });
+    const [deleteEventPopup, setDeleteEventPopup] = useState(null);
+    const createEvent = useCreateEvent({
+        onSuccess: (eventId) => {
+            setShowCreateEvent(false);
+            navigate('/events', { state: { highlightId: eventId } });
+        }
+    });
 
     useEffect(() => {
         const close = (e) => {
@@ -185,7 +200,8 @@ export default function ProfilePage({ type }) {
     const mobileMenuRef = useRef(null);
     const avatarDropdownRef = useRef(null);
     const { pathname } = useLocation();
-    const { userId } = useParams();
+    const { userId, id } = useParams();
+    const profileId = userId || id;
     const navigate = useNavigate();
 
     useEffect(() => { if (user) edit.syncFromUser(user); }, [user]);
@@ -215,6 +231,19 @@ export default function ProfilePage({ type }) {
         return () => { document.body.style.overflow = ''; };
     }, [mobileMenuOpen]);
 
+    const loadOwnPageEvents = async () => {
+        if (!user?.id) return;
+        console.log('fetching page events for id:', user.id, 'user type:', user.type, 'role:', user.role);
+        try {
+            const res = await fetch(`${API}/api/pages/${user.id}/events/`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await res.json();
+            console.log('page events:', res.status, data);
+            if (res.ok) setOwnPageEvents(Array.isArray(data) ? data : []);
+        } catch (e) { console.error(e); }
+    };
+
     useEffect(() => {
         const close = (e) => {
             if (activitiesDropdownRef.current && !activitiesDropdownRef.current.contains(e.target))
@@ -230,7 +259,16 @@ export default function ProfilePage({ type }) {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const data = await res.json();
-            console.log("currentUser data:", data);
+            if (data.role === 'university' || localStorage.getItem('user_type') === 'university') {
+                const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (pageRes.ok) {
+                    const pageData = await pageRes.json();
+                    data.avatar = pageData.profile_image; // 👈 inject avatar
+                }
+            }
+
             setCurrentUser(data);
         } catch (e) { console.error(e); }
     };
@@ -248,19 +286,36 @@ export default function ProfilePage({ type }) {
 
     const loadProfileUser = async () => {
         try {
-            const url = type === 'page'
-                ? `${API}/api/pages/${userId}/`
-                : `${API}/api/users/${userId}/`;
+            let res, raw, isPageType;
 
-            const res = await fetch(url, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            if (type === 'page') {
+                res = await fetch(`${API}/api/pages/${profileId}/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                isPageType = true;
+            } else if (type === 'user') {
+                res = await fetch(`${API}/api/users/${profileId}/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                isPageType = false;
+            } else {
+                res = await fetch(`${API}/api/users/${profileId}/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                isPageType = false;
+                if (!res.ok) {
+                    res = await fetch(`${API}/api/pages/${profileId}/`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    isPageType = true;
+                }
+            }
 
             if (!res.ok) { setUserError("Failed"); setUser(null); return; }
-            const raw = await res.json();
+            raw = await res.json();
 
             let data;
-            if (type === 'page') {
+            if (isPageType) {
                 data = {
                     ...raw,
                     id: raw.page_id,
@@ -285,7 +340,8 @@ export default function ProfilePage({ type }) {
             }
 
             setUser(data);
-            if (type !== 'page') {
+
+            if (!isPageType) {
                 const fs = raw.friendship_status;
                 const rawStatus = typeof fs === 'object' ? fs?.status : fs;
                 const sentByMe = typeof fs === 'object' ? fs?.sent_by_me : null;
@@ -300,7 +356,9 @@ export default function ProfilePage({ type }) {
 
                 setFriendStatus(statusMap[rawStatus] || rawStatus || "none");
             }
+
             if (data?.id) loadPosts(data.id, data.type);
+
         } catch (e) {
             console.error(e);
             setUserError(e?.message || "Something went wrong");
@@ -503,9 +561,10 @@ export default function ProfilePage({ type }) {
 
     const isPageUser = isOwnProfile && (
         userType === 'page' ||
-        user?.type === 'page'
+        userType === 'university' ||
+        user?.type === 'page' ||
+        user?.role === 'university'
     );
-
     useEffect(() => {
         loadCurrentUser();
         loadProfileUser();
@@ -523,8 +582,13 @@ export default function ProfilePage({ type }) {
     }, [currentUser, userId]);
 
     useEffect(() => {
+
+
         if (!user || !currentUser) return;
         const isOwn = currentUser.id === Number(userId);
+        if (isOwn && user?.type === 'page') {
+            loadOwnPageEvents();
+        }
         if (isOwn) return;
         if (user.role === 'instructor') {
             loadCommunityPicks();
@@ -738,6 +802,8 @@ export default function ProfilePage({ type }) {
                                             )}
                                         </div>
                                     )}
+
+
                                 </div>
 
                                 <div className={styles.profileHeaderRow}>
@@ -893,6 +959,23 @@ export default function ProfilePage({ type }) {
                                             )}
                                         </div>
                                     )}
+                                    {isOwnProfile && user?.type === 'page' && (
+                                        <div className={styles.profileActions}>
+                                            <button className={styles.editProfileBtn} onClick={() => setIsEditing(true)}>
+                                                <span className={styles.editText}>Edit</span>
+                                                <div style={{
+                                                    width: '20px', height: '20px',
+                                                    backgroundColor: '#999999',
+                                                    maskImage: `url(${Edit})`,
+                                                    WebkitMaskImage: `url(${Edit})`,
+                                                    maskSize: 'contain', WebkitMaskSize: 'contain',
+                                                    maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                                                    maskPosition: 'center', WebkitMaskPosition: 'center',
+                                                }} />
+                                            </button>
+                                        </div>
+                                    )}
+
                                 </div>
 
                                 <div className={styles.hr} />
@@ -1070,28 +1153,49 @@ export default function ProfilePage({ type }) {
                                             <div className={styles.eventsDivider} />
 
                                             <div className={styles.eventCardContainer}>
-                                                {/* Dynamic background passed inline, everything else in CSS */}
-                                                <div
-                                                    className={styles.eventCardBg}
-                                                    style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800)' }}
-                                                >
-                                                    <div className={styles.eventTimeBox}>
-                                                        Starts 07/6/2026 - 3:00 PM<br />
-                                                        Ends - 07/6/2026 - 6:00 PM
-                                                    </div>
-
-                                                    <div className={styles.eventDetailsBottom}>
-                                                        <div className={styles.eventTextContent}>
-                                                            <div className={styles.eventTitle}>Lorem ipsum</div>
-                                                            <div className={styles.eventDescWrapper}>
-                                                                <span className={styles.eventDesc}>
-                                                                    Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore
-                                                                </span>
-                                                                <span className={styles.readMoreText}>read more</span>
+                                                {ownPageEvents.length > 0 ? (() => {
+                                                    const next = ownPageEvents[0];
+                                                    const bannerUrl = next.image?.startsWith('http') ? next.image : `${API}${next.image}`;
+                                                    const formatDate = (d) => {
+                                                        if (!d) return '';
+                                                        const dt = new Date(d);
+                                                        return `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`;
+                                                    };
+                                                    const formatTime = (d) => {
+                                                        if (!d) return '';
+                                                        const dt = new Date(d);
+                                                        let h = dt.getHours(), m = dt.getMinutes();
+                                                        const period = h >= 12 ? 'PM' : 'AM';
+                                                        h = h % 12 || 12;
+                                                        return `${h}:${String(m).padStart(2, '0')} ${period}`;
+                                                    };
+                                                    return (
+                                                        <div
+                                                            className={styles.eventCardBg}
+                                                            style={{ backgroundImage: `url(${bannerUrl})` }}
+                                                        >
+                                                            <div className={styles.eventTimeBox}>
+                                                                Starts {formatDate(next.start_date)} - {formatTime(next.start_date)}<br />
+                                                                Ends - {formatDate(next.end_date)} - {formatTime(next.end_date)}
+                                                            </div>
+                                                            <div className={styles.eventDetailsBottom}>
+                                                                <div className={styles.eventTextContent}>
+                                                                    <div className={styles.eventTitle}>{next.title}</div>
+                                                                    <div className={styles.eventDescWrapper}>
+                                                                        <span className={styles.eventDesc}>{next.description}</span>
+                                                                        {next.description?.length > 80 && (
+                                                                            <span className={styles.readMoreText}>read more</span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
+                                                    );
+                                                })() : (
+                                                    <div style={{ color: 'rgba(255,255,255,0.4)', padding: '20px', textAlign: 'center', fontSize: '0.85rem' }}>
+                                                        No upcoming events yet.
                                                     </div>
-                                                </div>
+                                                )}
                                             </div>
 
                                             <div className={styles.eventsDivider} />
@@ -1358,7 +1462,7 @@ export default function ProfilePage({ type }) {
                                                 })}
                                             </div>
 
-                                         
+
                                         </div>
                                     )}
                                     {communityPicks.length > 0 && (
@@ -1849,7 +1953,6 @@ export default function ProfilePage({ type }) {
                 <div className={styles.manageModalOverlay} onClick={() => setShowManageEvents(false)}>
                     <div className={styles.manageModalBox} onClick={e => e.stopPropagation()}>
 
-                        {/* Header */}
                         <div className={styles.manageModalHeader}>
                             <button className={styles.manageModalBackBtn} onClick={() => setShowManageEvents(false)}>
                                 <img src={ArrowLeft} alt="back" className={styles.iconSmallBack} />
@@ -1860,10 +1963,8 @@ export default function ProfilePage({ type }) {
                             </div>
                         </div>
 
-                        {/* 90% Horizontal Line */}
                         <div className={styles.manageModalDivider} />
 
-                        {/* Tabs */}
                         <div className={styles.manageTabsContainer}>
                             <button
                                 className={`${styles.manageTabBtn} ${activeEventTab === 'upcoming' ? styles.manageTabActive : ''}`}
@@ -1880,16 +1981,11 @@ export default function ProfilePage({ type }) {
                             </button>
                         </div>
 
-                        {/* Content Body */}
                         <div className={styles.manageContentBody}>
-
-                            {/* Header Row: Title Left, Date Picker Right */}
                             <div className={styles.manageEventsHeaderRow}>
                                 <h3 className={styles.manageEventsMonth}>
                                     Events of <strong>{manageEventsDate.toLocaleString('default', { month: 'long' }).toUpperCase()}</strong>
                                 </h3>
-
-                                {/* Dynamic Date Picker Control */}
                                 <div className={styles.manageMonthPickerWrapper}>
                                     <button
                                         onClick={() => setShowManageMonthPicker(p => !p)}
@@ -1897,7 +1993,6 @@ export default function ProfilePage({ type }) {
                                     >
                                         {manageEventsDate.toLocaleString('default', { month: 'long' })} {manageEventsDate.getFullYear()} ▾
                                     </button>
-
                                     {showManageMonthPicker && (
                                         <div className={styles.manageMonthDropdown}>
                                             <div className={styles.manageMonthNav}>
@@ -1905,17 +2000,13 @@ export default function ProfilePage({ type }) {
                                                     onClick={() => setManageEventsDate(new Date(manageEventsDate.getFullYear() - 1, manageEventsDate.getMonth(), 1))}
                                                     className={styles.manageMonthNavBtn}
                                                     disabled={manageEventsDate.getFullYear() <= new Date().getFullYear()}
-                                                >
-                                                    ‹
-                                                </button>
+                                                >‹</button>
                                                 <span className={styles.manageMonthYear}>{manageEventsDate.getFullYear()}</span>
                                                 <button
                                                     onClick={() => setManageEventsDate(new Date(manageEventsDate.getFullYear() + 1, manageEventsDate.getMonth(), 1))}
                                                     className={styles.manageMonthNavBtn}
                                                     disabled={manageEventsDate.getFullYear() >= new Date().getFullYear() + 2}
-                                                >
-                                                    ›
-                                                </button>
+                                                >›</button>
                                             </div>
                                             <div className={styles.manageMonthGrid}>
                                                 {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => {
@@ -1923,14 +2014,9 @@ export default function ProfilePage({ type }) {
                                                     return (
                                                         <button
                                                             key={m}
-                                                            onClick={() => {
-                                                                setManageEventsDate(new Date(manageEventsDate.getFullYear(), i, 1));
-                                                                setShowManageMonthPicker(false);
-                                                            }}
+                                                            onClick={() => { setManageEventsDate(new Date(manageEventsDate.getFullYear(), i, 1)); setShowManageMonthPicker(false); }}
                                                             className={`${styles.manageMonthBtn} ${isSelected ? styles.manageMonthBtnActive : styles.manageMonthBtnInactive}`}
-                                                        >
-                                                            {m}
-                                                        </button>
+                                                        >{m}</button>
                                                     );
                                                 })}
                                             </div>
@@ -1939,71 +2025,322 @@ export default function ProfilePage({ type }) {
                                 </div>
                             </div>
 
-                            {/* Scrollable Event List */}
                             <div className={styles.manageScrollArea}>
                                 {(() => {
-                                    // Dynamically filter reminders based on the chosen month and year
-                                    const filteredEvents = reminders.filter(e => {
-                                        const d = new Date(e.start_date || e.date || e.event_date);
-                                        return d.getFullYear() === manageEventsDate.getFullYear() && d.getMonth() === manageEventsDate.getMonth();
+                                    const now = new Date();
+                                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+                                    const allFiltered = ownPageEvents.filter(e => {
+                                        const d = new Date(e.start_date);
+                                        return d.getFullYear() === manageEventsDate.getFullYear() &&
+                                            d.getMonth() === manageEventsDate.getMonth();
+                                    });
+
+                                    const filteredEvents = allFiltered.filter(e => {
+                                        const eventDay = new Date(new Date(e.start_date).getFullYear(), new Date(e.start_date).getMonth(), new Date(e.start_date).getDate());
+                                        return activeEventTab === 'upcoming'
+                                            ? eventDay >= today
+                                            : eventDay < today;
                                     });
 
                                     if (filteredEvents.length === 0) {
-                                        return <p className={styles.noEventsText}>No events found for {manageEventsDate.toLocaleString('default', { month: 'long' })} {manageEventsDate.getFullYear()}.</p>;
+                                        return <p className={styles.noEventsText}>
+                                            No {activeEventTab} events for {manageEventsDate.toLocaleString('default', { month: 'long' })} {manageEventsDate.getFullYear()}.
+                                        </p>;
                                     }
 
-                                    return filteredEvents.map((event, index) => (
-                                        <div key={event.id || index} className={styles.manageEventItemBlock}>
-                                            <div className={styles.manageEventItem}>
-                                                <div className={styles.eventCardContainer}>
-                                                    <div
-                                                        className={styles.eventCardBg}
-                                                        style={{ backgroundImage: `url(${event.image || event.banner || 'https://via.placeholder.com/400x200'})` }}
-                                                    >
-                                                        <div className={styles.eventTimeBox}>
-                                                            Starts {new Date(event.start_date).toLocaleDateString()} - 3:00 PM<br />
-                                                            Ends - {new Date(event.end_date || event.start_date).toLocaleDateString()} - 6:00 PM
-                                                        </div>
-                                                        <div className={styles.eventDetailsBottom}>
-                                                            <div className={styles.eventTextContent}>
-                                                                <div className={styles.eventTitle}>{event.title || 'Lorem ipsum'}</div>
-                                                                <div className={styles.eventDescWrapper}>
-                                                                    <span className={styles.eventDesc}>
-                                                                        {event.description || 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit...'}
-                                                                    </span>
-                                                                    <span className={styles.readMoreText}>read more</span>
+                                    const formatDate = (d) => {
+                                        if (!d) return '';
+                                        const dt = new Date(d);
+                                        return `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`;
+                                    };
+                                    const formatTime = (d) => {
+                                        if (!d) return '';
+                                        const dt = new Date(d);
+                                        let h = dt.getHours(), m = dt.getMinutes();
+                                        const period = h >= 12 ? 'PM' : 'AM';
+                                        h = h % 12 || 12;
+                                        return `${h}:${String(m).padStart(2, '0')} ${period}`;
+                                    };
+                                    // Convert datetime-local input value to ISO
+                                    const toInputVal = (iso) => {
+                                        if (!iso) return '';
+                                        const d = new Date(iso);
+                                        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}T${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                                    };
+
+                                    return filteredEvents.map((event, index) => {
+                                        const eventDay = new Date(new Date(event.start_date).getFullYear(), new Date(event.start_date).getMonth(), new Date(event.start_date).getDate());
+                                        const isToday = eventDay.getTime() === today.getTime();
+                                        const isEditing = editingEventId === event.id;
+
+                                        return (
+                                            <div key={event.id || index} className={styles.manageEventItemBlock}>
+                                                <div className={styles.manageEventItem}>
+                                                    <div className={styles.eventCardContainer}>
+                                                        <div
+                                                            className={styles.eventCardBg}
+                                                            style={{ backgroundImage: `url(${event.image?.startsWith('http') ? event.image : `${API}${event.image}`})` }}
+                                                        >
+                                                            <div className={styles.eventTimeBox}>
+                                                                Starts {formatDate(event.start_date)} - {formatTime(event.start_date)}<br />
+                                                                Ends - {formatDate(event.end_date)} - {formatTime(event.end_date)}
+                                                            </div>
+                                                            <div className={styles.eventDetailsBottom}>
+                                                                <div className={styles.eventTextContent}>
+                                                                    <div className={styles.eventTitle}>{event.title}</div>
+                                                                    <div className={styles.eventDescWrapper}>
+                                                                        <span className={styles.eventDesc}>{event.description}</span>
+                                                                        {event.description?.length > 80 && (
+                                                                            <span className={styles.readMoreText}>read more</span>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
+
+                                                    {/* ── Inline Edit Form ── */}
+                                                    {isEditing && (
+                                                        <div className={styles.manageEditForm}>
+                                                            {/* Title */}
+                                                            <input
+                                                                className={styles.manageEditInput}
+                                                                placeholder="Event title"
+                                                                value={editEventData.title}
+                                                                onChange={e => setEditEventData(p => ({ ...p, title: e.target.value }))}
+                                                            />
+                                                            {/* Description */}
+                                                            <textarea
+                                                                className={styles.manageEditTextarea}
+                                                                placeholder="Description"
+                                                                value={editEventData.description}
+                                                                onChange={e => setEditEventData(p => ({ ...p, description: e.target.value }))}
+                                                            />
+
+                                                            {/* Start */}
+                                                            <span className={styles.manageEditSectionLabel}>Start time</span>
+                                                            <div className={styles.manageEditSegmentRow}>
+                                                                <input type="text" inputMode="numeric" placeholder="DD" maxLength="2"
+                                                                    className={styles.manageEditSegment}
+                                                                    value={editEventData.startDay}
+                                                                    onChange={e => { const v = e.target.value.replace(/\D/g, ''); if (v === '' || +v <= 31) setEditEventData(p => ({ ...p, startDay: v })); }}
+                                                                />
+                                                                <span className={styles.manageEditSep}>/</span>
+                                                                <input type="text" inputMode="numeric" placeholder="MM" maxLength="2"
+                                                                    className={styles.manageEditSegment}
+                                                                    value={editEventData.startMonth}
+                                                                    onChange={e => { const v = e.target.value.replace(/\D/g, ''); if (v === '' || +v <= 12) setEditEventData(p => ({ ...p, startMonth: v })); }}
+                                                                />
+                                                                <span className={styles.manageEditSep}>/</span>
+                                                                <input type="text" inputMode="numeric" placeholder="YYYY" maxLength="4"
+                                                                    className={styles.manageEditSegmentYear}
+                                                                    value={editEventData.startYear}
+                                                                    onChange={e => setEditEventData(p => ({ ...p, startYear: e.target.value.replace(/\D/g, '') }))}
+                                                                />
+                                                                <span className={styles.manageEditSep}>at</span>
+                                                                <input type="text" inputMode="numeric" placeholder="HH" maxLength="2"
+                                                                    className={styles.manageEditSegment}
+                                                                    value={editEventData.startHour}
+                                                                    onChange={e => { const v = e.target.value.replace(/\D/g, ''); if (v === '' || +v <= 12) setEditEventData(p => ({ ...p, startHour: v })); }}
+                                                                />
+                                                                <span className={styles.manageEditSep}>:</span>
+                                                                <input type="text" inputMode="numeric" placeholder="MM" maxLength="2"
+                                                                    className={styles.manageEditSegment}
+                                                                    value={editEventData.startMinute}
+                                                                    onChange={e => { const v = e.target.value.replace(/\D/g, ''); if (v === '' || +v <= 59) setEditEventData(p => ({ ...p, startMinute: v })); }}
+                                                                />
+                                                                <div className={styles.manageEditAmPm}>
+                                                                    {['AM', 'PM'].map(p => (
+                                                                        <button key={p}
+                                                                            className={`${styles.manageEditAmPmBtn} ${editEventData.startPeriod === p ? styles.manageEditAmPmActive : ''}`}
+                                                                            onClick={() => setEditEventData(prev => ({ ...prev, startPeriod: p }))}
+                                                                        >{p}</button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* End */}
+                                                            <span className={styles.manageEditSectionLabel}>End time</span>
+                                                            <div className={styles.manageEditSegmentRow}>
+                                                                <input type="text" inputMode="numeric" placeholder="DD" maxLength="2"
+                                                                    className={styles.manageEditSegment}
+                                                                    value={editEventData.endDay}
+                                                                    onChange={e => { const v = e.target.value.replace(/\D/g, ''); if (v === '' || +v <= 31) setEditEventData(p => ({ ...p, endDay: v })); }}
+                                                                />
+                                                                <span className={styles.manageEditSep}>/</span>
+                                                                <input type="text" inputMode="numeric" placeholder="MM" maxLength="2"
+                                                                    className={styles.manageEditSegment}
+                                                                    value={editEventData.endMonth}
+                                                                    onChange={e => { const v = e.target.value.replace(/\D/g, ''); if (v === '' || +v <= 12) setEditEventData(p => ({ ...p, endMonth: v })); }}
+                                                                />
+                                                                <span className={styles.manageEditSep}>/</span>
+                                                                <input type="text" inputMode="numeric" placeholder="YYYY" maxLength="4"
+                                                                    className={styles.manageEditSegmentYear}
+                                                                    value={editEventData.endYear}
+                                                                    onChange={e => setEditEventData(p => ({ ...p, endYear: e.target.value.replace(/\D/g, '') }))}
+                                                                />
+                                                                <span className={styles.manageEditSep}>at</span>
+                                                                <input type="text" inputMode="numeric" placeholder="HH" maxLength="2"
+                                                                    className={styles.manageEditSegment}
+                                                                    value={editEventData.endHour}
+                                                                    onChange={e => { const v = e.target.value.replace(/\D/g, ''); if (v === '' || +v <= 12) setEditEventData(p => ({ ...p, endHour: v })); }}
+                                                                />
+                                                                <span className={styles.manageEditSep}>:</span>
+                                                                <input type="text" inputMode="numeric" placeholder="MM" maxLength="2"
+                                                                    className={styles.manageEditSegment}
+                                                                    value={editEventData.endMinute}
+                                                                    onChange={e => { const v = e.target.value.replace(/\D/g, ''); if (v === '' || +v <= 59) setEditEventData(p => ({ ...p, endMinute: v })); }}
+                                                                />
+                                                                <div className={styles.manageEditAmPm}>
+                                                                    {['AM', 'PM'].map(p => (
+                                                                        <button key={p}
+                                                                            className={`${styles.manageEditAmPmBtn} ${editEventData.endPeriod === p ? styles.manageEditAmPmActive : ''}`}
+                                                                            onClick={() => setEditEventData(prev => ({ ...prev, endPeriod: p }))}
+                                                                        >{p}</button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className={styles.manageEditActions}>
+                                                                <button className={styles.manageEditCancelBtn} onClick={() => setEditingEventId(null)}>Cancel</button>
+                                                                <button
+                                                                    className={styles.manageEditSaveBtn}
+                                                                    onClick={async () => {
+                                                                        const toISO = (day, month, year, hour, minute, period) => {
+                                                                            let h = parseInt(hour);
+                                                                            if (period === 'PM' && h !== 12) h += 12;
+                                                                            if (period === 'AM' && h === 12) h = 0;
+                                                                            return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(h).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+                                                                        };
+                                                                        try {
+                                                                            const res = await fetch(`${API}/api/events/${event.id}/update/`, {
+                                                                                method: 'PATCH',
+                                                                                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                                                                body: JSON.stringify({
+                                                                                    title: editEventData.title,
+                                                                                    description: editEventData.description,
+                                                                                    start_date: toISO(editEventData.startDay, editEventData.startMonth, editEventData.startYear, editEventData.startHour, editEventData.startMinute, editEventData.startPeriod),
+                                                                                    end_date: toISO(editEventData.endDay, editEventData.endMonth, editEventData.endYear, editEventData.endHour, editEventData.endMinute, editEventData.endPeriod),
+                                                                                })
+                                                                            });
+                                                                            if (res.ok) {
+                                                                                const updated = await res.json();
+                                                                                setOwnPageEvents(prev => prev.map(e => e.id === event.id ? { ...e, ...updated } : e));
+                                                                                setEditingEventId(null);
+                                                                            } else {
+                                                                                const err = await res.json();
+                                                                                console.error('Update failed:', err);
+                                                                            }
+                                                                        } catch (e) { console.error(e); }
+                                                                    }}
+                                                                >Save</button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* ── Action Buttons ── */}
+                                                    <div className={styles.manageActionsRow} style={activeEventTab === 'history' ? { justifyContent: 'center' } : {}}>
+                                                        <button
+                                                            className={styles.manageActionBtnDelete}
+                                                            onClick={() => setDeleteEventPopup(event)}
+                                                        >
+                                                            <img src={Bin} alt="delete" className={`${styles.manageActionIcon} ${styles.iconRed}`} />
+                                                            Delete
+                                                        </button>
+                                                        {activeEventTab === 'upcoming' && (
+                                                            <>
+                                                                <div className={styles.manageVerticalLine} />
+                                                                <button
+                                                                    className={styles.manageActionBtnUpdate}
+                                                                    disabled={isToday}
+                                                                    title={isToday ? "Can't update an event happening today" : "Update event"}
+                                                                    style={isToday ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
+                                                                    onClick={() => {
+                                                                        if (isToday) return;
+                                                                        const toSegments = (iso) => {
+                                                                            if (!iso) return { d: '', mo: '', y: '', h: '', mi: '', p: 'AM' };
+                                                                            const dt = new Date(iso);
+                                                                            let h = dt.getHours();
+                                                                            const p = h >= 12 ? 'PM' : 'AM';
+                                                                            h = h % 12 || 12;
+                                                                            return {
+                                                                                d: String(dt.getDate()).padStart(2, '0'),
+                                                                                mo: String(dt.getMonth() + 1).padStart(2, '0'),
+                                                                                y: String(dt.getFullYear()),
+                                                                                h: String(h).padStart(2, '0'),
+                                                                                mi: String(dt.getMinutes()).padStart(2, '0'),
+                                                                                p,
+                                                                            };
+                                                                        };
+                                                                        const s = toSegments(event.start_date);
+                                                                        const e = toSegments(event.end_date);
+                                                                        setEditingEventId(event.id);
+                                                                        setEditEventData({
+                                                                            title: event.title || '',
+                                                                            description: event.description || '',
+                                                                            startDay: s.d, startMonth: s.mo, startYear: s.y,
+                                                                            startHour: s.h, startMinute: s.mi, startPeriod: s.p,
+                                                                            endDay: e.d, endMonth: e.mo, endYear: e.y,
+                                                                            endHour: e.h, endMinute: e.mi, endPeriod: e.p,
+                                                                        });
+                                                                    }}
+                                                                >
+                                                                    <img src={Edit} alt="update" className={`${styles.manageActionIcon} ${styles.iconWhite}`} />
+                                                                    {isToday ? "Today's event" : "Update"}
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 </div>
 
-                                                {/* Actions Row */}
-                                                <div className={styles.manageActionsRow}>
-                                                    <button className={styles.manageActionBtnDelete}>
-                                                        <img src={Bin} alt="delete" className={`${styles.manageActionIcon} ${styles.iconRed}`} />
-                                                        Delete
-                                                    </button>
-                                                    <div className={styles.manageVerticalLine} />
-                                                    <button className={styles.manageActionBtnUpdate}>
-                                                        <img src={Edit} alt="update" className={`${styles.manageActionIcon} ${styles.iconWhite}`} />
-                                                        Update
-                                                    </button>
-                                                </div>
+                                                {index !== filteredEvents.length - 1 && (
+                                                    <div className={styles.eventItemDivider} />
+                                                )}
                                             </div>
-
-                                            {/* 50% Divider: Only render if it's NOT the last item */}
-                                            {index !== filteredEvents.length - 1 && (
-                                                <div className={styles.eventItemDivider} />
-                                            )}
-                                        </div>
-                                    ));
+                                        );
+                                    });
                                 })()}
                             </div>
                         </div>
                     </div>
                 </div>,
                 document.body
+            )}
+            {deleteEventPopup && (
+                <div className={styles.deleteEventOverlay} onClick={() => setDeleteEventPopup(null)}>
+                    <div className={styles.deleteEventModal} onClick={e => e.stopPropagation()}>
+                        <h3 className={styles.deleteEventTitle}>Delete Event</h3>
+                        <p className={styles.deleteEventDesc}>
+                            Are you sure you want to delete <strong>"{deleteEventPopup.title}"</strong>? This can't be undone.
+                        </p>
+                        <div className={styles.deleteEventActions}>
+                            <button className={styles.deleteEventCancelBtn} onClick={() => setDeleteEventPopup(null)}>
+                                Cancel
+                            </button>
+                            <button
+                                className={styles.deleteEventConfirmBtn}
+                                onClick={async () => {
+                                    try {
+                                        const res = await fetch(`${API}/api/events/${deleteEventPopup.id}/delete/`, {
+                                            method: 'DELETE',
+                                            headers: { Authorization: `Bearer ${token}` }
+                                        });
+                                        if (res.ok) {
+                                            setOwnPageEvents(prev => prev.filter(e => e.id !== deleteEventPopup.id));
+                                            setDeleteEventPopup(null);
+                                        } else {
+                                            const err = await res.json();
+                                            console.error('Delete failed:', err);
+                                        }
+                                    } catch (e) { console.error(e); }
+                                }}
+                            >
+                                Yes, Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

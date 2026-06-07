@@ -14,11 +14,12 @@ export default function CreateEventRightSidebar({
     endYear, setEndYear,
     endHour, setEndHour,
     endMinute, setEndMinute,
-    endPeriod, setEndPeriod
+    endPeriod, setEndPeriod,
+    address, setAddress,
 }) {
     const [showStartDropdown, setShowStartDropdown] = useState(false);
     const [showEndDropdown, setShowEndDropdown] = useState(false);
-    const [address, setAddress] = useState('');
+
 
     // ── Sanitizers ──────────────────────────────────────────────
     const onlyDigits = (value) => value.replace(/\D/g, '');

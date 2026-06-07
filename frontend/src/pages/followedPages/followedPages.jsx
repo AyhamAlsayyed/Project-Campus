@@ -88,8 +88,19 @@ export default function FollowedPages() {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const userData = await userRes.json();
-                setCurrentUser(userData);
 
+               
+                if (userData.role === 'university' || localStorage.getItem('user_type') === 'university') {
+                    const pageRes = await fetch("http://localhost:8000/api/pages/${userData.id}/", {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (pageRes.ok) {
+                        const pageData = await pageRes.json();
+                        userData.avatar = pageData.profile_image;
+                    }
+                }
+
+                setCurrentUser(userData);
                 // 2. Fetch followed pages + posts
                 const [pagesRes, postsRes] = await Promise.all([
                     fetch("http://localhost:8000/api/pages/followed/", {

@@ -124,10 +124,18 @@ export default function Community() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
+            if (data.role === 'university' || localStorage.getItem('user_type') === 'university') {
+                const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (pageRes.ok) {
+                    const pageData = await pageRes.json();
+                    data.avatar = pageData.profile_image;
+                }
+            }
+
             setUser(data);
-        } catch (err) {
-            console.error("Failed to load user");
-        }
+        } catch (err) { console.error("Failed to load user"); }
     };
 
     useEffect(() => {
@@ -385,7 +393,7 @@ export default function Community() {
                                     )}
                                 </div>
 
-                                <div className={styles.ownedCommunitiesContainer} style={{ minHeight: "unset", padding: "30px 0"}}>
+                                <div className={styles.ownedCommunitiesContainer} style={{ minHeight: "unset", padding: "30px 0" }}>
                                     {ownedCommunities.length === 0 ? (
                                         <p style={{
                                             color: "rgba(255,255,255,0.35)",
@@ -407,7 +415,7 @@ export default function Community() {
                                                         onSettingsClick={(c) => { setActiveCommunity(c); setSettingsOpen(true); setActiveTab('Community info'); }}
                                                     />
                                                 </div>
-                                                
+
                                             </div>
                                         ))
                                     )}
@@ -443,7 +451,7 @@ export default function Community() {
                     </div>
 
                     {/* --- RIGHT SECTION --- */}
-                    <div className={styles.rightSection} style={{ marginTop: settingsOpen ? "2%" : "4%" , flex: isUserPage ? " 0 0 420px;" : "0 0 380px"}}>
+                    <div className={styles.rightSection} style={{ marginTop: settingsOpen ? "2%" : "4%", flex: isUserPage ? " 0 0 420px;" : "0 0 380px" }}>
                         {settingsOpen ? (
                             <CommunitySettingsNav
                                 activeTab={activeTab}

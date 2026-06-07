@@ -125,7 +125,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
     setSearchResults(null);
     switch (type) {
       case "person": navigate(`/profile/${item.id}`); break;
-      case "page": navigate(`/profile/${item.id}`); break;
+      case "page": navigate(`/page/${item.page_id || item.id}`); break;  // ← /page/ route + correct id field
       case "community":
         if (item.is_joined) {
           navigate(`/communities/${item.id}`);
@@ -430,18 +430,26 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
 
   const handleManage = (id) => { navigate("/settings/notifications"); setOpenMenuId(null); setMenuRect(null); };
 
-  const rawAvatar = user?.profile?.avatar || user?.avatar;
+
+
+  const rawAvatar = user?.profile?.avatar || user?.avatar || user?.profile_image;
+
+
   const avatarSrc = rawAvatar
     ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
     : ProfilePicture;
 
   const handleAvatarClick = () => {
     if (!user?.id) return;
-    location.pathname.startsWith(`/profile/${user.id}`) ? navigate("/home") : navigate(`/profile/${user.id}`);
+    const loggedInType = localStorage.getItem("user_type");
+    const isPageUser = loggedInType === 'page' || loggedInType === 'university';
+    const profilePath = isPageUser ? `/page/${user.id}` : `/profile/${user.id}`;
+
+    location.pathname.startsWith(profilePath) ? navigate("/home") : navigate(profilePath);
   };
 
-  const isInProfileSection = location.pathname.startsWith(`/profile/${user?.id}`);
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const isInProfileSection = location.pathname.startsWith(`/profile/${user?.id}`) ||
+    location.pathname.startsWith(`/page/${user?.id}`); const unreadCount = notifications.filter(n => !n.is_read).length;
   const displayCount = notifications.length;
 
   const totalResults = searchResults
@@ -837,7 +845,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                   >
                     {!n.is_read && <span className={styles.unreadDot} />}
                     <div className={styles.notifAvatarWrap}>
-                      <img src={n.avatar ||  ProfilePicture} alt="" className={styles.notifAvatar} />
+                      <img src={n.avatar || ProfilePicture} alt="" className={styles.notifAvatar} />
                       <div className={styles.notifIconBadge}>{getNotificationIcon(n.type)}</div>
                     </div>
                     <div className={styles.notifContent}>

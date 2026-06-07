@@ -70,10 +70,11 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
+
 .postContainer {
     background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
     width: 100%;
-    padding-top: 10px;
+    padding-top: 6px;
     flex: 1;
     border-radius: 30px;
     height: auto;
@@ -82,91 +83,98 @@ body {
     position: relative;
     margin: 2% 0 0 0;
 }
+
 .innerContainer {
-  background-color: #333333;
-  border-radius: 30px 30px 0 0;
-  padding-top: 30px;
-  
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  top: 10px;
-  z-index: 10;
+    background-color: #333333;
+    border-radius: 30px 30px 0 0;
+    padding-top: 30px;
+    min-height: calc(100vh - 10px);
+    display: flex;
+    flex-direction: column;
+
+
+    width: 100%;
+    top: 10px;
+    z-index: 10;
 }
 
 
 
 .itemWrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  gap: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 30px;
 
 }
+
 .dividerOne {
     width: 60%;
     height: 1px;
-    margin: 20px auto 30px auto; 
-    
-    background: linear-gradient(
-        90deg, 
-        transparent 0%, 
-        rgba(255, 255, 255, 0.2) 50%, 
-        transparent 100%
-    );
+    margin: 20px auto 30px auto;
+
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.2) 50%,
+            transparent 100%);
     position: relative;
     z-index: 5;
 }
 
 .rightSection {
-  position: relative;
-  flex: 0 0 435px;
-  width: 25%;
-  margin: 5% 0 0 0;
-  gap: 70px;
-  display: flex;
-  flex-direction: column;
+    position: sticky;
+    top: 100px;
+    flex: 0 0 420px;
+    width: 25%;
+    margin: 5% 0 0 0;
+    gap: 70px;
+    display: flex;
+    flex-direction: column;
 }
-.rightCard{
-  position: relative;
-  z-index: 2;
 
-
-}
-.pill {
-   position: absolute;
-  top: -45px;
-  left: 10px;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  padding: 12px 20px;
-  border-radius: 18px 18px 0 0;
-  font-weight: 800  ;
-  height: 25px;
-  letter-spacing: 0.6px;
-  font-size: 0.95rem;
-  color: rgba(255,255,255,0.92);
-  background-color: rgba(61, 60, 60, 0.95);
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow: 0 0 0 10px rgba(0,0,0,0);
-}
 .rightCard {
-  display: flex;
-  flex-direction: column;
-  background: #333333;
-  border-radius: 24px;
-  padding: 16px;
-  border: 1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 2;
+
+
 }
-.rightList{
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
+
+.pill {
+    position: absolute;
+    top: -45px;
+    left: 10px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 18px 18px 0 0;
+    font-weight: 800;
+    height: 25px;
+    letter-spacing: 0.6px;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.92);
+    background-color: rgba(61, 60, 60, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+}
+
+.rightCard {
+    display: flex;
+    flex-direction: column;
+
+    background: #333333;
+    border-radius: 24px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+}
+
+.rightList {
+    display: flex;
+    flex-direction: column;
+
+    gap: 30px;
 }
 
 
@@ -177,10 +185,37 @@ body {
     width: 50%;
     height: 1px;
     margin: 20px auto 0 auto;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.1),
-        transparent
-    );
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.1),
+            transparent);
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 400px;
+    gap: 12px;
+    text-align: center;
+}
+
+.emptyIcon {
+    font-size: 48px;
+    opacity: 0.6;
+}
+
+.emptyTitle {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #ccc;
+    margin: 0;
+}
+
+.emptySubtitle {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0;
 }

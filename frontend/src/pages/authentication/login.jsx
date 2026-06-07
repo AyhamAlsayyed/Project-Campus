@@ -37,6 +37,7 @@ export default function Login() {
                 body: JSON.stringify({ username, password }),
             });
             const data = await response.json();
+            console.log('Login response:', data);
             if (!response.ok) {
                 setError(data.message || 'Login failed');
                 return;
