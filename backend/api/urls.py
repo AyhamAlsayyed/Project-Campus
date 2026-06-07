@@ -68,7 +68,7 @@ from .views.conversation.edit_conversation import (
     update_group_privacy_settings,
 )
 from .views.event.event_action import toggle_event_reminder
-from .views.event.events import create_event, events  # cancel_event edit_event
+from .views.event.events import create_event, delete_event, events, update_event
 from .views.notification.notification import get_notifications, notification_delete_mark
 
 # from .views.pages.page_update import update_page_profile
@@ -244,6 +244,8 @@ urlpatterns += [
 urlpatterns += [
     path("events/", events),
     path("events/create/", create_event),
+    path("events/<int:event_id>/update/", update_event),
+    path("events/<int:event_id>/delete/", delete_event),
     # event_action
     path("events/<int:event_id>/remind/", toggle_event_reminder),
 ]
@@ -264,9 +266,6 @@ urlpatterns += [
     path("", blocked_accounts_list),
     #community
     path("", process_join_request),#for the community
-    #event
-    path("", edit_event),
-    path("", cancel_event),
     #page_user
     path("page/profile/update/", update_page_profile),
 

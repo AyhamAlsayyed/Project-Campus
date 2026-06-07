@@ -175,7 +175,7 @@ def create_event(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def edit_event(request, event_id):
+def update_event(request, event_id):
     user = request.user
     event = get_object_or_404(Event, event_id=event_id)
 
@@ -210,7 +210,7 @@ def edit_event(request, event_id):
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
-def cancel_event(request, event_id):
+def delete_event(request, event_id):
     user = request.user
     event = get_object_or_404(Event, event_id=event_id)
 
