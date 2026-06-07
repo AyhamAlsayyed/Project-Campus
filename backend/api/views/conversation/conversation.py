@@ -17,7 +17,7 @@ from ...models import (
     MessageMedia,
     Post,
 )
-from ...serializers import ConversationMemberSerializer, PostSerializer
+from ...serializers import ConversationSerializer, PostSerializer
 from ...utils.blocked_users import is_blocked
 from ...utils.feed import base_annotations
 from ...utils.notifications import send_global_notification
@@ -46,7 +46,7 @@ def get_conversations(request):
         reverse=True,
     )
 
-    serializer = ConversationMemberSerializer(sorted_memberships, many=True, context={"request": request})
+    serializer = ConversationSerializer(sorted_memberships, many=True, context={"request": request})
 
     return Response(serializer.data)
 
@@ -203,14 +203,10 @@ def create_group_conversation(request):
             created_by=user,
         )
 
-        ConversationMember.objects.create(
-            conversation=new_group, user=user, role=ConversationMember.Role.OWNER
-        )
+        ConversationMember.objects.create(conversation=new_group, user=user, role=ConversationMember.Role.OWNER)
 
         membership_objects = [
-            ConversationMember(
-                conversation=new_group, user=invited_user, role=ConversationMember.Role.MEMBER
-            )
+            ConversationMember(conversation=new_group, user=invited_user, role=ConversationMember.Role.MEMBER)
             for invited_user in invited_users
         ]
 

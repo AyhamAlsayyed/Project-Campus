@@ -964,7 +964,20 @@ class Conversation(models.Model):
     def __str__(self):
         if self.is_group:
             return f"Group Chat: {self.name or f'Group #{self.conversation_id}'}"
-        return f"Direct Chat #{self.conversation_id}"
+        initiator = self.created_by.username if self.created_by else f"User {self.created_by_id}"
+
+        other_member_record = (
+            ConversationMember.objects.filter(conversation_id=self.conversation_id)
+            .exclude(user_id=self.created_by_id)
+            .first()
+        )
+
+        if other_member_record and other_member_record.user:
+            other_member = other_member_record.user.username
+        else:
+            other_member = "Unknown User"
+
+        return f"Direct Chat: {initiator} - {other_member}"
 
 
 class ConversationMember(models.Model):
@@ -1034,13 +1047,24 @@ class ConversationMember(models.Model):
         ]
 
     def __str__(self):
-        username = self.user.username if self.user else f"User {self.user_id}"
-        chat_title = self.conversation.name or f"Chat #{self.conversation_id}"
+        username = self.user.username if self.user else f"Deleted User (ID: {self.user_id})"
+        if not self.conversation.is_group:
+            other_member = (
+                ConversationMember.objects.filter(conversation_id=self.conversation_id)
+                .exclude(user_id=self.user_id)
+                .first()
+            )
+
+            if other_member and other_member.user:
+                return f"DM with {other_member.user.username} (Self: {username})"
+            return f"DM with Yourself ({username})"
+
+        chat_title = self.conversation.name or f"Group #{self.conversation_id}"
         return f"{chat_title} Member: {username} ({self.get_role_display()})"
 
 
 class Message(models.Model):
-    message_id = models.BigAutoField(primary_key=True, db_column="media_id")  # Keeping original column mapping format
+    message_id = models.BigAutoField(primary_key=True, db_column="media_id")
 
     conversation = models.ForeignKey(
         Conversation,
