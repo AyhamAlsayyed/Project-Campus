@@ -27,9 +27,8 @@ def fetch_join_requests(request, community_id):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def process_join_request(request, community_id):
+def process_join_request(request, community_id, member_id):
     admin_user = request.user
-    student_id = request.data.get("user_id")
     action = request.data.get("action")
 
     if action not in ["approve", "reject"]:
@@ -51,7 +50,7 @@ def process_join_request(request, community_id):
         return Response({"error": "You do not have permission to manage this community."}, status=403)
 
     membership = (
-        CommunityMember.objects.filter(community=community, user_id=student_id, status="pending")
+        CommunityMember.objects.filter(community=community, user_id=member_id, status="pending")
         .select_related("user")
         .first()
     )

@@ -272,8 +272,6 @@ urlpatterns += [
 urlpatterns += [
     #settings
     path("", blocked_accounts_list),
-    #community
-    path("", process_join_request),#for the community
     #page_user
     path("page/profile/update/", update_page_profile),
 
