@@ -126,7 +126,7 @@ body {
 
 .progressBarBackground {
     width: 456px;
-    height: 14.4px;
+    height: 25px;
     background-color: #4D4D4D;
     border-radius: 12px;
     overflow: hidden;
@@ -155,12 +155,9 @@ body {
 /* Grey mask layer indicating an active subscription higher rank status */
 .activeSubscriptionOverlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-   
-    border-radius: 28.8px;
+    inset: 0;
+    background: rgba(60, 60, 60, 0.45);
+    border-radius: inherit;
     pointer-events: none;
     z-index: 1;
 }
@@ -198,15 +195,11 @@ body {
 }
 
 .priceContainerBasic {
-    position: absolute;
-    bottom: 36px;
-    right: 42px;
     display: flex;
     align-items: center;
-    gap: 9.6px;
-    z-index: 2;
+    gap: 6px;
+    flex-shrink: 0;
 }
-
 /* Reusable Gradient Purple Action Button */
 .priceBtn {
     background: linear-gradient(90deg, #622598 0%, #952892 100%);
@@ -306,9 +299,15 @@ body {
     text-decoration: line-through;
 }
 .priceBtnDisabled {
-    background: #4a4a4a;
-    color: #888888;
+    background: rgba(100, 100, 100, 0.55) !important;
+    color: rgba(255, 255, 255, 0.75) !important;
     cursor: not-allowed;
-    opacity: 0.6;
-    pointer-events: none;
+}
+.basicFooter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    width: 100%;
+    margin-top: auto;
 }

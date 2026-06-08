@@ -715,6 +715,7 @@ class CommunitySerializer(serializers.ModelSerializer):
             "friends_count",
             "highlighted_count",
             "sample_members",
+            "created_at",
         ]
 
     def get_image(self, obj):

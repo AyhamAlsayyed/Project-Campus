@@ -98,8 +98,7 @@ export default function Subscriptions() {
         const daysLeft = Math.max(0, Math.ceil(remainingMs / 86400000));
 
         // Fill = how much time is LEFT (shrinks toward 0 as it expires)
-        const progress = Math.min(100, Math.max(0, (remainingMs / totalMs) * 100));
-
+        const progress = Math.min(100, Math.max(0, (1 - remainingMs / totalMs) * 100));
         const endLabel = end.toLocaleDateString('en-US', { day: 'numeric', month: 'long' });
         return { daysLeft, progress, endLabel };
     };
@@ -163,17 +162,28 @@ export default function Subscriptions() {
                             <li>Create posts and interact with others.</li>
                             <li>Create and run promotions.</li>
                         </ul>
+                        <div className={styles.basicFooter}>
+                            {isBasicActive && (
+                                <button
+                                    onClick={handleCancel}
+                                    disabled={cancelling}
+                                    className={styles.cancelBtn}
+                                >
+                                    {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
+                                </button>
+                            )}
 
-                        <div className={styles.priceContainerBasic}>
-                            <button
-                                onClick={() => handleSubscribe('basic')}
-                                disabled={isBasicActive || subscribing}
-                                className={`${styles.priceBtn} ${isBasicActive ? styles.priceBtnDisabled : ''}`}
-                                title={isBasicActive ? "You're already on this plan" : "Subscribe to Basic"}
-                            >
-                                {isBasicActive ? 'Active' : '$14.99'}
-                            </button>
-                            <span className={styles.perMonthText}>/month</span>
+                            <div className={styles.priceContainerBasic}>
+                                <button
+                                    onClick={() => handleSubscribe('basic')}
+                                    disabled={isBasicActive || subscribing}
+                                    className={`${styles.priceBtn} ${isBasicActive ? styles.priceBtnDisabled : ''}`}
+                                    title={isBasicActive ? "You're already on this plan" : "Subscribe to Basic"}
+                                >
+                                    {isBasicActive ? 'Active' : '$14.99'}
+                                </button>
+                                <span className={styles.perMonthText}>/month</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -225,7 +235,7 @@ export default function Subscriptions() {
                                         className={`${styles.priceBtn} ${isPremiumActive ? styles.priceBtnDisabled : ''}`}
                                         title={isPremiumActive ? "You're already on this plan" : "Subscribe to Premium"}
                                     >
-                                        {isPremiumActive ? 'Active' : '$24.99'}
+                                        {'$24.99'}
                                     </button>
                                 </div>
                                 <span className={styles.perMonthText}>/month</span>

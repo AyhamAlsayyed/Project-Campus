@@ -26,26 +26,21 @@ const renderIcon = (src, color, width = '20px', height = '20px', additionalStyle
 );
 
 export default function CommunityInfoPanel({ community, onBack }) {
-    console.log(community)
+    console.log('community in InfoPanel:', community);
+    console.log('community.image:', community?.image);
+    console.log('community.banner_image:', community?.banner_image);
+
     const token = localStorage.getItem('access');
     const [originalDescription, setOriginalDescription] = useState(community?.description || "");
     const [originalPrivacy, setOriginalPrivacy] = useState(community?.is_private ? 'Private' : 'Public');
-    const [originalBannerUrl, setOriginalBannerUrl] = useState(
-        community?.banner_image
-            ? (community.banner_image.startsWith('http') ? community.banner_image : `${API}${community.banner_image}`)
-            : null
-    );
-    const [bannerUrl, setBannerUrl] = useState(
-        community?.banner_image
-            ? (community.banner_image.startsWith('http') ? community.banner_image : `${API}${community.banner_image}`)
-            : null
-    );
+    const [originalBannerUrl, setOriginalBannerUrl] = useState(community?.image || null);
+    const [bannerUrl, setBannerUrl] = useState(community?.image || null);
 
     const [description, setDescription] = useState(originalDescription);
     const [privacyType, setPrivacyType] = useState(originalPrivacy);
     const [isPrivacyDropdownOpen, setIsPrivacyDropdownOpen] = useState(false);
     const [bannerFile, setBannerFile] = useState(null);
-   const [isSaving, setIsSaving] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [toast, setToast] = useState(null);
 
     const fileInputRef = useRef(null);
@@ -70,7 +65,7 @@ export default function CommunityInfoPanel({ community, onBack }) {
         if (!file) return;
         setBannerFile(file);
         const reader = new FileReader();
-        reader.onload = (ev) => setBannerUrl(`url('${ev.target.result}')`);
+        reader.onload = (ev) => setBannerUrl(ev.target.result);
         reader.readAsDataURL(file);
     };
 
@@ -109,7 +104,7 @@ export default function CommunityInfoPanel({ community, onBack }) {
     };
 
     const communityName = community?.name || 'Programmers';
-    const createdBy = community?.owner?.username || community?.created_by_username || community?.created_by || 'Unknown';
+    const createdBy = community?.owner_name || 'Unknown';
     const createdDate = community?.created_at
         ? new Date(community.created_at).toLocaleDateString('en-GB')
         : '';
@@ -170,7 +165,11 @@ export default function CommunityInfoPanel({ community, onBack }) {
 
                 <div
                     className={styles.bannerContainer}
-                    style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), ${bannerUrl}` }}
+                    style={{
+                        backgroundImage: bannerUrl ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('${bannerUrl}')` : 'none',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                    }}
                 >
                     <input
                         type="file"

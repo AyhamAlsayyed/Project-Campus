@@ -19,6 +19,7 @@
 .user {
   display: flex;
   align-items: center;
+  
   gap: 10px;
 }
 
@@ -31,12 +32,10 @@
 }
 
 .userMeta {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
-
 .nameLine {
   display: flex;
   align-items: center;
@@ -887,4 +886,50 @@
   width: 1px;
   height: 24px;
   background-color: #333333;
+}
+.headerActions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.bellBtn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.followBtn {
+    background: linear-gradient(135deg, #5B2598, #962892);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+}
+
+.followBtn:hover { opacity: 0.85; }
+
+.followedBtn {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
 }
