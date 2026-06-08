@@ -186,32 +186,13 @@ def communities(request):
 @permission_classes([IsAuthenticated])
 def community_detail(request, community_id):
     try:
-        c = Community.objects.get(community_id=community_id)
+        community = Community.objects.get(community_id=community_id)
     except Community.DoesNotExist:
         return Response({"error": "Community not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    is_muted = False
-    user_role = None
-    user = request.user
+    serializer = CommunitySerializer(community, context={"request": request})
 
-    if user and user.is_authenticated:
-        is_muted = CommunityMember.objects.filter(community=c, user=user, is_muted=True).exists()
-
-        membership = CommunityMember.objects.filter(community=c, user=user, status="approved").first()
-        if membership:
-            user_role = membership.role
-
-    return Response(
-        {
-            "id": c.community_id,
-            "name": c.name,
-            "description": c.description,
-            "is_private": c.privacy == "private",
-            "is_muted": is_muted,
-            "user_role": user_role,
-        },
-        status=status.HTTP_200_OK,
-    )
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET", "PATCH"])
