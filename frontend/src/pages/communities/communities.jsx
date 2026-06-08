@@ -38,11 +38,22 @@ export default function Community() {
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [activeCommunity, setActiveCommunity] = useState(null);
     const [activeTab, setActiveTab] = useState('Community info');
-    const isUserPage = localStorage.getItem("user_type") === "page";
+    const isUserPage = ["page", "uni"].includes(localStorage.getItem("user_type"));
+    const isUni = localStorage.getItem("user_type") === "uni";
     const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
     const [promoDurationIdx, setPromoDurationIdx] = useState(2);
     const [showCreateCommunityModal, setShowCreateCommunityModal] = useState(false);
     const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+    const [postApproval, setPostApproval] = useState(false);
+    const [whoCanPost, setWhoCanPost] = useState({
+        'Everyone': true,
+        'Members only': false,
+        'Admins only': false,
+    });
+    const handleWhoCanPostChange = (opt) => {
+        setWhoCanPost({ 'Everyone': false, 'Members only': false, 'Admins only': false, [opt]: true });
+    };
+
     const [requestSent, setRequestSent] = useState(
         () => localStorage.getItem("community_request_sent") === "true"
     );
@@ -124,7 +135,7 @@ export default function Community() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
-            if (data.role === 'university' || localStorage.getItem('user_type') === 'university') {
+            if (data.role === 'university' || localStorage.getItem('user_type') === 'uni') {
                 const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -390,7 +401,7 @@ export default function Community() {
 
                             </>
                         ) : (
-                            
+
                             <>
                                 {ownedCommunities.length > 0 && (
                                     <>
@@ -402,10 +413,7 @@ export default function Community() {
                                                 <div
                                                     className={styles.createCommunityBtn}
                                                     onClick={() => {
-                                                        if (!isUserPage) return;
-                                                        user?.is_premium
-                                                            ? setShowCreateCommunityModal(true)
-                                                            : setIsModalOpen(true);
+                                                        (user?.is_premium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
                                                     }}
                                                     style={{
                                                         display: "flex", alignItems: "center", justifyContent: "center",
@@ -435,9 +443,19 @@ export default function Community() {
                                     </>
                                 )}
 
-                                <h1 className={styles.title}>
-                                    Looking for - <br /> <span className={styles.highlight}>COMMUNITIES</span> to be part of?
-                                </h1>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                    <h1 className={styles.title}>
+                                        Looking for - <br /> <span className={styles.highlight}>COMMUNITIES</span> to be part of?
+                                    </h1>
+                                    {isUserPage && ownedCommunities.length === 0 && (
+                                        <div className={styles.createCommunityBtn} onClick={() => {
+                                            (user?.is_premium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
+
+                                        }} style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "8px", cursor: "pointer" }}>
+                                            <img src={CreateCommunityIcon} alt="" style={{ width: "25px", height: "25px", filter: 'brightness(0) invert(0.9)' }} />
+                                        </div>
+                                    )}
+                                </div>
                                 <div className={styles.filters}>
                                     {desktopFilters.map(f => (
                                         <button
@@ -463,7 +481,7 @@ export default function Community() {
                         )}
                     </div>
 
-                  
+
                     <div className={styles.rightSection} style={{ marginTop: settingsOpen ? "2%" : "4%", flex: isUserPage ? " 0 0 420px;" : "0 0 380px" }}>
                         {settingsOpen ? (
                             <CommunitySettingsNav
@@ -474,7 +492,12 @@ export default function Community() {
                             <>
 
                                 <div style={{ animation: 'tabFadeIn 0.25s ease forwards' }}>
-                                    <CommunityPermissions />
+                                    <CommunityPermissions
+                                        postApproval={postApproval}
+                                        onPostApprovalChange={setPostApproval}
+                                        whoCanPost={whoCanPost}
+                                        onWhoCanPostChange={handleWhoCanPostChange}
+                                    />
                                 </div>
                                 <div className={styles.promoContainer}>
                                     <div className={styles.promoHeaderContainer}>

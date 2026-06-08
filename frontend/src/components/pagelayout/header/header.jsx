@@ -441,7 +441,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
 
   const handleAvatarClick = () => {
     const loggedInType = localStorage.getItem("user_type");
-    const isPageUser = loggedInType === 'page' || loggedInType === 'university';
+    const isPageUser = loggedInType === 'page' || loggedInType === 'uni';
     const id = isPageUser ? user?.page_id : user?.id;
 
     if (!id) return;
@@ -452,7 +452,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
 
   const isInProfileSection = (() => {
     const loggedInType = localStorage.getItem("user_type");
-    const isPageUser = loggedInType === 'page' || loggedInType === 'university';
+    const isPageUser = loggedInType === 'page' || loggedInType === 'uni';
     const id = isPageUser ? user?.page_id : user?.id;
     return location.pathname.startsWith(`/profile/${id}`) ||
       location.pathname.startsWith(`/page/${id}`);

@@ -78,7 +78,7 @@ export default function Login() {
 
             if (subRes.ok) {
                 const subData = await subRes.json();
-                const isExpired = !subData?.plan || new Date(subData?.end_date) < new Date();
+                const isExpired = !subData?.is_active; 
                 if (isExpired) {
                     setShowExpiredPopup(true);
                     return;

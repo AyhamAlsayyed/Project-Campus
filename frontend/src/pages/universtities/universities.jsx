@@ -29,16 +29,16 @@ export default function Universities() {
     const [openNewsDropdown, setOpenNewsDropdown] = useState(null);
     const [extendItem, setExtendItem] = useState(null);
     const [sliderStep, setSliderStep] = useState(2);
-    const [deleteConfirmItem, setDeleteConfirmItem] = useState(null); 
+    const [deleteConfirmItem, setDeleteConfirmItem] = useState(null);
     const navigate = useNavigate();
     const [univData, setUnivData] = useState(null);
     const [events, setEvents] = useState([]);
     const [isManageDoctorsOpen, setIsManageDoctorsOpen] = useState(false);
     const [manageDoctorsSearch, setManageDoctorsSearch] = useState('');
-    const [isInviteOpen, setIsInviteOpen] = useState(false);        
-    const [inviteEmail, setInviteEmail] = useState('');              
-    const [inviteStatus, setInviteStatus] = useState(null);          
-    const [removingDoctorId, setRemovingDoctorId] = useState(null); 
+    const [isInviteOpen, setIsInviteOpen] = useState(false);
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteStatus, setInviteStatus] = useState(null);
+    const [removingDoctorId, setRemovingDoctorId] = useState(null);
     const API = "http://localhost:8000";
 
     const [loading, setLoading] = useState(true);
@@ -46,7 +46,7 @@ export default function Universities() {
     // Ref to close dropdown on outside click
     const dropdownRef = useRef(null);
 
-    const isUniversity = localStorage.getItem("user_type") === "university";
+    const isUniversity = localStorage.getItem("user_type") === "uni";
 
     const durationSteps = [
         { label: "1 week", addedText: "0 months & 12 days", dateStr: "Friday - 24/6/2026" },
@@ -372,7 +372,7 @@ export default function Universities() {
                         <div className={styles.pill}>Doctors and Teachers</div>
                         <div className={styles.rightCard} style={{ minHeight: isUniversity ? "570px" : "200px" }}>
                             <div className={styles.rightCardHeader}>
-                                <div className={styles.searchContainer} style={{width: isUniversity ? "60%" : "100%"}}>
+                                <div className={styles.searchContainer} style={{ width: isUniversity ? "60%" : "100%" }}>
                                     <Search size={16} className={styles.searchIcon} />
                                     <input
                                         type="text"

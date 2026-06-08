@@ -4,7 +4,7 @@ import ArrowLeftIcon from '../../Assets/icons/arrow-left.png';
 import InfoIcon from '../../Assets/icons/help.png';
 import DefaultBanner from '../../Assets/Pictures/default-community-banner.png';
 import CameraIcon from '../../Assets/icons/camera.png';
-import CommunityPermissions from './CommunityPermissions';
+
 
 export default function CreateCommunity({ onBack, onSuccess }) {
     // Community fields
@@ -195,13 +195,8 @@ export default function CreateCommunity({ onBack, onSuccess }) {
 
             <div className={styles.ccDivider}></div>
 
-            {/* PERMISSIONS — rendered inline as part of the form */}
-            <CommunityPermissions
-                postApproval={postApproval}
-                onPostApprovalChange={setPostApproval}
-                whoCanPost={whoCanPost}
-                onWhoCanPostChange={handleWhoCanPostChange}
-            />
+         
+        
         </div>
     );
 }
