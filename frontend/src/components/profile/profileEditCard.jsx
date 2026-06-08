@@ -16,6 +16,7 @@ import PhoneIcon from '../../Assets/icons/phone.png'
 import EducationIcon from '../../Assets/icons/education.png'
 import ProfilePicture from '../../Assets/icons/default-pfp.png';
 
+
 const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS_SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
@@ -243,7 +244,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                 minWidth: 140, zIndex: 9999,
                                 boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
                             }}
-                         >
+                        >
                             <button
                                 onClick={() => { coverInputRef.current?.click(); setShowCoverDropdown(false); }}
                                 style={{
@@ -288,8 +289,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
 
                         {isInstructor ? (
                             <>
-                                {/* Row 1: Title dropdown + Username */}
-                                {/* Row 1: Title dropdown + Arrow + Username */}
+
                                 <div style={{ display: "flex", gap: 12, alignItems: "stretch" }}>
 
                                     {/* Title button */}
@@ -587,94 +587,51 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                     </div>
 
                     {/* Birthday */}
-                    <div className={styles.detailFieldItem} style={{ position: "relative" }}>
-                        <span><img src={BirthdayIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} /> Birthday</span>
-                        <div className={styles.birthdayInputsGroup}>
+                    <div className={styles.detailFieldItem}>
+                        <span>
+                            <img src={BirthdayIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)' }} />
+                            Birthday
+                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight:"40%" }}>
                             <input
-                                type="text" maxLength={2} placeholder="MM"
+                                type="text"
+                                maxLength={2}
+                                placeholder="MM"
                                 value={formData.birthday.month}
-                                className={styles.bInput}
                                 onChange={e => setFormData(p => ({ ...p, birthday: { ...p.birthday, month: e.target.value } }))}
-                            /> /
+                                style={{
+                                    width: 48, background: '#262626', border: '1px solid #444',
+                                    borderRadius: 10, padding: '8px 0', color: 'white',
+                                    outline: 'none', fontSize: 13, textAlign: 'center'
+                                }}
+                            />
+                            <span style={{ color: '#555', fontSize: 16 }}>/</span>
                             <input
-                                type="text" maxLength={2} placeholder="DD"
+                                type="text"
+                                maxLength={2}
+                                placeholder="DD"
                                 value={formData.birthday.day}
-                                className={styles.bInput}
                                 onChange={e => setFormData(p => ({ ...p, birthday: { ...p.birthday, day: e.target.value } }))}
-                            /> /
+                                style={{
+                                    width: 48, background: '#262626', border: '1px solid #444',
+                                    borderRadius: 10, padding: '8px 0', color: 'white',
+                                    outline: 'none', fontSize: 13, textAlign: 'center'
+                                }}
+                            />
+                            <span style={{ color: '#555', fontSize: 16 }}>/</span>
                             <input
-                                type="text" maxLength={4} placeholder="YYYY"
+                                type="text"
+                                maxLength={4}
+                                placeholder="YYYY"
                                 value={formData.birthday.year}
-                                className={styles.bInput} style={{ width: 44 }}
                                 onChange={e => setFormData(p => ({ ...p, birthday: { ...p.birthday, year: e.target.value } }))}
+                                style={{
+                                    width: 64, background: '#262626', border: '1px solid #444',
+                                    borderRadius: 10, padding: '8px 0', color: 'white',
+                                    outline: 'none', fontSize: 13, textAlign: 'center'
+                                }}
                             />
                         </div>
-                        <Calendar size={18} className={styles.fieldEditIcon} onClick={() => setShowCalendar(p => !p)} />
-                        {showCalendar && (
-                            <div style={{
-                                position: "absolute", bottom: "calc(100% + 8px)", right: 0,
-                                width: 260, background: "#252525",
-                                border: "1px solid rgba(255,255,255,0.1)",
-                                borderRadius: 16, padding: 14, zIndex: 50,
-                                boxShadow: "0 16px 40px rgba(0,0,0,0.6)"
-                            }}>
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                                    <button onClick={() => setCalViewDate(new Date(calViewDate.getFullYear(), calViewDate.getMonth() - 1, 1))}
-                                        style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "1.2rem", cursor: "pointer", width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>‹</button>
-                                    <span style={{ color: "#fff", fontWeight: 600, fontSize: "0.88rem" }}>
-                                        {MONTHS_LONG[calViewDate.getMonth()]} {calViewDate.getFullYear()}
-                                    </span>
-                                    <button onClick={() => setCalViewDate(new Date(calViewDate.getFullYear(), calViewDate.getMonth() + 1, 1))}
-                                        style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "1.2rem", cursor: "pointer", width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>›</button>
-                                </div>
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", marginBottom: 6 }}>
-                                    {DAYS_SHORT.map(d => (
-                                        <span key={d} style={{ textAlign: "center", fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.35)", padding: "2px 0" }}>{d}</span>
-                                    ))}
-                                </div>
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
-                                    {Array.from({ length: firstDay(calViewDate.getFullYear(), calViewDate.getMonth()) }).map((_, i) => (
-                                        <span key={`e${i}`} />
-                                    ))}
-                                    {Array.from({ length: daysInMonth(calViewDate.getFullYear(), calViewDate.getMonth()) }).map((_, i) => {
-                                        const day = i + 1;
-                                        const isSelected =
-                                            Number(formData.birthday.year) === calViewDate.getFullYear() &&
-                                            Number(formData.birthday.month) === calViewDate.getMonth() + 1 &&
-                                            Number(formData.birthday.day) === day;
-                                        return (
-                                            <button
-                                                key={day}
-                                                onClick={() => {
-                                                    setFormData(p => ({
-                                                        ...p,
-                                                        birthday: {
-                                                            year: String(calViewDate.getFullYear()),
-                                                            month: String(calViewDate.getMonth() + 1).padStart(2, '0'),
-                                                            day: String(day).padStart(2, '0'),
-                                                        }
-                                                    }));
-                                                    setShowCalendar(false);
-                                                }}
-                                                style={{
-                                                    aspectRatio: "1", display: "flex", alignItems: "center",
-                                                    justifyContent: "center",
-                                                    background: isSelected
-                                                        ? "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))"
-                                                        : "transparent",
-                                                    border: "none", borderRadius: "50%",
-                                                    color: isSelected ? "#fff" : "rgba(255,255,255,0.8)",
-                                                    fontSize: "0.8rem", cursor: "pointer",
-                                                    fontWeight: isSelected ? 700 : 400,
-                                                }}
-                                            >
-                                                {day}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
                     </div>
                     {/* ── Degrees (students only) ── */}
                     {!isInstructor && (
@@ -943,22 +900,21 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                 <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)" }} onClick={() => setEditView("main")} />
                     <div style={{
-                        position: "relative", background: "#1e1e1e", borderRadius: 20,
+                        position: "relative", background: "#333333", borderRadius: 20,
                         padding: 28, width: 380, boxShadow: "0 20px 50px rgba(0,0,0,0.7)",
                         border: "1px solid rgba(255,255,255,0.08)"
                     }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                <Phone size={20} color="white" />
-                                <h3 style={{ margin: 0, color: "white", fontWeight: 700, fontSize: "1.1rem" }}>Phone</h3>
+                                <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />                                <h3 style={{ margin: 0, color: "white", fontWeight: 700, fontSize: "1.1rem" }}>Phone</h3>
                             </div>
                             <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
                                 <button onClick={() => setEditView("main")} style={{ background: "none", border: "none", color: "#e91e63", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}>Discard</button>
                                 <button onClick={() => setEditView("main")} style={{ background: "none", border: "1px solid #444", color: "white", borderRadius: 20, padding: "6px 20px", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}>Save</button>
                             </div>
                         </div>
-                        <div style={{ height: 1, background: "#2a2a2a", marginBottom: 20 }} />
-                        <div style={{ marginBottom: 16 }}>
+                        <div style={{ height: 1, background: "#4D4D4D", marginBottom: 20 }} />
+                        <div style={{ marginBottom: 16, display: "flex", flexDirection: "row", alignItems: "center", gap: "15px" }}>
                             <label style={{ color: "#888", fontSize: "0.85rem", display: "block", marginBottom: 8 }}>Primary</label>
                             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                                 <input
@@ -966,17 +922,18 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     value={formData.primaryPhone}
                                     placeholder="Primary phone number"
                                     onChange={e => setFormData(p => ({ ...p, primaryPhone: e.target.value }))}
-                                    style={{ flex: 1, background: "#252525", border: "1px solid #333", borderRadius: 12, padding: "11px 14px", color: "white", outline: "none", fontSize: "0.9rem" }}
+                                    style={{ flex: 1, background: "#262626", border: "1px solid #333", borderRadius: 25, padding: "11px 14px", color: "white", outline: "none", fontSize: "0.9rem" }}
                                 />
                                 <button
                                     onClick={() => handleSendOtp(formData.primaryPhone)}
-                                    style={{ background: "rgba(139,45,255,0.15)", border: "1px solid rgba(139,45,255,0.4)", color: "#c084fc", borderRadius: 10, padding: "10px 16px", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap" }}
+                                    style={{ background: "#4D4D4D", color: "#D1D1D1", border: "none", borderRadius: 25, padding: "10px 16px", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap" }}
                                 >
                                     Update
                                 </button>
                             </div>
                         </div>
-                        <div>
+                        <div style={{ height: 1, background: "#4D4D4D", margin: "0 auto 20px auto", width: "50%" }} />
+                        <div style={{ marginBottom: 16, display: "flex", flexDirection: "row", alignItems: "center", gap: "15px" }}>
                             <label style={{ color: "#888", fontSize: "0.85rem", display: "block", marginBottom: 8 }}>Secondary</label>
                             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                                 <input
@@ -984,11 +941,11 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     value={formData.secondaryPhone}
                                     placeholder="Add secondary number"
                                     onChange={e => setFormData(p => ({ ...p, secondaryPhone: e.target.value }))}
-                                    style={{ flex: 1, background: "#252525", border: "1px solid #333", borderRadius: 12, padding: "11px 14px", color: "white", outline: "none", fontSize: "0.9rem" }}
+                                    style={{ flex: 1, background: "#262626", border: "1px solid #333", borderRadius: 25, padding: "11px 14px", color: "white", outline: "none", fontSize: "0.9rem" }}
                                 />
                                 <button
                                     onClick={() => handleSendOtp(formData.secondaryPhone)}
-                                    style={{ background: "rgba(139,45,255,0.15)", border: "1px solid rgba(139,45,255,0.4)", color: "#c084fc", borderRadius: 10, padding: "10px 16px", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap" }}
+                                    style={{ background: "#4D4D4D", color: "#D1D1D1", border: "none", borderRadius: 25, padding: "10px 16px", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap" }}
                                 >
                                     Verify
                                 </button>
@@ -1013,7 +970,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                 <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)" }} onClick={() => setEditView("main")} />
                     <div style={{
-                        position: "relative", background: "#1e1e1e", borderRadius: 20,
+                        position: "relative", background: "#333333", borderRadius: 20,
                         padding: 28, width: 400, boxShadow: "0 20px 50px rgba(0,0,0,0.7)",
                         border: "1px solid rgba(255,255,255,0.08)"
                     }}>

@@ -589,11 +589,28 @@ class PostSerializer(serializers.ModelSerializer):
         try:
             page = user.page
             if page:
+                is_followed = False
+                is_notified = False
+                if request and request.user.is_authenticated:
+
+                   follow_rel = Friendship.objects.filter(
+                user1=request.user,
+                user2=user,
+                status=Friendship.Status.FOLLOWING,
+                relation_type=Friendship.RelationType.USER_TO_PAGE,
+                 ).first()
+                is_followed = follow_rel is not None
+                is_notified = getattr(follow_rel, 'is_notified', False) if follow_rel else False
+
+
                 avatar = page.profile_image.url if page.profile_image else ""
                 if request and avatar:
                     avatar = request.build_absolute_uri(avatar)
                 return {
                     "id": page.user.id,
+                    "is_followed": is_followed,
+                    "is_notified": is_notified,
+
                     "type": "page",
                     "username": page.page_full_name,
                     "avatar": avatar,

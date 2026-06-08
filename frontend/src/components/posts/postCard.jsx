@@ -49,7 +49,7 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
   const [isBlocked, setIsBlocked] = useState(post?.author?.is_blocked || false);
   const [adReaction, setAdReaction] = useState(post?.ad_reaction || null);
   const [showReport, setShowReport] = useState(false);
-  const [isFollowed, setIsFollowed] = useState(post?.author?.is_followed || false);
+  const [isFollowed, setIsFollowed] = useState(post?.author?.is_followed);
   const [isNotified, setIsNotified] = useState(post?.author?.is_notified || false);
   const [commenterAvatars, setCommenterAvatars] = useState(
     (post?.top_3comments_avatar || []).map(c => {
@@ -108,16 +108,51 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
   };
   const handleFollow = async () => {
     const token = localStorage.getItem("access");
-    const prev = isFollowed;
-    setIsFollowed(!prev);
+    const prevFollowed = isFollowed;
+    const prevNotified = isNotified;
+
+    setIsFollowed(!prevFollowed);
+    if (prevFollowed) setIsNotified(false);
+
     try {
       const res = await fetch(`http://localhost:8000/api/pages/${post.author.id}/follow/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) setIsFollowed(prev);
-    } catch { setIsFollowed(prev); }
+      if (res.ok) {
+        const data = await res.json();
+        const newFollowed = data.is_followed !== undefined ? data.is_followed : !prevFollowed;
+        const newNotified = newFollowed ? isNotified : false;
+
+        setIsFollowed(newFollowed);
+        if (!newFollowed) setIsNotified(false);
+
+
+        window.dispatchEvent(new CustomEvent("page-follow-changed", {
+          detail: { pageId: post.author.id, is_followed: newFollowed, is_notified: newNotified }
+        }));
+      } else {
+        setIsFollowed(prevFollowed);
+        setIsNotified(prevNotified);
+      }
+    } catch {
+      setIsFollowed(prevFollowed);
+      setIsNotified(prevNotified);
+    }
   };
+  useEffect(() => {
+    const handler = (e) => {
+      console.log("event pageId:", e.detail.pageId, typeof e.detail.pageId);
+      console.log("post author id:", post.author?.id, typeof post.author?.id);
+
+      if (String(e.detail.pageId) === String(post.author?.id)) {
+        setIsFollowed(e.detail.is_followed);
+        if (!e.detail.is_followed) setIsNotified(false);
+      }
+    };
+    window.addEventListener("page-follow-changed", handler);
+    return () => window.removeEventListener("page-follow-changed", handler);
+  }, [post.author?.id]);
 
   const handleNotify = async () => {
     const token = localStorage.getItem("access");
@@ -449,9 +484,9 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
               {post.author?.type === 'page' && (
                 <span className={styles.time}>{post.author?.page_type || 'Page'}</span>
               )}
-              
+
             </div>
-            
+
             {isPinned && isOwnProfile && (
               <>
                 <img src={Pin} alt="pinned" width={14} height={14} style={{ filter: 'brightness(0) invert(1)' }} className={styles.pinIcon} />
@@ -470,8 +505,8 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
                   <img
                     src={isNotified ? BellOn : BellOff}
                     alt="notifications"
-                    width={20}
-                    height={isNotified ? 24 : 20}
+                    width={ isNotified ? 16 : 20}
+                    height={isNotified ? 18 : 20}
                     style={{ filter: 'brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)' }}
                   />
                 </button>
