@@ -26,16 +26,26 @@ const renderIcon = (src, color, width = '20px', height = '20px', additionalStyle
 );
 
 export default function CommunityInfoPanel({ community, onBack }) {
+    console.log(community)
     const token = localStorage.getItem('access');
-    const originalDescription = community?.description || "consectetuer adipiscing elit, sed diam nonummy nibh";
-    const originalPrivacy = community?.isPublic === false ? 'Private' : 'Public';
-    const originalBanner = community?.banner || "url('https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1000')";
+    const [originalDescription, setOriginalDescription] = useState(community?.description || "");
+    const [originalPrivacy, setOriginalPrivacy] = useState(community?.is_private ? 'Private' : 'Public');
+    const [originalBannerUrl, setOriginalBannerUrl] = useState(
+        community?.banner_image
+            ? (community.banner_image.startsWith('http') ? community.banner_image : `${API}${community.banner_image}`)
+            : null
+    );
+    const [bannerUrl, setBannerUrl] = useState(
+        community?.banner_image
+            ? (community.banner_image.startsWith('http') ? community.banner_image : `${API}${community.banner_image}`)
+            : null
+    );
+
     const [description, setDescription] = useState(originalDescription);
     const [privacyType, setPrivacyType] = useState(originalPrivacy);
     const [isPrivacyDropdownOpen, setIsPrivacyDropdownOpen] = useState(false);
     const [bannerFile, setBannerFile] = useState(null);
-    const [bannerUrl, setBannerUrl] = useState(originalBanner);
-    const [isSaving, setIsSaving] = useState(false);
+   const [isSaving, setIsSaving] = useState(false);
     const [toast, setToast] = useState(null);
 
     const fileInputRef = useRef(null);
@@ -81,6 +91,14 @@ export default function CommunityInfoPanel({ community, onBack }) {
             });
 
             if (!res.ok) throw new Error('Save failed');
+            const data = await res.json();
+
+            setOriginalDescription(description);
+            setOriginalPrivacy(privacyType);
+            if (data.community?.banner_url) {
+                setOriginalBannerUrl(data.community.banner_url);
+                setBannerUrl(data.community.banner_url);
+            }
             setBannerFile(null);
             showToast('Changes saved successfully!', 'success');
         } catch (err) {
@@ -91,8 +109,10 @@ export default function CommunityInfoPanel({ community, onBack }) {
     };
 
     const communityName = community?.name || 'Programmers';
-    const createdBy = community?.created_by || 'Dr. Samer Swalen';
-    const createdDate = community?.created_at || '18/12/2025';
+    const createdBy = community?.owner?.username || community?.created_by_username || community?.created_by || 'Unknown';
+    const createdDate = community?.created_at
+        ? new Date(community.created_at).toLocaleDateString('en-GB')
+        : '';
 
     return (
         <div className={styles.infoPanelContainer}>

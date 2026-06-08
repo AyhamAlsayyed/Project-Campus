@@ -11,7 +11,7 @@ import MakeAdminIcon from '../../Assets/icons/make-admin.png';
 import LeaveIcon from '../../Assets/icons/leave.png';
 import BlockIcon from '../../Assets/icons/block.png';
 import InfoIcon from '../../Assets/icons/info.png';
-
+import { useNavigate } from 'react-router-dom';
 const API = 'http://localhost:8000';
 
 const renderIcon = (src, color, width = '18px', height = '18px') => (
@@ -48,7 +48,7 @@ const isMember = (member) => getRoleTier(member) === 2;
 // What actions can currentUserRole perform on a target member?
 const canAct = () => true;
 export default function MembersTab({ communityId, onBack, currentUserRole = 'member' }) {
-    console.log('currentUserRole prop received:', currentUserRole); // 👈
+  
     const [allMembers, setAllMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -61,10 +61,12 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
     const [actionLoading, setActionLoading] = useState(null);
     const [toast, setToast] = useState(null);
     const [currentRole, setCurrentRole] = useState(currentUserRole);
+    const navigate = useNavigate();
 
     const filterRef = useRef(null);
     const sortRef = useRef(null);
     const token = localStorage.getItem('access');
+    const actionMenuRef = useRef(null);
 
     // ── Fetch members ──
     useEffect(() => {
@@ -83,7 +85,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                 // 👇 Add this — derive role from the fetched list directly
                 const loginUser = JSON.parse(localStorage.getItem('login_user'));
                 const me = data.find(m => m.username === loginUser?.username);
-                console.log('me:', me, 'loginUser:', loginUser);
+               
                 if (me) setCurrentRole(me.role);
 
             } catch (err) {
@@ -94,6 +96,15 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
         };
         fetchMembers();
     }, [communityId, token]);
+    useEffect(() => {
+        const handler = (e) => {
+            if (filterRef.current && !filterRef.current.contains(e.target)) setIsFilterOpen(false);
+            if (sortRef.current && !sortRef.current.contains(e.target)) setIsSortOpen(false);
+            if (actionMenuRef.current && !actionMenuRef.current.contains(e.target)) setActiveActionMenu(null);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
 
     // ── Close dropdowns on outside click ──
     useEffect(() => {
@@ -176,7 +187,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                 endpoint = `${API}/api/communities/${communityId}/report/${member.id}/`;
                 successMsg = `${member.name || member.username} was reported.`;
             } else if (action === 'remove-admin') {
-                endpoint = `${API}/api/communities/${communityId}/make-admin/${member.id}/`;  
+                endpoint = `${API}/api/communities/${communityId}/make-admin/${member.id}/`;
                 successMsg = `${member.name || member.username} is no longer an admin.`;
             }
 
@@ -192,7 +203,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
             }
             if (action === 'make-admin') {
                 setAllMembers(prev =>
-                    prev.map(m => m.id === member.id ? { ...m, community_role: 'admin' } : m)
+                    prev.map(m => m.id === member.id ? { ...m, role: 'admin' } : m)
                 );
             }
             if (action === 'remove-admin') {
@@ -352,7 +363,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                     const canKick = myTier < theirTier;
                     const canMakeAdmin = canKick && isMember(member);
                     const canRemoveAdmin = myTier === 0 && isAdmin(member);
-                    console.log(`me: ${currentRole} (tier ${myTier}) | them: ${member.username} role="${member.role}" (tier ${theirTier}) | canKick: ${canKick} | canRemoveAdmin: ${canRemoveAdmin}`);
+                   
 
 
                     const displayRole = getDisplayRole(member);
@@ -383,7 +394,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                                 </div>
                             </div>
 
-                            <div className={styles.actionBtnWrapper}>
+                            <div className={styles.actionBtnWrapper} ref={activeActionMenu === member.id ? actionMenuRef : null}>
                                 <button
                                     className={styles.dotsBtn}
                                     onClick={() => setActiveActionMenu(p => p === member.id ? null : member.id)}
@@ -397,7 +408,14 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
 
                                 {activeActionMenu === member.id && (
                                     <div className={styles.actionDropdown}>
-                                        <div className={styles.actionItem} onClick={() => setActiveActionMenu(null)}>
+                                        <div className={styles.actionItem} onClick={() => {
+                                            setActiveActionMenu(null);
+                                            if (member.type === 'page') {
+                                                navigate(`/page/${member.id}`);
+                                            } else {
+                                                navigate(`/profile/${member.id}`);
+                                            }
+                                        }}>
                                             {renderIcon(DefaultPfp, '#CCCCCC')} View profile
                                         </div>
                                         <div className={styles.actionDivider} />

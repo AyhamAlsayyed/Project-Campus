@@ -112,9 +112,9 @@ export default function FriendsSuggestion() {
                                             />
                                             {!contact.is_group && (
                                                 <span
-                                                    className={`${styles.statusDot} ${contact.status === "Online"
+                                                    className={`${styles.statusDot} ${contact.user_status === "online"
                                                         ? styles.online
-                                                        : contact.status === "Do Not Disturb"
+                                                        : contact.user_status === "do_not_disturb"
                                                             ? styles.dnd
                                                             : styles.offline
                                                         }`}
@@ -125,7 +125,7 @@ export default function FriendsSuggestion() {
 
                                         <div className={styles.contactInfo}>
                                             <div className={styles.contactTopLine}>
-                                                <span className={styles.contactStatus}>{contact.status}</span>
+                                                <span className={styles.contactStatus}>{contact.user_status}</span>
                                             </div>
                                             <p className={styles.contactName}>{contact.name}</p>
                                         </div>

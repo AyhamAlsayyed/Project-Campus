@@ -176,7 +176,7 @@ urlpatterns += [
     path("communities/<int:community_id>/reported-posts/", get_reported_posts),
     path("communities/<int:community_id>/posts/", feed),
     path("communities/request/", create_community_or_request),
-    path("communities/request/status", check_community_request_status),
+    path("communities/request/status/", check_community_request_status),
     path("communities/create/", create_community_or_request),
     # community_join
     path("communities/<int:community_id>/request/", request_join_community),

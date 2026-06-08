@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef  } from 'react';
 import styles from './requestsTab.module.css';
 import PostCard from '../posts/postCard';
-
+import { useNavigate } from 'react-router-dom';
 import ArrowLeft from '../../Assets/icons/arrow-left.png';
 import SortIcon from '../../Assets/icons/sort.png';
 import DefaultPfp from '../../Assets/icons/default-pfp.png';
@@ -9,7 +9,7 @@ import BlockIcon from '../../Assets/icons/block.png';
 import InfoIcon from '../../Assets/icons/info.png';
 import HelpIcon from '../../Assets/icons/help.png';
 
-export default function RequestsTab({ groupId, token, onBack, isPublic = false }) {
+export default function RequestsTab({ communityId, token, onBack, isPublic = false }) {
     const [activeTab, setActiveTab] = useState('post');
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [selectedItemIds, setSelectedItemIds] = useState([]);
@@ -21,42 +21,63 @@ export default function RequestsTab({ groupId, token, onBack, isPublic = false }
     const [joinRequests, setJoinRequests] = useState([]);
     const [isLoadingPosts, setIsLoadingPosts] = useState(false);
     const [isLoadingJoins, setIsLoadingJoins] = useState(false);
+    const actionMenuRef = useRef(null);
 
     const API = 'http://localhost:8000';
-
+    const navigate = useNavigate();
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (actionMenuRef.current && !actionMenuRef.current.contains(e.target)) {
+                setOpenActionMenuId(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
     // ── FETCH: Post requests ──
     useEffect(() => {
-        if (!groupId || !token) return;
+        if (!communityId || !token) return;
         setIsLoadingPosts(true);
-        fetch(`${API}/api/groups/${groupId}/post-requests/`, {
+        fetch(`${API}/api/communities/${communityId}/post-requests/`, {
             headers: { Authorization: `Bearer ${token}` }
         })
             .then(res => res.ok ? res.json() : [])
             .then(data => setPostRequests(Array.isArray(data) ? data : []))
             .catch(err => console.error('Error fetching post requests:', err))
             .finally(() => setIsLoadingPosts(false));
-    }, [groupId, token]);
-
+    }, [communityId, token]);
     // ── FETCH: Join requests ──
     useEffect(() => {
-        if (!groupId || !token) return;
+        console.log('communityId:', communityId);
+        console.log('token:', token);
+        if (!communityId || !token) return;
         setIsLoadingJoins(true);
-        fetch(`${API}/api/groups/${groupId}/join-requests/`, {
+        fetch(`${API}/api/communities/${communityId}/join-requests/`, {
             headers: { Authorization: `Bearer ${token}` }
         })
-            .then(res => res.ok ? res.json() : [])
-            .then(data => setJoinRequests(Array.isArray(data) ? data : []))
-            .catch(err => console.error('Error fetching join requests:', err))
+            .then(res => {
+                console.log('Status:', res.status);
+                return res.json();
+            })
+            .then(data => {
+                console.log('Raw data:', data);  // what does it actually return?
+                console.log('Is array:', Array.isArray(data));
+                console.log('First item:', data[0]);  // does it have a .user field?
+                setJoinRequests(Array.isArray(data) ? data : []);
+            })
+            .catch(err => console.error('Error:', err))
             .finally(() => setIsLoadingJoins(false));
-    }, [groupId, token]);
+    }, [communityId, token]);
 
     // ── ACTION: Accept post ──
     const handleAcceptPost = async (postId) => {
         try {
-            const res = await fetch(`${API}/api/groups/${groupId}/post-requests/${postId}/approve/`, {
+            const res = await fetch(`${API}/api/communities/${communityId}/process_post-requests/${postId}/`, {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'approve' })
             });
+
             if (res.ok) setPostRequests(prev => prev.filter(p => (p.id || p.post_id) !== postId));
         } catch (err) { console.error('Error accepting post:', err); }
     };
@@ -64,9 +85,10 @@ export default function RequestsTab({ groupId, token, onBack, isPublic = false }
     // ── ACTION: Reject post ──
     const handleRejectPost = async (postId) => {
         try {
-            const res = await fetch(`${API}/api/groups/${groupId}/post-requests/${postId}/reject/`, {
+            const res = await fetch(`${API}/api/communities/${communityId}/process_post-requests/${postId}/`, {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'reject' })
             });
             if (res.ok) setPostRequests(prev => prev.filter(p => (p.id || p.post_id) !== postId));
         } catch (err) { console.error('Error rejecting post:', err); }
@@ -75,9 +97,10 @@ export default function RequestsTab({ groupId, token, onBack, isPublic = false }
     // ── ACTION: Accept join request ──
     const handleAcceptJoin = async (userId) => {
         try {
-            const res = await fetch(`${API}/api/groups/${groupId}/join-requests/${userId}/approve/`, {
+            const res = await fetch(`${API}/api/communities/${communityId}/process_join_request/${userId}/`, {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, action: 'approve' })
             });
             if (res.ok) setJoinRequests(prev => prev.filter(u => u.id !== userId));
         } catch (err) { console.error('Error accepting join:', err); }
@@ -86,9 +109,10 @@ export default function RequestsTab({ groupId, token, onBack, isPublic = false }
     // ── ACTION: Reject join request ──
     const handleRejectJoin = async (userId) => {
         try {
-            const res = await fetch(`${API}/api/groups/${groupId}/join-requests/${userId}/reject/`, {
+            const res = await fetch(`${API}/api/communities/${communityId}/process_join_request/${userId}/`, {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, action: 'reject' })
             });
             if (res.ok) setJoinRequests(prev => prev.filter(u => u.id !== userId));
         } catch (err) { console.error('Error rejecting join:', err); }
@@ -173,7 +197,7 @@ export default function RequestsTab({ groupId, token, onBack, isPublic = false }
 
             <div className={styles.centeredDivider} />
 
-            {/* ── CONTROLS ROW ── */}
+
             <div className={styles.controlsRow}>
                 <button
                     onClick={() => { setActiveTab('join'); setSelectedItemIds([]); }}
@@ -250,99 +274,12 @@ export default function RequestsTab({ groupId, token, onBack, isPublic = false }
                         </button>
                         {isSortOpen && (
                             <div className={styles.dropdownMenu}>
-                                {activeTab === 'join' && (
-                                    <div className={styles.memberList}>
-                                        {isPublic ? (
-                                            <div style={{
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: '12px',
-                                                padding: '60px 32px',
-                                                textAlign: 'center',
-                                            }}>
-                                                <div style={{ fontSize: '2.5rem' }}>🌐</div>
-                                                <h3 style={{ margin: 0, color: '#E6E6E6', fontSize: '1.1rem', fontWeight: 600 }}>
-                                                    Your community is public
-                                                </h3>
-                                                <p style={{ margin: 0, color: '#808080', fontSize: '0.875rem', maxWidth: '280px', lineHeight: 1.6 }}>
-                                                    Anyone can join without needing approval. Switch to private if you'd like to review join requests first.
-                                                </p>
-                                            </div>
-                                        ) : isLoadingJoins ? (
-                                            <div style={{ padding: '32px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>Loading...</div>
-                                        ) : joinRequests.length === 0 ? (
-                                            <div style={{ padding: '32px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>No join requests.</div>
-                                        ) : joinRequests.map((user) => {
-                                            const isSelected = selectedItemIds.includes(user.id);
-                                            const avatarSrc = user.avatar
-                                                ? (user.avatar.startsWith('http') ? user.avatar : `${API}${user.avatar}`)
-                                                : DefaultPfp;
-
-                                            return (
-                                                <React.Fragment key={user.id}>
-                                                    <div className={styles.selectionRowWrapper}>
-                                                        {isSelectMode && (
-                                                            <div
-                                                                onClick={() => handleToggleSelectId(user.id)}
-                                                                className={`${styles.rowSelectCircle} ${isSelected ? styles.rowSelectCircleActive : ''}`}
-                                                            />
-                                                        )}
-                                                        <div className={`${styles.selectableWrapper} ${isSelected ? styles.selectableWrapperHighlighted : ''}`}>
-                                                            <div className={styles.memberItem}>
-                                                                <div className={styles.memberInfoLeft}>
-                                                                    <img src={avatarSrc} alt={user.name} className={styles.avatar} />
-                                                                    <div className={styles.memberDetails}>
-                                                                        <div className={styles.nameRow}>
-                                                                            <h3 className={styles.memberName}>{user.name || user.username}</h3>
-                                                                            <span className={styles.userType}>{user.role || user.type || 'Student'}</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className={styles.memberActionGroup}>
-                                                                    <button className={styles.acceptBtn} onClick={() => handleAcceptJoin(user.id)}>Accept</button>
-                                                                    <button className={styles.rejectBtn} onClick={() => handleRejectJoin(user.id)}>Reject</button>
-
-                                                                    <div className={styles.actionBtnWrapper}>
-                                                                        <button
-                                                                            className={styles.dotsBtn}
-                                                                            onClick={() => setOpenActionMenuId(openActionMenuId === user.id ? null : user.id)}
-                                                                        >
-                                                                            <div className={styles.dot} />
-                                                                            <div className={styles.dot} />
-                                                                            <div className={styles.dot} />
-                                                                        </button>
-
-                                                                        {openActionMenuId === user.id && (
-                                                                            <div className={styles.dropdownMenu}>
-                                                                                <div className={styles.dropdownItem} onClick={() => setOpenActionMenuId(null)}>
-                                                                                    <img src={DefaultPfp} alt="" className={styles.dropdownIcon} />
-                                                                                    View profile
-                                                                                </div>
-                                                                                <div className={styles.dropdownItemDanger} onClick={() => handleReport(user.id)}>
-                                                                                    <img src={InfoIcon} alt="" className={styles.dropdownIcon}
-                                                                                        style={{ filter: 'invert(25%) sepia(90%) saturate(600%) hue-rotate(330deg) brightness(90%)' }} />
-                                                                                    Report
-                                                                                </div>
-                                                                                <div className={styles.dropdownItemDanger} onClick={() => handleBlock(user.id)}>
-                                                                                    <img src={BlockIcon} alt="" className={styles.dropdownIcon}
-                                                                                        style={{ filter: 'invert(25%) sepia(90%) saturate(600%) hue-rotate(330deg) brightness(90%)' }} />
-                                                                                    Block
-                                                                                </div>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </React.Fragment>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+                                <div className={styles.dropdownItem} onClick={() => setIsSortOpen(false)}>
+                                    Newest first
+                                </div>
+                                <div className={styles.dropdownItem} onClick={() => setIsSortOpen(false)}>
+                                    Oldest first
+                                </div>
                             </div>
                         )}
                     </div>
@@ -394,65 +331,59 @@ export default function RequestsTab({ groupId, token, onBack, isPublic = false }
                         <div style={{ padding: '32px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>Loading...</div>
                     ) : joinRequests.length === 0 ? (
                         <div style={{ padding: '32px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>No join requests.</div>
-                    ) : joinRequests.map((user) => {
-                        const isSelected = selectedItemIds.includes(user.id);
-                        const avatarSrc = user.avatar
-                            ? (user.avatar.startsWith('http') ? user.avatar : `${API}${user.avatar}`)
+                    ) : joinRequests.map((member) => {
+                        if (!member) return null;
+                        const isSelected = selectedItemIds.includes(member.id);
+                        const avatarSrc = member.avatar
+                            ? (member.avatar.startsWith('http') ? member.avatar : `${API}${member.avatar}`)
                             : DefaultPfp;
 
                         return (
-                            <React.Fragment key={user.id}>
+                            <React.Fragment key={member.id}>
                                 <div className={styles.selectionRowWrapper}>
                                     {isSelectMode && (
                                         <div
-                                            onClick={() => handleToggleSelectId(user.id)}
+                                            onClick={() => handleToggleSelectId(member.id)}
                                             className={`${styles.rowSelectCircle} ${isSelected ? styles.rowSelectCircleActive : ''}`}
                                         />
                                     )}
                                     <div className={`${styles.selectableWrapper} ${isSelected ? styles.selectableWrapperHighlighted : ''}`}>
                                         <div className={styles.memberItem}>
                                             <div className={styles.memberInfoLeft}>
-                                                <img src={avatarSrc} alt={user.name} className={styles.avatar} />
+                                                <img src={avatarSrc} alt={member.username} className={styles.avatar} />
                                                 <div className={styles.memberDetails}>
                                                     <div className={styles.nameRow}>
-                                                        <h3 className={styles.memberName}>{user.name || user.username}</h3>
-                                                        <span className={styles.userType}>{user.role || user.type || 'Student'}</span>
+                                                        <h3 className={styles.memberName}>{member.username}</h3>
+                                                        <span className={styles.userType}>{member.profile_role || 'Student'}</span>
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div className={styles.memberActionGroup}>
-                                                <button className={styles.acceptBtn} onClick={() => handleAcceptJoin(user.id)}>
-                                                    Accept
-                                                </button>
-                                                <button className={styles.rejectBtn} onClick={() => handleRejectJoin(user.id)}>
-                                                    Reject
-                                                </button>
-
-                                                <div className={styles.actionBtnWrapper}>
+                                                <button className={styles.acceptBtn} onClick={() => handleAcceptJoin(member.id)}>Accept</button>
+                                                <button className={styles.rejectBtn} onClick={() => handleRejectJoin(member.id)}>Reject</button>
+                                                <div className={styles.actionBtnWrapper} ref={actionMenuRef}>
                                                     <button
                                                         className={styles.dotsBtn}
-                                                        onClick={() => setOpenActionMenuId(openActionMenuId === user.id ? null : user.id)}
+                                                        onClick={() => setOpenActionMenuId(openActionMenuId === member.id ? null : member.id)}
                                                     >
                                                         <div className={styles.dot} />
                                                         <div className={styles.dot} />
                                                         <div className={styles.dot} />
                                                     </button>
-
-                                                    {openActionMenuId === user.id && (
+                                                    {openActionMenuId === member.id && (
                                                         <div className={styles.dropdownMenu}>
-                                                            <div className={styles.dropdownItem} onClick={() => setOpenActionMenuId(null)}>
-                                                                <img src={DefaultPfp} alt="" className={styles.dropdownIcon} />
+                                                            <div className={styles.dropdownItem} onClick={() => navigate(`/profile/${member.id}`)}>
+                                                                {renderIcon(DefaultPfp, '#E6E6E6', '18px', '18px')}
                                                                 View profile
                                                             </div>
-                                                            <div className={styles.dropdownItemDanger} onClick={() => handleReport(user.id)}>
-                                                                <img src={InfoIcon} alt="" className={styles.dropdownIcon}
-                                                                    style={{ filter: 'invert(25%) sepia(90%) saturate(600%) hue-rotate(330deg) brightness(90%)' }} />
+                                                            <div className={styles.dropdownDivider} />
+                                                            <div className={styles.dropdownItemDanger} onClick={() => handleReport(member.id)}>
+                                                                {renderIcon(InfoIcon, '#e53e3e', '18px', '18px')}
                                                                 Report
                                                             </div>
-                                                            <div className={styles.dropdownItemDanger} onClick={() => handleBlock(user.id)}>
-                                                                <img src={BlockIcon} alt="" className={styles.dropdownIcon}
-                                                                    style={{ filter: 'invert(25%) sepia(90%) saturate(600%) hue-rotate(330deg) brightness(90%)' }} />
+                                                            <div className={styles.dropdownDivider} />
+                                                            <div className={styles.dropdownItemDanger} onClick={() => handleBlock(member.id)}>
+                                                                {renderIcon(BlockIcon, '#e53e3e', '18px', '18px')}
                                                                 Block
                                                             </div>
                                                         </div>

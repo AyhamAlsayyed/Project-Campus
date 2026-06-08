@@ -440,16 +440,26 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
     : ProfilePicture;
 
   const handleAvatarClick = () => {
-    if (!user?.id) return;
     const loggedInType = localStorage.getItem("user_type");
     const isPageUser = loggedInType === 'page' || loggedInType === 'university';
-    const profilePath = isPageUser ? `/page/${user.id}` : `/profile/${user.id}`;
+    const id = isPageUser ? user?.page_id : user?.id;
 
+    if (!id) return;
+
+    const profilePath = isPageUser ? `/page/${id}` : `/profile/${id}`;
     location.pathname.startsWith(profilePath) ? navigate("/home") : navigate(profilePath);
   };
 
-  const isInProfileSection = location.pathname.startsWith(`/profile/${user?.id}`) ||
-    location.pathname.startsWith(`/page/${user?.id}`); const unreadCount = notifications.filter(n => !n.is_read).length;
+  const isInProfileSection = (() => {
+    const loggedInType = localStorage.getItem("user_type");
+    const isPageUser = loggedInType === 'page' || loggedInType === 'university';
+    const id = isPageUser ? user?.page_id : user?.id;
+    return location.pathname.startsWith(`/profile/${id}`) ||
+      location.pathname.startsWith(`/page/${id}`);
+  })();
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
   const displayCount = notifications.length;
 
   const totalResults = searchResults

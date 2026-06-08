@@ -223,7 +223,7 @@ export default function CommunityPage() {
         }
     };
 
-    const rawAvatar = user?.profile?.avatar || user?.avatar || user?.profile_image;   
+    const rawAvatar = user?.profile?.avatar || user?.avatar || user?.profile_image;
     const avatarSrc = rawAvatar
         ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
         : ProfilePicture;
@@ -239,6 +239,12 @@ export default function CommunityPage() {
 
     return (
         <div className={styles.darkContainer}>
+            {console.log('isMobile:', isMobile)}
+            {console.log('isSettingsOpen:', isSettingsOpen)}
+            {console.log('activeSettingsTab:', activeSettingsTab)}
+            {console.log('displayedTab:', displayedTab)}
+            {console.log('canManage:', canManage)}
+            {console.log('community?.user_role:', community?.user_role)}
 
             {/* ── MOBILE HEADER ── */}
             {isMobile && (
@@ -335,12 +341,14 @@ export default function CommunityPage() {
                                         />
                                     )}
                                     {displayedTab === 'Requests' && (
-                                        <RequestsTab
-                                            groupId={id}
-                                            token={token}
-                                            onBack={() => setActiveSettingsTab('Community info')}
-                                            isPublic={community?.is_public}
-                                        />
+                                        <>
+                                            {console.log('id being passed to RequestsTab:', id)}
+                                            <RequestsTab
+                                                communityId={id}
+                                                token={token}
+                                                onBack={() => setActiveSettingsTab('Community info')}
+                                                isPublic={community?.is_public}
+                                            /></>
                                     )}
                                     {displayedTab === 'Posts' && (
                                         <CommunityPosts

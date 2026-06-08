@@ -16,9 +16,11 @@ export default function CommunitySettingsLayout({ community }) {
     const { id } = useParams();
     const navigate = useNavigate();
     const token = localStorage.getItem("access");
+    console.log('useParams id:', id);
+    console.log('community prop:', community);
     const API = "http://localhost:8000";
 
-    const communityId = id || community?.id; // 👈 move this UP before the useEffect
+    const communityId = id || community?.community_id; // 👈 move this UP before the useEffect
 
     useEffect(() => {
         if (!communityId || !token) return;
@@ -75,7 +77,7 @@ export default function CommunitySettingsLayout({ community }) {
 
                 {displayedTab === 'Requests' && (
                     <RequestsTab
-                        groupId={communityId}
+                        communityId={communityId}
                         token={token}
                         onBack={() => setActiveTab('Community info')}
                         isPublic={community?.isPublic !== false}

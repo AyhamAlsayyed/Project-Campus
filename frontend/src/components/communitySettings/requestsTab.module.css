@@ -59,9 +59,9 @@
     align-items: center;
     justify-content: space-around;
     gap: 25px;
-    
+
     margin-bottom: 32px;
-    
+
     position: relative;
 }
 
@@ -118,10 +118,12 @@
     /* Filled when highlighted */
     color: #ffffff;
 }
-.rightSide{
+
+.rightSide {
     display: flex;
     gap: 15px;
 }
+
 /* Select Circle Graphic inside navigation control button */
 .selectCircleIndicator {
     width: 14px;
@@ -266,33 +268,39 @@
 /* ── CONTEXTUAL MULTI-TAB DROPDOWN DROPAWAYS ── */
 .dropdownMenu {
     position: absolute;
+    display: flex;
+    flex-direction: column;
     top: 100%;
     right: 0;
     margin-top: 8px;
-    background-color: #333333;
+    background-color: #2a2a2a;
     border-radius: 16px;
-    padding: 0;        /* ← was 6px 0 / 12px 0 */
+    padding: 6px 0;
     width: max-content;
-    min-width: 180px;
+    min-width: 160px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
     border: 1px solid #4D4D4D;
     z-index: 9999;
-    overflow: hidden;  /* ← clips item backgrounds to the rounded corners */
+    overflow: hidden;
 }
+
 
 .dropdownItem {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 20px;
+    justify-content: center;
+    /* ← centers content */
+    gap: 10px;
+    padding: 12px 32px;
     color: #CCCCCC;
     font-size: 0.9rem;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.15s ease;
     width: 100%;
     background: none;
     border: none;
-    text-align: left;
+    text-align: center;
+    box-sizing: border-box;
 }
 
 .dropdownItem:hover {
@@ -305,8 +313,45 @@
     object-fit: contain;
 }
 
+.dropdownItemDanger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateX(-10%);
+  
+    gap: 10px;
+   padding: 12px 20px;
+    color: #e53e3e;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    width: 100%;
+    background: none;
+    border: none;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.dropdownItemDanger:hover {
+    background-color: rgba(229, 62, 62, 0.1);
+}
+
+.dropdownDivider {
+    width: 60%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 0 auto;
+}
+
 .actionBtnWrapper {
     position: relative;
+}
+
+.dropdownDivider {
+    width: 60%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 0 auto;
 }
 
 .dotsBtn {
@@ -329,6 +374,7 @@
 .dotsBtn:hover .dot {
     background-color: #CCCCCC;
 }
+
 .memberActionGroup {
     display: flex;
     align-items: center;

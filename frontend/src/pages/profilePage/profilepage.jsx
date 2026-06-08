@@ -557,8 +557,8 @@ export default function ProfilePage({ type }) {
         finally { setPostsLoading(false); }
     };
 
-    const isOwnProfile = currentUser?.id === Number(userId);
-
+    const isOwnProfile = currentUser?.id === Number(userId) ||
+        currentUser?.page_id === Number(userId);
     const isPageUser = isOwnProfile && (
         userType === 'page' ||
         userType === 'university' ||

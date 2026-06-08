@@ -200,6 +200,7 @@ def community_detail(request, community_id):
         membership = CommunityMember.objects.filter(community=c, user=user, status="approved").first()
         if membership:
             user_role = membership.role
+            
 
     return Response(
         {

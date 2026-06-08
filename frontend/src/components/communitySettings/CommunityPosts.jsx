@@ -153,10 +153,9 @@ const CommunityPosts = ({ onBack, communityId }) => {
         const authorId = post?.author?.id;
         if (!authorId) return;
         try {
-            await fetch(`${API}/api/communities/${communityId}/kick/`, {
+            await fetch(`${API}/api/communities/${communityId}/kick/${authorId}/`, {  
                 method: 'POST',
-                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: authorId })
+                headers: { Authorization: `Bearer ${token}` },
             });
             setReportedPosts(prev => prev.filter(p => (p.id || p.post_id) !== postId));
         } catch (err) { console.error('Kick failed:', err); }

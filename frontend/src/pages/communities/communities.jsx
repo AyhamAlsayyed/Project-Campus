@@ -137,29 +137,7 @@ export default function Community() {
             setUser(data);
         } catch (err) { console.error("Failed to load user"); }
     };
-    useEffect(() => {
-        const checkPending = async () => {
-            try {
-                const res = await fetch(`${API}/api/communities/request/`, {
-                    method: 'POST',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ name: '_check_', description: '_check_', privacy: 'Public', justification: '_check_' }),
-                });
-                if (!res.ok) {
-                    const data = await res.json();
-                    if (data.error?.includes('already have an active pending')) {
-                        setRequestSent(true);
-                        localStorage.setItem("community_request_sent", "true");
-                    }
-                }
-            } catch (e) { console.error(e); }
-        };
 
-        if (!requestSent) checkPending();
-    }, []);
     useEffect(() => {
         const checkRequestStatus = async () => {
             try {
@@ -168,9 +146,13 @@ export default function Community() {
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.has_pending_request) {
+                    if (data.has_requested) {
                         setRequestSent(true);
                         localStorage.setItem("community_request_sent", "true");
+                    } else {
+                        // ← clear stale localStorage value
+                        setRequestSent(false);
+                        localStorage.removeItem("community_request_sent");
                     }
                 }
             } catch (e) { console.error(e); }
@@ -383,7 +365,7 @@ export default function Community() {
                                 )}
                                 {displayedTab === 'Requests' && (
                                     <RequestsTab
-                                        groupId={activeCommunity?.id}
+                                        communityId={activeCommunity?.id}
                                         token={token}
                                         onBack={() => setActiveTab('Community info')}
                                         isPublic={activeCommunity?.is_public}
@@ -408,59 +390,50 @@ export default function Community() {
 
                             </>
                         ) : (
-                            // DEFAULT VIEW
+                            
                             <>
-                                <div className={styles.yourCommunitiesHeader}>
-                                    <h1 className={styles.title}>
-                                        Your <span className={styles.highlight}>COMMUNITIES</span>
-                                    </h1>
-                                    {isUserPage && (
-                                        <div
-                                            className={styles.createCommunityBtn}
-                                            onClick={() => {
-                                                if (!isUserPage) return;
-                                                user?.is_premium
-                                                    ? setShowCreateCommunityModal(true)
-                                                    : setIsModalOpen(true);
-                                            }}
-                                            style={{
-                                                display: "flex", alignItems: "center", justifyContent: "center",
-                                                padding: "8px", cursor: "pointer", transition: "background 0.2s"
-                                            }}
-                                        >
-                                            <img src={CreateCommunityIcon} alt="" style={{ width: "25px", height: "25px", filter: 'brightness(0) invert(0.9)' }} />
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className={styles.ownedCommunitiesContainer} style={{ minHeight: "unset", padding: "30px 0" }}>
-                                    {ownedCommunities.length === 0 ? (
-                                        <p style={{
-                                            color: "rgba(255,255,255,0.35)",
-                                            textAlign: "center",
-                                            fontSize: "0.95rem",
-                                            margin: "20px 0"
-                                        }}>
-                                            You haven't created any communities yet.
-                                        </p>
-                                    ) : (
-                                        ownedCommunities.map((community, index) => (
-                                            <div key={index} className={styles.itemWrapper}>
-                                                <div style={{ width: "100%", maxWidth: "100%" }}>
-                                                    <CommunityCard
-                                                        community={community}
-                                                        setCommunities={setOwnedCommunities}
-                                                        fullWidth
-                                                        isOwned
-                                                        onSettingsClick={(c) => { setActiveCommunity(c); setSettingsOpen(true); setActiveTab('Community info'); }}
-                                                    />
+                                {ownedCommunities.length > 0 && (
+                                    <>
+                                        <div className={styles.yourCommunitiesHeader}>
+                                            <h1 className={styles.title}>
+                                                Your <span className={styles.highlight}>COMMUNITIES</span>
+                                            </h1>
+                                            {isUserPage && (
+                                                <div
+                                                    className={styles.createCommunityBtn}
+                                                    onClick={() => {
+                                                        if (!isUserPage) return;
+                                                        user?.is_premium
+                                                            ? setShowCreateCommunityModal(true)
+                                                            : setIsModalOpen(true);
+                                                    }}
+                                                    style={{
+                                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                                        padding: "8px", cursor: "pointer", transition: "background 0.2s"
+                                                    }}
+                                                >
+                                                    <img src={CreateCommunityIcon} alt="" style={{ width: "25px", height: "25px", filter: 'brightness(0) invert(0.9)' }} />
                                                 </div>
-
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                                <div className={styles.divider} style={{ width: "50%", margin: "16px auto ", backgroundColor: "#747475" }} />
+                                            )}
+                                        </div>
+                                        <div className={styles.ownedCommunitiesContainer} style={{ minHeight: "unset", padding: "30px 0" }}>
+                                            {ownedCommunities.map((community, index) => (
+                                                <div key={index} className={styles.itemWrapper}>
+                                                    <div style={{ width: "100%", maxWidth: "100%" }}>
+                                                        <CommunityCard
+                                                            community={community}
+                                                            setCommunities={setOwnedCommunities}
+                                                            fullWidth
+                                                            isOwned
+                                                            onSettingsClick={(c) => { setActiveCommunity(c); setSettingsOpen(true); setActiveTab('Community info'); }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className={styles.divider} style={{ width: "50%", margin: "16px auto", backgroundColor: "#747475" }} />
+                                    </>
+                                )}
 
                                 <h1 className={styles.title}>
                                     Looking for - <br /> <span className={styles.highlight}>COMMUNITIES</span> to be part of?
@@ -490,7 +463,7 @@ export default function Community() {
                         )}
                     </div>
 
-                    {/* --- RIGHT SECTION --- */}
+                  
                     <div className={styles.rightSection} style={{ marginTop: settingsOpen ? "2%" : "4%", flex: isUserPage ? " 0 0 420px;" : "0 0 380px" }}>
                         {settingsOpen ? (
                             <CommunitySettingsNav
