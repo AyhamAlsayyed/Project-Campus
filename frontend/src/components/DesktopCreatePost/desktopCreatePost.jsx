@@ -41,7 +41,7 @@ const DesktopCreatePost = ({
                 />
                 <div className={styles.greetingText}>
                     <strong className={styles.greeting}>
-                        Good {timeGreeting}, {user?.full_name || user?.username || "User"}!
+                       Good {timeGreeting}, {user?.full_name || user?.page_full_name || user?.username || "User"}!
                     </strong>
                     <span className={styles.question}>What's on your mind?</span>
                 </div>

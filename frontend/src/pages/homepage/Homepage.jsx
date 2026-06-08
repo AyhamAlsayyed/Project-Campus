@@ -68,8 +68,9 @@ export default function Homepage() {
         try {
             const res = await fetch(`${API}/api/auth/me/`, { headers: { Authorization: `Bearer ${token}` } })
             const data = await res.json().catch(() => ({}))
+            console.log("user data:", data);
             if (!res.ok) { setUserError("Failed to load user"); setUser(null); return }
-            if (data.role === 'university' || localStorage.getItem('user_type') === 'university') {
+            if (data.role === 'uni' || localStorage.getItem('user_type') === 'uni') {
                 const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -77,6 +78,7 @@ export default function Homepage() {
                     const pageData = await pageRes.json();
                     data.avatar = pageData.profile_image;
                 }
+                  data.username = data.page_full_name || data.page_name;
             }
 
             setUser(data)

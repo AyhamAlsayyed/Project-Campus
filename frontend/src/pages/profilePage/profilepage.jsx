@@ -1490,7 +1490,7 @@ export default function ProfilePage({ type }) {
                                                         const pick = communityPicks[picksSlide];
                                                         return (
                                                             <div className={styles.pickItemCard}>
-                                                                <img src={pick.image} alt={pick.name} className={styles.pickItemImageBg} />
+                                                                <img src={pick.image} alt={pick.name} className={styles.pickItemImageBg}   style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
                                                                 <div className={styles.pickOverlay}>
                                                                     <div className={styles.pickContentTop}>
                                                                         <div className={styles.pickTitleGroup}>

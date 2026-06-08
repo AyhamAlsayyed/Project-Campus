@@ -69,7 +69,7 @@ body {
   z-index: 1;
   overflow: hidden;
   flex: 1;
-  min-height: 77.8vh;
+  min-height:  94vh;
   height: auto;
 }
 
@@ -2775,7 +2775,7 @@ body {
   border-radius: 32px;
   padding: 24px;
   width: 100%;
-  max-width: 500px;
+  max-width: 380px;
 }
 
 .picksHeader {
