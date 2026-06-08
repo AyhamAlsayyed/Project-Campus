@@ -15,13 +15,10 @@ from ...models import (
     Friendship,
     Message,
     MessageMedia,
-    Post,
 )
-from ...serializers import ConversationSerializer, PostSerializer
+from ...serializers import ConversationSerializer, MessageSerializer
 from ...utils.blocked_users import is_blocked
-from ...utils.feed import base_annotations
 from ...utils.notifications import send_global_notification
-from ...utils.user_type import get_user_avatar
 
 User = get_user_model()
 
@@ -69,79 +66,22 @@ def get_messages(request, conversation_id):
 
     messages = (
         query.select_related(
-            "sender",
-            "parent_message",
-            "parent_message__sender",
             "sender__profile",
+            "parent_message__sender",
+            "shared_post",
         )
-        .prefetch_related("media")
+        .prefetch_related(
+            "media",
+        )
         .order_by("sent_at")
     )
 
-    data = []
-
-    for msg in messages:
-        if msg.sender:
-            sender_name = msg.sender.username
-            avatar = get_user_avatar(request, msg.sender)
-            sender_id = "me" if msg.sender == user else msg.sender.id
-        else:
-            sender_name = "System"
-            avatar = None
-            sender_id = "system"
-
-        reply_to = None
-        if msg.parent_message:
-            parent_sender_name = getattr(msg.parent_message.sender, "username", "Unknown User")
-
-            reply_to = {
-                "id": msg.parent_message.message_id,
-                "text": msg.parent_message.content,
-                "sender_name": parent_sender_name,
-            }
-
-        media_list = []
-        for item in msg.media.all():
-            file_url = None
-            if item.media_file:
-                file_url = request.build_absolute_uri(item.media_file.url)
-            elif item.media_url:
-                file_url = item.media_url
-
-            media_list.append(
-                {"id": item.media_id, "type": item.media_type, "url": file_url, "order_index": item.order_index}
-            )
-
-        message_data = {
-            "id": msg.message_id,
-            "text": msg.content,
-            "type": "text" if not media_list else "media",
-            "time": msg.sent_at.strftime("%H:%M"),
-            "sender": sender_name,
-            "senderId": sender_id,
-            "avatar": avatar,
-            "reply_to_details": reply_to,
-            "media": media_list,
-        }
-
-        if msg.shared_post:
-            annotated_post = (
-                Post.objects.filter(post_id=msg.shared_post.post_id)
-                .annotate(**base_annotations(user))
-                .select_related("author__profile")
-                .prefetch_related("media")
-                .first()
-            )
-
-            if annotated_post:
-                message_data["post"] = PostSerializer(annotated_post, context={"request": request}).data
-
-        data.append(message_data)
+    serializer = MessageSerializer(messages, many=True, context={"request": request})
 
     member.last_read_at = timezone.now()
     member.save(update_fields=["last_read_at"])
 
-    return Response(data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])

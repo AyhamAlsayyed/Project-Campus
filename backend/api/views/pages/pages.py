@@ -45,8 +45,7 @@ def recommended_pages(request):
 @permission_classes([IsAuthenticated])
 def toggle_follow_page(request, page_id):
     user = request.user
-
-    target_page = get_object_or_404(Page, pk=page_id)
+    target_page = get_object_or_404(Page, user__id=page_id)
     target_page_user = target_page.user
 
     if hasattr(user, "page") and user.page == target_page:

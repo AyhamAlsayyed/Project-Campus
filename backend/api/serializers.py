@@ -12,6 +12,7 @@ from .models import (
     Event,
     Friendship,
     Message,
+    MessageMedia,
     Notification,
     NotificationSetting,
     Page,
@@ -680,6 +681,44 @@ class PostSerializer(serializers.ModelSerializer):
         ]
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source="comment_id", read_only=True)
+    author = UserMinimalSerializer(read_only=True)
+    reactions_count = serializers.SerializerMethodField()
+    has_reacted = serializers.SerializerMethodField()
+    replies_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = [
+            "id",
+            "post",
+            "author",
+            "content",
+            "parent_comment",
+            "reactions_count",
+            "has_reacted",
+            "replies_count",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_reactions_count(self, obj):
+        """Returns total reactions recorded for this comment."""
+        return obj.reactions.count()
+
+    def get_has_reacted(self, obj):
+        """Evaluates whether the authenticated client user liked this comment."""
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
+            return False
+        return obj.reactions.filter(user=request.user).exists()
+
+    def get_replies_count(self, obj):
+        """Counts direct reply instances underneath this comment thread."""
+        return Comment.objects.filter(parent_comment=obj).count()
+
+
 class CommunitySerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source="community_id", read_only=True)
     owner_name = serializers.CharField(source="owner.username", read_only=True)
@@ -1216,3 +1255,37 @@ class ConversationSerializer(serializers.ModelSerializer):
         if other_member_obj and other_member_obj.user:
             return other_member_obj.user.id
         return None
+
+
+class MessageMediaSerializer(serializers.ModelSerializer):
+    # Maps internal 'media_id' safely to explicit output tracking ID
+    id = serializers.IntegerField(source="media_id", read_only=True)
+
+    class Meta:
+        model = MessageMedia
+        fields = ["id", "media_type", "media_file", "media_url", "order_index"]
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    # Maps internal 'message_id' column to frontend 'id'
+    id = serializers.IntegerField(source="message_id", read_only=True)
+    sender = UserMinimalSerializer(read_only=True)
+    media = MessageMediaSerializer(many=True, read_only=True)
+
+    # Return string representation of the shared post summary if present
+    shared_post_title = serializers.CharField(source="shared_post.title", read_only=True)
+
+    class Meta:
+        model = Message
+        fields = [
+            "id",
+            "conversation",
+            "sender",
+            "content",
+            "shared_post",
+            "shared_post_title",
+            "parent_message",
+            "sent_at",
+            "media",
+        ]
+        read_only_fields = ["sent_at"]
