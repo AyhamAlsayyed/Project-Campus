@@ -256,7 +256,9 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
             id: chat.id,
             name: chat.name || chat.user_name || "Unknown User",
             avatar: chat.avatar?.startsWith("http") ? chat.avatar : `${API}${chat.avatar}` || "/default-avatar.png",
-            message: chat.preview || chat.last_message || "No messages yet",
+            message: typeof chat.preview === 'string' ? chat.preview
+              : typeof chat.last_message === 'string' ? chat.last_message
+                : chat.last_message?.content || chat.last_message?.text || "No messages yet",
             status: chat.is_online ? "online" : "offline",
             dotStyle: chat.is_online ? "online" : "offline",
             isGroup: chat.is_group || false,

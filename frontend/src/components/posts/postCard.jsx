@@ -51,6 +51,13 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
   const [showReport, setShowReport] = useState(false);
   const [isFollowed, setIsFollowed] = useState(post?.author?.is_followed);
   const [isNotified, setIsNotified] = useState(post?.author?.is_notified || false);
+  const loginUserRaw = localStorage.getItem("login_user");
+  const loginUserObj = loginUserRaw ? JSON.parse(loginUserRaw) : null;
+  const loggedInUserId = loginUserObj?.id;
+
+  const isOwnPost = String(post.author?.id || post.author_id) === String(loggedInUserId);
+  console.log("login_user:", localStorage.getItem("login_user"), "author id:", post.author?.id);
+
   const [commenterAvatars, setCommenterAvatars] = useState(
     (post?.top_3comments_avatar || []).map(c => {
       const avatar = c.author_avatar || c.avatar;
@@ -479,13 +486,18 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
             <div className={styles.nameLine}>
               <span className={styles.name}>{post.author?.username || "User"}</span>
               {post.tag && <span className={styles.tag}>{post.tag}</span>}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {post.author?.type === 'page' && (
-                <span className={styles.time}>{post.author?.page_type || 'Page'}</span>
+              <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>
+              {post.is_academic && (
+                <span style={{ color: '#999999', fontSize: '0.75rem' }}>· Educational</span>
               )}
-
+              {post.is_announcement && (
+                <span style={{ color: '#999999', fontSize: '0.75rem' }}>· Announcement</span>
+              )}
             </div>
+
+            {post.author?.type === 'page' && (
+              <span className={styles.time}>{post.author?.page_type || 'Page'}</span>
+            )}
 
             {isPinned && isOwnProfile && (
               <>
@@ -494,18 +506,16 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
               </>
             )}
           </div>
-          <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>
         </div>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {post.author?.type === 'page' && (
+          {post.author?.type === 'page' && !isOwnPost && (
             <div className={styles.headerActions}>
               {isFollowed && (
                 <button className={styles.bellBtn} onClick={handleNotify}>
                   <img
                     src={isNotified ? BellOn : BellOff}
                     alt="notifications"
-                    width={ isNotified ? 16 : 20}
+                    width={isNotified ? 16 : 20}
                     height={isNotified ? 18 : 20}
                     style={{ filter: 'brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)' }}
                   />
@@ -519,381 +529,395 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
               </button>
             </div>
           )}
+        
 
-          <div className={styles.menuContainer} ref={menuRef}>
-            {!isReportedMode && (
-              <button
-                className={styles.menuBtn}
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  setMenuPosition({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
-                  setShowMenu(prev => !prev);
-                }}
-                aria-label="menu"
-              >
-                <MoreHorizontal size={30} strokeWidth={4} />
-              </button>
-            )}
+            <div className={styles.menuContainer} ref={menuRef}>
+              {!isReportedMode && (
+                <button
+                  className={styles.menuBtn}
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setMenuPosition({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+                    setShowMenu(prev => !prev);
+                  }}
+                  aria-label="menu"
+                >
+                  <MoreHorizontal size={30} strokeWidth={4} />
+                </button>
+              )}
 
-            {showMenu && createPortal(
-              <div
-                style={{
-                  position: "fixed",
-                  top: menuPosition.top,
-                  right: menuPosition.right,
-                  zIndex: 9999,
-                  background: "#333333",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  borderRadius: 14,
-                  padding: "6px 0",
-                  minWidth: 150,
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.7)"
-                }}
-                ref={menuRef}
-              >
-                {isAdmin && communityContext ? (
-                  <>
-                    <button className={styles.menuItem} onClick={() => handleMenuAction('save')} style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <img src={SaveIcon} width={13} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
-                      <span style={{ color: "#C2C2C2" }}>{isSaved ? "Unsave" : "Save post"}</span>
-                    </button>
-                    <MenuDivider />
-                    <button className={styles.menuItem} onClick={() => handleMenuAction('highlight')} style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <img src={HighLight} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
-                      <span style={{ color: "#C2C2C2" }}>{isHighlighted ? "Remove highlight" : "Highlight post"}</span>
-                    </button>
-                    <MenuDivider />
-                    <button className={styles.menuItem} onClick={async () => {
-                      setShowMenu(false);
-                      const memberId = post.author?.id || post.author_id;
-                      if (communityId && memberId) {
-                        const token = localStorage.getItem("access");
-                        const res = await fetch(`http://localhost:8000/api/communities/${communityId}/kick/${memberId}/`, {
-                          method: "POST",
-                          headers: { Authorization: `Bearer ${token}` }
-                        });
-                        if (res.ok) setIsKicked(true);
-                      }
-                    }} style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <img src={LeaveIcon} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
-                      <span style={{ color: "#C2C2C2" }}>Kick member</span>
-                    </button>
-                    <MenuDivider />
-                    <button className={styles.menuItem} onClick={() => handleMenuAction('delete')} style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <img src={DeletePost} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
-                      <span style={{ color: "#C2C2C2" }}>Delete post</span>
-                    </button>
-                    <MenuDivider />
-                    <button className={styles.menuItem} onClick={() => handleMenuAction('block')} style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <img src={Block} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
-                      <span style={{ color: "#D4145A" }}>{isBlocked ? "Unblock user" : "Block user"}</span>
-                    </button>
-                    <MenuDivider />
-                    <button className={styles.menuItem} onClick={() => { setShowMenu(false); setShowReport(true); }} style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <img src={Report} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
-                      <span style={{ color: "#D4145A" }}>Report user</span>
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    {isOwnProfile && (
-                      <>
-                        <button className={styles.menuItem} onClick={() => handleMenuAction('pin')} style={menuItemStyle}
-                          onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                          <img src={Pin} width={14} alt="" style={{ filter: "brightness(0) saturate(100%) invert(76%)", flexShrink: 0 }} />
-                          <span style={{ color: "#C2C2C2" }}>{isPinned ? "Unpin Post" : "Pin Post"}</span>
-                        </button>
-                        <MenuDivider />
-                      </>
-                    )}
-                    <button className={styles.menuItem} onClick={() => handleMenuAction('save')} style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <Bookmark size={14} fill={isSaved ? "#C2C2C2" : "none"} color="#C2C2C2" />
-                      <span style={{ color: "#C2C2C2" }}>{isSaved ? "Unsave" : "Save"}</span>
-                    </button>
-                    <MenuDivider />
-                    {isOwnProfile ? (
+              {showMenu && createPortal(
+                <div
+                  style={{
+                    position: "fixed",
+                    top: menuPosition.top,
+                    right: menuPosition.right,
+                    zIndex: 9999,
+                    background: "#333333",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 14,
+                    padding: "6px 0",
+                    minWidth: 150,
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.7)"
+                  }}
+                  ref={menuRef}
+                >
+                  {isAdmin && communityContext ? (
+                    <>
+                      <button className={styles.menuItem} onClick={() => handleMenuAction('save')} style={menuItemStyle}
+                        onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <img src={SaveIcon} width={13} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
+                        <span style={{ color: "#C2C2C2" }}>{isSaved ? "Unsave" : "Save post"}</span>
+                      </button>
+                      <MenuDivider />
+                      <button className={styles.menuItem} onClick={() => handleMenuAction('highlight')} style={menuItemStyle}
+                        onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <img src={HighLight} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
+                        <span style={{ color: "#C2C2C2" }}>{isHighlighted ? "Remove highlight" : "Highlight post"}</span>
+                      </button>
+                      <MenuDivider />
+                      <button className={styles.menuItem} onClick={async () => {
+                        setShowMenu(false);
+                        const memberId = post.author?.id || post.author_id;
+                        if (communityId && memberId) {
+                          const token = localStorage.getItem("access");
+                          const res = await fetch(`http://localhost:8000/api/communities/${communityId}/kick/${memberId}/`, {
+                            method: "POST",
+                            headers: { Authorization: `Bearer ${token}` }
+                          });
+                          if (res.ok) setIsKicked(true);
+                        }
+                      }} style={menuItemStyle}
+                        onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <img src={LeaveIcon} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
+                        <span style={{ color: "#C2C2C2" }}>Kick member</span>
+                      </button>
+                      <MenuDivider />
                       <button className={styles.menuItem} onClick={() => handleMenuAction('delete')} style={menuItemStyle}
                         onMouseEnter={e => e.currentTarget.style.background = "#464646"}
                         onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                        <Trash2 size={14} color="#D4145A" />
-                        <span style={{ color: "#D4145A" }}>Delete Post</span>
+                        <img src={DeletePost} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
+                        <span style={{ color: "#C2C2C2" }}>Delete post</span>
                       </button>
-                    ) : (
-                      <>
-                        <button className={styles.menuItem} onClick={() => { setShowMenu(false); setShowReport(true); }} style={menuItemStyle}
+                      <MenuDivider />
+                      <button className={styles.menuItem} onClick={() => handleMenuAction('block')} style={menuItemStyle}
+                        onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <img src={Block} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
+                        <span style={{ color: "#D4145A" }}>{isBlocked ? "Unblock user" : "Block user"}</span>
+                      </button>
+                      <MenuDivider />
+                      <button className={styles.menuItem} onClick={() => { setShowMenu(false); setShowReport(true); }} style={menuItemStyle}
+                        onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <img src={Report} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
+                        <span style={{ color: "#D4145A" }}>Report user</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {isOwnProfile && (
+                        <>
+                          <button className={styles.menuItem} onClick={() => handleMenuAction('pin')} style={menuItemStyle}
+                            onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <img src={Pin} width={14} alt="" style={{ filter: "brightness(0) saturate(100%) invert(76%)", flexShrink: 0 }} />
+                            <span style={{ color: "#C2C2C2" }}>{isPinned ? "Unpin Post" : "Pin Post"}</span>
+                          </button>
+                          <MenuDivider />
+                        </>
+                      )}
+                      <button className={styles.menuItem} onClick={() => handleMenuAction('save')} style={menuItemStyle}
+                        onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <Bookmark size={14} fill={isSaved ? "#C2C2C2" : "none"} color="#C2C2C2" />
+                        <span style={{ color: "#C2C2C2" }}>{isSaved ? "Unsave" : "Save"}</span>
+                      </button>
+                      <MenuDivider />
+                      {isOwnProfile ? (
+                        <button className={styles.menuItem} onClick={() => handleMenuAction('delete')} style={menuItemStyle}
                           onMouseEnter={e => e.currentTarget.style.background = "#464646"}
                           onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                          <img src={InfoIcon} width={14} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
-                          <span style={{ color: "#D4145A" }}>Report</span>
+                          <Trash2 size={14} color="#D4145A" />
+                          <span style={{ color: "#D4145A" }}>Delete Post</span>
                         </button>
-                        <MenuDivider />
-                        <button className={styles.menuItem} onClick={() => handleMenuAction('block')} style={menuItemStyle}
-                          onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                          <img src={Block} width={14} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
-                          <span style={{ color: "#D4145A" }}>{isBlocked ? "Unblock" : "Block"}</span>
-                        </button>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>,
-              document.body
-            )}
-          </div>
+                      ) : (
+                        <>
+                          <button className={styles.menuItem} onClick={() => { setShowMenu(false); setShowReport(true); }} style={menuItemStyle}
+                            onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <img src={InfoIcon} width={14} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
+                            <span style={{ color: "#D4145A" }}>Report</span>
+                          </button>
+                          <MenuDivider />
+                          <button className={styles.menuItem} onClick={() => handleMenuAction('block')} style={menuItemStyle}
+                            onMouseEnter={e => e.currentTarget.style.background = "#464646"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <img src={Block} width={14} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
+                            <span style={{ color: "#D4145A" }}>{isBlocked ? "Unblock" : "Block"}</span>
+                          </button>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>,
+                document.body
+              )}
+            </div>
+        
         </div>
       </div>
 
-      {post.content_text && (
-        <p className={styles.text}>
-          {post.content_text.length > CHAR_LIMIT && !isExpanded
-            ? <>
-              {formatText(post.content_text.substring(0, CHAR_LIMIT))}...{' '}
-              <span className={styles.readMore} onClick={() => setIsExpanded(true)}>read more</span>
-            </>
-            : <>
-              {formatText(post.content_text)}
-              {post.content_text.length > CHAR_LIMIT && (
-                <span className={styles.readMore} onClick={() => setIsExpanded(false)} style={{ marginLeft: 6 }}>show less</span>
-              )}
-            </>
-          }
-        </p>
-      )}
+      {
+        post.content_text && (
+          <p className={styles.text}>
+            {post.content_text.length > CHAR_LIMIT && !isExpanded
+              ? <>
+                {formatText(post.content_text.substring(0, CHAR_LIMIT))}...{' '}
+                <span className={styles.readMore} onClick={() => setIsExpanded(true)}>read more</span>
+              </>
+              : <>
+                {formatText(post.content_text)}
+                {post.content_text.length > CHAR_LIMIT && (
+                  <span className={styles.readMore} onClick={() => setIsExpanded(false)} style={{ marginLeft: 6 }}>show less</span>
+                )}
+              </>
+            }
+          </p>
+        )
+      }
 
-      {validMedia.length > 0 && validMedia[current]?.type !== "file" && (
-        <div className={styles.media}>
-          {validMedia.length > 1 && <button className={styles.leftArrow} onClick={prevSlide}><img src={ArrowLeft} alt="prev" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} /></button>}
-          {validMedia[current]?.type === "image" && <img src={validMedia[current].url} alt="" className={styles.mediaItem} />}
-          {validMedia[current]?.type === "video" && (
-            <video controls className={styles.mediaItem}>
-              <source src={validMedia[current].url} type="video/mp4" />
-            </video>
-          )}
-          {validMedia.length > 1 && <button className={styles.rightArrow} onClick={nextSlide}><img src={ArrowRight} alt="next" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} /></button>}
-          {validMedia.length > 1 && (
-            <div className={styles.dots}>
-              {validMedia.map((_, index) => (
-                <span key={index} className={`${styles.dot} ${index === current ? styles.activeDot : ""}`} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {
+        validMedia.length > 0 && validMedia[current]?.type !== "file" && (
+          <div className={styles.media}>
+            {validMedia.length > 1 && <button className={styles.leftArrow} onClick={prevSlide}><img src={ArrowLeft} alt="prev" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} /></button>}
+            {validMedia[current]?.type === "image" && <img src={validMedia[current].url} alt="" className={styles.mediaItem} />}
+            {validMedia[current]?.type === "video" && (
+              <video controls className={styles.mediaItem}>
+                <source src={validMedia[current].url} type="video/mp4" />
+              </video>
+            )}
+            {validMedia.length > 1 && <button className={styles.rightArrow} onClick={nextSlide}><img src={ArrowRight} alt="next" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} /></button>}
+            {validMedia.length > 1 && (
+              <div className={styles.dots}>
+                {validMedia.map((_, index) => (
+                  <span key={index} className={`${styles.dot} ${index === current ? styles.activeDot : ""}`} />
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      }
 
-      {files.length > 0 && (
-        <div className={styles.filesContainer}>
-          {files.map((file, i) => (
-            <a key={i} href={file.url} target="_blank" rel="noopener noreferrer" className={styles.fileItem}>
-              📁 {file.url.split("/").pop()}
-            </a>
-          ))}
-        </div>
-      )}
+      {
+        files.length > 0 && (
+          <div className={styles.filesContainer}>
+            {files.map((file, i) => (
+              <a key={i} href={file.url} target="_blank" rel="noopener noreferrer" className={styles.fileItem}>
+                📁 {file.url.split("/").pop()}
+              </a>
+            ))}
+          </div>
+        )
+      }
 
-      {post.poll_options && post.poll_options.length > 0 && (
-        <div className={styles.pollBox}>
-          {post.poll_options.map((opt, i) => (
-            <button key={i} className={styles.pollOption}>{opt}</button>
-          ))}
-        </div>
-      )}
+      {
+        post.poll_options && post.poll_options.length > 0 && (
+          <div className={styles.pollBox}>
+            {post.poll_options.map((opt, i) => (
+              <button key={i} className={styles.pollOption}>{opt}</button>
+            ))}
+          </div>
+        )
+      }
 
       {/* --- SWAPPED ACTIONS FOR REQUEST MODE --- */}
-      {isReportedMode ? (
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #333' }}>
-          <button onClick={() => onDismiss?.(post.id || post.post_id)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-            <img src={XIcon} alt="Dismiss" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
-            Dismiss
-          </button>
-          <button onClick={() => onReportDelete?.(post.id || post.post_id)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-            <img src={BinIcon} alt="Delete" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
-            Delete
-          </button>
-          <button onClick={() => onKick?.(post.id || post.post_id)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-            <img src={LeaveIcon} alt="Kick" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
-            Kick
-          </button>
-          <button onClick={() => onReportAction?.(post.id || post.post_id)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-            <img src={InfoIcon} alt="Report" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
-            Report
-          </button>
-        </div>
-      ) : isRequestMode ? (
-        <div className={styles.postRequestActions}>
-          <button className={styles.acceptPostBtn} onClick={() => onAcceptPost?.(post.id || post.post_id)}>
-            <Check size={18} strokeWidth={3} color="#ffffff" />
-            Accept
-          </button>
-          <div className={styles.verticalDivider}></div>
-          <button className={styles.rejectPostBtn} onClick={() => onRejectPost?.(post.id || post.post_id)}>
-            <X size={18} strokeWidth={3} color="#D4145A" />
-            Reject
-          </button>
-        </div>
-      ) : (
-        <div className={styles.actions}>
-          {/* Original normal post actions stay completely untouched */}
-          <button className={`${styles.iconBtn} ${isLiked ? styles.liked : ""}`} onClick={handleLike} type="button">
-            <span className={styles.heart}>
-              {isLiked
-                ? <img src={LikeActive} alt="liked" className={styles.likeActive} width={22} height={22} />
-                : <img src={Like} alt="like" className={styles.like} width={22} height={22} />
-              }
-            </span>
-            {likesCount > 0 && <span className={styles.count}>{likesCount}</span>}
-          </button>
-
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {post.post_type === "advertisement" ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span className={styles.prompt}>how do you feel about this ad?</span>
-                <div className={styles.reactions}>
-                  {[
-                    { key: 'good', src: GoodReview },
-                    { key: 'neutral', src: NatrualReview },
-                    { key: 'bad', src: BadReview },
-                  ].map(({ key, src }) => (
-                    <button
-                      key={key}
-                      className={styles.reactionBtn}
-                      onClick={() => handleAdReaction(key)}
-                      style={{
-                        transform: adReaction === key ? 'scale(1.25)' : 'scale(1)',
-                        filter: adReaction && adReaction !== key ? 'grayscale(1) opacity(0.4)' : 'none',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      <img src={src} alt={key} width={28} height={28} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div
-                className={styles.commentInputPill}
-                style={{ maxWidth: "200px", display: "flex", alignItems: "center", padding: "0 8px 0 16px" }}
-                onClick={() => openComments(post)}
-              >
-                <span className={styles.placeholderText}>Add a comment ...</span>
-                {commenterAvatars.length > 0 && (
-                  <div style={{ display: "flex", alignItems: "center", marginLeft: "auto", width: 20 }}>
-                    {commenterAvatars.map((avatar, i) => (
-                      <img
-                        key={i}
-                        src={avatar}
-                        alt=""
-                        style={{
-                          width: 34, height: 34, borderRadius: "50%", objectFit: "cover",
-                          border: "2px solid #262626",
-                          marginLeft: i === 0 ? 0 : -10,
-                          zIndex: 3 - i, position: "relative"
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+      {
+        isReportedMode ? (
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #333' }}>
+            <button onClick={() => onDismiss?.(post.id || post.post_id)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <img src={XIcon} alt="Dismiss" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
+              Dismiss
+            </button>
+            <button onClick={() => onReportDelete?.(post.id || post.post_id)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <img src={BinIcon} alt="Delete" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
+              Delete
+            </button>
+            <button onClick={() => onKick?.(post.id || post.post_id)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <img src={LeaveIcon} alt="Kick" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
+              Kick
+            </button>
+            <button onClick={() => onReportAction?.(post.id || post.post_id)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <img src={InfoIcon} alt="Report" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
+              Report
+            </button>
           </div>
-
-          <div className={styles.shareContainer} ref={shareMenuRef} style={{ position: 'relative' }}>
-            <button className={styles.shareBtn} type="button" onClick={() => setShowShareMenu(!showShareMenu)}>
-              <img src={Share} alt="share" width={18} height={18} className={styles.shareIcon} />
-              <span className={styles.shareText}>Share</span>
+        ) : isRequestMode ? (
+          <div className={styles.postRequestActions}>
+            <button className={styles.acceptPostBtn} onClick={() => onAcceptPost?.(post.id || post.post_id)}>
+              <Check size={18} strokeWidth={3} color="#ffffff" />
+              Accept
+            </button>
+            <div className={styles.verticalDivider}></div>
+            <button className={styles.rejectPostBtn} onClick={() => onRejectPost?.(post.id || post.post_id)}>
+              <X size={18} strokeWidth={3} color="#D4145A" />
+              Reject
+            </button>
+          </div>
+        ) : (
+          <div className={styles.actions}>
+            {/* Original normal post actions stay completely untouched */}
+            <button className={`${styles.iconBtn} ${isLiked ? styles.liked : ""}`} onClick={handleLike} type="button">
+              <span className={styles.heart}>
+                {isLiked
+                  ? <img src={LikeActive} alt="liked" className={styles.likeActive} width={22} height={22} />
+                  : <img src={Like} alt="like" className={styles.like} width={22} height={22} />
+                }
+              </span>
+              {likesCount > 0 && <span className={styles.count}>{likesCount}</span>}
             </button>
 
-            {showShareMenu && createPortal(
-              <div className={styles.shareOverlay} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
-                <div className={styles.shareModal} onClick={e => e.stopPropagation()} ref={shareMenuRef}>
-
-                  <div className={styles.shareHeader}>
-                    <p className={styles.shareTitle}>Share post</p>
-                    <button className={styles.closeBtn} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
-                      <img src={XIcon} alt="close" width={14} height={14} style={{ filter: "brightness(0) invert(1)" }} />
-                    </button>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {post.post_type === "advertisement" ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span className={styles.prompt}>how do you feel about this ad?</span>
+                  <div className={styles.reactions}>
+                    {[
+                      { key: 'good', src: GoodReview },
+                      { key: 'neutral', src: NatrualReview },
+                      { key: 'bad', src: BadReview },
+                    ].map(({ key, src }) => (
+                      <button
+                        key={key}
+                        className={styles.reactionBtn}
+                        onClick={() => handleAdReaction(key)}
+                        style={{
+                          transform: adReaction === key ? 'scale(1.25)' : 'scale(1)',
+                          filter: adReaction && adReaction !== key ? 'grayscale(1) opacity(0.4)' : 'none',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <img src={src} alt={key} width={28} height={28} />
+                      </button>
+                    ))}
                   </div>
-
-                  <div className={styles.shareSearchWrapper}>
-                    <div className={styles.shareSearchInner}>
-                      <input
-                        className={styles.shareInput}
-                        placeholder="Search people or chats..."
-                        value={shareSearch}
-                        onChange={e => setShareSearch(e.target.value)}
-                        autoFocus
-                      />
-                    </div>
-                  </div>
-
-                  <div className={styles.shareListContainer}>
-                    {isLoadingChats ? (
-                      <div className={styles.shareStatus}>Loading...</div>
-                    ) : shareTargets.filter(t =>
-                      (t.name || t.username || "").toLowerCase().includes(shareSearch.toLowerCase())
-                    ).length === 0 ? (
-                      <div className={styles.shareStatus}>No chats found</div>
-                    ) : (
-                      <>
-                        <div className={styles.sectionHeader}>Chats</div>
-                        {shareTargets
-                          .filter(t => (t.name || t.username || "").toLowerCase().includes(shareSearch.toLowerCase()))
-                          .map(target => (
-                            <button
-                              key={target.id}
-                              className={styles.shareItem}
-                              onClick={() => handleShareToTarget(target.id)}
-                              disabled={isSharing}
-                            >
-                              <div className={styles.shareAvatarWrapper}>
-                                <img
-                                  src={target.avatar}
-                                  alt=""
-                                  className={styles.shareAvatarImg}
-                                  onError={e => { e.currentTarget.src = "/default-avatar.png"; }}
-                                />
-                              </div>
-                              <span className={styles.targetName}>
-                                {target.name || target.username}
-                              </span>
-                              <span className={styles.sendLabel}>Send</span>
-                            </button>
-                          ))
-                        }
-                      </>
-                    )}
-                  </div>
-
                 </div>
-              </div>,
-              document.body
-            )}
-          </div>
-        </div>
-      )}
+              ) : (
+                <div
+                  className={styles.commentInputPill}
+                  style={{ maxWidth: "200px", display: "flex", alignItems: "center", padding: "0 8px 0 16px" }}
+                  onClick={() => openComments(post)}
+                >
+                  <span className={styles.placeholderText}>Add a comment ...</span>
+                  {commenterAvatars.length > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", marginLeft: "auto", width: 20 }}>
+                      {commenterAvatars.map((avatar, i) => (
+                        <img
+                          key={i}
+                          src={avatar}
+                          alt=""
+                          style={{
+                            width: 34, height: 34, borderRadius: "50%", objectFit: "cover",
+                            border: "2px solid #262626",
+                            marginLeft: i === 0 ? 0 : -10,
+                            zIndex: 3 - i, position: "relative"
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
-      {showReport && (
-        <ReportModal
-          contentId={post.id || post.post_id}
-          contentType="post"
-          onClose={() => setShowReport(false)}
-        />
-      )}
-    </article>
+            <div className={styles.shareContainer} ref={shareMenuRef} style={{ position: 'relative' }}>
+              <button className={styles.shareBtn} type="button" onClick={() => setShowShareMenu(!showShareMenu)}>
+                <img src={Share} alt="share" width={18} height={18} className={styles.shareIcon} />
+                <span className={styles.shareText}>Share</span>
+              </button>
+
+              {showShareMenu && createPortal(
+                <div className={styles.shareOverlay} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
+                  <div className={styles.shareModal} onClick={e => e.stopPropagation()} ref={shareMenuRef}>
+
+                    <div className={styles.shareHeader}>
+                      <p className={styles.shareTitle}>Share post</p>
+                      <button className={styles.closeBtn} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
+                        <img src={XIcon} alt="close" width={14} height={14} style={{ filter: "brightness(0) invert(1)" }} />
+                      </button>
+                    </div>
+
+                    <div className={styles.shareSearchWrapper}>
+                      <div className={styles.shareSearchInner}>
+                        <input
+                          className={styles.shareInput}
+                          placeholder="Search people or chats..."
+                          value={shareSearch}
+                          onChange={e => setShareSearch(e.target.value)}
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+
+                    <div className={styles.shareListContainer}>
+                      {isLoadingChats ? (
+                        <div className={styles.shareStatus}>Loading...</div>
+                      ) : shareTargets.filter(t =>
+                        (t.name || t.username || "").toLowerCase().includes(shareSearch.toLowerCase())
+                      ).length === 0 ? (
+                        <div className={styles.shareStatus}>No chats found</div>
+                      ) : (
+                        <>
+                          <div className={styles.sectionHeader}>Chats</div>
+                          {shareTargets
+                            .filter(t => (t.name || t.username || "").toLowerCase().includes(shareSearch.toLowerCase()))
+                            .map(target => (
+                              <button
+                                key={target.id}
+                                className={styles.shareItem}
+                                onClick={() => handleShareToTarget(target.id)}
+                                disabled={isSharing}
+                              >
+                                <div className={styles.shareAvatarWrapper}>
+                                  <img
+                                    src={target.avatar}
+                                    alt=""
+                                    className={styles.shareAvatarImg}
+                                    onError={e => { e.currentTarget.src = "/default-avatar.png"; }}
+                                  />
+                                </div>
+                                <span className={styles.targetName}>
+                                  {target.name || target.username}
+                                </span>
+                                <span className={styles.sendLabel}>Send</span>
+                              </button>
+                            ))
+                          }
+                        </>
+                      )}
+                    </div>
+
+                  </div>
+                </div>,
+                document.body
+              )}
+            </div>
+          </div>
+        )
+      }
+
+      {
+        showReport && (
+          <ReportModal
+            contentId={post.id || post.post_id}
+            contentType="post"
+            onClose={() => setShowReport(false)}
+          />
+        )
+      }
+    </article >
   );
 }

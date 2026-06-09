@@ -19,6 +19,7 @@ import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
 import { useNavigate, useLocation } from 'react-router-dom';
 import MobileCreatePost from '../../components/MobileCreatePost/mobileCreatePost';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
+import Calender from '../../Assets/icons/calender.png'
 export default function Homepage() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -48,6 +49,11 @@ export default function Homepage() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const mobileMenuRef = useRef(null)
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024)
+    const [isAnnouncement, setIsAnnouncement] = useState(false);
+    const [announcementTitle, setAnnouncementTitle] = useState('');
+    const [announcementDesc, setAnnouncementDesc] = useState('');
+    const [announcementDuration, setAnnouncementDuration] = useState(0);
+    const [annImageError, setAnnImageError] = useState(false);
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 1024)
         window.addEventListener("resize", check)
@@ -56,6 +62,8 @@ export default function Homepage() {
 
     const resetPostState = () => {
         setContent(""); setImages([]); setFiles([]); setPollOptions(["", ""]); setIsPollOpen(false);
+        setIsAnnouncement(false); setAnnouncementTitle(''); setAnnouncementDesc(''); setAnnouncementDuration(0);
+        setAnnImageError(false);
     };
 
     const API = "http://localhost:8000"
@@ -78,7 +86,7 @@ export default function Homepage() {
                     const pageData = await pageRes.json();
                     data.avatar = pageData.profile_image;
                 }
-                  data.username = data.page_full_name || data.page_name;
+                data.username = data.page_full_name || data.page_name;
             }
 
             setUser(data)
@@ -187,13 +195,20 @@ export default function Homepage() {
     const handleFileUpload = (e) => { setFiles(prev => [...prev, ...Array.from(e.target.files)]); setIsModalOpen(true); };
 
     const handleCreatePost = async () => {
-        if (!content.trim() && !images.length && !files.length && !isPollOpen) return;
+        if (isAnnouncement && localStorage.getItem("user_type") === "uni") {
+            if (!announcementTitle.trim() || !announcementDesc.trim() || images.length === 0) return;
+        } else {
+            if (!content.trim() && !images.length && !files.length && !isPollOpen) return;
+        }
 
-        // Optimistically add to top of feed
+        const postContent = isAnnouncement ? announcementDesc : content;
+
         const optimisticPost = {
             id: `temp-${Date.now()}`,
-            content_text: content,
+            content_text: postContent,
             created_at: new Date().toISOString(),
+            is_announcement: isAnnouncement && localStorage.getItem("user_type") === "uni",
+            is_academic: isAnnouncement && user?.role === "instructor",
             author: {
                 id: user?.id,
                 username: user?.username,
@@ -210,15 +225,23 @@ export default function Homepage() {
         };
 
         setPosts(prev => [optimisticPost, ...prev]);
-
         setIsModalOpen(false);
         setModalCommunityDropdownOpen(false);
-
         resetPostState();
 
         try {
             const formData = new FormData();
-            formData.append("content", content);
+            formData.append("content", postContent);
+            if (isAnnouncement) {
+                formData.append("title", announcementTitle);
+                formData.append("post_type", "announcement");
+                formData.append("duration", ["1 week", "1 month", "3 months", "6 months", "1 year"][announcementDuration]);
+            }
+            if (isAnnouncement && user?.role === "instructor") {
+                formData.append("is_academic", "true");
+            }
+
+
             images.forEach(img => formData.append("images", img));
             files.forEach(file => formData.append("files", file));
             if (isPollOpen) {
@@ -237,7 +260,6 @@ export default function Homepage() {
                 return;
             }
 
-            // Replace temp post with real one from server
             const savedPost = await res.json();
             setPosts(prev => prev.map(p =>
                 p.id === optimisticPost.id ? savedPost : p
@@ -322,7 +344,7 @@ export default function Homepage() {
     }, [])
 
     const rawAvatar = user?.profile?.avatar || user?.avatar || user?.profile_image;
-      const avatarSrc = rawAvatar
+    const avatarSrc = rawAvatar
         ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
         : ProfilePicture;
 
@@ -552,6 +574,8 @@ export default function Homepage() {
                             <h3>Create post</h3>
                             <button className={styles.closeButton} onClick={() => { setIsModalOpen(false); resetPostState(); setModalCommunityDropdownOpen(false); }}>✕</button>
                         </div>
+
+                        {/* Name row + announcement toggle on the right */}
                         <div className={styles.leftSide}>
                             <img
                                 src={avatarSrc}
@@ -559,14 +583,81 @@ export default function Homepage() {
                                 className={styles.userProfilePicture}
                                 onError={e => { e.currentTarget.src = ProfilePicture; }}
                             />
-                            <strong>{user?.full_name || user?.username}</strong>
+                            <strong>{user?.full_name || user?.page_full_name || user?.username}</strong>
+                            {(localStorage.getItem("user_type") === "uni" ||
+                                localStorage.getItem("user_type") === "page" ||
+                                user?.role === "instructor") && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+                                        <span style={{ color: '#ADADAD', fontSize: '0.85rem' }}>
+                                            {user?.role === "instructor" ? "Academic?" : "Announcement?"}
+                                        </span>
+                                        <label className={styles.switch}>
+                                            <input
+                                                type="checkbox"
+                                                checked={isAnnouncement}
+                                                onChange={() => setIsAnnouncement(p => !p)}
+                                            />
+                                            <span className={styles.switchSlider}></span>
+                                        </label>
+                                    </div>
+                                )}
                         </div>
-                        <textarea
-                            value={content}
-                            onChange={e => setContent(e.target.value)}
-                            placeholder={`What's on your mind, ${user?.username || "User"}?`}
-                            className={styles.modalInput}
-                        />
+
+                        {isAnnouncement && localStorage.getItem("user_type") === "uni" ? (
+                            <div className={styles.announcementFields}>
+
+
+
+                                <input
+                                    type="text"
+                                    placeholder="Announcement title..."
+                                    value={announcementTitle}
+                                    onChange={e => setAnnouncementTitle(e.target.value)}
+                                    className={styles.announcementTitleInput}
+                                />
+                                <textarea
+                                    placeholder="Announcement description..."
+                                    value={announcementDesc}
+                                    onChange={e => setAnnouncementDesc(e.target.value)}
+                                    className={styles.announcementDescInput}
+                                />
+                                <div className={styles.announcementFieldDivider} />
+                                <div className={styles.annDurationRow}>
+                                    <span className={styles.annDurationLabel}>
+                                        <img src={Calender} alt="" style={{ width: 16, height: 16, filter: 'brightness(0) saturate(100%) invert(31%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)', flexShrink: 0 }} />
+                                        Duration
+                                    </span>
+                                    <div className={styles.annSliderWrapper}>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="4"
+                                            value={announcementDuration}
+                                            onChange={e => setAnnouncementDuration(Number(e.target.value))}
+                                            className={styles.annRangeInput}
+                                        />
+                                        <div className={styles.annTrackBase} />
+                                        <div className={styles.annTrackFill} style={{ width: `${(announcementDuration / 4) * 100}%` }} />
+                                        <div className={styles.annNodesRow}>
+                                            {["1 week", "1 month", "3 months", "6 months", "1 year"].map((label, i) => (
+                                                <div key={i} className={styles.annNode} onClick={() => setAnnouncementDuration(i)}>
+                                                    <div className={`${styles.annNodeDot} ${i === announcementDuration ? styles.annNodeDotActive : i < announcementDuration ? styles.annNodeDotPassed : ''}`} />
+                                                    <span className={`${styles.annNodeLabel} ${i === announcementDuration ? styles.annNodeLabelActive : ''}`}>{label}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <textarea
+                                value={content}
+                                onChange={e => setContent(e.target.value)}
+                                placeholder={`What's on your mind, ${user?.page_full_name || user?.username || "User"}?`}
+                                className={styles.modalInput}
+                            />
+                        )}
+
                         {images.length > 0 && (
                             <div className={styles.previewContainer}>
                                 {images.map((file, i) => {
@@ -592,6 +683,7 @@ export default function Homepage() {
                                 })}
                             </div>
                         )}
+
                         {files.length > 0 && (
                             <div className={styles.filePreviewContainer}>
                                 {files.map((f, i) => (
@@ -605,6 +697,7 @@ export default function Homepage() {
                                 ))}
                             </div>
                         )}
+
                         <div className={styles.actionsRow}>
                             <label className={styles.actionButton}>📷 Media<input hidden type="file" onChange={handleMediaUpload} /></label>
                             <label className={styles.actionButton}>📁 File<input hidden type="file" multiple onChange={handleFileUpload} /></label>
@@ -614,41 +707,17 @@ export default function Homepage() {
                             </button>
                             <div style={{ position: "relative", display: "flex", justifyContent: "flex-end" }} onClick={e => e.stopPropagation()}>
                                 <button
-                                    style={{
-                                        display: "flex", alignItems: "center",
-                                        background: "transparent", border: "none",
-                                        padding: "2px 8px", cursor: "pointer"
-                                    }}
+                                    style={{ display: "flex", alignItems: "center", background: "transparent", border: "none", padding: "2px 8px", cursor: "pointer" }}
                                     onClick={e => { e.stopPropagation(); setModalCommunityDropdownOpen(prev => !prev); }}
                                 >
-                                    <span style={{
-                                        position: "relative", zIndex: 0,
-                                        marginRight: "-15px",
-                                        background: "#262626", borderRadius: 20,
-                                        padding: "1px 30px 1px 15px",
-                                        color: "rgba(255,255,255,0.45)", fontSize: 12,
-                                        whiteSpace: "nowrap"
-                                    }}>
+                                    <span style={{ position: "relative", zIndex: 0, marginRight: "-15px", background: "#262626", borderRadius: 20, padding: "1px 30px 1px 15px", color: "rgba(255,255,255,0.45)", fontSize: 12, whiteSpace: "nowrap" }}>
                                         {selectedCommunity ? selectedCommunity.name : "Community"}
                                     </span>
-                                    <span style={{
-                                        position: "relative", zIndex: 1,
-                                        display: "flex", alignItems: "center", justifyContent: "center",
-                                        width: 25, height: 25,
-                                        background: "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))",
-                                        borderRadius: "50%", fontSize: 20, color: "white", flexShrink: 0
-                                    }}>▾</span>
+                                    <span style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center", width: 25, height: 25, background: "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))", borderRadius: "50%", fontSize: 20, color: "white", flexShrink: 0 }}>▾</span>
                                 </button>
-
                                 {modalCommunityDropdownOpen && (
-                                    <div style={{
-                                        position: "absolute", top: "calc(100% + 6px)", right: 0,
-                                        minWidth: 200, background: "#2a2a2a",
-                                        border: "1px solid rgba(255,255,255,0.1)",
-                                        borderRadius: 14, padding: 6, zIndex: 100,
-                                        display: "flex", flexDirection: "column", gap: 2,
-                                        boxShadow: "0 10px 30px rgba(0,0,0,0.4)"
-                                    }} onClick={e => e.stopPropagation()}>
+                                    <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, minWidth: 200, background: "#2a2a2a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: 6, zIndex: 100, display: "flex", flexDirection: "column", gap: 2, boxShadow: "0 10px 30px rgba(0,0,0,0.4)" }}
+                                        onClick={e => e.stopPropagation()}>
                                         <div
                                             style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, fontSize: 13, color: "rgba(255,255,255,0.75)", cursor: "pointer" }}
                                             onClick={() => { setSelectedCommunity(null); setModalCommunityDropdownOpen(false); }}
@@ -660,24 +729,12 @@ export default function Homepage() {
                                         {joinedCommunities.map(c => (
                                             <div
                                                 key={c.id}
-                                                style={{
-                                                    display: "flex", alignItems: "center", gap: 10,
-                                                    padding: "9px 12px", borderRadius: 10, fontSize: 13,
-                                                    color: selectedCommunity?.id === c.id ? "#c084fc" : "rgba(255,255,255,0.75)",
-                                                    background: selectedCommunity?.id === c.id ? "rgba(168,85,247,0.15)" : "transparent",
-                                                    cursor: "pointer"
-                                                }}
+                                                style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, fontSize: 13, color: selectedCommunity?.id === c.id ? "#c084fc" : "rgba(255,255,255,0.75)", background: selectedCommunity?.id === c.id ? "rgba(168,85,247,0.15)" : "transparent", cursor: "pointer" }}
                                                 onClick={() => { setSelectedCommunity(c); setModalCommunityDropdownOpen(false); }}
                                                 onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
                                                 onMouseLeave={e => e.currentTarget.style.background = selectedCommunity?.id === c.id ? "rgba(168,85,247,0.15)" : "transparent"}
                                             >
-                                                {c.avatar && (
-                                                    <img
-                                                        src={c.avatar.startsWith("http") ? c.avatar : `${API}${c.avatar}`}
-                                                        alt=""
-                                                        style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
-                                                    />
-                                                )}
+                                                {c.avatar && <img src={c.avatar.startsWith("http") ? c.avatar : `${API}${c.avatar}`} alt="" style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />}
                                                 {c.name}
                                             </div>
                                         ))}
@@ -685,6 +742,7 @@ export default function Homepage() {
                                 )}
                             </div>
                         </div>
+
                         {isPollOpen && (
                             <div className={styles.pollContainer}>
                                 {pollOptions.map((option, i) => (
@@ -698,21 +756,41 @@ export default function Homepage() {
                                         />
                                         {pollOptions.length > 2 && (
                                             <button className={styles.removeOption}
-                                                onClick={() => setPollOptions(pollOptions.filter((_, idx) => idx !== i))}>
-                                                ✕
-                                            </button>
+                                                onClick={() => setPollOptions(pollOptions.filter((_, idx) => idx !== i))}>✕</button>
                                         )}
                                     </div>
                                 ))}
-                                <button type="button" onClick={() => setPollOptions([...pollOptions, ""])} className={styles.addOption}>
-                                    + Add Option
-                                </button>
+                                <button type="button" onClick={() => setPollOptions([...pollOptions, ""])} className={styles.addOption}>+ Add Option</button>
                             </div>
                         )}
+                        {annImageError && (
+                            <div className={styles.annImageWarning}>
+                                <span className={styles.annImageWarningIcon}>📸</span>
+                                <div>
+                                    <p className={styles.annImageWarningTitle}>Image required</p>
+                                    <p className={styles.annImageWarningDesc}>Announcements need a cover image to stand out in the feed.</p>
+                                </div>
+                                <button className={styles.annImageWarningClose} onClick={() => setAnnImageError(false)}>✕</button>
+                            </div>
+                        )}
+
+
+
+
                         <button
                             className={styles.postButton}
-                            onClick={handleCreatePost}
-                            disabled={!content && !images.length && !files && !isPollOpen}
+                            onClick={() => {
+                                if (isAnnouncement && localStorage.getItem("user_type") === "uni") {
+                                    if (images.length === 0) { setAnnImageError(true); return; }
+                                    if (!announcementTitle.trim() || !announcementDesc.trim()) return;
+                                }
+                                handleCreatePost();
+                            }}
+                            disabled={
+                                isAnnouncement
+                                    ? (!announcementTitle.trim() || !announcementDesc.trim())
+                                    : (!content.trim() && !images.length && !files.length && !isPollOpen)
+                            }
                         >
                             Post
                         </button>

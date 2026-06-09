@@ -30,16 +30,18 @@
   object-fit: cover;
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
-
 .userMeta {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
 }
 .nameLine {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    flex-wrap: nowrap;
 }
 
 .name {
@@ -344,8 +346,8 @@
   align-items: center;
   width: 100%;
   max-width: 280px;
-  /* Adjust based on your card width */
-  height: 32px;
+  
+  height: 25px;
   background: rgba(255, 255, 255, 0.06);
   /* Subtly lighter than the card bg */
   border-radius: 16px;

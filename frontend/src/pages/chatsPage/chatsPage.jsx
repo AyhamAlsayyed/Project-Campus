@@ -149,6 +149,12 @@ export default function ChatsPage() {
     const [chatSearchQuery, setChatSearchQuery] = useState('');
     const [searchResultIndex, setSearchResultIndex] = useState(0);
     const chatSearchRef = useRef(null);
+    const getSenderName = (sender) => {
+        if (!sender) return '';
+        if (typeof sender === 'string') return sender;
+        if (typeof sender === 'object') return sender.username || sender.name || '';
+        return '';
+    };
 
 
     const { chatId } = useParams();
@@ -202,7 +208,7 @@ export default function ChatsPage() {
 
                 if (response.ok) {
                     const newMsg = await response.json();
-                    setMessages(prev => [...prev, newMsg]);
+                    setMessages(prev => [...prev, ...normalizeMessages([newMsg])]);
                     setInputText("");
                     setPendingFiles([]);
                     setReplyingTo(null);
@@ -228,8 +234,7 @@ export default function ChatsPage() {
 
                 if (response.ok) {
                     const newMessage = await response.json();
-                    setMessages(prev => [...prev, newMessage]);
-                    setInputText("");
+                    setMessages(prev => [...prev, ...normalizeMessages([newMessage])]); setInputText("");
                     setReplyingTo(null);
                     setChats(prev => prev.map(c =>
                         c.id === selectedChat.id ? { ...c, unread_count: 0 } : c
@@ -291,6 +296,16 @@ export default function ChatsPage() {
     useEffect(() => {
         scrollToBottom();
     }, [selectedChat?.id]);
+    const normalizeMessages = (data) => (Array.isArray(data) ? data : []).map(msg => ({
+        ...msg,
+        text: msg.content || msg.text,
+        senderId: msg.sender?.id || msg.senderId,
+        sender: msg.sender?.username || msg.sender,
+        avatar: msg.sender?.avatar || msg.avatar,
+        time: msg.sent_at ? new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : msg.time,
+        date: msg.sent_at || msg.date,
+        reply_to_details: msg.parent_message || msg.reply_to_details,
+    }));
 
     useEffect(() => {
         if (chatId && chats.length > 0) {
@@ -301,11 +316,14 @@ export default function ChatsPage() {
                     headers: { Authorization: `Bearer ${token}` },
                 })
                     .then(res => res.json())
-                    .then(data => setMessages(data))
+                    .then(data => setMessages(normalizeMessages(data)))  // ← fix
                     .catch(err => console.error("Error fetching messages:", err));
             }
         }
     }, [chatId, chats]);
+
+
+
 
 
     const API = "http://localhost:8000"
@@ -587,6 +605,7 @@ export default function ChatsPage() {
 
 
 
+
     return (
         <div className={styles.darkContainer}>
             <div className={`${styles.header} ${styles.page}`}>
@@ -596,7 +615,7 @@ export default function ChatsPage() {
                 <SideBarNav />
                 <div className={styles.mainContent}>
                     {showCreateGroup ? (
-                        <GroupCreationFlow closeFlow={() => setShowCreateGroup(false)} />
+                        <GroupCreationFlow closeFlow={() => setShowCreateGroup(false)} currentUser={user} />
                     ) :
 
                         !selectedChat ? (
@@ -807,7 +826,7 @@ export default function ChatsPage() {
                                                                                 headers: { Authorization: `Bearer ${token}` },
                                                                             });
                                                                             const data = await res.json();
-                                                                            setRequestMessages(Array.isArray(data) ? data : []);
+                                                                            setRequestMessages(normalizeMessages(data));
                                                                         }}
                                                                     >
                                                                         <div className={styles.chatItemLeft}>
@@ -971,7 +990,7 @@ export default function ChatsPage() {
                                                                 headers: { Authorization: `Bearer ${token}` },
                                                             });
                                                             const data = await res.json();
-                                                            setMessages(data);
+                                                            setMessages(normalizeMessages(data));
                                                         }} style={{ cursor: 'pointer' }}>
 
                                                             <div className={styles.chatItemLeft}>
@@ -1437,7 +1456,9 @@ export default function ChatsPage() {
                                                                         <div className={styles.messageContentBlock}>
                                                                             {!isGrouped && (
                                                                                 <div className={`${styles.messageMeta} ${isMine ? styles.metaRight : styles.metaLeft}`}>
-                                                                                    <span className={styles.msgSenderName}>{isMine ? 'You' : msg.sender}</span>
+                                                                                    <span className={styles.msgSenderName}>
+                                                                                        {isMine ? 'You' : getSenderName(msg.sender)}
+                                                                                    </span>
                                                                                     <span className={styles.msgTime}>{msg.time}</span>
                                                                                 </div>
                                                                             )}
@@ -1451,8 +1472,11 @@ export default function ChatsPage() {
                                                                                     {msg.reply_to_details && (
                                                                                         <div className={styles.replyQuoteBox} onClick={() => scrollToMessage(msg.reply_to_details.id)}>
                                                                                             <span className={styles.replySender}>
-                                                                                                {(msg.reply_to_details.senderId === 'me' || msg.reply_to_details.senderId === user?.id || msg.reply_to_details.sender_name === user?.username)
-                                                                                                    ? 'You' : msg.reply_to_details.sender_name}
+                                                                                                {(msg.reply_to_details.senderId === 'me' ||
+                                                                                                    msg.reply_to_details.senderId === user?.id ||
+                                                                                                    msg.reply_to_details.sender_name === user?.username)
+                                                                                                    ? 'You'
+                                                                                                    : getSenderName(msg.reply_to_details.sender_name || msg.reply_to_details.sender)}
                                                                                             </span>
                                                                                             <p className={styles.replyTextPreview}>{msg.reply_to_details.text}</p>
                                                                                         </div>
@@ -1641,7 +1665,7 @@ export default function ChatsPage() {
                                                 {replyingTo && (
                                                     <div className={styles.replyPreviewBar}>
                                                         <div className={styles.replyPreviewContent}>
-                                                            <span>Replying to <strong>{replyingTo.sender}</strong></span>
+                                                            <span>Replying to <strong>{getSenderName(replyingTo.sender)}</strong></span>
                                                             <p>{replyingTo.text}</p>
                                                         </div>
                                                         <button onClick={() => setReplyingTo(null)} className={styles.cancelReply}>
@@ -1724,8 +1748,7 @@ export default function ChatsPage() {
                                     chat.preview_sender === user?.username ||
                                     chat.preview_sender === 'me';
                                 const isAttachment = chat.preview === null || chat.preview === undefined;
-                                const lastSender = chat.last_sender || chat.last_message_sender || chat.sender || '';
-                                const senderLabel = isMineSender ? 'You' : lastSender;
+                                const lastSender = getSenderName(chat.last_sender || chat.last_message_sender || chat.sender || ''); const senderLabel = isMineSender ? 'You' : lastSender;
 
                                 console.log('chat preview fields:', chat.name, chat.last_message_type, chat.has_attachment, chat.preview, chat.type);
 
@@ -1738,7 +1761,7 @@ export default function ChatsPage() {
                                             headers: { Authorization: `Bearer ${token}` },
                                         });
                                         const data = await res.json();
-                                        setMessages(data);
+                                        setMessages(normalizeMessages(data));
                                     }}>
                                         <div className={styles.academicAvatarWrapper}>
                                             <img

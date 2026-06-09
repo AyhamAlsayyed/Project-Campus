@@ -75,14 +75,15 @@ export default function Universities() {
                 const univJson = univRes.ok ? await univRes.json() : null;
                 const newsJson = newsRes.ok ? await newsRes.json() : null;
                 const doctorsJson = doctorsRes.ok ? await doctorsRes.json() : null;
+
                 console.log("univRes status:", univRes.status, univJson);
                 console.log("newsRes status:", newsRes.status, newsJson);
                 console.log("doctorsRes status:", doctorsRes.status, doctorsJson);
 
-                if (univRes.ok) setUnivData(await univRes.json());
-                if (newsRes.ok) setNews(await newsRes.json());
+                if (univJson) setUnivData(univJson);
+                if (newsJson) setNews(newsJson);
                 if (eventsRes.ok) setEvents(await eventsRes.json());
-                if (doctorsRes.ok) setDoctors(await doctorsRes.json());
+                if (doctorsJson) setDoctors(doctorsJson);
                 if (userRes.ok) setUser(await userRes.json());
 
             } catch (err) {

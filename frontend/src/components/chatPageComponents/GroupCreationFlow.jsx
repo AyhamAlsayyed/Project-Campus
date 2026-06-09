@@ -11,8 +11,7 @@ export default function GroupCreationFlow({ closeFlow, currentUser }) {
     const [createError, setCreateError] = useState('');
 
     const token = localStorage.getItem('access');
-    const isInstructor = currentUser?.role === 'instructor' || currentUser?.role === 'admin';
-
+    const isInstructor = currentUser?.role === 'instructor' || currentUser?.user_type === 'instructor';
     // Step 1 done — store form data, move to member selection
     const handleProceedToMembers = (formData) => {
         setPendingGroupData(formData);
