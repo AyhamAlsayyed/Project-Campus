@@ -40,10 +40,7 @@ export default function Universities() {
     const [inviteStatus, setInviteStatus] = useState(null);
     const [removingDoctorId, setRemovingDoctorId] = useState(null);
     const API = "http://localhost:8000";
-
     const [loading, setLoading] = useState(true);
-
-    // Ref to close dropdown on outside click
     const dropdownRef = useRef(null);
 
     const isUniversity = localStorage.getItem("user_type") === "uni";

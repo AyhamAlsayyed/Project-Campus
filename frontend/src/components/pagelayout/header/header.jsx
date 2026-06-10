@@ -848,7 +848,8 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
               </div>
               <div className={styles.notifList}>
                 {notifications.length === 0 ? (
-                  <div className={styles.emptyState}>No new notifications</div>
+                  <div className={styles.emptyState} style={{ padding: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>No new notifications</div>
+
                 ) : notifications.map((n) => (
                   <div
                     key={n.id}

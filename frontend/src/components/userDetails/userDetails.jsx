@@ -1,7 +1,18 @@
 import styles from './userDetails.module.css';
-import { GraduationCap, Phone, Mail, Building2, BookOpen, Star, MapPin, Link, LayoutGrid } from "lucide-react";
+import CollegeIcon from '../../Assets/icons/college.png';
+import CategoryIcon from '../../Assets/icons/category.png';
+import LinkIcon from '../../Assets/icons/link.png';
+import LocationIcon from '../../Assets/icons/location.png';
+import PhoneIcon from '../../Assets/icons/phone.png';
+import MailIcon from '../../Assets/icons/mail.png';
+import StarIcon from '../../Assets/icons/star.png';
 
-export default function UserDetails({ user, hidePill = false , darker = false }) {
+const icon = (src, size = 16) => (
+    <img src={src} alt="" width={size} height={size}
+        style={{ filter: 'brightness(0) invert(55%)', flexShrink: 0 }} />
+);
+
+export default function UserDetails({ user, hidePill = false, darker = false }) {
     if (!user) return null;
 
     const isInstructor = user?.role === 'instructor';
@@ -19,38 +30,38 @@ export default function UserDetails({ user, hidePill = false , darker = false })
         <div className={styles.container} style={{ width: "100%", boxSizing: "border-box" }}>
             <div className={styles.recentlyContactedWrap} style={{ width: "100%", boxSizing: "border-box" }}>
                 {!hidePill && <div className={styles.pill}><p>Details</p></div>}
-                <div className={styles.recentlyContactedWrapper} style={{ width: "100%", boxSizing: "border-box"  }}>
+                <div className={styles.recentlyContactedWrapper} style={{ width: "100%", boxSizing: "border-box" }}>
                     <div className={styles.contactList} style={{ width: "100%", boxSizing: "border-box" }}>
                         <div className={styles.contactCard} style={{ width: "100%", boxSizing: "border-box" }}>
                             <div className={styles.detailsSection} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                                 {user.average_rating > 0 && (
                                     <p style={{ margin: 0, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: 10 }}>
-                                        <Star size={18} className={styles.detailIcon} />{user.average_rating} / 5
+                                        {icon(StarIcon, 18)}{user.average_rating} / 5
                                     </p>
                                 )}
                                 {user.page_type && (
                                     <p style={{ margin: 0, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: 10 }}>
-                                        <LayoutGrid size={18} className={styles.detailIcon} />{user.page_type}
+                                        {icon(CategoryIcon, 18)}{user.page_type}
                                     </p>
                                 )}
                                 {primary_phone && (
                                     <p style={{ margin: 0, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: 10 }}>
-                                        <Phone size={18} className={styles.detailIcon} />{primary_phone}
+                                        {icon(PhoneIcon, 18)}{primary_phone}
                                     </p>
                                 )}
                                 {academic_email && (
                                     <p style={{ margin: 0, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: 10 }}>
-                                        <Mail size={18} className={styles.detailIcon} />{academic_email}
+                                        {icon(MailIcon, 18)}{academic_email}
                                     </p>
                                 )}
                                 {user.location && (
                                     <p style={{ margin: 0, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: 10 }}>
-                                        <MapPin size={18} className={styles.detailIcon} />{user.location}
+                                        {icon(LocationIcon, 18)}{user.location}
                                     </p>
                                 )}
                                 {user.link && (
                                     <p style={{ margin: 0, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: 10 }}>
-                                        <Link size={18} className={styles.detailIcon} />
+                                        {icon(LinkIcon, 18)}
                                         <a href={user.link} target="_blank" rel="noreferrer"
                                             style={{ color: "inherit", textDecoration: "underline" }}>
                                             {user.link.replace(/^https?:\/\//, '')}
@@ -59,7 +70,7 @@ export default function UserDetails({ user, hidePill = false , darker = false })
                                 )}
                                 {user.page_branch && (
                                     <p style={{ margin: 0, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: 10 }}>
-                                        <Building2 size={18} className={styles.detailIcon} />{user.page_branch}
+                                        {icon(CollegeIcon, 18)}{user.page_branch}
                                     </p>
                                 )}
                             </div>
@@ -80,23 +91,23 @@ export default function UserDetails({ user, hidePill = false , darker = false })
                     </div>
                 )}
 
-                <div className={styles.recentlyContactedWrapper} style={{ width: "100%", boxSizing: "border-box",...(darker && { background: "#2a2a2a" }) }}>
+                <div className={styles.recentlyContactedWrapper} style={{ width: "100%", boxSizing: "border-box", ...(darker && { background: "#2a2a2a" }) }}>
                     <div className={styles.contactList} style={{ width: "100%", boxSizing: "border-box" }}>
 
                         <div className={styles.contactCard} style={{ width: "100%", boxSizing: "border-box" }}>
                             <div className={styles.detailsSection}>
                                 <h4>Contact</h4>
                                 {primary_phone && (
-                                    <p><Phone size={16} className={styles.detailIcon} />{primary_phone}</p>
+                                    <p>{icon(PhoneIcon)}{primary_phone}</p>
                                 )}
                                 {secondary_phone && (
-                                    <p><Phone size={16} className={styles.detailIcon} />{secondary_phone}</p>
+                                    <p>{icon(PhoneIcon)}{secondary_phone}</p>
                                 )}
                                 {academic_email && (
-                                    <p><Mail size={16} className={styles.detailIcon} />{academic_email}</p>
+                                    <p>{icon(MailIcon)}{academic_email}</p>
                                 )}
                                 {personal_email && (
-                                    <p><Mail size={16} className={styles.detailIcon} />{personal_email}</p>
+                                    <p>{icon(MailIcon)}{personal_email}</p>
                                 )}
                             </div>
                         </div>
@@ -108,7 +119,7 @@ export default function UserDetails({ user, hidePill = false , darker = false })
                                         <div className={styles.detailsSection}>
                                             <h4>Instructor at</h4>
                                             <p>
-                                                <Building2 size={16} className={styles.detailIcon} />
+                                                {icon(CollegeIcon)}
                                                 {Array.isArray(university) ? university[0] : university}
                                             </p>
                                         </div>
@@ -120,7 +131,7 @@ export default function UserDetails({ user, hidePill = false , darker = false })
                                             <h4>Education</h4>
                                             {degrees.map((d, i) => (
                                                 <div key={i} className={styles.degreeItem}>
-                                                    <BookOpen size={16} className={styles.detailIcon} />
+                                                    {icon(CollegeIcon)}
                                                     <span className={styles.degreeText}>
                                                         {d.university || d.institution || d}
                                                     </span>
@@ -137,7 +148,7 @@ export default function UserDetails({ user, hidePill = false , darker = false })
                                         <div className={styles.detailsSection}>
                                             <h4>University</h4>
                                             <p>
-                                                <Building2 size={16} className={styles.detailIcon} />
+                                                {icon(CollegeIcon)}
                                                 {Array.isArray(university) ? university[0] : university}
                                             </p>
                                         </div>
@@ -149,7 +160,7 @@ export default function UserDetails({ user, hidePill = false , darker = false })
                                             <h4>Degree</h4>
                                             {degrees.map((d, i) => (
                                                 <div key={i} className={styles.degreeItem}>
-                                                    <GraduationCap size={16} className={styles.detailIcon} />
+                                                    {icon(CollegeIcon)}
                                                     <span className={styles.degreeText}>
                                                         {d.major ? `${d.major} ${d.degree_type || ''}` : d}
                                                     </span>

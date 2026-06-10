@@ -78,6 +78,7 @@ export default function LandingPage() {
                     <button
                         className={`${styles.getStarted} max-lg:!w-auto max-lg:!text-xl max-lg:!px-6 max-lg:!py-4`}
                         onClick={() => navigate('/signup')}
+                        style={{fontWeight :"1000"}}
                     >
                         {t.getStarted}
                     </button>

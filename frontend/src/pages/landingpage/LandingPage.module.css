@@ -39,8 +39,6 @@
 
 .headerText {
     font-size: clamp(1.5rem, 2rem, 3rem);
-
-
     color: var(--text-accent);
 }
 

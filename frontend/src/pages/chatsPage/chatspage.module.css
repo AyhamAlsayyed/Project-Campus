@@ -580,9 +580,8 @@
     background: #333333;
     border-radius: 24px;
     padding: 16px;
-
     border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(10px);
+   
 }
 
 .rightList {
@@ -902,7 +901,7 @@
 
 .bubbleOther {
     background: white;
-    backdrop-filter: blur(10px);
+    
     color: black;
     border: 1px solid rgba(255, 255, 255, 0.1);
    
@@ -930,13 +929,11 @@
     z-index: 10;
 }
 .bubbleOther.bubbleLastInGroup {
-    /* Tail dimensions */
-    --b: 14px; /* control the base width */
-    --h: 8px;  /* control the height/extension of the tail */
-    --c: white; /* Matches the bubbleOther background */
+    --b: 14px; 
+    --h: 8px;  
+    --c: white; 
 
-    border-bottom-left-radius: 0 !important;
-    
+    border-bottom-left-radius: 0 !important; 
     clip-path: polygon(
         0 0, 
         100% 0, 
@@ -1027,7 +1024,7 @@
     gap: 12px;
     padding: 15px 20px;
     background: rgba(30, 30, 30, 0.6);
-    backdrop-filter: blur(20px);
+  
     border-radius: 30px;
     margin: 10px 20px 20px 20px;
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -1402,7 +1399,7 @@
 
 .bubbleOther .replyQuoteBox {
     background: rgba(0, 0, 0, 0.2);
-    /* Keep it translucent dark */
+
 
 }
 
@@ -1412,7 +1409,7 @@
 
 .bubbleOther .replySender {
     color: #a777e3;
-    /* Lighter purple for dark background */
+ 
 }
 
 .replySender::after {
@@ -1421,7 +1418,7 @@
 
 .bubbleOther .replyTextPreview {
     color: #e0e0e0;
-    /* Light text for dark background */
+   
 }
 
 .cancelReply {
