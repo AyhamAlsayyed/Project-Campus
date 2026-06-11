@@ -67,6 +67,7 @@ export default function Login() {
                 localStorage.setItem("access", data.access);
                 localStorage.setItem("refresh", data.refresh);
                 localStorage.setItem("user_type", data.user.user_type ?? '');
+                localStorage.setItem("user_id", data.user.id);  
                 localStorage.setItem("login_user", JSON.stringify(data.user));
             } else {
                 setError("No tokens returned from server");

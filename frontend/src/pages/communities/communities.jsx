@@ -45,6 +45,11 @@ export default function Community() {
     const [showCreateCommunityModal, setShowCreateCommunityModal] = useState(false);
     const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
     const [postApproval, setPostApproval] = useState(false);
+    const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+    const [promoCart, setPromoCart] = useState([]);
+    const [selectedPromoCommunityId, setSelectedPromoCommunityId] = useState(null);
+    const [isCommunityDropdownOpen, setIsCommunityDropdownOpen] = useState(false);
+
     const [whoCanPost, setWhoCanPost] = useState({
         'Everyone': true,
         'Members only': false,
@@ -394,7 +399,19 @@ export default function Community() {
                             <>
                                 <div className={styles.communitiesContainer}>
                                     <div style={{ animation: 'tabFadeIn 0.25s ease forwards' }}>
-                                        <CreateCommunityForm onBack={() => setShowCreateCommunityModal(false)} />
+                                        <CreateCommunityForm
+                                            onBack={() => setShowCreateCommunityModal(false)}
+                                            onSuccess={(id, community) => {
+                                                setOwnedCommunities(prev => [...prev, {
+                                                    ...community,
+                                                    isJoined: true,
+                                                    isVerified: false,
+                                                    isPrivate: community.is_private,
+                                                    requestSent: false,
+                                                }]);
+                                                setShowCreateCommunityModal(false);
+                                            }}
+                                        />
                                     </div>
                                 </div>
 
@@ -520,40 +537,71 @@ export default function Community() {
                                 </div>
 
                                 <div className={styles.onHoldContainer}>
-                                    <div className={styles.pendingText}>1 Pending checkout</div>
+                                    <div className={styles.pendingText}>
+                                        {promoCart.length} Pending checkout
+                                    </div>
                                     <div className={styles.onHoldDivider}></div>
 
                                     <div className={styles.checkoutList}>
-                                        {communities.slice(0, 2).map(item => (
-                                            <div key={item.id} className={styles.checkoutItemWrap}>
-                                                <div className={styles.checkoutCard}>
-                                                    <img
-                                                        src={item.banner || item.image}
-                                                        alt={item.name}
-                                                        className={styles.checkoutBannerImg}
-                                                    />
-                                                    <div className={styles.checkoutOverlay}>
-                                                        <div className={styles.checkoutOverlayLeft}>
-                                                            <h4 className={styles.checkoutTitle}>{item.name}</h4>
-                                                            <p className={styles.checkoutDesc}>
-                                                                {item.description?.substring(0, 50)}...
-                                                            </p>
+                                        {promoCart.length === 0 ? (
+                                            <p style={{
+                                                color: 'rgba(255,255,255,0.35)', fontSize: '0.82rem',
+                                                textAlign: 'center', padding: '16px 0'
+                                            }}>
+                                                No promotions queued. Use "Manage" below to add one.
+                                            </p>
+                                        ) : promoCart.map(item => {
+                                            const imgSrc = item.community.banner || item.community.image
+                                                ? ((item.community.banner || item.community.image)?.startsWith('http')
+                                                    ? (item.community.banner || item.community.image)
+                                                    : `${API}${item.community.banner || item.community.image}`)
+                                                : '/default-banner.png';
+                                            return (
+                                                <div key={item.communityId} className={styles.checkoutItemWrap}>
+                                                    <div className={styles.checkoutCard}>
+                                                        <img
+                                                            src={imgSrc}
+                                                            alt={item.community.name}
+                                                            className={styles.checkoutBannerImg}
+                                                        />
+                                                        <div className={styles.checkoutOverlay}>
+                                                            <div className={styles.checkoutOverlayLeft}>
+                                                                <h4 className={styles.checkoutTitle}>{item.community.name}</h4>
+                                                                <p className={styles.checkoutDesc}>
+                                                                    {item.community.description?.substring(0, 50)}
+                                                                    {item.community.description?.length > 50 && '...'}
+                                                                </p>
+                                                            </div>
+                                                            <button
+                                                                className={styles.detailsBtn}
+                                                                onClick={() => setPromoCart(prev => prev.filter(c => c.communityId !== item.communityId))}
+                                                            >
+                                                                Remove
+                                                            </button>
                                                         </div>
-                                                        <button className={styles.detailsBtn}>Details</button>
                                                     </div>
+                                                    <div className={styles.checkoutSubInfo}>
+                                                        <span>Plan: {item.label} promotion</span>
+                                                        <span>Price: ${item.cost.toFixed(2)}</span>
+                                                    </div>
+                                                    <div className={styles.onHoldDivider}></div>
                                                 </div>
-                                                <div className={styles.checkoutSubInfo}>
-                                                    <span>Details: 3 months promotion plan</span>
-                                                    <span>Price: $14.99</span>
-                                                </div>
-                                                <div className={styles.onHoldDivider}></div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
 
                                     <div className={styles.checkoutBottom}>
-                                        <span className={styles.totalText}>Total: $14.99</span>
-                                        <button className={styles.proceedBtn}>Proceed to check-out</button>
+                                        <span className={styles.totalText}>
+                                            Total: ${promoCart.reduce((sum, item) => sum + item.cost, 0).toFixed(2)}
+                                        </span>
+                                        <button
+                                            className={styles.proceedBtn}
+                                            onClick={() => promoCart.length > 0 && setIsCheckoutModalOpen(true)}
+                                            disabled={promoCart.length === 0}
+                                            style={promoCart.length === 0 ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
+                                        >
+                                            Proceed to check-out
+                                        </button>
                                     </div>
                                 </div>
 
@@ -563,8 +611,12 @@ export default function Community() {
                                         <h3 className={styles.promoTitle}>Community Promotion</h3>
                                     </div>
                                     <div className={styles.promoBodyContainer}>
-                                        <p className={styles.promoText}>Manage your promotion plan and get more users to notice your community.</p>
-                                        <button className={styles.promoManageBtn} onClick={() => setIsPromoModalOpen(true)}>Manage</button>
+                                        <p className={styles.promoText}>
+                                            Manage your promotion plan and get more users to notice your community.
+                                        </p>
+                                        <button className={styles.promoManageBtn} onClick={() => setIsPromoModalOpen(true)}>
+                                            Manage
+                                        </button>
                                     </div>
                                 </div>
                             </>
@@ -655,7 +707,34 @@ export default function Community() {
                             </div>
                             <div className={styles.pmHeaderRight}>
                                 <span className={styles.pmCancelBtn} onClick={() => setIsPromoModalOpen(false)}>Cancel</span>
-                                <button className={styles.pmDoneBtn} onClick={() => setIsPromoModalOpen(false)}>Done</button>
+                                <button
+                                    className={styles.pmDoneBtn}
+                                    onClick={() => {
+                                        if (selectedPromoCommunityId) {
+                                            const communityObj = ownedCommunities.find(c => c.id === selectedPromoCommunityId);
+                                            if (communityObj) {
+                                                const existingIdx = promoCart.findIndex(item => item.communityId === selectedPromoCommunityId);
+                                                const cartItem = {
+                                                    communityId: selectedPromoCommunityId,
+                                                    community: communityObj,
+                                                    durationIdx: promoDurationIdx,
+                                                    label: durationOptions[promoDurationIdx].label,
+                                                    cost: durationOptions[promoDurationIdx].cost,
+                                                };
+                                                if (existingIdx >= 0) {
+                                                    setPromoCart(prev => prev.map((item, i) => i === existingIdx ? cartItem : item));
+                                                } else {
+                                                    setPromoCart(prev => [...prev, cartItem]);
+                                                }
+                                            }
+                                        }
+                                        setIsPromoModalOpen(false);
+                                        setSelectedPromoCommunityId(null);
+                                        setPromoDurationIdx(2);
+                                    }}
+                                >
+                                    Done
+                                </button>
                             </div>
                         </div>
                         <div className={styles.pmBody}>
@@ -665,6 +744,90 @@ export default function Community() {
                                     Choose a promotion for your community ad, your community will start to appear more for users!
                                 </p>
                             </div>
+
+                            <h3 className={styles.pmSectionTitle}>Select community</h3>
+                            {ownedCommunities.length === 0 ? (
+                                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', margin: '0 0 18px' }}>
+                                    No communities found. Create one first.
+                                </p>
+                            ) : (
+                                <div style={{ position: 'relative', marginBottom: 22 }}>
+                                    {/* Trigger row */}
+                                    <div
+                                        onClick={() => setIsCommunityDropdownOpen(p => !p)}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                            background: '#2a2a2a', borderRadius: 8, padding: '10px 12px',
+                                            cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)',
+                                        }}
+                                    >
+                                        <span style={{ color: selectedPromoCommunityId ? 'white' : 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>
+                                            {selectedPromoCommunityId
+                                                ? ownedCommunities.find(c => c.id === selectedPromoCommunityId)?.name
+                                                : '— Choose a community —'}
+                                        </span>
+                                        <img
+                                            src={ArrowLeftIcon}
+                                            alt=""
+                                            style={{
+                                                width: 14, height: 14,
+                                                filter: 'brightness(0) invert(1)',
+                                                transform: isCommunityDropdownOpen ? 'rotate(90deg)' : 'rotate(270deg)',
+                                                transition: 'transform 0.2s ease',
+                                                flexShrink: 0,
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* Dropdown list */}
+                                    {isCommunityDropdownOpen && (
+                                        <div style={{
+                                            position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+                                            background: '#333333', borderRadius: 8,
+                                            border: '1px solid rgba(255,255,255,0.08)',
+                                            zIndex: 100, overflow: 'hidden',
+                                        }}>
+                                            <div style={{
+                                                maxHeight: 132, overflowY: 'auto',
+                                                scrollbarWidth: 'thin',
+                                                scrollbarColor: 'rgba(255,255,255,0.15) transparent',
+                                            }}>
+                                                {ownedCommunities.map((c, i) => (
+                                                    <div key={c.id}>
+                                                        <div
+                                                            onClick={() => {
+                                                                setSelectedPromoCommunityId(c.id);
+                                                                const existing = promoCart.find(item => item.communityId === c.id);
+                                                                if (existing) setPromoDurationIdx(existing.durationIdx);
+                                                                setIsCommunityDropdownOpen(false);
+                                                            }}
+                                                            style={{
+                                                                padding: '10px 12px', cursor: 'pointer',
+                                                                color: selectedPromoCommunityId === c.id ? 'white' : 'rgba(255,255,255,0.75)',
+                                                                fontSize: '0.9rem',
+                                                                background: selectedPromoCommunityId === c.id ? 'rgba(255,255,255,0.07)' : 'transparent',
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                                transition: 'background 0.15s',
+                                                            }}
+                                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+                                                            onMouseLeave={e => e.currentTarget.style.background = selectedPromoCommunityId === c.id ? 'rgba(255,255,255,0.07)' : 'transparent'}
+                                                        >
+                                                            <span>{c.name}</span>
+                                                            {promoCart.find(item => item.communityId === c.id) && (
+                                                                <span style={{ fontSize: '0.75rem', color: '#a855f7' }}>✓ in cart</span>
+                                                            )}
+                                                        </div>
+                                                        {i !== ownedCommunities.length - 1 && (
+                                                            <div style={{ height: 1, background: '#4D4D4D', margin: '10px auto 10px auto' , width:"50%" }} />
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             <h3 className={styles.pmSectionTitle}>Select duration</h3>
                             <div className={styles.pmSliderWrapper}>
                                 <input
@@ -699,6 +862,68 @@ export default function Community() {
                                     Note: The promotion will get proceeded once making sure the community has been created successfully!
                                 </p>
                             </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+            {isCheckoutModalOpen && createPortal(
+                <div className={styles.checkoutModalOverlay} onClick={() => setIsCheckoutModalOpen(false)}>
+                    <div className={styles.checkoutModalContent} onClick={e => e.stopPropagation()}>
+                        <h2 style={{ color: 'white', marginTop: 0, marginBottom: '24px', fontSize: '1.5rem' }}>Checkout</h2>
+
+                        <div className={styles.checkoutInputGroup}>
+                            <label className={styles.checkoutLabel}>Name on Card</label>
+                            <input type="text" className={styles.checkoutInput} placeholder="John Doe" />
+                        </div>
+
+                        <div className={styles.checkoutInputGroup}>
+                            <label className={styles.checkoutLabel}>Card Number</label>
+                            <input type="text" className={styles.checkoutInput} placeholder="0000 0000 0000 0000" />
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '16px' }}>
+                            <div className={styles.checkoutInputGroup} style={{ flex: 1 }}>
+                                <label className={styles.checkoutLabel}>Expiry Date</label>
+                                <input type="text" className={styles.checkoutInput} placeholder="MM/YY" />
+                            </div>
+                            <div className={styles.checkoutInputGroup} style={{ flex: 1 }}>
+                                <label className={styles.checkoutLabel}>CVC</label>
+                                <input type="text" className={styles.checkoutInput} placeholder="123" />
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+                            <button className={styles.checkoutCancelBtn} onClick={() => setIsCheckoutModalOpen(false)}>
+                                Cancel
+                            </button>
+                            <button className={styles.checkoutSubmitBtn} onClick={async () => {
+                                const token = localStorage.getItem("access");
+                                try {
+                                    const res = await fetch(`${API}/api/communities/promotions/checkout/`, {
+                                        method: 'POST',
+                                        headers: {
+                                            Authorization: `Bearer ${token}`,
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                            items: promoCart.map(item => ({
+                                                community_id: item.communityId,
+                                                duration: item.label,
+                                                cost: item.cost,
+                                            }))
+                                        })
+                                    });
+                                    if (res.ok) {
+                                        setPromoCart([]);
+                                        setIsCheckoutModalOpen(false);
+                                    } else {
+                                        console.error('Checkout failed:', res.status);
+                                    }
+                                } catch (err) {
+                                    console.error('Checkout error:', err);
+                                }
+                            }}>Pay Now</button>
                         </div>
                     </div>
                 </div>,

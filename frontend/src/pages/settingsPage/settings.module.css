@@ -51,7 +51,7 @@ body {
 .rightSection {
     position: sticky;
     top: 100px;
-    flex: 0 0 430px;
+    flex: 0 0 420px;
     width: 25%;
     margin: 2% 0 0 0;
     gap: 0;
@@ -68,24 +68,25 @@ body {
 }
 
 .settingsMainContainer {
-    background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
+       background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
     width: 100%;
     padding-top: 6px;
     flex: 1;
     border-radius: 30px;
     height: auto;
     z-index: 1;
+    min-width: 850px;
     position: relative;
     margin: 2% 0 0 0;
 }
 
-/* ── INNER COMPONENT UI ── */
+
 .sectionHeading {
-    font-size: 2rem; /* Increased size per request */
+    font-size: 2rem; 
     font-weight: 600;
     margin-top: 0;
     margin-bottom: 30px;
-    color: #CCCCCC; /* Adjusted tab header color */
+    color: #CCCCCC; 
 }
 
 .settingsFormGroup {

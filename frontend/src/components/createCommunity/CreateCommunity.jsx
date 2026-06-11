@@ -65,7 +65,7 @@ export default function CreateCommunity({ onBack, onSuccess }) {
                 'who_can_post',
                 JSON.stringify(Object.keys(whoCanPost).filter(k => whoCanPost[k]))
             );
-            if (bannerFile) formData.append('banner', bannerFile);
+            if (bannerFile) formData.append('banner_image', bannerFile);
 
             const res = await fetch('http://localhost:8000/api/communities/create/', {
                 method: 'POST',

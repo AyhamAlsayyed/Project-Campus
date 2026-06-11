@@ -282,9 +282,7 @@
     height: 25px;
     width: 25px;
     left: -2px;
-    /* Pulls the circle back to cover the 2px border */
     bottom: -2px;
-    /* Pulls the circle down to cover the 2px border */
     background-color: white;
     /* Stays white when OFF */
     transition: .4s cubic-bezier(0.4, 0.0, 0.2, 1);
@@ -293,16 +291,16 @@
 
 input:checked+.slider {
     background-color: #A4279C;
-    /* Purple background when ON */
+   
     border-color: #A4279C;
-    /* Changes border to match background */
+
 }
 
 input:checked+.slider:before {
     background-color: white;
-    /* Stays white when ON */
+
     transform: translateX(25px);
-    /* Slides exactly to the right edge (50px width - 25px circle) */
+  
 }
 
 /* Radio / Check Options */

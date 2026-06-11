@@ -381,6 +381,7 @@ def create_community_or_request(request):
                     can_pages_post=can_pages,
                     can_instructors_post=can_instructors,
                     can_students_post=can_students,
+                    owner=user,
                 )
                 CommunityMember.objects.create(
                     community=community,

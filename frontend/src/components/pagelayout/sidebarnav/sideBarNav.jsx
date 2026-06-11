@@ -29,14 +29,23 @@ export default function SidebarNav({ variant = "default", currentUser }) {
   const { pathname } = useLocation();
 
   const isActive = (path) => {
-    if (path.startsWith('/profile/') && !path.endsWith('/friends') && !path.endsWith('/pages')) {
+    if (
+      (path.startsWith('/profile/') || path.startsWith('/page/')) &&
+      !path.endsWith('/friends') &&
+      !path.endsWith('/pages')
+    ) {
       return pathname === path;
     }
     return pathname === path || pathname.startsWith(path + "/");
   };
   const userType = localStorage.getItem("user_type");
-  const isPage = currentUser?.user_type === 'page' || currentUser?.role === 'cafe' || userType === 'page';
-
+  const isPage =
+    currentUser?.user_type === 'page' ||
+    currentUser?.role === 'cafe' ||
+    userType === 'page' ||
+    userType === 'university' ||   
+    userType === 'uni';
+  const userId = currentUser?.id || localStorage.getItem("user_id");
   const defaultMainItems = [
     { label: "Home page", path: "/home", icon: Home },
     isPage
@@ -56,10 +65,14 @@ export default function SidebarNav({ variant = "default", currentUser }) {
     { label: "Help", path: "/help", icon: Help },
   ];
   const profileMainItems = [
-    { label: "Profile", path: `/profile/${currentUser?.id}`, icon: Profile },
-    { label: "Friends", path: `/profile/${currentUser?.id}/friends`, icon: Friends },
-    { label: "Pages", path: `/profile/${currentUser?.id}/pages`, icon: FollowedPages },
-    { label: "Communities", path: `/profile/${currentUser?.id}/communities`, icon: Community },
+    {
+      label: "Profile",
+      path: isPage ? `/page/${userId}` : `/profile/${userId}`,
+      icon: Profile
+    },
+    { label: "Friends", path: `/profile/${userId}/friends`, icon: Friends },
+    { label: "Pages", path: `/profile/${userId}/pages`, icon: FollowedPages },
+    { label: "Communities", path: `/profile/${userId}/communities`, icon: Community },
   ];
 
   const profileFooterItems = [
@@ -75,7 +88,7 @@ export default function SidebarNav({ variant = "default", currentUser }) {
 
   if (variant === "profile" && !currentUser) return null;
 
-  
+
   return (
     <nav className={styles.sideBarNav}>
       {mainItems.map(({ label, path, icon: Icon }) => (

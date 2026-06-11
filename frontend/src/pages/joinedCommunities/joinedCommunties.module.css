@@ -30,7 +30,7 @@ body {
     margin: 0 auto;
     --left-col: 300px;
     --right-col: 380px;
-    --col-gap: 40px;
+    --col-gap: 65px;
 }
 
 .header {
@@ -79,7 +79,7 @@ body {
     border-radius: 30px;
     height: auto;
     z-index: 1;
-    min-width: 900px;
+    min-width: 850px;
     position: relative;
     margin: 2% 0 0 0;
 }
@@ -88,11 +88,9 @@ body {
     background-color: #333333;
     border-radius: 30px 30px 0 0;
     padding-top: 30px;
-    min-height: calc(100vh - 10px);
+    min-height: calc(100vh - 305px);
     display: flex;
     flex-direction: column;
-
-
     width: 100%;
     top: 10px;
     z-index: 10;

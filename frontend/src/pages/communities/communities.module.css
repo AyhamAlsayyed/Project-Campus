@@ -15,7 +15,7 @@
   margin: 0 auto;
   --left-col: 300px;
   --right-col: 380px;
-  --col-gap: 40px;
+   --col-gap: 65px;
 }
 
 .header {
@@ -51,6 +51,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+
   min-width: 0;
 }
 
@@ -61,7 +62,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: 100%;
+  width: 95%;
   margin: 2% 0 0 0;
 
 }
@@ -74,7 +75,7 @@
   border-radius: 30px 30px;
   height: auto;
   z-index: 1;
-  min-width: 870px;
+  min-width: 850px;
   position: relative;
   margin: 2% 0 0 0;
 }
@@ -148,8 +149,6 @@
   position: sticky;
   top: 100px;
   flex: 0 0 420px;
-  padding-left: 60px;
-  width: 55%;
   margin: 5% 0 0 0;
   gap: 70px;
   display: flex;
@@ -159,9 +158,6 @@
 .rightCard {
   position: relative;
   z-index: 2;
-
-
-
 }
 
 .rightList img {
@@ -772,6 +768,116 @@
   justify-content: center;
   transition: background-color 0.2s ease;
 }
+
 .createCommunityBtn:hover {
- background-color: #A2279C;
+  background-color: #A2279C;
+}
+
+/* =========================================
+   CHECKOUT MODAL
+========================================= */
+.checkoutModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(2px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkoutModalContent {
+  background-color: #333333;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 450px;
+  padding: 30px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  font-family: "Aktiv Grotesk", sans-serif;
+}
+
+.checkoutInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.checkoutLabel {
+  color: #CCCCCC;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.checkoutInput {
+  background-color: #262626;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+.checkoutCancelBtn {
+  background: transparent;
+  color: #CCCCCC;
+  border: none;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.checkoutCancelBtn:hover {
+  color: #ffffff;
+}
+
+.checkoutInput:focus {
+  border-color: #93278F;
+  /* Matches your theme's purple highlight */
+  box-shadow: 0 0 0 1px rgba(147, 39, 143, 0.3);
+}
+
+.checkoutInput::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.checkoutSubmitBtn {
+  background: linear-gradient(to right, #622598, #942892);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.checkoutSubmitBtn:hover {
+  opacity: 0.85;
+}
+.pmEventSelect {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: white;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    margin-bottom: 22px;
+    cursor: pointer;
+    outline: none;
+}
+
+.pmEventSelect option {
+    background: #2a2a2a;
+    color: white;
 }

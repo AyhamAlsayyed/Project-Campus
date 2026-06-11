@@ -29,7 +29,7 @@ body {
   margin: 0 auto;
   --left-col: 300px;
   --right-col: 380px;
-  --col-gap: 40px;
+  --col-gap: 65px;
 }
 
 .header {
@@ -56,7 +56,7 @@ body {
   border-radius: 30px;
   min-height: 60vh;
   z-index: 1;
-  min-width: 900px;
+  min-width: 850px;
   position: relative;
   margin: 2% 0 0 0;
   padding-top: 5px;
@@ -577,8 +577,7 @@ body {
   position: sticky;
   top: 120px;
   flex: 0 0 420px;
-  width: 100%;
-  margin: 5% 5% 0 0;
+  margin: 5% 0 0 0;
   gap: 70px;
   display: flex;
   flex-direction: column;
