@@ -1,23 +1,33 @@
-import styles from './authentication.module.css'
+import styles from './authentication.module.css';
 import darkMode from '../../Assets/Pictures/LogoDarkMode.png';
+import lightMode from '../../Assets/Pictures/LogoLightMode.png';
 import LanguageDropdown from '../../components/pagelayout/languageDrop';
+import ThemeToggle from '../../components/pagelayout/themeToggle';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TEXT } from '../../i18n';
-import imageOne from '../../Assets/Pictures/login-1.png'
-import imageTwo from '../../Assets/Pictures/login-2.png'
-import imageThree from '../../Assets/Pictures/login-3.png'
-import imageFour from '../../Assets/Pictures/login-4.png'
+import imageOne from '../../Assets/Pictures/login-1.png';
+import imageTwo from '../../Assets/Pictures/login-2.png';
+import imageThree from '../../Assets/Pictures/login-3.png';
+import imageFour from '../../Assets/Pictures/login-4.png';
 import Stars from '../../Assets/icons/stars.png';
+
 export default function Login() {
     const navigate = useNavigate();
     const [language, setLanguage] = useState('en');
+    const [theme, setTheme] = useState('dark');
+    
     const t = (TEXT[language] || TEXT.en).auth.Login;
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [showExpiredPopup, setShowExpiredPopup] = useState(false);
     const [subscribing, setSubscribing] = useState(false);
+
+    const toggleTheme = () => {
+        setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'));
+    };
+
     const handleSubscribe = async (plan) => {
         try {
             setSubscribing(true);
@@ -37,6 +47,7 @@ export default function Login() {
         } catch (e) { console.error(e); }
         finally { setSubscribing(false); }
     };
+    
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const slides = [
@@ -46,11 +57,11 @@ export default function Login() {
         { image: imageFour, }
     ];
     const currentSlide = slides[currentIndex];
+    
     const handlesubmit = async (e) => {
         e.preventDefault();
         try {
             const response = await fetch('http://localhost:8000/api/auth/login/', {
-
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -86,7 +97,6 @@ export default function Login() {
                 }
             }
 
-
             navigate('/home');
 
         }
@@ -94,6 +104,7 @@ export default function Login() {
             setError('An error occurred. Please try again later.');
         }
     }
+    
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length);
@@ -108,14 +119,14 @@ export default function Login() {
 
 
     return (
-        <div className={`${styles.darkContainer} max-lg:!overflow-auto`}>
+        <div className={`${theme === 'dark' ? styles.darkContainer : styles.lightContainer} max-lg:!overflow-auto`}>
 
             <div className={`${styles.header} max-lg:!px-6 max-lg:!py-4 max-lg:!gap-4`}>
-                <img src={darkMode} alt="Dark Mode" className={`${styles.darkModeImage} max-lg:!h-12`} />
+                <img src={theme === 'dark' ? darkMode : lightMode} alt="Campus Logo" className={`${styles.darkModeImage} max-lg:!h-12`} />
                 <button className={`${styles.homeButton} max-lg:!text-xl max-lg:!h-auto`}>{t.homepage}</button>
                 <LanguageDropdown language={language} onChange={setLanguage} />
+                <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
             </div>
-
 
             <div className={`${styles.absoluteSlider} !hidden lg:!block`}>
                 <p key={`text-${currentIndex}`} className={`${styles.sliderDescription} ${styles.fade}`}>

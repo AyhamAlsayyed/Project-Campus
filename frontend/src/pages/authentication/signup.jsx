@@ -1,21 +1,28 @@
-import styles from './authentication.module.css'
+import styles from './authentication.module.css';
 import darkMode from '../../Assets/Pictures/LogoDarkMode.png';
+import lightMode from '../../Assets/Pictures/LogoLightMode.png';
 import LanguageDropdown from '../../components/pagelayout/languageDrop';
+import ThemeToggle from '../../components/pagelayout/themeToggle';
 import { useNavigate } from 'react-router-dom';
 import { TEXT } from '../../i18n';
 import { useState, useEffect } from 'react';
-import imageOne from '../../Assets/Pictures/login-1.png'
-import imageTwo from '../../Assets/Pictures/login-2.png'
-import imageThree from '../../Assets/Pictures/login-3.png'
-import imageFour from '../../Assets/Pictures/login-4.png'
-
+import imageOne from '../../Assets/Pictures/login-1.png';
+import imageTwo from '../../Assets/Pictures/login-2.png';
+import imageThree from '../../Assets/Pictures/login-3.png';
+import imageFour from '../../Assets/Pictures/login-4.png';
 
 export default function Signup() {
     const navigate = useNavigate();
     const [language, setLanguage] = useState('en');
+    const [theme, setTheme] = useState('dark');
     const [step, setStep] = useState(0);
     const [loading, setLoading] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
+    
+    const toggleTheme = () => {
+        setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'));
+    };
+
     const slides = [
         { image: imageOne, },
         { image: imageTwo, },
@@ -23,12 +30,14 @@ export default function Signup() {
         { image: imageFour, }
     ];
     const currentSlide = slides[currentIndex];
+    
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length);
         }, 4000);
         return () => clearInterval(interval);
     }, [slides.length]);
+
     const [form, setForm] = useState({
         username: '',
         academicEmail: '',
@@ -36,21 +45,21 @@ export default function Signup() {
         password: '',
         code: '',
         confirmPassword: ''
+    });
 
-    })
     const [error, setError] = useState('');
+    
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
     };
+
     const getButtonText = () => {
         if (loading) return t.loading;
         if (step == 0) return t.submitSignup;
         if (step == 1) return t.confirmCode;
         if (step == 2) return t.createAccount;
-
-
-    }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -58,7 +67,8 @@ export default function Signup() {
         if (step == 0) return sendCode();
         if (step == 1) return verifyCode();
         return completeSignup();
-    }
+    };
+
     const sendCode = async () => {
         if (!form.username || !form.academicEmail) {
             setError('Please fill in all required fields.');
@@ -83,9 +93,8 @@ export default function Signup() {
         } finally {
             setLoading(false);
         }
+    };
 
-
-    }
     const verifyCode = async () => {
         if (!form.code) {
             setError('Please enter the verification code.');
@@ -111,7 +120,8 @@ export default function Signup() {
         } finally {
             setLoading(false);
         }
-    }
+    };
+
     const completeSignup = async () => {
         if (!form.password || !form.confirmPassword) {
             setError('Please fill in all required fields.');
@@ -143,9 +153,9 @@ export default function Signup() {
         } finally {
             setLoading(false);
         }
-        navigate('/login')
+        navigate('/login');
+    };
 
-    }
     const handleReSend = async () => {
         setError('');
         setLoading(true);
@@ -157,7 +167,6 @@ export default function Signup() {
                     username: form.username,
                     academicEmail: form.academicEmail,
                 })
-
             });
             const data = await response.json().catch(() => { });
             if (!response.ok) {
@@ -171,26 +180,23 @@ export default function Signup() {
         finally {
             setLoading(false);
         }
-    }
-
-
-
-
-
-
+    };
 
     const t = (TEXT[language] || TEXT.en).auth.Signup;
+    
     useEffect(() => {
         document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
     }, [language]);
 
     return (
-        <div className={`${styles.darkContainer} max-lg:!overflow-auto`}>
+        <div className={`${theme === 'dark' ? styles.darkContainer : styles.lightContainer} max-lg:!overflow-auto`}>
             <div className={`${styles.header} max-lg:!px-6 max-lg:!py-4 max-lg:!gap-4`}>
-                <img src={darkMode} alt="Dark Mode" className={`${styles.darkModeImage} max-lg:!h-12`} />
+                <img src={theme === 'dark' ? darkMode : lightMode} alt="Campus Logo" className={`${styles.darkModeImage} max-lg:!h-12`} />
                 <button className={`${styles.homeButton} max-lg:!text-xl max-lg:!h-auto`}>{t.homepage}</button>
                 <LanguageDropdown language={language} onChange={setLanguage} />
+                <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
             </div>
+            
             <div className={`${styles.absoluteSlider} !hidden lg:!block`}>
                 <p key={`text-${currentIndex}`} className={`${styles.sliderDescription} ${styles.fade}`}>
                     {currentSlide?.description}
@@ -198,6 +204,7 @@ export default function Signup() {
                 <img key={`img-${currentIndex}`} src={currentSlide?.image} alt="Slide"
                     className={`${styles.sliderImage} ${styles.fadeSlide}`} />
             </div>
+            
             <div className={`${styles.content} max-lg:!justify-center max-lg:!items-start max-lg:!py-8 max-lg:!flex-1`}>
                 <div className="hidden max-lg:!flex flex-col w-full max-w-[430px] mx-4">
 
@@ -269,6 +276,7 @@ export default function Signup() {
                         <span className={styles.copyright}>{t.copyright}</span>
                     </form>
                 </div>
+                
                 <div className={`${styles.outterContainer} max-lg:!hidden`}>
                     <div className={styles.sideTabs}>
                         <button className={styles.tabButton} onClick={() => navigate('/login')}>{t.login}</button>
@@ -317,7 +325,6 @@ export default function Signup() {
                     </form>
                 </div>
             </div>
-
 
             <div className={`${styles.footer}  lg:!block`}></div>
         </div>

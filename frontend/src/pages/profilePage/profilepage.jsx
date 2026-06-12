@@ -457,12 +457,22 @@ export default function ProfilePage({ type }) {
     onSavedRef.current = loadProfileUser;
 
     const loadOwnPageEvents = async () => {
-        const pageId = currentUser?.page_id || user?.id;
+        const pageId = currentUser?.page_id || user?.id || profileId;
         if (!pageId) return;
         try {
             const res = await fetch(`${API}/api/pages/${pageId}/events/`, { headers: { Authorization: `Bearer ${token}` } });
             const data = await res.json();
-            if (res.ok) setOwnPageEvents(Array.isArray(data) ? data : []);
+            if (res.ok) {
+                const events = Array.isArray(data) ? data : [];
+                setOwnPageEvents(events);
+                setPageEvents(events); // 👈 Sync directly to the main tab state too
+
+                // Initialize reminder states
+                if (events.length > 0) setEventsTabNotify(events[0].is_notified || false);
+                const reminderMap = {};
+                events.forEach(e => { reminderMap[e.id] = e.is_reminded || false; });
+                setEventsTabReminders(reminderMap);
+            }
         } catch (e) { console.error(e); }
     };
 
@@ -547,12 +557,15 @@ export default function ProfilePage({ type }) {
     };
 
     const loadPageEvents = async () => {
+        if (!profileId) return;
         try {
-            const res = await fetch(`${API}/api/events/?page=${userId}`, { headers: { Authorization: `Bearer ${token}` } });
+            // 🎯 Fixed: Targets the current page's specific events instead of the global endpoint
+            const res = await fetch(`${API}/api/pages/${profileId}/events/`, { headers: { Authorization: `Bearer ${token}` } });
             if (res.ok) {
                 const data = await res.json();
                 const events = Array.isArray(data) ? data : [];
                 setPageEvents(events);
+
                 if (events.length > 0) setEventsTabNotify(events[0].is_notified || false);
                 const reminderMap = {};
                 events.forEach(e => { reminderMap[e.id] = e.is_reminded || false; });
@@ -560,7 +573,6 @@ export default function ProfilePage({ type }) {
             }
         } catch (e) { console.error(e); }
     };
-
 
     // ─── actions ────────────────────────────────────────────────────────────
 
@@ -947,7 +959,7 @@ export default function ProfilePage({ type }) {
                                         {user?.type === 'page' ? (
                                             <>
                                                 <div className={`${styles.nameRow} ${styles.pageNameRow}`}>
-                                                    <h2 className={styles.username}>{username}</h2>
+                                                    <h2 className={styles.username} style={{ fontSize: "19px" }}>{username}</h2>
                                                     {user?.is_verified && <img src={VerifiedBadge} alt="verified" className={styles.pageVerifiedBadge} />}
                                                 </div>
                                                 <div className={`${styles.subRow} ${styles.pageFollowersMeta}`}>
@@ -1160,7 +1172,7 @@ export default function ProfilePage({ type }) {
                                                 ? (event.avatar.startsWith('http') ? event.avatar : `${API}${event.avatar}`)
                                                 : '/default-avatar.png';
                                             return (
-                                                <div key={event.id} style={{ background: '#333333', borderRadius: 40, padding: 24, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', marginBottom: 30 }}>
+                                                <div key={event.id} style={{ background: '#262626', borderRadius: 40, padding: 24,width:"700px", border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', margin: "0 auto 30px auto" }}>
                                                     {/* Card header */}
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, padding: '0 10px' }}>
                                                         <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>

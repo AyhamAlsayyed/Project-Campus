@@ -7,8 +7,17 @@
     --bottom-gradient: linear-gradient(45deg, rgba(166, 39, 156, 0.25), rgba(49, 32, 233, 0.25));
 }
 
+.lightContainer {
+    --bg-main: #f2f2f2;
+    --bg-secondary: #e5e5e5;
+    --text-main: #000000;
+    --text-accent: #7a2fd6;
+    --subtitle-text: #303030;
+    --bottom-gradient: linear-gradient(45deg, rgba(166, 39, 156, 0.75), rgba(49, 32, 233, 0.75));
+}
 
-.darkContainer {
+.darkContainer,
+.lightContainer {
     min-height: 100vh;
     box-sizing: border-box;
     background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
@@ -17,7 +26,7 @@
     flex-direction: column;
     position: relative;
     overflow: hidden;
-
+    transition: background 0.4s ease;
 }
 
 .header {
@@ -42,6 +51,7 @@
     font-size: 1.75rem;
     color: var(--text-accent);
     cursor: pointer;
+    transition: color 0.4s ease;
 }
 
 .content {
@@ -51,25 +61,29 @@
     z-index: 2;
     flex: 1;
     justify-content: flex-end;
-
 }
 
 :root[dir="rtl"] .content {
     justify-content: flex-start;
-
 }
+
+/* ── Form Containers ── */
 
 .form {
     display: flex;
-    background-color: white;
+    background-color: white; 
     border-radius: 35px;
     flex-direction: column;
     gap: 20px;
     padding-top: 30px;
     width: 430px;
     height: 550px;
+    transition: background-color 0.4s ease;
 }
 
+.lightContainer .form {
+    background-color: var(--bg-secondary);
+}
 
 .outterContainer {
     position: relative;
@@ -80,12 +94,19 @@
     margin-inline-end: 4%;
     background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
     padding: 14px 0 0 0;
+    transition: background 0.4s ease;
+}
+
+.lightContainer .outterContainer {
+    background: var(--bottom-gradient);
 }
 
 .formHeader {
     display: flex;
     flex-direction: column;
 }
+
+/* ── Typography & Labels ── */
 
 .titleOne {
     font-size: 1.2rem;
@@ -95,7 +116,11 @@
     direction: ltr;
     text-align: left;
     unicode-bidi: isolate;
+    transition: color 0.4s ease;
+}
 
+.lightContainer .titleOne {
+    color: var(--text-accent);
 }
 
 .titleTwo {
@@ -103,26 +128,33 @@
     margin-inline-start: 40px;
     font-size: clamp(2rem, 7vw, 3rem);
     font-weight: 800;
-  
-    background: #662D91;
+    background: #662D91; 
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-
     direction: ltr;
-
     text-align: left;
-
     unicode-bidi: isolate;
+    transition: background 0.4s ease;
+}
+
+.lightContainer .titleTwo {
+    background: linear-gradient(45deg, rgba(166, 39, 156, 0.75), rgba(49, 32, 233, 0.75));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .helpTextOne {
     margin: 0 40px;
     font-size: 0.9rem;
-
-
     font-style: italic;
-    color: rgba(0, 0, 0, 0.45);
+    color: rgba(0, 0, 0, 0.45); 
+    transition: color 0.4s ease;
+}
+
+.lightContainer .helpTextOne {
+    color: var(--subtitle-text);
 }
 
 .helpTextTwo {
@@ -130,25 +162,76 @@
     font-size: 0.9rem;
     margin-left: auto;
     font-style: italic;
-    color: rgba(0, 0, 0, 0.45);
+    color: rgba(0, 0, 0, 0.45); 
+    transition: color 0.4s ease;
 }
 
+.lightContainer .helpTextTwo {
+    color: var(--subtitle-text);
+}
 
 .helpTextOne a,
 .helpTextTwo a {
-    color: rgba(0, 0, 0, 0.45);
-
+    color: rgba(0, 0, 0, 0.45); 
+    transition: color 0.4s ease;
 }
+
+.lightContainer .helpTextOne a,
+.lightContainer .helpTextTwo a {
+    color: var(--text-main);
+}
+
+.copyright {
+    text-align: center;
+    margin-top: 5%;
+    color: rgba(0, 0, 0, 0.45); 
+    font-size: 0.7rem;
+    transition: color 0.4s ease;
+}
+
+.lightContainer .copyright {
+    color: var(--subtitle-text);
+}
+
+.rememberMeLabel {
+    font-size: 0.9rem;
+    color: rgba(0, 0, 0, 0.45); 
+    transition: color 0.4s ease;
+}
+
+.lightContainer .rememberMeLabel {
+    color: var(--subtitle-text);
+}
+
+/* ── Inputs & Controls ── */
 
 .input {
     margin: 0 40px;
     padding: 12px 16px;
     border-radius: 35px;
-    background-color: rgba(230, 230, 230, 0.5);
-    border: 1px solid rgba(204, 204, 204, 0.5);
+    background-color: rgba(230, 230, 230, 0.5); 
+    border: 1px solid rgba(204, 204, 204, 0.5); 
     font-size: 1rem;
+    color: initial;
+    transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
 }
 
+.lightContainer .input {
+    background-color: var(--bg-main);
+    border: 1px solid var(--subtitle-text);
+    color: var(--text-accent);
+}
+
+.lightContainer .input:focus {
+    outline: none;
+    border-color: var(--text-main);
+}
+
+.checkbox input[type="checkbox"] {
+    accent-color: #B82CA4;
+}
+
+/* ── Interactive Buttons ── */
 
 .sideTabs {
     position: absolute;
@@ -171,8 +254,30 @@
     border-radius: 0 15px 15px 0;
     height: 110px;
     cursor: pointer;
-    background-color:#662D91;
+    background-color: #662D91;
+    position: relative;
+    z-index: 1;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
 
+.tabButton:hover:not(.activeTab) {
+    background-color: #7a2fd6; 
+    box-shadow: 4px 0 15px rgba(102, 45, 145, 0.4);
+    z-index: 3;
+}
+
+.activeTab {
+    background-color: white; 
+    color: var(--text-main); 
+    transition: background-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+    z-index: 2;
+}
+
+.lightContainer .activeTab {
+    background-color: var(--bg-secondary);
+    color: var(--text-accent);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
 }
 
 .resendButton {
@@ -186,11 +291,12 @@
     color: white;
     font-size: 1rem;
     cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.activeTab {
-    background-color: white;
-    color: var(--text-main);
+.resendButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(166, 39, 156, 0.4);
 }
 
 .submitButton {
@@ -206,22 +312,18 @@
     font-size: clamp(1rem, 4vw, 1.5rem);
     white-space: nowrap;
     cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.copyright {
-    text-align: center;
-    margin-top: 5%;
-    color: rgba(0, 0, 0, 0.45);
-    font-size: 0.7rem;
+.submitButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(166, 39, 156, 0.4);
 }
 
-.rememberMeLabel {
-    font-size: 0.9rem;
-    color: rgba(0, 0, 0, 0.45);
+.submitButton:active {
+    transform: translateY(1px);
+    box-shadow: 0 4px 10px rgba(166, 39, 156, 0.3);
 }
-
-
-
 
 .rememberMe {
     display: flex;
@@ -231,7 +333,6 @@
     align-items: center;
     justify-content: space-between;
     margin: 0 40px;
-
 }
 
 .error {
@@ -247,10 +348,11 @@
 }
 
 :root[dir="rtl"] .rememberMe {
-
     flex-direction: row-reverse;
     transform: translateX(20px);
 }
+
+/* ── Layout Elements ── */
 
 .footer {
     position: absolute;
@@ -260,6 +362,7 @@
     height: 35vh;
     z-index: 0;
     background: var(--bottom-gradient);
+    transition: background 0.4s ease;
 }
 
 .contentWrapper {
@@ -271,11 +374,9 @@
     padding: 0 40px;
 }
 
-/* LEFT SIDE (The Slider) */
 .absoluteSlider {
     position: absolute;
     top: 18%;
-    /* Adjust based on where you want it vertically */
     left: 5%;
     width: 45%;
     z-index: 1;
@@ -286,7 +387,6 @@
     width: 100%;
     height: auto;
     margin-top: -50px;
-    /* Slight bleed into the top title */
 }
 
 .sliderImage {
@@ -297,14 +397,13 @@
 
 .sliderDescription {
     font-size: clamp(1.5rem, 2rem, 3rem);
-    color: #e6e6e6;
-    /* var(--subtitle-text) from landing page */
+    color: var(--subtitle-text);
     font-style: italic;
     max-width: 80%;
     line-height: 1.4;
     margin-bottom: 30px;
+    transition: color 0.4s ease;
 }
-
 
 .fade {
     animation: fadeInUp 0.6s ease forwards;
@@ -319,7 +418,6 @@
         opacity: 0;
         transform: translateY(20px);
     }
-
     100% {
         opacity: 1;
         transform: translateY(0);
@@ -331,7 +429,6 @@
         opacity: 0;
         transform: translateY(20px) scale(0.98);
     }
-
     100% {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -339,6 +436,7 @@
 }
 
 /* ── Expired Subscription Popup ── */
+
 .expiredOverlay {
     position: fixed;
     inset: 0;
@@ -368,7 +466,6 @@
     padding: 36px;
     width: 100%;
     min-width: 500px;
-    
     box-sizing: border-box;
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
 }
