@@ -609,7 +609,6 @@ class PostSerializer(serializers.ModelSerializer):
                     ).first()
                 is_followed = follow_rel is not None
                 is_notified = getattr(follow_rel, "is_notified", False) if follow_rel else False
-
                 avatar = page.profile_image.url if page.profile_image else ""
                 if request and avatar:
                     avatar = request.build_absolute_uri(avatar)

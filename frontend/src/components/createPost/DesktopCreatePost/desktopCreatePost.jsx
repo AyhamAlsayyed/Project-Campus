@@ -3,6 +3,10 @@ import { Cloud } from 'lucide-react';
 import { useEffect } from 'react';
 import styles from './desktopCreatePost.module.css';
 import ProfilePicture from '../../../Assets/icons/default-pfp.png';
+import MediaIcon from '../../../Assets/icons/media.png';
+import DocumentIcon from '../../../Assets/icons/document.png';
+import { BarChart2 } from 'lucide-react'
+
 const DesktopCreatePost = ({
     user,
     avatarSrc,
@@ -41,7 +45,7 @@ const DesktopCreatePost = ({
                 />
                 <div className={styles.greetingText}>
                     <strong className={styles.greeting}>
-                       Good {timeGreeting}, {user?.full_name || user?.page_full_name || user?.username || "User"}!
+                        Good {timeGreeting}, {user?.full_name || user?.page_full_name || user?.username || "User"}!
                     </strong>
                     <span className={styles.question}>What's on your mind?</span>
                 </div>
@@ -54,32 +58,25 @@ const DesktopCreatePost = ({
 
             <div className={styles.actionsRow} onClick={e => e.stopPropagation()}>
                 {/* 2. Added setIsModalOpen(true) to labels so clicking them opens the editor */}
-                <label
-                    className={styles.actionButton}
-                    onClick={() => setIsModalOpen(true)}
-                >
-                    <span>🖼</span> Media
+                <label className={styles.actionButton} onClick={() => setIsModalOpen(true)}>
+                    <img src={MediaIcon} alt="" className={styles.actionIcon} />
+                    Media
                     <input hidden type="file" accept="image/*,video/*" multiple onChange={handleMediaUpload} />
                 </label>
 
-                <label
-                    className={styles.actionButton}
-                    onClick={() => setIsModalOpen(true)}
-                >
-                    <span>📁</span> File
+                <label className={styles.actionButton} onClick={() => setIsModalOpen(true)}>
+                    <img src={DocumentIcon} alt="" className={styles.actionIcon} />
+                    File
                     <input hidden type="file" multiple onChange={handleFileUpload} />
                 </label>
 
                 <button
                     type="button"
                     className={styles.actionButton}
-                    onClick={e => {
-                        e.stopPropagation();
-                        setIsPollOpen(prev => !prev);
-                        setIsModalOpen(true); // 3. Open modal when Poll is clicked
-                    }}
+                    onClick={e => { e.stopPropagation(); setIsPollOpen(prev => !prev); setIsModalOpen(true); }}
                 >
-                    <span>📊</span> Poll
+                    <BarChart2 size={16} className={styles.actionIconSvg} />
+                    Poll
                 </button>
 
                 <div className={styles.communitySelector} onClick={e => e.stopPropagation()}>

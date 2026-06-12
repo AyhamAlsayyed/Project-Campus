@@ -804,3 +804,88 @@
 .annImageWarningClose:hover {
     color: rgba(255, 255, 255, 0.8);
 }
+/* ── Light mode overrides ── */
+[data-theme="light"] .darkContainer {
+  background-color: #E6E6E6;
+}
+
+[data-theme="light"] .postContainer {
+  background: linear-gradient(to right, #6523A3, #A1279D);
+}
+
+[data-theme="light"] .innerContainer {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .modal {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.1);
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .modalHeader h3 {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .modalInput {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .modalInput::placeholder {
+  color: rgba(0,0,0,0.35);
+}
+
+[data-theme="light"] .actionButton {
+  color: rgba(0,0,0,0.6);
+}
+
+[data-theme="light"] .actionButton + .actionButton::before {
+  background: rgba(0,0,0,0.12);
+}
+
+[data-theme="light"] .postInput {
+  background-color: #f2f2f2;
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .postInput::placeholder {
+  color: rgba(0,0,0,0.35);
+}
+
+[data-theme="light"] .pollInput {
+  background: rgba(0,0,0,0.06);
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .communitySelectLabel {
+  background: #f2f2f2;
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .fileItem {
+  background: #f0f0f0;
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .announcementTitleInput,
+[data-theme="light"] .announcementDescInput {
+  background: rgba(0,0,0,0.05);
+  border-color: rgba(0,0,0,0.1);
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .announcementFieldDivider {
+  background-color: rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .annDurationLabel {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .annNodeLabel {
+  color: rgba(0,0,0,0.5);
+}
+
+[data-theme="light"] .annNodeLabelActive {
+  color: #1a1a1a;
+}

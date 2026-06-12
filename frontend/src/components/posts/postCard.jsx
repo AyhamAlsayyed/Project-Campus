@@ -24,6 +24,7 @@ import Block from '../../Assets/icons/block.png';
 import Report from '../../Assets/icons/info.png';
 import SaveIcon from '../../Assets/icons/save-icon.png';
 import BellOn from '../../Assets/icons/notifications.png';
+import SearchIcon from '../../Assets/icons/search.png';
 import BellOff from '../../Assets/icons/mute.png';
 export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPost, onPinChange, isRequestMode, onAcceptPost, onRejectPost,
   isReportedMode, onDismiss, onReportDelete, onKick, onReportAction, isAdmin, communityContext, communityId
@@ -56,7 +57,6 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
   const loggedInUserId = loginUserObj?.id;
 
   const isOwnPost = String(post.author?.id || post.author_id) === String(loggedInUserId);
-  console.log("login_user:", localStorage.getItem("login_user"), "author id:", post.author?.id);
 
   const [commenterAvatars, setCommenterAvatars] = useState(
     (post?.top_3comments_avatar || []).map(c => {
@@ -149,9 +149,7 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
   };
   useEffect(() => {
     const handler = (e) => {
-      console.log("event pageId:", e.detail.pageId, typeof e.detail.pageId);
-      console.log("post author id:", post.author?.id, typeof post.author?.id);
-
+    
       if (String(e.detail.pageId) === String(post.author?.id)) {
         setIsFollowed(e.detail.is_followed);
         if (!e.detail.is_followed) setIsNotified(false);
@@ -859,6 +857,7 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
 
                     <div className={styles.shareSearchWrapper}>
                       <div className={styles.shareSearchInner}>
+                        <img src={SearchIcon} alt="" className={styles.shareSearchIcon} />
                         <input
                           className={styles.shareInput}
                           placeholder="Search people or chats..."

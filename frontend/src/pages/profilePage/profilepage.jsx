@@ -1175,7 +1175,7 @@ export default function ProfilePage({ type }) {
                                                 ? (event.avatar.startsWith('http') ? event.avatar : `${API}${event.avatar}`)
                                                 : '/default-avatar.png';
                                             return (
-                                                <div key={event.id} style={{ background: '#262626', borderRadius: 40, padding: 24, width: "700px", border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', margin: "0 auto 30px auto" }}>
+                                                <div key={event.id} style={{ background: '#262626', borderRadius: 40, padding: 24, width: "90%", border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', margin: "0 auto 30px auto" }}>
                                                     {/* Card header */}
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, padding: '0 10px' }}>
                                                         <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>

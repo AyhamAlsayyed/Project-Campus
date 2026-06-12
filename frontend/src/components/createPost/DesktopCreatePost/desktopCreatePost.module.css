@@ -242,3 +242,77 @@
 .postInput::placeholder {
   color: rgba(255, 255, 255, 0.35);
 }
+.actionIcon {
+  width: 16px;
+  height: 16px;
+  filter: brightness(0) invert(0.55);
+}
+
+.actionIconSvg {
+  color: rgba(255,255,255,0.55);
+}
+
+/* ── Light mode overrides ── */
+[data-theme="light"] .createPostSection {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .createPostSection:hover {
+  background-color: #f7f7f7;
+}
+
+[data-theme="light"] .greeting {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .question {
+  color: rgba(0,0,0,0.6);
+}
+
+[data-theme="light"] .actionButton {
+  color: rgba(0,0,0,0.6);
+}
+
+[data-theme="light"] .actionButton + .actionButton::before {
+  background: rgba(0,0,0,0.12);
+}
+
+[data-theme="light"] .actionIcon {
+  filter: brightness(0) saturate(100%) invert(18%) sepia(60%) saturate(1200%) hue-rotate(265deg) brightness(85%) contrast(95%);
+}
+
+[data-theme="light"] .actionIconSvg {
+  color: #662D91;
+}
+
+[data-theme="light"] .communitySelectLabel {
+  background: #F2F2F2;
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .postInput {
+  background-color: #F2F2F2;
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .postInput::placeholder {
+  color: rgba(0,0,0,0.35);
+}
+
+[data-theme="light"] .weatherBadge {
+  color: rgba(0,0,0,0.7);
+}
+
+[data-theme="light"] .communityDropdown {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .communityDropdownItem {
+  color: rgba(0,0,0,0.75);
+}
+
+[data-theme="light"] .communityDropdownItem:hover {
+  background: rgba(0,0,0,0.05);
+  color: #1a1a1a;
+}

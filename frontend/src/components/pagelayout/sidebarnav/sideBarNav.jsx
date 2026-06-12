@@ -44,7 +44,7 @@ export default function SidebarNav({ variant = "default", currentUser }) {
     currentUser?.role === 'cafe' ||
     userType === 'page'
 
-  
+
   const userId = currentUser?.id || localStorage.getItem("user_id");
   const defaultMainItems = [
     { label: "Home page", path: "/home", icon: Home },
@@ -124,7 +124,16 @@ export default function SidebarNav({ variant = "default", currentUser }) {
           className={`${styles.sideBarButton} ${isActive(path) ? styles.active : ""}`}
         >
           {Icon && typeof Icon === "string" ? (
-            <img src={Icon} alt="" className={styles.icon} width={25} height={25} style={{ filter: "invert(1)" }} />
+            <img
+              src={Icon}
+              alt=""
+              className={styles.icon}
+              style={{
+                filter: "brightness(0) invert(1)",
+                width: Icon === Community ? "30px" : "25px",
+                height: Icon === Community ? "20px" : "25px",
+              }}
+            />
           ) : Icon ? (
             <Icon size={22} />
           ) : null}

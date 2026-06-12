@@ -63,3 +63,47 @@
   font-size: 0.72rem;
   padding-top: 20px;
 }
+/* ── Light mode overrides ── */
+[data-theme="light"] .sideBarNav {
+  background-color: #ffffff;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .divider {
+  background: rgba(0,0,0,0.12);
+}
+
+[data-theme="light"] .sideBarButton {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .sideBarButton img {
+  filter: brightness(0) !important;
+}
+
+[data-theme="light"] .sideBarButton:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+[data-theme="light"] .copyright {
+  color: rgba(0,0,0,0.35);
+}
+
+[data-theme="light"] .active {
+  color: #662D91;
+}
+
+[data-theme="light"] .active img {
+  filter: brightness(0) saturate(100%) invert(18%) sepia(60%) saturate(1200%) hue-rotate(265deg) brightness(85%) contrast(95%) !important;
+}
+
+[data-theme="light"] .active::before {
+  border-left-color: #662D91;
+}
+[data-theme="light"] .sideBarButton:not(.active) {
+  color: #666666;
+}
+
+[data-theme="light"] .sideBarButton:not(.active) img {
+  filter: brightness(0) saturate(100%) invert(40%) !important;
+}

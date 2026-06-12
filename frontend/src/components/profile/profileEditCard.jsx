@@ -592,7 +592,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                             <img src={BirthdayIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)' }} />
                             Birthday
                         </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight:"40%" }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: "40%" }}>
                             <input
                                 type="text"
                                 maxLength={2}
@@ -772,15 +772,17 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                 <div key={i} className={styles.detailFieldItem}>
                                     <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                                         <span style={{ fontSize: 16 }}>🏛️</span>
-                                        <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>{pos.institution}</span>
+                                        <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
+                                            {pos.institution_name || pos.institution}
+                                        </span>
                                         <span style={{
                                             fontSize: 11, fontWeight: 600,
-                                            background: pos.type === 'primary' ? 'rgba(139,45,255,0.15)' : 'rgba(255,180,0,0.12)',
-                                            color: pos.type === 'primary' ? '#c084fc' : '#f59e0b',
-                                            border: `1px solid ${pos.type === 'primary' ? 'rgba(139,45,255,0.3)' : 'rgba(245,158,11,0.3)'}`,
+                                            background: (pos.employment_type || pos.type) === 'primary' ? 'rgba(139,45,255,0.15)' : 'rgba(255,180,0,0.12)',
+                                            color: (pos.employment_type || pos.type) === 'primary' ? '#c084fc' : '#f59e0b',
+                                            border: `1px solid ${(pos.employment_type || pos.type) === 'primary' ? 'rgba(139,45,255,0.3)' : 'rgba(245,158,11,0.3)'}`,
                                             borderRadius: 6, padding: '1px 7px'
                                         }}>
-                                            {pos.type === 'primary' ? 'Primary' : 'Part-time'}
+                                            {(pos.employment_type || pos.type) === 'primary' ? 'Primary' : 'Part-time'}
                                         </span>
                                     </span>
                                     <button

@@ -43,7 +43,35 @@ body {
 button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, span, a, li {
   font-family: inherit;
 }
+body {
+  background-color: #1a1a1a;
+  transition: background-color 0.3s ease;
+}
 
+[data-theme="light"] body {
+  background-color: #E6E6E6;
+}
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+:root {
+    --bg-main: #1b1b1d;
+    --bg-secondary: #2f2f31;
+    --bg-card: #333333;
+    --bg-input: #262626;
+    --text-primary: rgba(255,255,255,0.9);
+    --text-secondary: #999;
+    --text-muted: rgba(255,255,255,0.4);
+    --border-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="light"] {
+    --bg-main: #f0f0f0;
+    --bg-secondary: #e4e4e4;
+    --bg-card: #ffffff;
+    --bg-input: #f5f5f5;
+    --text-primary: #1a1a1a;
+    --text-secondary: #555;
+    --text-muted: rgba(0,0,0,0.4);
+    --border-color: rgba(0,0,0,0.1);
 }

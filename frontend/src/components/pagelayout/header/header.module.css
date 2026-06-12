@@ -153,7 +153,7 @@
 
 .chatListWrapper {
   max-height: 400px;
-  overflow-y: auto;
+  overflow-y: scroll;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.15) transparent;
 }
@@ -586,4 +586,203 @@
   place-items: center;
   border-radius: 50%;
   flex-shrink: 0;
+}
+[data-theme="light"] .title {
+  background: linear-gradient(to right, #6423A3, #A2279C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="light"] .searchWrap {
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .searchInput {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .searchInput::placeholder {
+  color: rgba(0,0,0,0.35);
+}
+
+[data-theme="light"] .bellButton img,
+[data-theme="light"] .iconButton img:not(.userProfilePicture) {
+  filter: none !important;
+  filter: brightness(0) saturate(100%) invert(28%) sepia(50%) saturate(800%) hue-rotate(255deg) brightness(90%) contrast(90%) !important;
+}
+[data-theme="light"] .searchWrap svg {
+  color: #662D91;
+  stroke: #662D91;
+}
+
+[data-theme="light"] .rightBadge {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+
+[data-theme="light"] .rightBadge {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+/* Dropdowns */
+[data-theme="light"] .notificationDropdown,
+[data-theme="light"] .chatDropdown {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* Notif header */
+[data-theme="light"] .notifTitle {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .notifHeaderActions {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .notifHeaderActions img {
+  filter: brightness(0) saturate(100%) invert(28%) sepia(50%)
+    saturate(800%) hue-rotate(255deg) brightness(90%) contrast(90%) !important;
+}
+
+[data-theme="light"] .viewAll {
+  color: #6423A3;
+}
+
+[data-theme="light"] .viewAll:hover {
+  color: #A2279C;
+}
+
+/* Notification items */
+[data-theme="light"] .notificationItem {
+  border-bottom-color: rgba(0, 0, 0, 0.07);
+}
+
+[data-theme="light"] .notificationItem:hover {
+  background: rgba(100, 35, 163, 0.04);
+}
+
+[data-theme="light"] .notifIconBadge {
+  background: #ececec;
+  border-color: #ffffff;
+  color: #6423A3;
+}
+
+[data-theme="light"] .notifType {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .notifTime {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .notifText {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="light"] .unreadDot {
+  background: #A2279C;
+}
+
+[data-theme="light"] .notifMenuBtn {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .notifMenuBtn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #1a1a1a;
+}
+
+/* Three-dot action menu (portal) */
+[data-theme="light"] .actionMenu {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .actionMenu button {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .actionMenu button img {
+  filter: brightness(0) saturate(100%) invert(28%) sepia(50%)
+    saturate(800%) hue-rotate(255deg) brightness(90%) contrast(90%) !important;
+}
+
+[data-theme="light"] .actionMenu button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .actionMenu .deleteAction {
+  color: #d63b6e;
+}
+
+[data-theme="light"] .actionMenu .deleteAction:hover {
+  background: rgba(214, 59, 110, 0.08);
+}
+
+/* Chat search bar */
+[data-theme="light"] .chatSearchContainer {
+  background: #f2f2f2;
+  border-color: #f2f2f2;
+}
+
+[data-theme="light"] .chatSearchContainer:focus-within {
+  border-color: rgba(100, 35, 163, 0.4);
+}
+
+[data-theme="light"] .chatSearchIcon {
+  color: #6423A3;
+}
+
+[data-theme="light"] .chatSearchInput {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .chatSearchInput::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+/* Chat items */
+[data-theme="light"] .chatItem:hover {
+  background: rgba(100, 35, 163, 0.04);
+}
+
+[data-theme="light"] .chatItem::after {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+[data-theme="light"] .chatName {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .chatStatus {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .chatPreview {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .chatTime {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .chatUnread {
+  background: rgba(100, 35, 163, 0.12);
+  color: #6423A3;
+}
+
+/* Status dot & red dot border against white */
+[data-theme="light"] .statusDot {
+  border-color: #ffffff;
+}
+
+[data-theme="light"] .redDotIndicator {
+  border-color: #f5f5f5;
 }

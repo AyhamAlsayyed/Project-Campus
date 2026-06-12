@@ -76,7 +76,7 @@ export default function Homepage() {
         try {
             const res = await fetch(`${API}/api/auth/me/`, { headers: { Authorization: `Bearer ${token}` } })
             const data = await res.json().catch(() => ({}))
-            console.log("user data:", data);
+           
             if (!res.ok) { setUserError("Failed to load user"); setUser(null); return }
             if (data.role === 'uni' || localStorage.getItem('user_type') === 'uni') {
                 const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
@@ -98,10 +98,7 @@ export default function Homepage() {
     const closeComments = () => { setSelectedPost(null); };
 
     useEffect(() => {
-        console.log("📍 [location.state, user] fired", {
-            hasOpenPost: !!location.state?.openPost,
-            userLoaded: !!user
-        });
+     
         if (!location.state?.openPost) return;
 
         const openPost = location.state.openPost;
@@ -342,6 +339,9 @@ export default function Homepage() {
         fetchWeather();
 
     }, [])
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+    }, [theme]);
 
     const rawAvatar = user?.profile?.avatar || user?.avatar || user?.profile_image;
     const avatarSrc = rawAvatar
@@ -349,7 +349,7 @@ export default function Homepage() {
         : ProfilePicture;
 
     return (
-        <div className={styles.darkContainer}>
+        <div className={styles.darkContainer} data-theme={theme}>
 
             {/* ══════════════════════════════════════
                     MOBILE HEADER BAR
