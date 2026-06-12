@@ -42,9 +42,9 @@ export default function SidebarNav({ variant = "default", currentUser }) {
   const isPage =
     currentUser?.user_type === 'page' ||
     currentUser?.role === 'cafe' ||
-    userType === 'page' ||
-    userType === 'university' ||   
-    userType === 'uni';
+    userType === 'page'
+
+  
   const userId = currentUser?.id || localStorage.getItem("user_id");
   const defaultMainItems = [
     { label: "Home page", path: "/home", icon: Home },

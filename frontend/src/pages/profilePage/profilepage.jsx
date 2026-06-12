@@ -3,11 +3,11 @@ import Header from '../../components/pagelayout/header/header';
 import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import PostCard from '../../components/posts/postCard';
-import UserDetails from '../../components/userDetails/userDetails';
+import UserDetails from '../../components/rightPanel/userDetails/userDetails';
 import CommentModal from '../../components/comments/commentsModal';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
-import FriendsTab from '../../components/FriendsTab/FriendsTab';
-import FriendsSuggestion from '../../components/recentlycontacted/recentlyContacted';
+import FriendsTab from '../../components/rightPanel/FriendsTab/FriendsTab';
+import FriendsSuggestion from '../../components/rightPanel/recentlycontacted/recentlyContacted';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import MobileEditView from '../../components/profile/mobileEditView';
 import MobileProfileView from '../../components/profile/mobileProfileView';
@@ -32,6 +32,8 @@ import Edit from '../../Assets/icons/edit.png';
 import { useCreateEvent } from '../../components/createEvent/useCreateEvent';
 import CreateEventForm from '../../components/createEvent/CreateEventForm';
 import CreateEventRightSidebar from '../../components/createEvent/CreateEventRightSidebar';
+import ReportModal from '../../components/posts/ReportModal';
+
 import { AlertCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
@@ -156,7 +158,7 @@ function MonthPicker({ date, setDate, onClose }) {
                     className={styles.manageMonthNavBtn}>›</button>
             </div>
             <div className={styles.manageMonthGrid}>
-                {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => (
+                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => (
                     <button key={m}
                         onClick={() => { setDate(new Date(date.getFullYear(), i, 1)); onClose(); }}
                         className={`${styles.manageMonthBtn} ${i === date.getMonth() ? styles.manageMonthBtnActive : styles.manageMonthBtnInactive}`}
@@ -216,6 +218,8 @@ export default function ProfilePage({ type }) {
     const [modalPicks, setModalPicks] = useState([]);
     const [pageFollowStatus, setPageFollowStatus] = useState({});
     const [pageNotifyStatus, setPageNotifyStatus] = useState({});
+    const [reportTargetId, setReportTargetId] = useState(null);
+
 
     // events management
     const [showManageEvents, setShowManageEvents] = useState(false);
@@ -227,6 +231,9 @@ export default function ProfilePage({ type }) {
     const [editingEventId, setEditingEventId] = useState(null);
     const [editEventData, setEditEventData] = useState(EDIT_EMPTY);
     const [deleteEventPopup, setDeleteEventPopup] = useState(null);
+    const [eventsTabNotify, setEventsTabNotify] = useState(false);
+    const [eventsTabReminders, setEventsTabReminders] = useState({});
+    const [eventsTabPopup, setEventsTabPopup] = useState(null);
 
     // refs
     const menuRef = useRef(null);
@@ -542,9 +549,18 @@ export default function ProfilePage({ type }) {
     const loadPageEvents = async () => {
         try {
             const res = await fetch(`${API}/api/events/?page=${userId}`, { headers: { Authorization: `Bearer ${token}` } });
-            if (res.ok) { const data = await res.json(); setPageEvents(Array.isArray(data) ? data : []); }
+            if (res.ok) {
+                const data = await res.json();
+                const events = Array.isArray(data) ? data : [];
+                setPageEvents(events);
+                if (events.length > 0) setEventsTabNotify(events[0].is_notified || false);
+                const reminderMap = {};
+                events.forEach(e => { reminderMap[e.id] = e.is_reminded || false; });
+                setEventsTabReminders(reminderMap);
+            }
         } catch (e) { console.error(e); }
     };
+
 
     // ─── actions ────────────────────────────────────────────────────────────
 
@@ -555,6 +571,25 @@ export default function ProfilePage({ type }) {
             const res = await fetch(`${API}/api/users/${userId}/block/`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
             if (!res.ok) setIsBlocked(wasBlocked);
         } catch { setIsBlocked(wasBlocked); }
+    };
+
+    const handleEventsTabNotify = async () => {
+        const prev = eventsTabNotify;
+        setEventsTabNotify(!prev);
+        try {
+            const res = await fetch(`${API}/api/pages/${userId}/notify/`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+            if (res.ok) { const data = await res.json(); setEventsTabNotify(data.is_notified); }
+            else setEventsTabNotify(prev);
+        } catch { setEventsTabNotify(prev); }
+    };
+
+    const handleEventsTabReminder = async (eventId) => {
+        const prev = eventsTabReminders[eventId];
+        setEventsTabReminders(s => ({ ...s, [eventId]: !prev }));
+        try {
+            const res = await fetch(`${API}/api/events/${eventId}/remind/`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+            if (!res.ok) setEventsTabReminders(s => ({ ...s, [eventId]: prev }));
+        } catch { setEventsTabReminders(s => ({ ...s, [eventId]: prev })); }
     };
 
     const handleUnfriend = async () => {
@@ -889,7 +924,7 @@ export default function ProfilePage({ type }) {
                                                         className={`${styles.coverDropdownItem} ${isBlocked ? styles.coverDropdownItemDanger : styles.coverDropdownItemNormal}`}>
                                                         <Ban size={15} />{isBlocked ? 'Unblock user' : 'Block user'}
                                                     </button>
-                                                    <button onClick={() => setMenuOpen(false)}
+                                                    <button onClick={() => { setReportTargetId(Number(userId)); setMenuOpen(false); }}
                                                         className={`${styles.coverDropdownItem} ${styles.coverDropdownItemDanger}`}>
                                                         <AlertCircle size={15} />Report user
                                                     </button>
@@ -1036,7 +1071,7 @@ export default function ProfilePage({ type }) {
                                     {(user?.type === 'page'
                                         ? ['Posts', 'Photos', 'Events']
                                         : isOwnProfile ? ['Posts', 'Activities', 'About']
-                                        : ['Posts', 'Photos', 'Friends']
+                                            : ['Posts', 'Photos', 'Friends']
                                     ).map(tab => (
                                         tab === 'Activities' && isOwnProfile ? (
                                             <div key="Activities" ref={activitiesDropdownRef} className={styles.activitiesDropdownWrap}>
@@ -1117,22 +1152,105 @@ export default function ProfilePage({ type }) {
                                 )}
                                 {activeTab === 'Events' && (
                                     <div className={styles.postsSection}>
-                                        {pageEvents.length > 0 ? pageEvents.map(event => (
-                                            <div key={event.id} className={styles.eventCard}>
-                                                {event.banner && (
-                                                    <img src={resolveUrl(event.banner)} alt="" className={styles.eventCardBanner} />
-                                                )}
-                                                <div className={styles.eventCardBody}>
-                                                    <div className={styles.eventCardTitle}>{event.title}</div>
-                                                    {event.start_date && (
-                                                        <div className={styles.eventCardDate}>
-                                                            {event.start_date}{event.end_date ? ` → ${event.end_date}` : ''}
+                                        {pageEvents.length > 0 ? pageEvents.map(event => {
+                                            const bannerSrc = event.banner
+                                                ? (event.banner.startsWith('http') ? event.banner : `${API}${event.banner}`)
+                                                : '';
+                                            const avatarSrc = event.avatar
+                                                ? (event.avatar.startsWith('http') ? event.avatar : `${API}${event.avatar}`)
+                                                : '/default-avatar.png';
+                                            return (
+                                                <div key={event.id} style={{ background: '#333333', borderRadius: 40, padding: 24, border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', marginBottom: 30 }}>
+                                                    {/* Card header */}
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, padding: '0 10px' }}>
+                                                        <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
+                                                            <img src={avatarSrc} alt="Logo" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
+                                                            <div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                                    <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff', fontWeight: 600 }}>
+                                                                        {event.organization_name || user?.username}
+                                                                    </h3>
+                                                                    {user?.is_verified && (
+                                                                        <img src={VerifiedBadge} alt="verified" style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', marginLeft: 3 }} />
+                                                                    )}
+                                                                </div>
+                                                                <p style={{ margin: '2px 0 0 0', color: '#999', fontSize: '0.85rem' }}>
+                                                                    {event.page_type || user?.category}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        {!isOwnProfile && (
+                                                            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                                                                {isFollowing && (
+                                                                    <button
+                                                                        onClick={handleEventsTabNotify}
+                                                                        style={{ background: 'rgba(255,255,255,0.1)', border: 'none', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                    >
+                                                                        <img
+                                                                            src={eventsTabNotify ? BellOn : BellOff}
+                                                                            alt="notifications"
+                                                                            width={20} height={eventsTabNotify ? 24 : 20}
+                                                                            style={{ filter: 'brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)' }}
+                                                                        />
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={handleFollow}
+                                                                    style={isFollowing
+                                                                        ? { background: 'rgba(255,255,255,0.15)', color: 'white', border: 'none', borderRadius: 20, padding: '8px 20px', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }
+                                                                        : { background: 'linear-gradient(135deg, #5B2598, #962892)', color: 'white', border: 'none', borderRadius: 20, padding: '8px 20px', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }
+                                                                    }
+                                                                >
+                                                                    {isFollowing ? 'Followed' : 'Follow'}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Banner */}
+                                                    {bannerSrc && (
+                                                        <div style={{ position: 'relative', width: '100%', borderRadius: 30, overflow: 'hidden' }}>
+                                                            <img src={bannerSrc} alt="Event Banner" style={{ width: '100%', minHeight: 200, objectFit: 'cover', display: 'block' }} />
+
+                                                            {/* Date + reminder widget */}
+                                                            <div style={{ position: 'absolute', top: 30, right: 30, background: 'rgba(30,30,30,0.85)', backdropFilter: 'blur(10px)', padding: '15px 25px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 20, zIndex: 3, border: '1px solid rgba(255,255,255,0.1)' }}>
+                                                                <div>
+                                                                    <p style={{ margin: 0, color: '#fff', fontSize: '0.8rem', fontWeight: 600, lineHeight: 1.6 }}>Starts {fmtDate(event.start_date)}</p>
+                                                                    <p style={{ margin: 0, color: '#fff', fontSize: '0.8rem', fontWeight: 600, lineHeight: 1.6 }}>Ends — {fmtDate(event.end_date)}</p>
+                                                                </div>
+                                                                {!isOwnProfile && (
+                                                                    <button
+                                                                        onClick={() => handleEventsTabReminder(event.id)}
+                                                                        style={{ background: eventsTabReminders[event.id] ? 'rgba(255,255,255,0.2)' : '#7b1fa2', color: 'white', border: 'none', padding: '8px 18px', borderRadius: 12, fontWeight: 800, fontSize: '0.75rem', cursor: 'pointer', transition: 'background 0.2s', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}
+                                                                    >
+                                                                        {eventsTabReminders[event.id] ? '✓ Reminder set' : 'Set reminder'}
+                                                                    </button>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Title + description overlay */}
+                                                            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 16, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.75))', pointerEvents: 'none' }}>
+                                                                <div style={{ pointerEvents: 'auto' }}>
+                                                                    {event.title?.length > 20 ? (
+                                                                        <div style={{ overflow: 'hidden', position: 'relative', maxWidth: '100%' }}>
+                                                                            <span className={styles.titleMarquee}>{event.title}</span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <h2 style={{ color: 'white', margin: 0, fontSize: '2.2rem', fontWeight: 800 }}>{event.title}</h2>
+                                                                    )}
+                                                                    <p style={{ color: 'rgba(255,255,255,0.9)', maxWidth: 500, fontSize: '1rem', marginTop: 10, lineHeight: 1.4 }}>
+                                                                        {event.description?.length > 80
+                                                                            ? <>{event.description.substring(0, 80)}... <span onClick={() => setEventsTabPopup(event)} style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'underline', fontSize: '0.9rem', cursor: 'pointer' }}>read more</span></>
+                                                                            : event.description
+                                                                        }
+                                                                    </p>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     )}
-                                                    {event.description && <p className={styles.eventCardDesc}>{event.description}</p>}
                                                 </div>
-                                            </div>
-                                        )) : <div className={styles.notice}>No events yet.</div>}
+                                            );
+                                        }) : <div className={styles.notice}>No events yet.</div>}
                                     </div>
                                 )}
                             </div>
@@ -1227,7 +1345,7 @@ export default function ProfilePage({ type }) {
                                                     </span>
                                                     {next && (
                                                         <span className={styles.remindersNextTitle}>
-                                                            Upcoming event on {next._d.getDate()}{['st','nd','rd'][((next._d.getDate()+90)%100-10)%10-1]||'th'}
+                                                            Upcoming event on {next._d.getDate()}{['st', 'nd', 'rd'][((next._d.getDate() + 90) % 100 - 10) % 10 - 1] || 'th'}
                                                         </span>
                                                     )}
                                                 </div>
@@ -1307,7 +1425,7 @@ export default function ProfilePage({ type }) {
                                                         <button onClick={() => setRemindersMonth(new Date(year + 1, month, 1))} disabled={year >= new Date().getFullYear() + 2} className={styles.monthPickerNavBtn}>›</button>
                                                     </div>
                                                     <div className={styles.monthGrid}>
-                                                        {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => (
+                                                        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => (
                                                             <button key={m} onClick={() => { setRemindersMonth(new Date(year, i, 1)); setShowRemindersMonthPicker(false); }}
                                                                 className={`${styles.monthBtn} ${i === month ? styles.monthBtnActive : styles.monthBtnInactive}`}>{m}</button>
                                                         ))}
@@ -1341,7 +1459,7 @@ export default function ProfilePage({ type }) {
                                             <span className={styles.reviewWidgetTitle}>Add a Review</span>
                                         </div>
                                         <div className={styles.reviewStarsRow}>
-                                            {[1,2,3,4,5].map(star => (
+                                            {[1, 2, 3, 4, 5].map(star => (
                                                 <button key={star} onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)} onClick={() => handleReview(star)} className={styles.reviewStarBtn}>
                                                     <div style={maskStyle(Star, 36.8, star <= (hoverRating || reviewRating) ? '#B8B8B8' : '#575757')} />
                                                 </button>
@@ -1444,7 +1562,7 @@ export default function ProfilePage({ type }) {
                         <div className={styles.remindersPopupHeader}>
                             <img src={Events} alt="events" className={styles.remindersPopupHeaderIcon} />
                             <h3 className={styles.remindersPopupTitle}>
-                                Events on {remindersPopup.monthName} {remindersPopup.day}{[1,21,31].includes(remindersPopup.day)?'st':[2,22].includes(remindersPopup.day)?'nd':[3,23].includes(remindersPopup.day)?'rd':'th'}
+                                Events on {remindersPopup.monthName} {remindersPopup.day}{[1, 21, 31].includes(remindersPopup.day) ? 'st' : [2, 22].includes(remindersPopup.day) ? 'nd' : [3, 23].includes(remindersPopup.day) ? 'rd' : 'th'}
                             </h3>
                             <button onClick={() => setRemindersPopup(null)} className={styles.remindersPopupCancelBtn}>Cancel</button>
                         </div>
@@ -1525,7 +1643,7 @@ export default function ProfilePage({ type }) {
                                                         <span className={styles.remindersInfoLabel}>Information</span>
                                                         {event.start_date && (
                                                             <div className={styles.remindersInfoRow}>
-                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6823A3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6823A3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                                                                 <span className={styles.remindersInfoText}>
                                                                     {new Date(event.start_date) <= new Date() ? 'Happening Now!' : `The event starts in ${Math.ceil((new Date(event.start_date) - new Date()) / 3600000)} hours`}
                                                                 </span>
@@ -1533,7 +1651,7 @@ export default function ProfilePage({ type }) {
                                                         )}
                                                         {event.location && (
                                                             <div className={styles.remindersInfoRow}>
-                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6823A3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6823A3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
                                                                 <span className={styles.remindersInfoText}>{event.location}</span>
                                                             </div>
                                                         )}
@@ -1673,6 +1791,23 @@ export default function ProfilePage({ type }) {
                         </div>
                     </div>
                 </div>, document.body
+            )}
+            {reportTargetId && (
+                <ReportModal
+                    contentId={reportTargetId}
+                    contentType="user"
+                    onClose={() => setReportTargetId(null)}
+                />
+            )}
+            {eventsTabPopup && createPortal(
+                <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setEventsTabPopup(null)}>
+                    <div style={{ background: '#2a2a2a', borderRadius: 20, padding: 28, maxWidth: 480, width: '90%', position: 'relative', border: '1px solid rgba(255,255,255,0.08)' }} onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setEventsTabPopup(null)} style={{ position: 'absolute', top: 14, right: 14, background: 'none', border: 'none', color: 'white', fontSize: '1.1rem', cursor: 'pointer' }}>✕</button>
+                        <h3 style={{ color: 'white', margin: '0 0 12px' }}>{eventsTabPopup.title}</h3>
+                        <p style={{ color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, margin: 0 }}>{eventsTabPopup.description}</p>
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
     );

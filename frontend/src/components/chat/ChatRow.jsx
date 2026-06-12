@@ -3,19 +3,20 @@ import { createPortal } from 'react-dom';
 import { MoreHorizontal } from 'lucide-react';
 import styles from '../../pages/chatsPage/chatspage.module.css';
 import MaskIcon from './MaskIcon';
-import Pin   from '../../Assets/icons/pin.png';
-import Mute  from '../../Assets/icons/mute.png';
+import Pin from '../../Assets/icons/pin.png';
+import Mute from '../../Assets/icons/mute.png';
 import Unread from '../../Assets/icons/unread-message.png';
-import Clear  from '../../Assets/icons/clear.png';
+import Clear from '../../Assets/icons/clear.png';
 import BinIcon from '../../Assets/icons/bin.png';
 import Block from '../../Assets/icons/block.png';
 import Report from '../../Assets/icons/info.png';
 import { API } from '../../pages/chatsPage/chatUtils';
+import ReportModal from '../posts/ReportModal';
 
 const Divider = () => (
     <div style={{ width: '65%', height: 1, background: '#4D4D4D', margin: '0 auto' }} />
 );
- 
+
 /**
  * ChatRow — memoised so it only re-renders when its own `chat` prop changes.
  *
@@ -28,22 +29,22 @@ function chatRowPropsAreEqual(prev, next) {
     const pc = prev.chat;
     const nc = next.chat;
     return (
-        pc.id           === nc.id           &&
-        pc.name         === nc.name         &&
-        pc.avatar       === nc.avatar       &&
-        pc.preview      === nc.preview      &&
-        pc.time         === nc.time         &&
+        pc.id === nc.id &&
+        pc.name === nc.name &&
+        pc.avatar === nc.avatar &&
+        pc.preview === nc.preview &&
+        pc.time === nc.time &&
         pc.unread_count === nc.unread_count &&
-        pc.is_pinned    === nc.is_pinned    &&
-        pc.is_muted     === nc.is_muted     &&
-        pc.is_blocked   === nc.is_blocked   &&
-        pc.status       === nc.status       &&
+        pc.is_pinned === nc.is_pinned &&
+        pc.is_muted === nc.is_muted &&
+        pc.is_blocked === nc.is_blocked &&
+        pc.status === nc.status &&
         pc.last_message_type === nc.last_message_type &&
-        pc.has_attachment    === nc.has_attachment    &&
-        prev.isLast     === next.isLast
+        pc.has_attachment === nc.has_attachment &&
+        prev.isLast === next.isLast
     );
 }
- 
+
 const ChatRow = React.memo(({
     chat,
     onSelect,
@@ -59,7 +60,9 @@ const ChatRow = React.memo(({
     const [menuOpen, setMenuOpen] = useState(false);
     const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
     const menuWrapRef = useRef(null);
- 
+    const [reportTargetId, setReportTargetId] = useState(null);
+
+
     // Close on outside click
     useEffect(() => {
         if (!menuOpen) return;
@@ -70,7 +73,7 @@ const ChatRow = React.memo(({
         document.addEventListener('mousedown', handle);
         return () => document.removeEventListener('mousedown', handle);
     }, [menuOpen]);
- 
+
     const openMenu = useCallback((e) => {
         e.stopPropagation();
         const rect = e.currentTarget.getBoundingClientRect();
@@ -82,30 +85,30 @@ const ChatRow = React.memo(({
         });
         setMenuOpen(v => !v);
     }, []);
- 
+
     const close = useCallback(() => setMenuOpen(false), []);
- 
+
     const avatarSrc = chat.avatar?.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`;
- 
+
     const statusClass =
-        chat.is_group    ? styles.groupDot   :
-        chat.is_blocked  ? styles.blockedDot :
-        chat.status === 'online' ? styles.online  :
-        chat.status === 'dnd'    ? styles.dnd     :
-        styles.offline;
- 
+        chat.is_group ? styles.groupDot :
+            chat.is_blocked ? styles.blockedDot :
+                chat.status === 'online' ? styles.online :
+                    chat.status === 'dnd' ? styles.dnd :
+                        styles.offline;
+
     const statusLabel =
-        chat.is_blocked  ? 'Blocked'        :
-        chat.is_group    ? 'Group Chat'      :
-        chat.status === 'online' ? 'Online'  :
-        chat.status === 'dnd'   ? 'Do Not Disturb' :
-        'Offline';
- 
+        chat.is_blocked ? 'Blocked' :
+            chat.is_group ? 'Group Chat' :
+                chat.status === 'online' ? 'Online' :
+                    chat.status === 'dnd' ? 'Do Not Disturb' :
+                        'Offline';
+
     const previewText =
         chat.last_message_type === 'media' || chat.has_attachment
             ? '📎 sent an attachment'
             : chat.preview;
- 
+
     return (
         <div className={styles.chatRow}>
             <div
@@ -126,12 +129,12 @@ const ChatRow = React.memo(({
                         </div>
                     </div>
                 </div>
- 
+
                 {/* ── Right ── */}
                 <div className={styles.chatItemRight}>
                     <div className={styles.chatIndicators}>
-                        {chat.is_pinned && <MaskIcon src={Pin}  size={25} />}
-                        {chat.is_muted  && <MaskIcon src={Mute} size={25} />}
+                        {chat.is_pinned && <MaskIcon src={Pin} size={25} />}
+                        {chat.is_muted && <MaskIcon src={Mute} size={25} />}
                     </div>
                     <div className={styles.chatDetails}>
                         <span className={styles.chatPreview}>{previewText}</span>
@@ -147,7 +150,7 @@ const ChatRow = React.memo(({
                             <button className={styles.moreButton} onClick={openMenu}>
                                 <MoreHorizontal size={16} />
                             </button>
- 
+
                             {menuOpen && createPortal(
                                 <div
                                     className={styles.dropdownMenu}
@@ -194,7 +197,11 @@ const ChatRow = React.memo(({
                                         {chat.is_blocked ? 'Unblock user' : 'Block user'}
                                     </button>
                                     <Divider />
-                                    <button className={`${styles.menuItem} ${styles.destructive}`} onClick={(e) => { e.stopPropagation(); onReportUser(chat.id); close(); }}>
+                                    <button className={`${styles.menuItem} ${styles.destructive}`} onClick={(e) => {
+                                        e.stopPropagation();
+                                        setReportTargetId(chat.id);
+                                        close();
+                                    }}>
                                         <MaskIcon src={Report} color="#D4145A" />
                                         Report user
                                     </button>
@@ -206,9 +213,16 @@ const ChatRow = React.memo(({
                 </div>
             </div>
             {!isLast && <div className={styles.chatDivider} />}
+            {reportTargetId && (
+                <ReportModal
+                    contentId={reportTargetId}
+                    contentType="user"
+                    onClose={() => setReportTargetId(null)}
+                />
+            )}
         </div>
     );
 }, chatRowPropsAreEqual);
- 
+
 ChatRow.displayName = 'ChatRow';
 export default ChatRow;

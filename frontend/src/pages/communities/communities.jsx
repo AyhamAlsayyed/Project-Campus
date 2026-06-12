@@ -623,7 +623,7 @@ export default function Community() {
                         ) : (
 
                             <>
-                                <div className={styles.pill}>FRIENDS RELATED</div>
+                                <div className={styles.pill} style={{left:"20px"}}>FRIENDS RELATED</div>
                                 <div className={styles.rightCard}>
                                     <div className={styles.rightList}>
                                         {friendsCommunities.map((community, index) => (

@@ -2,7 +2,6 @@ html {
     height: auto;
     min-height: auto;
     display: flow-root;
-
 }
 
 body {
@@ -38,7 +37,6 @@ body {
     margin-top: 2%;
     height: 110px;
     width: 100%;
-
 }
 
 .content {
@@ -64,12 +62,10 @@ body {
 }
 
 .friendsPostsSection {
-
     display: flex;
     flex-direction: column;
     flex: 1;
     min-width: 0;
-
 }
 
 .postContainer {
@@ -107,10 +103,17 @@ body {
 }
 
 .rightCard {
+    display: flex;
+    flex-direction: column;
+    background: rgba(61, 60, 60, 0.45);
+    border-radius: 24px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    min-height: 500px;
+    max-height: 500px;
     position: relative;
     z-index: 2;
-
-
 }
 
 .emptyState {
@@ -175,105 +178,116 @@ body {
     box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
 }
 
-.rightCard {
+/* ── Friends list header: search + view all on one row ── */
+.friendsListHeader {
     display: flex;
-    flex-direction: column;
-    background: rgba(61, 60, 60, 0.45);
-    border-radius: 24px;
-    padding: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(10px);
-    min-height: 500px;
-    max-height: 500px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
 }
 
-.rightList {
+.searchContactWrap {
     display: flex;
-    flex-direction: column;
-    gap: 30px;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 999px;
+    padding: 8px 16px;
+    flex: 1;
+    margin-bottom: 0;
 }
 
-.searchContainer {
-    display: flex;
-    justify-content: center;
-    padding: 15px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+.searchIcon {
+    flex: 0 0 auto;
+    color: rgba(255, 255, 255, 0.65);
 }
 
-.searchBar {
-    width: 100%;
-    padding: 10px 15px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    color: white;
-    font-size: 14px;
+.searchInput {
+    border: none;
     outline: none;
-    transition: all 0.2s ease;
+    background: transparent;
+    width: 100%;
+    color: #fff;
+    font-size: 0.95rem;
 }
 
-.searchBar:focus {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(166, 39, 156, 0.5);
-    /* Matching your theme purple */
-    box-shadow: 0 0 10px rgba(166, 39, 156, 0.1);
+.searchInput::placeholder {
+    color: rgba(255, 255, 255, 0.45);
 }
 
-.searchBar::placeholder {
-    color: #666;
+.viewAllBtn {
+    background-color: #4D4D4D;
+    border: none;
+    padding: 10px 18px;
+    color: white;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background-color 0.2s, color 0.2s;
 }
 
+.viewAllBtn:hover {
+    color: rgba(255, 255, 255, 0.85);
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Friends list ── */
+.rightList,
+.popupList {
+    max-height: 340px;
+    overflow-y: auto;
+    overflow-x: visible;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-right: 4px;
+    padding-bottom: 110px;
+}
 
 .friendWrapper {
     display: flex;
     flex-direction: column;
+    margin-top: 2%;
     align-items: center;
+}
+
+.friendItemRow {
+    display: flex;
+    border-radius: 25px;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
 }
 
 .friendItemRow:hover {
     background: rgba(255, 255, 255, 0.05);
-
 }
 
-.friendItem {
-    width: 100%;
+.friendItemLeft {
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding: 12px 20px;
+    gap: 12px;
+    flex: 1;
     cursor: pointer;
-    transition: all 0.2s ease;
-    user-select: none;
 }
 
-.friendItem:hover {
-    background: rgba(255, 255, 255, 0.05);
-    padding-left: 25px;
+.friendAvatarWrapper {
+    position: relative;
+    flex-shrink: 0;
 }
 
-.friendItem:active {
-    background: rgba(255, 255, 255, 0.1);
-    transform: scale(0.98);
+.friendAvatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #4a4a4a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
-
-.friendName {
-    color: #fff;
-    font-size: 14px;
-    font-weight: 500;
-    transition: color 0.2s ease;
-}
-
-.friendItem:hover .friendName {
-    color: var(--highlight-color, #a6279c);
-}
-
-.divider {
-    width: 50%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    margin: 5px 0;
-}
-
 
 .statusDot {
     position: absolute;
@@ -291,35 +305,6 @@ body {
 
 .offline {
     background-color: #4b5563;
-}
-
-.friendItem {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 12px 10px;
-    border-radius: 18px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    position: relative;
-}
-
-.friendItem:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-}
-
-.friendAvatarWrapper {
-    position: relative;
-    flex-shrink: 0;
-}
-
-.friendAvatar {
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    object-fit: cover;
-    background-color: #4a4a4a;
-    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .friendInfo {
@@ -345,54 +330,14 @@ body {
     margin-top: 2px;
 }
 
-/* Container Headers */
-.friendsHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    width: 100%;
+.divider {
+    width: 50%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    margin: 5px 0;
 }
 
-.viewAllBtn {
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.55);
-    margin-right: 0%;
-    width: 16%;
-    margin-left: 85%;
-    margin-bottom: 1%;
-    font-size: 0.85rem;
-    font-weight: 500;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: color 0.2s, background-color 0.2s;
-}
-
-.viewAllBtn:hover {
-    color: rgba(255, 255, 255, 0.85);
-    background-color: rgba(255, 255, 255, 0.05);
-}
-
-/* Row Adjustment for items */
-.friendItemRow {
-    display: flex;
-    border-radius: 25px;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
-
-.friendItemLeft {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    cursor: pointer;
-}
-
-/* Action Buttons Style */
+/* ── Action buttons ── */
 .friendActions {
     display: flex;
     align-items: center;
@@ -418,7 +363,6 @@ body {
     color: #fff;
 }
 
-/* Forces PNG to be pure White */
 .messageIcon {
     width: 18px;
     height: 18px;
@@ -426,7 +370,7 @@ body {
     filter: brightness(0) invert(1);
 }
 
-/* Dropdown Menu styling */
+/* ── Dropdown ── */
 .dropdownContainer {
     position: relative;
     display: flex;
@@ -439,29 +383,15 @@ body {
     top: 100%;
     right: 0;
     margin-top: 6px;
-
-    background: #222222;
+    background: #333333;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    min-width: 130px;
+    min-width: 150px;
     overflow: hidden;
-}
-
-
-.rightList,
-.popupList {
-    max-height: 340px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding-right: 4px;
-
-    padding-bottom: 110px;
 }
 
 .dropdownMenu button {
@@ -473,6 +403,9 @@ body {
     font-size: 0.85rem;
     cursor: pointer;
     width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .dropdownMenu button:hover {
@@ -488,37 +421,7 @@ body {
     background: rgba(255, 77, 77, 0.15);
 }
 
-/* Recently Contacted Search Bar Ported Over */
-.searchContactWrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(0, 0, 0, 0.25);
-    border-radius: 999px;
-    padding: 12px 16px;
-    margin-bottom: 22px;
-}
-
-.searchIcon {
-    flex: 0 0 auto;
-    color: rgba(255, 255, 255, 0.65);
-}
-
-.searchInput {
-    border: none;
-    outline: none;
-    background: transparent;
-    width: 100%;
-    color: #fff;
-    /* adjust variable fallback if needed */
-    font-size: 0.95rem;
-}
-
-.searchInput::placeholder {
-    color: rgba(255, 255, 255, 0.45);
-}
-
-/* Popup / Modal Windows */
+/* ── Popup / Modal ── */
 .popupOverlay {
     position: fixed;
     top: 0;
@@ -534,7 +437,7 @@ body {
 }
 
 .popupContent {
-    background: #1a1a1a;
+    background: #333333;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     width: 100%;
@@ -589,7 +492,90 @@ body {
     cursor: pointer;
     transition: background 0.2s;
 }
-
+.popupFriendWrapper{
+    margin-top: 5%;
+}
 .popupFriendItem:hover {
     background: rgba(255, 255, 255, 0.05);
+}
+
+.noDataText {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 20px 0;
+}
+.portalMenu {
+    position: fixed;
+    z-index: 99999;
+    background: #333333;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    min-width: 150px;
+    overflow: hidden;
+}
+
+.portalMenuItem {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.85rem;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: inherit;
+}
+
+.portalMenuItem:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.portalMenuItemDanger {
+    background: transparent;
+    border: none;
+    color: #ff4d4d;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.85rem;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: inherit;
+}
+
+.portalMenuItemDanger:hover {
+    background: rgba(255, 77, 77, 0.15);
+}
+
+.portalMenuDivider {
+    display: flex;
+    justify-content: center;
+}
+
+.portalMenuDividerLine {
+    width: 50%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.portalMenuIcon {
+    width: 14px;
+    height: 14px;
+    filter: brightness(0) invert(0.8);
+    flex-shrink: 0;
+}
+
+.portalMenuIconDanger {
+    width: 14px;
+    height: 14px;
+    filter: brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg);
+    flex-shrink: 0;
 }

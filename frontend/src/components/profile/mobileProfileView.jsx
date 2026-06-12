@@ -1,7 +1,7 @@
 
 import PostCard from "../posts/postCard";
-import UserDetails from "../userDetails/userDetails";
-import FriendsTab from "../FriendsTab/FriendsTab";
+import UserDetails from "../rightPanel/userDetails/userDetails";
+import FriendsTab from "../rightPanel/FriendsTab/FriendsTab";
 import { User, MessageSquare, UserPlus, Users } from "lucide-react";
 const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS_SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];

@@ -13,6 +13,7 @@ import X from '../../Assets/icons/x.png';
 import Info from '../../Assets/icons/info.png';
 import { useParams } from "react-router-dom";
 import Block from '../../Assets/icons/block.png';
+import ReportModal from '../../components/posts/ReportModal';
 
 export default function FollowedPages() {
     const navigate = useNavigate();
@@ -26,6 +27,8 @@ export default function FollowedPages() {
     const [isCommentsOpen, setIsCommentsOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
     const { userId } = useParams();
+    const [reportTargetId, setReportTargetId] = useState(null);
+
 
     const [userError, setUserError] = useState("");
     const [userLoading, setUserLoading] = useState(true);
@@ -89,7 +92,7 @@ export default function FollowedPages() {
                 });
                 const userData = await userRes.json();
 
-               
+
                 if (userData.role === 'university' || localStorage.getItem('user_type') === 'university') {
                     const pageRes = await fetch("http://localhost:8000/api/pages/${userData.id}/", {
                         headers: { Authorization: `Bearer ${token}` }
@@ -503,7 +506,11 @@ export default function FollowedPages() {
 
                     <div className={styles.dropdownDivider} />
 
-                    <button onClick={() => setActiveMenuId(null)}>
+                    <button onClick={() => {
+                        const id = Number(String(activeMenuId).replace('popup-', ''));
+                        setReportTargetId(id);
+                        setActiveMenuId(null);
+                    }}>
                         <img src={Info} alt="Report" style={{
                             filter: "invert(87%) sepia(5%) saturate(297%) hue-rotate(185deg) brightness(96%) contrast(85%)"
                         }} className={styles.dropdownIcon} />
@@ -530,6 +537,13 @@ export default function FollowedPages() {
                         setIsCommentsOpen(false);
                         setSelectedPost(null);
                     }}
+                />
+            )}
+            {reportTargetId && (
+                <ReportModal
+                    contentId={reportTargetId}
+                    contentType="page"
+                    onClose={() => setReportTargetId(null)}
                 />
             )}
         </div>

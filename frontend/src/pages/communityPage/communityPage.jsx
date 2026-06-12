@@ -1,8 +1,8 @@
 import styles from './communityPage.module.css'
 import Header from '../../components/pagelayout/header/header'
-import WeeklyNews from '../../components/weeklynews/weeklynews';
-import DesktopCreatePost from '../../components/DesktopCreatePost/desktopCreatePost'
-import MobileCreatePost from '../../components/MobileCreatePost/mobileCreatePost'
+import WeeklyNews from '../../components/rightPanel/weeklynews/weeklynews';
+import DesktopCreatePost from '../../components/createPost/DesktopCreatePost/desktopCreatePost'
+import MobileCreatePost from '../../components/createPost/MobileCreatePost/mobileCreatePost'
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from "react-router-dom";

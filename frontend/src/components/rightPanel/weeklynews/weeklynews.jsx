@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import styles from "./weeklynews.module.css";
 import { createPortal } from "react-dom";
-import ArrowRight from '../../Assets/icons/arrow-right.png'
+import ArrowRight from '../../../Assets/icons/arrow-right.png'
 export default function WeeklyNews({ communityId, useHighlights }) {
     const [items, setItems] = useState([]);
     const [idx, setIdx] = useState(0);

@@ -459,7 +459,7 @@ export default function EventsPage() {
                                 </>
                             ) : (
                                 <>
-                                    <div className={styles.pill} style={{ left: "60px" }}>RECOMMENDED</div>
+                                    <div className={styles.pill} style={{ left: "20px" }}>RECOMMENDED</div>
                                     <div className={styles.rightCard}>
                                         <div className={styles.rightList}>
                                             {recommendedEvents.map((rec, index) => (

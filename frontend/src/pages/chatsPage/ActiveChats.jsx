@@ -9,8 +9,9 @@ import {
 import { Download } from 'lucide-react';
 import BackButton from '../../Assets/icons/arrow-left.png';
 import CommentModal from '../../components/comments/commentsModal';
-import GroupInfoPanel from '../../components/chatPageComponents/groupInfoPanel';
+import GroupInfoPanel from '../../components/chat/groupInfoPanel';
 import { API, normalizeMessages, getSenderName } from './chatUtils';
+import ReportModal from '../../components/posts/ReportModal';
 
 export default function ActiveChat({
     selectedChat, user, token,
@@ -34,6 +35,7 @@ export default function ActiveChat({
     const [chatSearchQuery, setChatSearchQuery] = useState('');
     const [searchResultIndex, setSearchResultIndex] = useState(0);
     const [visibleCount, setVisibleCount] = useState(50);
+    const [reportTargetId, setReportTargetId] = useState(null);
 
     const messagesScrollRef = useRef(null);
     const messagesEndRef = useRef(null);
@@ -364,7 +366,11 @@ export default function ActiveChat({
                                         <button className={styles.menuItem}><BellOff size={14} /> Mute notifications</button>
                                         <button className={styles.menuItem}><CheckSquare size={14} /> Select messages</button>
                                         <div className={styles.menuDivider} />
-                                        <button className={`${styles.menuItem} ${styles.destructive}`}>
+                                        <button className={`${styles.menuItem} ${styles.destructive}`} onClick={() => {
+                                            setReportTargetId(selectedChat.is_group ? selectedChat.id : selectedChat.other_member_id);
+                                            setActiveChatMenuOpen(false);
+                                            setActiveChatMenuRect(null);
+                                        }}>
                                             <AlertCircle size={14} /> {selectedChat.is_group ? 'Report group' : 'Report user'}
                                         </button>
                                     </div>,
@@ -604,6 +610,13 @@ export default function ActiveChat({
                         ✕
                     </button>
                 </div>
+            )}
+            {reportTargetId && (
+                <ReportModal
+                    contentId={selectedChat.is_group ? selectedChat.id : reportTargetId}
+                    contentType={selectedChat.is_group ? 'group' : 'user'}
+                    onClose={() => setReportTargetId(null)}
+                />
             )}
         </div>
     );

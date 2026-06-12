@@ -7,6 +7,13 @@ import Messages from '../../Assets/icons/messages.png'
 import Posts from '../../components/posts/postCard';
 import { Search, MessageSquare } from "lucide-react"
 import CommentsModal from '../../components/comments/commentsModal'
+import DefaultProfileIcon from '../../Assets/icons/default-pfp.png'
+import { createPortal } from 'react-dom';
+import ReportModal from '../../components/posts/ReportModal';
+import RemoveFriendIcon from '../../Assets/icons/remove-person.png'
+import Block from '../../Assets/icons/block.png'
+import InfoIcon from '../../Assets/icons/info.png'
+
 export default function FriendsPage() {
     const [theme, setTheme] = useState('dark')
     const [currentUser, setCurrentUser] = useState(null);
@@ -21,9 +28,11 @@ export default function FriendsPage() {
     const [isCommentsOpen, setIsCommentsOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
     const [activeMenu, setActiveMenu] = useState(null);
+    const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
     const token = localStorage.getItem("access");
     const API = "http://localhost:8000";
     const navigate = useNavigate();
+    const [reportTargetId, setReportTargetId] = useState(null);
     const handleOpenComments = (postObject) => {
         setSelectedPost(postObject);
         setIsCommentsOpen(true);
@@ -42,6 +51,30 @@ export default function FriendsPage() {
         friend.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (friend.major && friend.major.toLowerCase().includes(searchTerm.toLowerCase()))
     );
+    const handleUnfriend = async (friendId) => {
+        try {
+            const res = await fetch(`${API}/api/friends/unfriend/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: friendId }),
+            });
+            if (res.ok) {
+                setFriends(prev => prev.filter(f => f.id !== friendId));
+            }
+        } catch (e) { console.error("Unfriend failed:", e); }
+    };
+
+    const handleBlock = async (friendId) => {
+        try {
+            const res = await fetch(`${API}/api/users/${friendId}/block/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+                setFriends(prev => prev.filter(f => f.id !== friendId));
+            }
+        } catch (e) { console.error("Block failed:", e); }
+    };
     useEffect(() => {
         const fetchPageData = async () => {
             setUserLoading(true);
@@ -206,29 +239,27 @@ export default function FriendsPage() {
                     )}
                 </div>
                 <div className={styles.rightSection}>
-
                     <div className={styles.pill}>FRIENDS LIST</div>
-
-
-
                     <div className={styles.rightCard}>
-                        <button
-                            className={styles.viewAllBtn}
-                            onClick={() => setShowAllPopup(true)}
-                        >
-                            View All
-                        </button>
-                        {/* Search Bar */}
-                        <div className={styles.searchContactWrap}>
-                            <Search size={16} color="#888" className={styles.searchIcon} />
-                            <input
-                                type="text"
-                                placeholder="Search friends..."
-                                className={styles.searchInput}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
+                        <div className={styles.friendsListHeader}>
+                            <div className={styles.searchContactWrap}>
+                                <Search size={16} color="#888" className={styles.searchIcon} />
+                                <input
+                                    type="text"
+                                    placeholder="Search friends..."
+                                    className={styles.searchInput}
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                            <button
+                                className={styles.viewAllBtn}
+                                onClick={() => setShowAllPopup(true)}
+                            >
+                                View All
+                            </button>
                         </div>
+
 
                         {/* Regular Friends List */}
                         <div className={styles.rightList}>
@@ -268,20 +299,20 @@ export default function FriendsPage() {
                                                     <button
                                                         className={styles.actionBtn}
                                                         onClick={(e) => {
-                                                            e.stopPropagation(); // Prevents global closing/row clicks
-                                                            setActiveMenuId(activeMenuId === friend.id ? null : friend.id);
+                                                            e.stopPropagation();
+                                                            if (activeMenuId === friend.id) {
+                                                                setActiveMenuId(null);
+                                                            } else {
+                                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                                setMenuPosition({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+                                                                setActiveMenuId(friend.id);
+                                                            }
                                                         }}
                                                     >
                                                         •••
                                                     </button>
 
-                                                    {activeMenuId === friend.id && (
-                                                        <div className={styles.dropdownMenu} onClick={(e) => e.stopPropagation()}>
-                                                            <button onClick={() => { /* unfriend logic */; setActiveMenuId(null); }}>Unfriend</button>
-                                                            <button onClick={() => { /* report logic */; setActiveMenuId(null); }}>Report</button>
-                                                            <button className={styles.blockBtn} onClick={() => { /* block logic */; setActiveMenuId(null); }}>Block</button>
-                                                        </div>
-                                                    )}
+
                                                 </div>
                                             </div>
                                         </div>
@@ -354,20 +385,19 @@ export default function FriendsPage() {
                                                                 className={styles.actionBtn}
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    // Prepended popup context string avoids key duplication collision states
-                                                                    setActiveMenuId(activeMenuId === `popup-${friend.id}` ? null : `popup-${friend.id}`);
+                                                                    if (activeMenuId === `popup-${friend.id}`) {
+                                                                        setActiveMenuId(null);
+                                                                    } else {
+                                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                                        setMenuPosition({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+                                                                        setActiveMenuId(`popup-${friend.id}`);
+                                                                    }
                                                                 }}
                                                             >
                                                                 •••
                                                             </button>
 
-                                                            {activeMenuId === `popup-${friend.id}` && (
-                                                                <div className={styles.dropdownMenu} onClick={(e) => e.stopPropagation()}>
-                                                                    <button onClick={() => {  setActiveMenuId(null); }}>Unfriend</button>
-                                                                    <button onClick={() => {  setActiveMenuId(null); }}>Report</button>
-                                                                    <button className={styles.blockBtn} onClick={() => {  setActiveMenuId(null); }}>Block</button>
-                                                                </div>
-                                                            )}
+
                                                         </div>
                                                     </div>
                                                 </div>
@@ -380,6 +410,45 @@ export default function FriendsPage() {
                 </div>
 
             </div>
+            {activeMenuId && createPortal(
+                <div
+                    className={styles.portalMenu}
+                    style={{ top: menuPosition.top, right: menuPosition.right }}
+                    onClick={e => e.stopPropagation()}
+                >
+                    <button className={styles.portalMenuItem} onClick={() => {
+                        const id = Number(String(activeMenuId).replace('popup-', ''));
+                        handleUnfriend(id);
+                        setActiveMenuId(null);
+                    }}>
+                        <img src={RemoveFriendIcon} alt="" className={styles.portalMenuIcon} />
+                        Unfriend
+                    </button>
+                    <div className={styles.portalMenuDivider}>
+                        <div className={styles.portalMenuDividerLine} />
+                    </div>
+                    <button className={styles.portalMenuItemDanger} onClick={() => {
+                        const id = Number(String(activeMenuId).replace('popup-', ''));
+                        setReportTargetId(id);
+                        setActiveMenuId(null);
+                    }}>
+                        <img src={InfoIcon} alt="" className={styles.portalMenuIconDanger} />
+                        Report User
+                    </button>
+                    <div className={styles.portalMenuDivider}>
+                        <div className={styles.portalMenuDividerLine} />
+                    </div>
+                    <button className={styles.portalMenuItemDanger} onClick={() => {
+                        const id = Number(String(activeMenuId).replace('popup-', ''));
+                        handleBlock(id);
+                        setActiveMenuId(null);
+                    }}>
+                        <img src={Block} alt="" className={styles.portalMenuIconDanger} />
+                        Block
+                    </button>
+                </div>,
+                document.body
+            )}
             {isCommentsOpen && selectedPost && (
                 <CommentsModal
                     post={selectedPost}
@@ -388,6 +457,13 @@ export default function FriendsPage() {
                         setIsCommentsOpen(false);
                         setSelectedPost(null);
                     }}
+                />
+            )}
+            {reportTargetId && (
+                <ReportModal
+                    contentId={reportTargetId}
+                    contentType="user"
+                    onClose={() => setReportTargetId(null)}
                 />
             )}
 

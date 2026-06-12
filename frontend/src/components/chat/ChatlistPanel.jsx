@@ -6,13 +6,6 @@ import ChatRow from './ChatRow';
 
 const FILTERS = ['all', 'unread', 'pinned', 'groups'];
 
-/**
- * ChatListPanel
- *
- * Uses `useDeferredValue` on the search query so typing stays instant
- * even when the list is long — React renders the old list first, then
- * updates in the background once the deferred value settles.
- */
 const ChatListPanel = React.memo(({
     sortedChats,
     filter, setFilter,

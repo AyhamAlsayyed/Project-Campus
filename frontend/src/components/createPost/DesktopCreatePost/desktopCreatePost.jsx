@@ -2,7 +2,7 @@ import React from 'react';
 import { Cloud } from 'lucide-react';
 import { useEffect } from 'react';
 import styles from './desktopCreatePost.module.css';
-import ProfilePicture from '../../Assets/icons/default-pfp.png';
+import ProfilePicture from '../../../Assets/icons/default-pfp.png';
 const DesktopCreatePost = ({
     user,
     avatarSrc,

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import styles from './recentlyContacted.module.css';
 import { Search, MessageSquare } from "lucide-react"
 import { useNavigate } from 'react-router-dom';
-import Messages from '../../Assets/icons/messages.png'
+import Messages from '../../../Assets/icons/messages.png'
 
 
 export default function FriendsSuggestion() {

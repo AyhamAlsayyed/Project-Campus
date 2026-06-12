@@ -1,6 +1,6 @@
 import React from 'react';
-import styles from './mobileCreatePost.module.css'; // <-- Using its own CSS now!
-import ProfilePicture from '../../Assets/icons/default-pfp.png';
+import styles from './mobileCreatePost.module.css'; 
+import ProfilePicture from '../../../Assets/icons/default-pfp.png';
 export default function MobileCreatePost({
     avatarSrc,
     setIsModalOpen,

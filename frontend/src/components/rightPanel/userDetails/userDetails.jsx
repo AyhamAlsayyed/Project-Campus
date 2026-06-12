@@ -1,11 +1,11 @@
 import styles from './userDetails.module.css';
-import CollegeIcon from '../../Assets/icons/college.png';
-import CategoryIcon from '../../Assets/icons/category.png';
-import LinkIcon from '../../Assets/icons/link.png';
-import LocationIcon from '../../Assets/icons/location.png';
-import PhoneIcon from '../../Assets/icons/phone.png';
-import MailIcon from '../../Assets/icons/mail.png';
-import StarIcon from '../../Assets/icons/star.png';
+import CollegeIcon from '../../../Assets/icons/college.png';
+import CategoryIcon from '../../../Assets/icons/category.png';
+import LinkIcon from '../../../Assets/icons/link.png';
+import LocationIcon from '../../../Assets/icons/location.png';
+import PhoneIcon from '../../../Assets/icons/phone.png';
+import MailIcon from '../../../Assets/icons/mail.png';
+import StarIcon from '../../../Assets/icons/star.png';
 
 const icon = (src, size = 16) => (
     <img src={src} alt="" width={size} height={size}

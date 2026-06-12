@@ -3,7 +3,7 @@ import communityStyles from '../communityPage/communityPage.module.css'
 import headerStyles from '../../components/pagelayout/header/header.module.css'
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
-import DesktopCreatePost from '../../components/DesktopCreatePost/desktopCreatePost';
+import DesktopCreatePost from '../../components/createPost/DesktopCreatePost/desktopCreatePost';
 import CommentModal from '../../components/comments/commentsModal';
 import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import { useState, useEffect, useRef } from 'react';
@@ -13,11 +13,11 @@ import {
     User, MessageSquare as MessageSquareIcon2, Bell as BellIcon2, ChevronDown
 } from "lucide-react";
 import PostCard from '../../components/posts/postCard'
-import WeeklyNews from '../../components/weeklynews/weeklynews';
+import WeeklyNews from '../../components/rightPanel/weeklynews/weeklynews';
 import ThemeToggler from '../../components/pagelayout/themeToggle';
 import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
 import { useNavigate, useLocation } from 'react-router-dom';
-import MobileCreatePost from '../../components/MobileCreatePost/mobileCreatePost';
+import MobileCreatePost from '../../components/createPost/MobileCreatePost/mobileCreatePost';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import Calender from '../../Assets/icons/calender.png'
 export default function Homepage() {

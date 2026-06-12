@@ -2,11 +2,11 @@ import { useState, lazy, Suspense } from 'react';
 import styles from './chatspage.module.css';
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
-import GroupCreationFlow from '../../components/chatPageComponents/GroupCreationFlow';
-import { useChats } from '../../components/chatPageComponents/Usechats';
-import ChatListPanel from '../../components/chatPageComponents/ChatlistPanel';
-import ChatRequestsPanel from '../../components/chatPageComponents/Chatrequestspanel';
-import AcademicGroupsPanel from '../../components/chatPageComponents/Academicgroupspanel';
+import GroupCreationFlow from '../../components/chat/GroupCreationFlow';
+import { useChats } from '../../components/chat/Usechats';
+import ChatListPanel from '../../components/chat/ChatlistPanel';
+import ChatRequestsPanel from '../../components/chat/Chatrequestspanel';
+import AcademicGroupsPanel from '../../components/chat/Academicgroupspanel';
 
 // Downloaded only when the user first opens a chat
 const ActiveChat = lazy(() => import('./ActiveChats'));

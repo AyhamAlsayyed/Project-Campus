@@ -15,7 +15,7 @@
     margin: 0 auto;
     --left-col: 300px;
     --right-col: 380px;
-    --col-gap: 40px;
+    --col-gap: 65px;
 }
 
 .header {
@@ -537,7 +537,7 @@
 
 .rightSection {
     position: sticky;
-    flex: 0 0 435px;
+    flex: 0 0 420px;
     top: 100px;
     width: 25%;
     margin: 5% 0 0 0;
