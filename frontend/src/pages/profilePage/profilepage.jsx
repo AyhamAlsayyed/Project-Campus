@@ -343,17 +343,19 @@ export default function ProfilePage({ type }) {
     }, [userId]);
 
     useEffect(() => {
-        if (!currentUser) return;
+        if (!user || !currentUser) return;
         const isOwn =
             currentUser.id === Number(profileId) ||
             currentUser.id === Number(userId) ||
             currentUser.page_id === Number(profileId) ||
             currentUser.page_id === Number(userId);
-        if (!isOwn) return;
-        loadActivities();
-        loadSavedPosts();
-        loadReminders();
-    }, [currentUser, userId]);
+
+        if (isOwn && user?.type === 'page') { loadOwnPageEvents(); return; }
+        if (isOwn && user?.role === 'instructor') { loadCommunityPicks(); return; }  
+        if (isOwn) return;
+        if (user.role === 'instructor') loadCommunityPicks();
+        if (user.type !== 'page') loadFriends(userId);
+    }, [user, currentUser, userId]);
 
     useEffect(() => {
         if (!user || !currentUser) return;
@@ -550,8 +552,9 @@ export default function ProfilePage({ type }) {
 
     const loadCommunityPicks = async () => {
         try {
-            let res = await fetch(`${API}/api/pages/${userId}/community-picks/`, { headers: { Authorization: `Bearer ${token}` } });
-            if (!res.ok) res = await fetch(`${API}/api/users/${userId}/community-picks/`, { headers: { Authorization: `Bearer ${token}` } });
+            const res = await fetch(`${API}/api/users/${userId}/community-picks/`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             if (res.ok) { const data = await res.json(); setCommunityPicks(Array.isArray(data) ? data : []); }
         } catch (e) { console.error(e); }
     };
@@ -1172,7 +1175,7 @@ export default function ProfilePage({ type }) {
                                                 ? (event.avatar.startsWith('http') ? event.avatar : `${API}${event.avatar}`)
                                                 : '/default-avatar.png';
                                             return (
-                                                <div key={event.id} style={{ background: '#262626', borderRadius: 40, padding: 24,width:"700px", border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', margin: "0 auto 30px auto" }}>
+                                                <div key={event.id} style={{ background: '#262626', borderRadius: 40, padding: 24, width: "700px", border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', margin: "0 auto 30px auto" }}>
                                                     {/* Card header */}
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, padding: '0 10px' }}>
                                                         <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
@@ -1388,14 +1391,23 @@ export default function ProfilePage({ type }) {
                                         <img src={Community} alt="" className={styles.picksWidgetIcon} />
                                         <span className={styles.picksWidgetTitle}>Your Picks</span>
                                         <div className={styles.picksWidgetMeta}>
-                                            <span className={styles.picksWidgetCount}>{(user?.community_picks || []).length}/3</span>
+                                            <span className={styles.picksWidgetCount}>{communityPicks.length}/3</span>
                                             <button className={styles.picksManageBtn} onClick={async () => {
-                                                setModalPicks(user?.community_picks || []);
                                                 setShowPicksModal(true);
                                                 setPicksLoading(true);
                                                 try {
-                                                    const res = await fetch(`${API}/api/communities/?filter=joined`, { headers: { Authorization: `Bearer ${token}` } });
-                                                    if (res.ok) { const data = await res.json(); setJoinedCommunities(data.map(c => ({ ...c, bgImage: c.image }))); }
+                                                    const [communitiesRes, picksRes] = await Promise.all([
+                                                        fetch(`${API}/api/communities/?filter=joined`, { headers: { Authorization: `Bearer ${token}` } }),
+                                                        fetch(`${API}/api/users/${currentUser.id}/community-picks/`, { headers: { Authorization: `Bearer ${token}` } }),
+                                                    ]);
+                                                    if (communitiesRes.ok) {
+                                                        const data = await communitiesRes.json();
+                                                        setJoinedCommunities(data.map(c => ({ ...c, bgImage: c.image })));
+                                                    }
+                                                    if (picksRes.ok) {
+                                                        const picks = await picksRes.json();
+                                                        setModalPicks(Array.isArray(picks) ? picks.map(p => ({ ...p, id: p.id ?? p.community_id })) : []);
+                                                    }
                                                 } catch (e) { console.error(e); }
                                                 finally { setPicksLoading(false); }
                                             }}>Manage</button>
@@ -1735,7 +1747,19 @@ export default function ProfilePage({ type }) {
                                                 <p className={styles.picksModalCommunityDesc}>{community.description || 'No description available.'}</p>
                                             </div>
                                             <button
-                                                onClick={() => isPicked ? setModalPicks(p => p.filter(c => c.id !== community.id)) : (!atLimit && setModalPicks(p => [...p, community]))}
+                                                onClick={async () => {
+                                                    try {
+                                                        const res = await fetch(`${API}/api/${community.id}/toggle_picks/`, {
+                                                            method: 'POST',
+                                                            headers: { Authorization: `Bearer ${token}` },
+                                                        });
+                                                        if (res.ok) {
+                                                            isPicked
+                                                                ? setModalPicks(p => p.filter(c => c.id !== community.id))
+                                                                : (!atLimit && setModalPicks(p => [...p, community]));
+                                                        } else console.error('Toggle pick failed:', await res.json());
+                                                    } catch (e) { console.error(e); }
+                                                }}
                                                 disabled={!isPicked && atLimit}
                                                 className={`${styles.picksModalPickBtn} ${isPicked ? styles.picksModalPickBtnPicked : atLimit ? styles.picksModalPickBtnDisabled : styles.picksModalPickBtnNormal}`}
                                             >

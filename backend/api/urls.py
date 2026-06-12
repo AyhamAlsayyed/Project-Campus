@@ -189,7 +189,7 @@ urlpatterns += [
     path("communities/<int:community_id>/block/<int:member_id>/", block_user_from_community),
     # community_action
     path("users/<int:instructor_id>/community-picks/", instructor_community_picks),
-    path("<int:instructor_id>/toggle_picks/", toggle_pick),
+    path("<int:community_id>/toggle_picks/", toggle_pick),
     path("communities/<int:pk>/notify/", toggle_community_notifications),
     path("communities/<int:pk>/leave/", leave_community),
     # community_admin_action

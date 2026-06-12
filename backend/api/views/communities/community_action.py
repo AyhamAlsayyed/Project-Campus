@@ -25,11 +25,11 @@ def toggle_pick(request, community_id):
     instructor = request.user.instructor_profile
     community = get_object_or_404(Community, pk=community_id)
 
-    if community in instructor.featured_communities.all():
-        instructor.featured_communities.remove(community)
+    if community in instructor.community_picks.all():
+        instructor.community_picks.remove(community)
         return Response({"message": "Removed from picks"})
     else:
-        instructor.featured_communities.add(community)
+        instructor.community_picks.add(community)
         return Response({"message": "Added to picks"})
 
 
