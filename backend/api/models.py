@@ -386,6 +386,32 @@ class Instructor(models.Model):
         return f"{title} {username} - {self.department or 'No Department'}"
 
 
+class TeachingPosition(models.Model):
+    class EmploymentType(models.TextChoices):
+        PRIMARY = "primary", "Primary"
+        PART_TIME = "part_time", "Part Time"
+
+    position_id = models.BigAutoField(primary_key=True, db_column="position_id")
+
+    instructor = models.ForeignKey(
+        "Instructor", on_delete=models.CASCADE, related_name="teaching_positions", db_column="instructor_id"
+    )
+
+    institution_name = models.CharField(max_length=255)
+
+    employment_type = models.CharField(
+        max_length=15,
+        choices=EmploymentType.choices,
+        default=EmploymentType.PRIMARY,
+    )
+
+    class Meta:
+        db_table = "teaching_position"
+
+    def __str__(self):
+        return f"{self.instructor.user.username}" f"({self.institution_name} - {self.get_employment_type_display()})"
+
+
 class Student(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -433,7 +459,7 @@ class Friendship(models.Model):
     class RelationType(models.TextChoices):
         USER_TO_USER = "user_to_user", "User To User"
         USER_TO_PAGE = "user_to_page", "User To Page"
-        PAGE_TO_PAGE = "page_to_page", "Page To Page"  # ➕ Add the choice here
+        PAGE_TO_PAGE = "page_to_page", "Page To Page"
 
     friendship_id = models.BigAutoField(primary_key=True, db_column="friendship_id")
 
@@ -931,7 +957,7 @@ class Conversation(models.Model):
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
-        default=Status.PENDING,
+        default=Status.ACCEPTED,
     )
 
     created_by = models.ForeignKey(

@@ -175,7 +175,7 @@ def create_event(request):
     return Response({"message": "Event created successfully", "event_id": event.event_id}, status=201)
 
 
-@api_view(["POST"])
+@api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
 def update_event(request, event_id):
     user = request.user

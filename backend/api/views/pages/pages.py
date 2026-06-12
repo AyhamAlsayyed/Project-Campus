@@ -130,8 +130,8 @@ def rate_page(request, page_id):
 
     PageRating.objects.update_or_create(page=page, user=user, defaults={"score": score_int})
 
-    serializer = PageSerializer(page, context={"request": request})
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    response_data = {"user_rating": score_int}
+    return Response(response_data, status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET"])

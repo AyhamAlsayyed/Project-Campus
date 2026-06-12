@@ -8,8 +8,9 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import ConversationMember, Friendship
+from ...models import ConversationMember, Friendship, Message
 from ...serializers import GroupMemberSerializer, UserMinimalSerializer
+from ...utils.conversation import get_or_create_direct_conversation
 
 User = get_user_model()
 
@@ -128,3 +129,27 @@ def get_group_members(request, conv_id):
 
     serializer = GroupMemberSerializer(sorted_users, many=True, context={"request": request})
     return Response(serializer.data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def share_group_link(request, conv_id):
+    user = request.user
+    recipient_id = request.data.get("recipient_id")
+    link_url = request.data.get("link_url")
+
+    if not recipient_id or not link_url:
+        return Response({"error": "Recipient ID and Link URL are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    recipient = get_object_or_404(User, id=recipient_id)
+
+    conversation, _ = get_or_create_direct_conversation(user, recipient)
+
+    message_content = f"Check out this group: {link_url}"
+    Message.objects.create(
+        conversation=conversation,
+        sender=user,
+        content=message_content,
+    )
+
+    return Response({"message": "Link shared successfully"}, status=status.HTTP_201_CREATED)

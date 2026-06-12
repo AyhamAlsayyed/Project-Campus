@@ -59,6 +59,7 @@ from .views.conversation.conversation_info import (
     add_member_to_group,
     get_friends_to_invite,
     get_group_members,
+    share_group_link,
 )
 from .views.conversation.conversation_member_action import (
     remove_member_from_group,
@@ -226,6 +227,7 @@ urlpatterns += [
     path("groups/<int:conv_id>/edit-image/", edit_group_image),
     path("groups/invite-friends/", get_friends_to_invite),
     path("groups/<int:conv_id>/invite-friends/", get_friends_to_invite),
+    path("groups/<int:conv_id>/share-link/", share_group_link),
     # chat_group_action
     path("groups/<int:conv_id>/add-member/", add_member_to_group),
     path("groups/<int:conv_id>/remove-member/", remove_member_from_group),
