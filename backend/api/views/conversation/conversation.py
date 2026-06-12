@@ -9,16 +9,10 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import (
-    Conversation,
-    ConversationMember,
-    Friendship,
-    Message,
-    MessageMedia,
-)
+from ...models import Conversation, ConversationMember, Message, MessageMedia
 from ...serializers import ConversationSerializer, MessageSerializer
 from ...utils.blocked_users import is_blocked
-from ...utils.notifications import send_global_notification
+from ...utils.conversation import get_or_create_direct_conversation
 
 User = get_user_model()
 
@@ -271,62 +265,14 @@ def send_message(request, conversation_id):
 @permission_classes([IsAuthenticated])
 def create_dm(request, user_id):
     current_user = request.user
+
+    existing_id = request.data.get("conversation_id")
+    if existing_id:
+        return Response({"id": existing_id}, status=status.HTTP_200_OK)
+
     target_user = get_object_or_404(User, id=user_id)
-    existing = request.data.get("conversation_id")
 
-    if existing:
-        return Response({"id": existing})
+    conversation, created = get_or_create_direct_conversation(current_user, target_user)
 
-    if is_blocked(current_user, target_user):
-        raise PermissionDenied("You cannot start a chat context with this profile due to block restrictions.")
-
-    profile = getattr(target_user, "profile", None)
-    if not profile:
-        return Response({"error": "User does not have an active profile."}, status=status.HTTP_400_BAD_REQUEST)
-
-    privacy_setting = getattr(profile, "message_privacy", "EVERYONE")
-
-    if privacy_setting == "NOBODY":
-        raise PermissionDenied("This user does not allow new conversations.")
-
-    elif privacy_setting == "FRIENDS_ONLY":
-        is_target_a_page = hasattr(target_user, "page")
-
-        if is_target_a_page:
-            is_mutual = Friendship.objects.filter(
-                user1=current_user,
-                user2=target_user,
-                status=Friendship.Status.FOLLOWING,
-                relation_type=Friendship.RelationType.USER_TO_PAGE,
-            ).exists()
-        else:
-            is_mutual = Friendship.objects.filter(
-                (Q(user1=current_user, user2=target_user) | Q(user1=target_user, user2=current_user)),
-                status=Friendship.Status.ACCEPTED,
-                relation_type=Friendship.RelationType.USER_TO_USER,
-            ).exists()
-
-        if not is_mutual:
-            raise PermissionDenied("You do not have permission to message this profile.")
-
-    duplicate_dm = (
-        Conversation.objects.filter(is_group=False, members__user=current_user)
-        .filter(members__user=target_user)
-        .first()
-    )
-
-    if duplicate_dm:
-        return Response({"id": duplicate_dm.conversation_id}, status=status.HTTP_200_OK)
-
-    new_conv = Conversation.objects.create(is_group=False, created_by=current_user)
-    ConversationMember.objects.create(conversation=new_conv, user=current_user)
-    ConversationMember.objects.create(conversation=new_conv, user=target_user)
-
-    send_global_notification(
-        sender=current_user,
-        receiver=target_user,
-        notification_type="dm-request",
-        target_object=new_conv,
-        custom_text=f"{current_user.username} wants to start a conversation with you.",
-    )
-    return Response({"id": new_conv.conversation_id}, status=status.HTTP_201_CREATED)
+    response_status = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+    return Response({"id": conversation.conversation_id}, status=response_status)

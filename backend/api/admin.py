@@ -28,6 +28,7 @@ from .models import (
     SavedPost,
     Student,
     Subscription,
+    TeachingPosition,
     UniversityDomain,
     UserDegree,
     UserProfile,
@@ -40,6 +41,7 @@ admin.site.register(Subscription)
 admin.site.register(PageRating)
 admin.site.register(Admin)
 admin.site.register(Instructor)
+admin.site.register(TeachingPosition)
 admin.site.register(Student)
 admin.site.register(Friendship)
 admin.site.register(Notification)

@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ...models import EventReminder, UserDegree
-from ...serializers import PageSerializer, UserSerializer
+from ...serializers import PageSerializer, TeachingPosition, UserSerializer
 
 
 def get_user_academic_info(user):
@@ -108,6 +108,31 @@ def profile_view(request, user_id):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+# this is the data for update profile
+"""
+<QueryDict:
+    {
+    'username': [''],
+    'full_name': [''],
+    'major': [''],
+    'bio': [''],
+    'personal_email': ['ahmed@gmail.com'],
+    'primary_phone': [''],
+    'secondary_phone': [''],
+    'birthday': ['1963-05-06'],
+    'degrees': ['[
+        {"id":3,"degree_type":"PhD","major":"CS","institution":""},
+        {"id":4,"degree_type":"Master","major":"eng","institution":""},
+        {"id":5,"degree_type":"Bachelor","major":"Graphic","institution":""}
+    ]'],
+    'teaching_positions': ['[
+        {"institution":"asd","type":"primary"}
+        ]']
+    }
+>
+"""
+
+
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
 def update_profile(request):
@@ -139,8 +164,9 @@ def update_profile(request):
             profile.primary_phone = request.data["primary_phone"]
         if "secondary_phone" in request.data:
             profile.secondary_phone = request.data["secondary_phone"]
-        if "birth_date" in request.data:
-            profile.birth_date = request.data["birth_date"]
+        if "birthday" in request.data:
+            profile.birth_date = request.data["birthday"]
+
         if "avatar" in request.FILES:
             profile.profile_image = request.FILES["avatar"]
         if "cover" in request.FILES:
@@ -148,16 +174,12 @@ def update_profile(request):
 
         profile.save()
 
-    print(request.data)
     if "degrees" in request.data:
         try:
             degrees_raw = request.data.get("degrees")
-
-            # If form-data stringified it as JSON text, unpack it safely
             if isinstance(degrees_raw, str):
                 degrees_data = json.loads(degrees_raw)
             else:
-                # If parsed natively or passed via list objects
                 degrees_data = request.data.getlist("degrees") if hasattr(request.data, "getlist") else degrees_raw
 
             existing_degree_ids = set(user.degrees.values_list("id", flat=True))
@@ -171,7 +193,6 @@ def update_profile(request):
                     degree_id = degree_item.get("id")
 
                     if degree_id and int(degree_id) in existing_degree_ids:
-                        # update degree
                         dg = UserDegree.objects.get(id=degree_id, user=user)
                         dg.degree_type = degree_item.get("degree_type", dg.degree_type)
                         dg.major = degree_item.get("major", dg.major)
@@ -179,7 +200,6 @@ def update_profile(request):
                         dg.save()
                         provided_degree_ids.append(int(degree_id))
                     else:
-                        # create new degree
                         new_dg = UserDegree.objects.create(
                             user=user,
                             degree_type=degree_item.get("degree_type"),
@@ -193,12 +213,55 @@ def update_profile(request):
         except Exception as e:
             return Response({"error": f"Failed to update degrees: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
+    if hasattr(user, "instructor_profile") and "teaching_positions" in request.data:
+        try:
+            instructor = user.instructor_profile
+            positions_raw = request.data.get("teaching_positions")
+
+            if isinstance(positions_raw, str):
+                positions = json.loads(positions_raw)
+            else:
+                positions = (
+                    request.data.getlist("teaching_positions") if hasattr(request.data, "getlist") else positions_raw
+                )
+
+            existing_position_ids = set(instructor.teaching_positions.values_list("position_id", flat=True))
+            provided_position_ids = []
+
+            with transaction.atomic():
+                for position in positions:
+                    if isinstance(position, str):
+                        position = json.loads(position)
+
+                    position_id = position.get("id") or position.get("position_id")
+
+                    institution = position.get("institution") or ""
+
+                    employment_type = position.get("type") or "primary"
+
+                    if position_id and int(position_id) in existing_position_ids:
+                        tp = TeachingPosition.objects.get(position_id=position_id, instructor=instructor)
+                        tp.institution_name = institution
+                        tp.employment_type = employment_type
+                        tp.save()
+                        provided_position_ids.append(int(position_id))
+                    else:
+                        new_tp = TeachingPosition.objects.create(
+                            instructor=instructor, institution_name=institution, employment_type=employment_type
+                        )
+                        provided_position_ids.append(new_tp.position_id)
+
+                instructor.teaching_positions.exclude(position_id__in=provided_position_ids).delete()
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to update teaching positions: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
     if hasattr(user, "student_profile") and "major" in request.data:
         user.student_profile.major = request.data["major"]
         user.student_profile.save()
 
     user.save()
-
     return Response({"message": "Profile updated successfully"}, status=status.HTTP_200_OK)
 
 

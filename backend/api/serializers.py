@@ -20,6 +20,7 @@ from .models import (
     Post,
     PostMedia,
     Subscription,
+    TeachingPosition,
     UserDegree,
     UserProfile,
 )
@@ -65,6 +66,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
     degrees = serializers.SerializerMethodField()
+    teaching_positions = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
     university = serializers.SerializerMethodField()
     university_full_name = serializers.SerializerMethodField()
@@ -95,6 +97,7 @@ class UserSerializer(serializers.ModelSerializer):
             "academic_title",
             "instructor_type",
             "degrees",
+            "teaching_positions",
             "convention_id",
             "conversation_detail",
             "is_restricted",
@@ -104,9 +107,6 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
     def _should_restrict_data(self, obj):
-        if hasattr(obj, "instructor_profile"):
-            return False
-
         request = self.context.get("request")
         if not request or not request.user or request.user.is_anonymous:
             return True
@@ -208,7 +208,6 @@ class UserSerializer(serializers.ModelSerializer):
                 "username": obj.username,
                 "avatar": data.get("avatar"),
                 "privacy": data.get("privacy"),
-                #
                 "academic_email": None,
                 "bio": None,
                 "status": "offline",
@@ -220,13 +219,16 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
     def get_degrees(self, obj):
-        if self._should_restrict_data(obj):
-            return []
-
         DEGREE_ORDER = {"PhD": 1, "Master": 2, "Bachelor": 3, "Diploma": 4}
         degrees_qs = obj.degrees.all()
         sorted_degrees = sorted(degrees_qs, key=lambda d: DEGREE_ORDER.get(d.degree_type, 99))
         return UserDegreeSerializer(sorted_degrees, many=True).data
+
+    def get_teaching_positions(self, obj):
+        if not hasattr(obj, "instructor_profile"):
+            return []
+        positions = obj.instructor_profile.teaching_positions.all()
+        return TeachingPositionSerializer(positions, many=True).data
 
     def get_personal_email(self, obj):
         if self._should_restrict_data(obj):
@@ -364,6 +366,12 @@ class UserDegreeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserDegree
         fields = ["id", "degree_type", "major", "institution"]
+
+
+class TeachingPositionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeachingPosition
+        fields = ["position_id", "institution_name", "employment_type"]
 
 
 class GroupMemberSerializer(serializers.ModelSerializer):
@@ -593,15 +601,14 @@ class PostSerializer(serializers.ModelSerializer):
                 is_notified = False
                 if request and request.user.is_authenticated:
 
-                   follow_rel = Friendship.objects.filter(
-                user1=request.user,
-                user2=user,
-                status=Friendship.Status.FOLLOWING,
-                relation_type=Friendship.RelationType.USER_TO_PAGE,
-                 ).first()
+                    follow_rel = Friendship.objects.filter(
+                        user1=request.user,
+                        user2=user,
+                        status=Friendship.Status.FOLLOWING,
+                        relation_type=Friendship.RelationType.USER_TO_PAGE,
+                    ).first()
                 is_followed = follow_rel is not None
-                is_notified = getattr(follow_rel, 'is_notified', False) if follow_rel else False
-
+                is_notified = getattr(follow_rel, "is_notified", False) if follow_rel else False
 
                 avatar = page.profile_image.url if page.profile_image else ""
                 if request and avatar:
@@ -610,7 +617,6 @@ class PostSerializer(serializers.ModelSerializer):
                     "id": page.user.id,
                     "is_followed": is_followed,
                     "is_notified": is_notified,
-
                     "type": "page",
                     "username": page.page_full_name,
                     "avatar": avatar,
