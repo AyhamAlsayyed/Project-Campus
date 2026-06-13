@@ -45,13 +45,14 @@
   cursor: not-allowed;
   height: 36px;
   min-width: 70px;
+  transition: background 0.2s ease;
 }
-
 .saveBtnActive {
-  background-color: #D4145A;
-  color: #FFFFFF;
+  background: linear-gradient(90deg, #612886, #892A82);
+  color: #ffffff;
   cursor: pointer;
 }
+
 
 .centeredDivider {
   width: 75%;
@@ -271,4 +272,94 @@
 
 .dropdownItem:hover {
   background-color: #404040;
+}
+[data-theme="light"] .infoPanelContainer {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .infoTitle {
+  color: #662D91;
+}
+
+[data-theme="light"] .sectionTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .privacyTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .sectionHelperText,
+[data-theme="light"] .sectionHelperTextBanner {
+  color: #666666;
+}
+
+[data-theme="light"] .centeredDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .descriptionTextarea {
+  background-color: #f3e8ff;
+  color: #333333;
+}
+
+[data-theme="light"] .privacyBtn {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .privacySelector:hover .privacyBtn {
+  background-color: #e9d5ff;
+}
+
+[data-theme="light"] .privacyDropdown {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .dropdownItem {
+  color: #333333;
+}
+
+[data-theme="light"] .dropdownItem:hover {
+  background-color: #f3e8ff;
+}
+.iconBack,
+.iconHelp,
+.iconCamera,
+.iconVerified,
+.iconEdit,
+.iconArrow {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) saturate(100%) invert(1);
+  display: block;
+}
+
+.iconHelp { width: 22px; height: 22px; cursor: pointer; }
+.iconCamera { width: 18px; height: 18px; }
+.iconVerified { width: 18px; height: 18px; }
+.iconEdit { width: 18px; height: 18px; cursor: pointer; }
+.iconArrow { width: 16px; height: 16px; }
+
+[data-theme="light"] .iconBack,
+[data-theme="light"] .iconHelp,
+[data-theme="light"] .iconArrow,
+[data-theme="light"] .iconEdit {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .iconVerified {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+[data-theme="light"] .saveBtn {
+  background-color: #ffffff;
+  color: #662D91;
+  border: 1.5px solid #662D91;
+}
+
+[data-theme="light"] .saveBtnActive {
+  background: linear-gradient(90deg, #612886, #892A82);
+  color: #ffffff;
+  border: none;
 }

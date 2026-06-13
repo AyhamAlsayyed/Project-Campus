@@ -231,7 +231,11 @@
   overflow-wrap: break-word;
  
 }
-
+.settingsIcon {
+  filter: brightness(0) saturate(100%) invert(80%);
+  cursor: pointer;
+  flex-shrink: 0;
+}
 @keyframes popIn {
   from {
     opacity: 0;
@@ -337,4 +341,41 @@
 }
 .small .joinBtn {
   background: linear-gradient(90deg, #a855f7, #d946ef);
+}
+[data-theme="light"] .viewBtn {
+  background: #ffffff;
+  color: #662D91;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="light"] .joinBtn {
+  background: #8E2794;
+  color: white;
+  border: 1px solid white;
+}
+
+[data-theme="light"] .requestedDisabled {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.35) !important;
+  border: 1px solid transparent !important;
+  cursor: not-allowed !important;
+}
+.overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(to right, rgba(25,25,25,0.95) 10%, rgba(25,25,25,0.7) 40%, rgba(25,25,25,0.2) 100%);
+}
+
+[data-theme="light"] .overlay {
+  background: linear-gradient(to right, rgba(59,32,130,0.95) 10%, rgba(59,32,130,0.7) 40%, rgba(59,32,130,0.2) 100%);
+}
+
+.joinedByText { font-size: 11px; color: rgba(255,255,255,0.5); }
+.joinedByLabel { font-weight: 600; color: rgba(255,255,255,0.7); }
+
+[data-theme="light"] .joinedByText { color: #4D4D4D; }
+[data-theme="light"] .joinedByLabel { color: #4D4D4D; }
+[data-theme="light"] .settingsIcon {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
 }

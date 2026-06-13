@@ -148,8 +148,17 @@ export default function CommentModal({ post, onClose, currentUser }) {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const data = await res.json();
-                // 👇 handle both array and object responses
-                setComments(Array.isArray(data) ? data : data.results || data.comments || []);
+                const raw = Array.isArray(data) ? data : data.results || data.comments || [];
+                const normalized = raw.map(c => ({
+                    ...c,
+                    text: c.text || c.content,
+                    user: c.user || c.author?.username,
+                    user_id: c.user_id || c.author?.id,
+                    user_avatar: c.user_avatar || c.author?.avatar,
+                    author: c.author || null,
+                }));
+
+                setComments(normalized);
             } catch (err) {
                 console.error("Error fetching comments:", err);
             } finally {
@@ -188,7 +197,15 @@ export default function CommentModal({ post, onClose, currentUser }) {
             });
             if (res.ok) {
                 const savedComment = await res.json();
-                setComments([...comments, savedComment]);
+                const normalized = {
+                    ...savedComment,
+                    text: savedComment.text || savedComment.content,
+                    user: savedComment.user || savedComment.author?.username,
+                    user_id: savedComment.user_id || savedComment.author?.id,
+                    user_avatar: savedComment.user_avatar || savedComment.author?.avatar,
+                    author: savedComment.author || null,
+                };
+                setComments(prev => [...prev, normalized]);
                 setNewComment("");
                 setParentComment(null);
             } else {
@@ -255,7 +272,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
 
                 <div className={styles.content}>
                     <div className={styles.postHeader}>
-                        <Link to={`/profile/${post.author_id}`}>
+                        <Link to={post.author?.type === 'page' ? `/page/${post.author?.id}` : `/profile/${post.author?.id}`}>
                             <img
                                 src={post.author?.avatar || post.author_avatar || "/default-avatar.png"}
                                 className={styles.avatar}
@@ -323,7 +340,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
                             {likesCount > 0 && <span style={{ fontSize: "0.85rem", marginLeft: 4, opacity: 0.8 }}>{likesCount}</span>}
                         </div>
 
-                        <div style={{ display: "flex", alignItems: "center", gap: 4, color: "rgba(255,255,255,0.6)", fontSize: "0.9rem" }}>
+                        <div className={styles.commentsCount}>
                             <span>{post.comments_count || comments.length}</span>
                             <span>comments</span>
                         </div>
@@ -414,7 +431,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
                             return (
                                 <div key={c.id} className={styles.commentBlock} ref={el => commentRefs.current[c.id] = el}>
                                     <div className={styles.commentRow}>
-                                        <Link to={`/profile/${c.user_id}`}>
+                                        <Link to={c.author?.user_type === 'page' ? `/page/${c.user_id}` : `/profile/${c.user_id}`}>
                                             <img src={c.user_avatar || "/default-avatar.png"} className={styles.commentAvatar} alt="" />
                                         </Link>
                                         <div className={styles.commentContent}>
@@ -441,8 +458,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
 
                                     {isExpanded && replies.map((reply) => (
                                         <div key={reply.id} className={styles.replyRow} ref={el => commentRefs.current[reply.id] = el}>
-                                            <Link to={`/profile/${reply.user_id}`}>
-                                                <img src={reply.user_avatar || "/default-avatar.png"} className={styles.replyAvatar} alt="" />
+                                            <Link to={reply.author?.user_type === 'page' ? `/page/${reply.user_id}` : `/profile/${reply.user_id}`}>                                                <img src={reply.user_avatar || "/default-avatar.png"} className={styles.replyAvatar} alt="" />
                                             </Link>
                                             <div className={styles.replyContent}>
                                                 <div className={`${styles.replyBubble} ${highlightedId === reply.id ? styles.highlighted : ''}`}>

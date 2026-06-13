@@ -100,6 +100,27 @@ export default function Community() {
         };
         fetchOwned();
     }, []);
+    useEffect(() => {
+        const fetchPromoCart = async () => {
+            try {
+                const res = await fetch(`${API}/api/communities/promotions/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setPromoCart(data.map(item => ({
+                        id: item.id,
+                        communityId: item.community_id,
+                        community: ownedCommunities.find(c => c.id === item.community_id) || { name: item.community_name },
+                        durationIdx: item.duration_idx,
+                        label: item.duration,
+                        cost: item.cost,
+                    })));
+                }
+            } catch (err) { console.error("Failed to load promo cart:", err); }
+        };
+        if (token) fetchPromoCart();
+    }, [ownedCommunities]);
 
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 1024);
@@ -132,6 +153,9 @@ export default function Community() {
         };
         fetchFriendsRelated();
     }, []);
+    useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme);
+    }, [theme]);
 
     const loadUser = async () => {
         if (!token) return;
@@ -437,7 +461,7 @@ export default function Community() {
                                                         padding: "8px", cursor: "pointer", transition: "background 0.2s"
                                                     }}
                                                 >
-                                                    <img src={CreateCommunityIcon} alt="" style={{ width: "25px", height: "25px", filter: 'brightness(0) invert(0.9)' }} />
+                                                   <img src={CreateCommunityIcon} alt="" className={styles.createCommunityIcon} />
                                                 </div>
                                             )}
                                         </div>
@@ -469,7 +493,7 @@ export default function Community() {
                                             (user?.is_premium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
 
                                         }} style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "8px", cursor: "pointer" }}>
-                                            <img src={CreateCommunityIcon} alt="" style={{ width: "25px", height: "25px", filter: 'brightness(0) invert(0.9)' }} />
+                                            <img src={CreateCommunityIcon} alt="" className={styles.createCommunityIcon} />
                                         </div>
                                     )}
                                 </div>
@@ -574,7 +598,15 @@ export default function Community() {
                                                             </div>
                                                             <button
                                                                 className={styles.detailsBtn}
-                                                                onClick={() => setPromoCart(prev => prev.filter(c => c.communityId !== item.communityId))}
+                                                                onClick={async () => {
+                                                                    if (item.id) {
+                                                                        await fetch(`${API}/api/communities/promotions/${item.id}/delete`, {
+                                                                            method: "DELETE",
+                                                                            headers: { Authorization: `Bearer ${token}` }
+                                                                        });
+                                                                    }
+                                                                    setPromoCart(prev => prev.filter(c => c.communityId !== item.communityId));
+                                                                }}
                                                             >
                                                                 Remove
                                                             </button>
@@ -623,7 +655,7 @@ export default function Community() {
                         ) : (
 
                             <>
-                                <div className={styles.pill} style={{left:"20px"}}>FRIENDS RELATED</div>
+                                <div className={styles.pill} style={{ left: "20px" }}>FRIENDS RELATED</div>
                                 <div className={styles.rightCard}>
                                     <div className={styles.rightList}>
                                         {friendsCommunities.map((community, index) => (
@@ -709,25 +741,49 @@ export default function Community() {
                                 <span className={styles.pmCancelBtn} onClick={() => setIsPromoModalOpen(false)}>Cancel</span>
                                 <button
                                     className={styles.pmDoneBtn}
-                                    onClick={() => {
-                                        if (selectedPromoCommunityId) {
-                                            const communityObj = ownedCommunities.find(c => c.id === selectedPromoCommunityId);
-                                            if (communityObj) {
-                                                const existingIdx = promoCart.findIndex(item => item.communityId === selectedPromoCommunityId);
-                                                const cartItem = {
-                                                    communityId: selectedPromoCommunityId,
-                                                    community: communityObj,
-                                                    durationIdx: promoDurationIdx,
-                                                    label: durationOptions[promoDurationIdx].label,
-                                                    cost: durationOptions[promoDurationIdx].cost,
-                                                };
-                                                if (existingIdx >= 0) {
-                                                    setPromoCart(prev => prev.map((item, i) => i === existingIdx ? cartItem : item));
-                                                } else {
-                                                    setPromoCart(prev => [...prev, cartItem]);
-                                                }
+                                    onClick={async () => {
+                                        if (!selectedPromoCommunityId) { setIsPromoModalOpen(false); return; }
+                                        const communityObj = ownedCommunities.find(c => c.id === selectedPromoCommunityId);
+                                        if (!communityObj) return;
+
+                                        const cartItem = {
+                                            communityId: selectedPromoCommunityId,
+                                            community: communityObj,
+                                            durationIdx: promoDurationIdx,
+                                            label: durationOptions[promoDurationIdx].label,
+                                            cost: durationOptions[promoDurationIdx].cost,
+                                        };
+
+                                        try {
+                                            const existingItem = promoCart.find(item => item.communityId === selectedPromoCommunityId);
+                                            if (existingItem) {
+                                                await fetch(`${API}/api/communities/promotions/${existingItem.id}/delete/`, {
+                                                    method: "DELETE",
+                                                    headers: { Authorization: `Bearer ${token}` }
+                                                });
                                             }
-                                        }
+
+                                            const res = await fetch(`${API}/api/communities/promotions/`, {
+                                                method: "POST",
+                                                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                                                body: JSON.stringify({
+                                                    community_id: selectedPromoCommunityId,
+                                                    duration: durationOptions[promoDurationIdx].label,
+                                                    duration_idx: promoDurationIdx,
+                                                    cost: durationOptions[promoDurationIdx].cost,
+                                                })
+                                            });
+
+                                            if (res.ok) {
+                                                const saved = await res.json();
+                                                const newItem = { ...cartItem, id: saved.id };
+                                                setPromoCart(prev => {
+                                                    const filtered = prev.filter(i => i.communityId !== selectedPromoCommunityId);
+                                                    return [...filtered, newItem];
+                                                });
+                                            }
+                                        } catch (err) { console.error("Failed to save promotion:", err); }
+
                                         setIsPromoModalOpen(false);
                                         setSelectedPromoCommunityId(null);
                                         setPromoDurationIdx(2);
@@ -818,7 +874,7 @@ export default function Community() {
                                                             )}
                                                         </div>
                                                         {i !== ownedCommunities.length - 1 && (
-                                                            <div style={{ height: 1, background: '#4D4D4D', margin: '10px auto 10px auto' , width:"50%" }} />
+                                                            <div style={{ height: 1, background: '#4D4D4D', margin: '10px auto 10px auto', width: "50%" }} />
                                                         )}
                                                     </div>
                                                 ))}

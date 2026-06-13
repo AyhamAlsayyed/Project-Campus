@@ -174,10 +174,15 @@ export default function CreateCommunity({ onBack, onSuccess }) {
                         <div className={styles.privacySelector}
                             onClick={() => setIsPrivacyDropdownOpen(p => !p)}>
                             <div className={styles.privacyBtn}>{privacy}</div>
-                            {renderIcon(ArrowLeftIcon, '16px', '16px', {
-                                transform: isPrivacyDropdownOpen ? 'rotate(90deg)' : 'rotate(270deg)',
-                                transition: 'transform 0.2s ease',
-                            })}
+                            <img
+                                src={ArrowLeftIcon}
+                                className={styles.privacyArrow}
+                                style={{
+                                    width: '16px', height: '16px',
+                                    transform: isPrivacyDropdownOpen ? 'rotate(90deg)' : 'rotate(270deg)',
+                                    transition: 'transform 0.2s ease',
+                                }}
+                            />
                         </div>
                         {isPrivacyDropdownOpen && (
                             <div className={styles.privacyDropdown}>
@@ -195,8 +200,8 @@ export default function CreateCommunity({ onBack, onSuccess }) {
 
             <div className={styles.ccDivider}></div>
 
-         
-        
+
+
         </div>
     );
 }

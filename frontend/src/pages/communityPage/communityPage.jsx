@@ -12,7 +12,7 @@ import CommentModal from '../../components/comments/commentsModal';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
 import PostCard from '../../components/posts/postCard'
 import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
-import NotificationInactive from '../../Assets/icons/notifications.png'
+import NotificationInactive from '../../Assets/icons/mute.png'
 import NotificationActive from '../../Assets/icons/notifications-active.png'
 import Leave from '../../Assets/icons/leave.png'
 import Setting from '../../Assets/icons/setting.png'
@@ -236,17 +236,15 @@ export default function CommunityPage() {
         { key: "popular", label: "Popular" },
         { key: "trending", label: "Trending" },
     ];
+    useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme);
+    }, [theme]);
+
 
     return (
         <div className={styles.darkContainer}>
-            {console.log('isMobile:', isMobile)}
-            {console.log('isSettingsOpen:', isSettingsOpen)}
-            {console.log('activeSettingsTab:', activeSettingsTab)}
-            {console.log('displayedTab:', displayedTab)}
-            {console.log('canManage:', canManage)}
-            {console.log('community?.user_role:', community?.user_role)}
-
-            {/* ── MOBILE HEADER ── */}
+        
+          {/* ── MOBILE HEADER ── */}
             {isMobile && (
                 <MobileHeader avatarSrc={avatarSrc} user={user} setMobileMenuOpen={setMobileMenuOpen} token={token} API={API} />
             )}
@@ -328,9 +326,9 @@ export default function CommunityPage() {
 
                     {isSettingsOpen ? (
                         <>
-                            <div className={styles.communityPostsContainer}>
+                            <div className={`${styles.communityPostsContainer} ${styles.settingsWrapper}`}>
                                 <div className={`${styles.mainContent} ${styles.settingsMiddleContainer}`}>
-                                    {/* 2. CHANGE activeSettingsTab TO displayedTab HERE */}
+                                  
                                     {(displayedTab === 'Settings' || displayedTab === 'Community info') && (
                                         <CommunityInfoPanel community={community} onBack={() => setIsSettingsOpen(false)} />
                                     )}
@@ -384,16 +382,16 @@ export default function CommunityPage() {
                                     </div>
                                     <div style={{ display: "flex", alignItems: "center", gap: 50 }}>
                                         <button onClick={handleToggleNotification} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                                            <img src={isNotified ? NotificationActive : NotificationInactive} alt="notifications" style={{ width: 23, height: 28, filter: "brightness(0) invert(1)" }} />
+                                            <img src={isNotified ? NotificationActive : NotificationInactive} alt="notifications" className={styles.headerIcon} style={{height : NotificationActive ? "30px" : "25px"}} />
                                         </button>
-
                                         {canManage ? (
                                             <button onClick={() => setIsSettingsOpen(!isSettingsOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                                                <img src={Setting} alt="settings" style={{ width: 28, height: 28, filter: "brightness(0) invert(1)" }} />
+                                                <img src={Setting} alt="settings" className={styles.headerIcon} />
                                             </button>
+
                                         ) : (
                                             <button onClick={() => setShowLeaveConfirm(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                                                <img src={Leave} alt="leave" style={{ width: 28, height: 28, filter: "brightness(0) invert(1)" }} />
+                                                <img src={Leave} alt="leave" className={styles.headerIcon} />
                                             </button>
                                         )}
 

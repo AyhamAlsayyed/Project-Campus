@@ -889,3 +889,161 @@
 [data-theme="light"] .annNodeLabelActive {
   color: #1a1a1a;
 }
+/* ════════════════════════════════════════
+   LIGHT MODE — CREATE POST MODAL / POPUP
+   ════════════════════════════════════════ */
+
+[data-theme="light"] .modalOverlay {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .modal {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .modalHeader h3 {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .closeButton {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .closeButton:hover {
+  background: rgba(0, 0, 0, 0.12);
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .modalInput {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .modalInput::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .actionsRow {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .actionButton {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="light"] .actionButton:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+[data-theme="light"] .annNodeDotActive {
+  background-color: #B533A9;  
+  box-shadow: 0 0 0 5px rgba(181, 51, 169, 0.2);
+}
+
+[data-theme="light"] .actionButton + .actionButton::before {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+
+[data-theme="light"] .postButton:disabled {
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.25);
+}
+
+/* Poll */
+[data-theme="light"] .pollInput {
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .pollInput::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .addOption {
+  color: #7B2FBE;
+}
+
+[data-theme="light"] .removeOption {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .removeOption:hover {
+  color: #d63b6e;
+}
+
+/* File preview */
+[data-theme="light"] .fileItem {
+  background: #f0f0f0;
+  color: #1a1a1a;
+}
+
+/* Toggle switch — off state */
+[data-theme="light"] .switchSlider {
+  background-color: #C8C8C8;
+  border-color: #C8C8C8;
+}
+
+[data-theme="light"] .switchSlider:before {
+  background-color: #ffffff;
+}
+
+/* Announcement fields */
+[data-theme="light"] .announcementTitleInput,
+[data-theme="light"] .announcementDescInput {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .announcementTitleInput::placeholder,
+[data-theme="light"] .announcementDescInput::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .announcementFieldDivider {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Duration slider */
+[data-theme="light"] .annDurationLabel {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .annTrackBase {
+  background-color: #C8C8C8;
+}
+
+
+[data-theme="light"] .annNodeDotPassed {
+  background-color: #B533A9;
+}
+
+[data-theme="light"] .annNodeLabel {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .annNodeLabelActive {
+  color: #1a1a1a;
+}
+
+/* Image warning banner */
+[data-theme="light"] .annImageWarning {
+  background: linear-gradient(135deg, rgba(212, 20, 90, 0.08), rgba(166, 39, 156, 0.06));
+  border-color: rgba(212, 20, 90, 0.25);
+}
+
+[data-theme="light"] .annImageWarningDesc {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .annImageWarningClose {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .annImageWarningClose:hover {
+  color: rgba(0, 0, 0, 0.7);
+}

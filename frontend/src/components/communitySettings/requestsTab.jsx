@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef  } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from './requestsTab.module.css';
 import PostCard from '../posts/postCard';
 import { useNavigate } from 'react-router-dom';
@@ -168,18 +168,6 @@ export default function RequestsTab({ communityId, token, onBack, isPublic = fal
         setSelectedItemIds([]);
     };
 
-    const renderIcon = (src, color, width = '18px', height = '18px') => (
-        <div style={{
-            width, height,
-            backgroundColor: color,
-            maskImage: `url(${src})`,
-            WebkitMaskImage: `url(${src})`,
-            maskSize: 'contain', WebkitMaskSize: 'contain',
-            maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
-            maskPosition: 'center', WebkitMaskPosition: 'center',
-            display: 'inline-block', flexShrink: 0,
-        }} />
-    );
 
     return (
         <div className={styles.membersContainer}>
@@ -188,11 +176,11 @@ export default function RequestsTab({ communityId, token, onBack, isPublic = fal
             <div className={styles.headerRow}>
                 <div className={styles.headerLeft}>
                     <button className={styles.backBtn} onClick={onBack}>
-                        {renderIcon(ArrowLeft, '#E6E6E6', '20px', '20px')}
+                        <img src={ArrowLeft} className={styles.iconBack} alt="Back" />
                     </button>
                     <h2 className={styles.headerTitle}>Requests</h2>
                 </div>
-                {renderIcon(HelpIcon, '#E6E6E6', '25px', '25px')}
+                <img src={HelpIcon} className={styles.iconHelp} alt="Help" />
             </div>
 
             <div className={styles.centeredDivider} />
@@ -270,7 +258,7 @@ export default function RequestsTab({ communityId, token, onBack, isPublic = fal
 
                     <div className={styles.buttonWrapper}>
                         <button className={styles.sortBtn} onClick={() => setIsSortOpen(!isSortOpen)}>
-                            {renderIcon(SortIcon, '#E6E6E6', '30px', '30px')}
+                            <img src={SortIcon} className={styles.iconSort} alt="" />
                         </button>
                         {isSortOpen && (
                             <div className={styles.dropdownMenu}>
@@ -373,17 +361,17 @@ export default function RequestsTab({ communityId, token, onBack, isPublic = fal
                                                     {openActionMenuId === member.id && (
                                                         <div className={styles.dropdownMenu}>
                                                             <div className={styles.dropdownItem} onClick={() => navigate(`/profile/${member.id}`)}>
-                                                                {renderIcon(DefaultPfp, '#E6E6E6', '18px', '18px')}
+                                                                <img src={DefaultPfp} className={styles.iconAction} alt="" />
                                                                 View profile
                                                             </div>
                                                             <div className={styles.dropdownDivider} />
                                                             <div className={styles.dropdownItemDanger} onClick={() => handleReport(member.id)}>
-                                                                {renderIcon(InfoIcon, '#e53e3e', '18px', '18px')}
+                                                                <img src={InfoIcon} className={styles.iconDanger} alt="" />
                                                                 Report
                                                             </div>
                                                             <div className={styles.dropdownDivider} />
                                                             <div className={styles.dropdownItemDanger} onClick={() => handleBlock(member.id)}>
-                                                                {renderIcon(BlockIcon, '#e53e3e', '18px', '18px')}
+                                                                <img src={BlockIcon} className={styles.iconDanger} alt="" />
                                                                 Block
                                                             </div>
                                                         </div>

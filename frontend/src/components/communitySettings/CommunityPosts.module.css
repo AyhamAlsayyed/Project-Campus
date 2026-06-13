@@ -306,3 +306,101 @@
 .modalBody > * {
     flex-shrink: 0;
 }
+/* ── LIGHT MODE ── */
+[data-theme="light"] .postsContainer {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .headerTitle {
+  color: #662D91;
+}
+
+[data-theme="light"] .backArrow,
+[data-theme="light"] .helpIcon {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .centeredDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .sectionTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .sectionSubtext {
+  color: #888888;
+}
+
+[data-theme="light"] .checkboxLabel {
+  color: #333333;
+}
+
+[data-theme="light"] .customCheckbox {
+  border-color: #662D91;
+}
+
+[data-theme="light"] .customCheckbox:checked {
+  background-color: #662D91;
+  border-color: #662D91;
+}
+
+[data-theme="light"] .toggleSlider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .toggleSlider::before {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .toggleInput:checked + .toggleSlider {
+  background-color: #662D91;
+}
+
+[data-theme="light"] .countText {
+  color: #666666;
+}
+
+[data-theme="light"] .actionBtn {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .actionBtn:hover {
+  background-color: #e9d5ff;
+}
+
+/* ── MODAL LIGHT MODE ── */
+[data-theme="light"] .modalOverlay {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .modalContent {
+  background-color: #ffffff;
+  color: #333333;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .modalHeader {
+  border-bottom-color: #e0e0e0;
+}
+
+[data-theme="light"] .closeBtn {
+  color: #aaaaaa;
+}
+
+[data-theme="light"] .closeBtn:hover {
+  color: #333333;
+}
+
+[data-theme="light"] .modalBody::-webkit-scrollbar-track {
+  background: #f3e8ff;
+}
+
+[data-theme="light"] .modalBody::-webkit-scrollbar-thumb {
+  background: #c084fc;
+}
+
+[data-theme="light"] .modalBody::-webkit-scrollbar-thumb:hover {
+  background: #662D91;
+}

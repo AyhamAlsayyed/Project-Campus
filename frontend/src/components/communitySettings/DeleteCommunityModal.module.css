@@ -192,3 +192,58 @@
     color: #808080;
     cursor: not-allowed;
 }
+[data-theme="light"] .modalOverlay {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .modalContent {
+  background-color: #ffffff;
+  color: #333333;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .modalHeader {
+  border-bottom-color: #e0e0e0;
+}
+
+[data-theme="light"] .closeBtn {
+  color: #aaaaaa;
+}
+
+[data-theme="light"] .closeBtn:hover {
+  color: #333333;
+}
+
+[data-theme="light"] .warningText {
+  color: #555555;
+}
+
+[data-theme="light"] .warningText strong {
+  color: #333333;
+}
+
+[data-theme="light"] .checkboxLabel {
+  color: #555555;
+}
+
+[data-theme="light"] .customCheckbox {
+  border-color: #aaaaaa;
+}
+
+[data-theme="light"] .modalFooter {
+  border-top-color: #e0e0e0;
+}
+
+[data-theme="light"] .cancelBtn {
+  color: #666666;
+}
+
+[data-theme="light"] .cancelBtn:hover {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .deleteBtn:disabled {
+  background-color: #e0e0e0;
+  color: #aaaaaa;
+}

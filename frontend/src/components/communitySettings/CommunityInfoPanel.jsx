@@ -8,22 +8,6 @@ import CameraIcon from '../../Assets/icons/camera.png';
 
 const API = 'http://localhost:8000';
 
-const renderIcon = (src, color, width = '20px', height = '20px', additionalStyles = {}) => (
-    <div
-        style={{
-            width, height,
-            backgroundColor: color,
-            maskImage: `url(${src})`,
-            WebkitMaskImage: `url(${src})`,
-            maskSize: 'contain', WebkitMaskSize: 'contain',
-            maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
-            maskPosition: 'center', WebkitMaskPosition: 'center',
-            display: 'inline-block',
-            flexShrink: 0,
-            ...additionalStyles,
-        }}
-    />
-);
 
 export default function CommunityInfoPanel({ community, onBack }) {
     console.log('community in InfoPanel:', community);
@@ -95,7 +79,7 @@ export default function CommunityInfoPanel({ community, onBack }) {
                 setBannerUrl(data.community.banner_url);
             }
             setBannerFile(null);
-            showToast('Changes saved successfully!', 'success');
+
         } catch (err) {
             showToast('Failed to save changes. Try again.', 'error');
         } finally {
@@ -126,27 +110,20 @@ export default function CommunityInfoPanel({ community, onBack }) {
                         onClick={onBack}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}
                     >
-                        {renderIcon(ArrowLeft, '#E6E6E6', '20px', '20px')}
+                        <img src={ArrowLeft} className={styles.iconBack} alt="Back" />
                     </button>
                     <h2 className={styles.infoTitle}>Community Info</h2>
                 </div>
 
                 <div className={styles.infoHeaderRight}>
                     <button
-                        className={styles.saveBtn}
+                        className={`${styles.saveBtn} ${hasChanges ? styles.saveBtnActive : ''}`}
                         onClick={handleSave}
                         disabled={!hasChanges || isSaving}
-                        style={{
-                            background: hasChanges
-                                ? 'linear-gradient(90deg, #612886, #892A82)'
-                                : '#404040',
-                            opacity: isSaving ? 0.7 : 1,
-                            cursor: hasChanges && !isSaving ? 'pointer' : 'default',
-                        }}
                     >
                         {isSaving ? 'Saving...' : 'Save'}
                     </button>
-                    {renderIcon(Help, '#E6E6E6', '22px', '22px', { cursor: 'pointer' })}
+                    <img src={Help} className={styles.iconHelp} alt="Help" />
                 </div>
             </div>
 
@@ -179,7 +156,7 @@ export default function CommunityInfoPanel({ community, onBack }) {
                         style={{ display: 'none' }}
                     />
                     <div className={styles.cameraBtn} onClick={handleCameraClick}>
-                        {renderIcon(CameraIcon, '#E6E6E6', '18px', '18px')}
+                        <img src={CameraIcon} className={styles.iconCamera} alt="Camera" />
                     </div>
                 </div>
             </div>
@@ -191,9 +168,9 @@ export default function CommunityInfoPanel({ community, onBack }) {
                 <div className={styles.nameRow}>
                     <div className={styles.nameWrapper}>
                         <h1 className={styles.communityName}>{communityName}</h1>
-                        {renderIcon(VerifiedBadge, '#595959', '18px', '18px')}
+                        <img src={VerifiedBadge} className={styles.iconVerified} alt="Verified" />
                     </div>
-                    {renderIcon(EditIcon, '#595959', '18px', '18px', { cursor: 'pointer' })}
+                    <img src={EditIcon} className={styles.iconEdit} alt="Edit" />
                 </div>
                 <p className={styles.communityMeta}>
                     Created by: {createdBy} &bull; {createdDate}
@@ -241,10 +218,15 @@ export default function CommunityInfoPanel({ community, onBack }) {
                             onClick={() => setIsPrivacyDropdownOpen(p => !p)}
                         >
                             <div className={styles.privacyBtn}>{privacyType}</div>
-                            {renderIcon(ArrowLeft, '#E6E6E6', '16px', '16px', {
-                                transform: isPrivacyDropdownOpen ? 'rotate(90deg)' : 'rotate(270deg)',
-                                transition: 'transform 0.2s ease',
-                            })}
+                            <img
+                                src={ArrowLeft}
+                                className={styles.iconArrow}
+                                alt=""
+                                style={{
+                                    transform: isPrivacyDropdownOpen ? 'rotate(90deg)' : 'rotate(270deg)',
+                                    transition: 'transform 0.2s ease',
+                                }}
+                            />
                         </div>
 
                         {isPrivacyDropdownOpen && (

@@ -167,6 +167,33 @@ export default function EventsPage() {
 
         fetchData();
     }, []);
+    useEffect(() => {
+        const fetchPromoCart = async () => {
+            const token = localStorage.getItem("access");
+            try {
+                const res = await fetch(`${API}/api/events/promotions/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setPromoCart(data.map(item => ({
+                        id: item.id,
+                        eventId: item.event_id,
+                        event: {
+                            title: item.event_title,
+                            image: item.event_image,
+                            banner: item.event_banner,
+                            description: item.event_description,
+                        },
+                        durationIdx: item.duration_idx,
+                        label: item.duration,
+                        cost: item.cost,
+                    })));
+                }
+            } catch (err) { console.error("Failed to load promo cart:", err); }
+        };
+        fetchPromoCart();
+    }, []);
 
     useEffect(() => {
         if (highlightId && events.length > 0) {
@@ -418,7 +445,16 @@ export default function EventsPage() {
                                                                         {item.event.description?.length > 50 && '...'}
                                                                     </p>
                                                                 </div>
-                                                                <button className={styles.detailsBtn} onClick={() => setPromoCart(prev => prev.filter(c => c.eventId !== item.eventId))}>
+                                                                <button className={styles.detailsBtn} onClick={async () => {
+                                                                    const token = localStorage.getItem("access");
+                                                                    if (item.id) {
+                                                                        await fetch(`${API}/api/events/promotions/${item.id}/delete/`, {
+                                                                            method: "DELETE",
+                                                                            headers: { Authorization: `Bearer ${token}` }
+                                                                        });
+                                                                    }
+                                                                    setPromoCart(prev => prev.filter(c => c.eventId !== item.eventId));
+                                                                }}>
                                                                     Remove
                                                                 </button>
                                                             </div>
@@ -559,25 +595,50 @@ export default function EventsPage() {
                                 <span className={styles.pmCancelBtn} onClick={() => setIsPromoModalOpen(false)}>Cancel</span>
                                 <button
                                     className={styles.pmDoneBtn}
-                                    onClick={() => {
-                                        if (selectedPromoEventId) {
-                                            const eventObj = ownPageEvents.find(e => e.id === selectedPromoEventId);
-                                            if (eventObj) {
-                                                const existingIdx = promoCart.findIndex(item => item.eventId === selectedPromoEventId);
-                                                const cartItem = {
-                                                    eventId: selectedPromoEventId,
-                                                    event: eventObj,
-                                                    durationIdx: promoDurationIdx,
-                                                    label: durationOptions[promoDurationIdx].label,
-                                                    cost: durationOptions[promoDurationIdx].cost,
-                                                };
-                                                if (existingIdx >= 0) {
-                                                    setPromoCart(prev => prev.map((item, i) => i === existingIdx ? cartItem : item));
-                                                } else {
-                                                    setPromoCart(prev => [...prev, cartItem]);
-                                                }
+                                    onClick={async () => {
+                                        if (!selectedPromoEventId) { setIsPromoModalOpen(false); return; }
+                                        const eventObj = ownPageEvents.find(e => e.id === selectedPromoEventId);
+                                        if (!eventObj) return;
+                                        const token = localStorage.getItem("access");
+
+                                        const cartItem = {
+                                            eventId: selectedPromoEventId,
+                                            event: eventObj,
+                                            durationIdx: promoDurationIdx,
+                                            label: durationOptions[promoDurationIdx].label,
+                                            cost: durationOptions[promoDurationIdx].cost,
+                                        };
+
+                                        try {
+                                            const existingItem = promoCart.find(item => item.eventId === selectedPromoEventId);
+                                            if (existingItem) {
+                                                await fetch(`${API}/api/events/promotions/${existingItem.id}/delete/`, {
+                                                    method: "DELETE",
+                                                    headers: { Authorization: `Bearer ${token}` }
+                                                });
                                             }
-                                        }
+
+                                            const res = await fetch(`${API}/api/events/promotions/`, {
+                                                method: "POST",
+                                                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                                                body: JSON.stringify({
+                                                    event_id: selectedPromoEventId,
+                                                    duration: durationOptions[promoDurationIdx].label,
+                                                    duration_idx: promoDurationIdx,
+                                                    cost: durationOptions[promoDurationIdx].cost,
+                                                })
+                                            });
+
+                                            if (res.ok) {
+                                                const saved = await res.json();
+                                                const newItem = { ...cartItem, id: saved.id };
+                                                setPromoCart(prev => {
+                                                    const filtered = prev.filter(i => i.eventId !== selectedPromoEventId);
+                                                    return [...filtered, newItem];
+                                                });
+                                            }
+                                        } catch (err) { console.error("Failed to save event promotion:", err); }
+
                                         setIsPromoModalOpen(false);
                                         setSelectedPromoEventId(null);
                                         setPromoDurationIdx(2);
@@ -888,7 +949,26 @@ export default function EventsPage() {
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
                             <button className={styles.checkoutCancelBtn} onClick={() => setIsCheckoutModalOpen(false)}>Cancel</button>
-                            <button className={styles.checkoutSubmitBtn} onClick={() => setIsCheckoutModalOpen(false)}>Pay Now</button>
+                            <button className={styles.checkoutSubmitBtn} onClick={async () => {
+                                const token = localStorage.getItem("access");
+                                try {
+                                    const res = await fetch(`${API}/api/events/promotions/checkout/`, {
+                                        method: "POST",
+                                        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                            items: promoCart.map(item => ({
+                                                event_id: item.eventId,
+                                                duration: item.label,
+                                                cost: item.cost,
+                                            }))
+                                        })
+                                    });
+                                    if (res.ok) {
+                                        setPromoCart([]);
+                                        setIsCheckoutModalOpen(false);
+                                    }
+                                } catch (err) { console.error("Checkout error:", err); }
+                            }}>Pay Now</button>
                         </div>
                     </div>
                 </div>,

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { createPortal } from 'react-dom';
 import Settings from '../../Assets/icons/setting.png';
-export default function CommunityCard({ community, variant = "large", setCommunities, fullWidth, isOwned, onSettingsClick  }) {
+export default function CommunityCard({ community, variant = "large", setCommunities, fullWidth, isOwned, onSettingsClick }) {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const navigate = useNavigate();
     const handleReadMoreClick = (e) => {
@@ -11,6 +11,7 @@ export default function CommunityCard({ community, variant = "large", setCommuni
         e.stopPropagation();
         setIsPopupOpen(true);
     };
+    const isLight = document.documentElement.getAttribute("data-theme") === "light";
 
     const closePopup = (e) => {
         e.preventDefault();
@@ -66,10 +67,9 @@ export default function CommunityCard({ community, variant = "large", setCommuni
         <>
             <div
                 className={`${styles.communityItem} ${variant === "small" ? styles.small : ""} ${fullWidth ? styles.fullWidth : ""}`}
-                style={{
-                    backgroundImage: `linear-gradient(to right, rgba(25, 25, 25, 0.95) 10%, rgba(25, 25, 25, 0.7) 40%, rgba(25, 25, 25, 0.2) 100%), url(${community.image})`
-                }}
+                style={{ backgroundImage: `url(${community.image})` }}
             >
+                <div className={styles.overlay} />
                 <div className={styles.content}>
                     <div className={styles.left}>
                         <h3 className={styles.communityName}>
@@ -104,8 +104,8 @@ export default function CommunityCard({ community, variant = "large", setCommuni
                                 alt="settings"
                                 width={20}
                                 height={20}
-                                 onClick={(e) => { e.stopPropagation(); onSettingsClick?.(community); }}
-                                style={{ filter: "brightness(0) saturate(100%) invert(80%)", cursor: "pointer", flexShrink: 0 }}
+                                onClick={(e) => { e.stopPropagation(); onSettingsClick?.(community); }}
+                                className={styles.settingsIcon}
                             />
                         )}
                     </div>
@@ -117,7 +117,7 @@ export default function CommunityCard({ community, variant = "large", setCommuni
             {variant === "small" && community.sample_members?.length > 0 && (
                 <div style={{ padding: '6px 4px 0' }}>
                     <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
-                        <span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Joined by: </span>
+                        <span className={styles.joinedByLabel}>Joined by: </span>
                         {community.sample_members.map(f => f.username).join(', ')}
                         {community.members_count > community.sample_members.length
                             ? ` and ${community.members_count - community.sample_members.length} others.`

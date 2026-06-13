@@ -350,16 +350,21 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserMinimalSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
+    user_type = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "avatar"]
+        fields = ["id", "username", "avatar", "user_type"]
 
     def get_avatar(self, obj):
         request = self.context.get("request")
         if hasattr(obj, "profile") and obj.profile.profile_image and request:
             return request.build_absolute_uri(obj.profile.profile_image.url)
         return None
+    def get_user_type(self, obj):
+        if hasattr(obj, "page") and obj.page:
+            return "page"
+        return "user"
 
 
 class UserDegreeSerializer(serializers.ModelSerializer):
@@ -722,7 +727,7 @@ class CommentSerializer(serializers.ModelSerializer):
             "has_reacted",
             "replies_count",
             "created_at",
-            "updated_at",
+            
         ]
 
     def get_reactions_count(self, obj):

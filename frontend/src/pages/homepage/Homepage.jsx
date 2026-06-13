@@ -54,6 +54,10 @@ export default function Homepage() {
     const [announcementDesc, setAnnouncementDesc] = useState('');
     const [announcementDuration, setAnnouncementDuration] = useState(0);
     const [annImageError, setAnnImageError] = useState(false);
+    const [offset, setOffset] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const sentinelRef = useRef(null);
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 1024)
         window.addEventListener("resize", check)
@@ -76,7 +80,7 @@ export default function Homepage() {
         try {
             const res = await fetch(`${API}/api/auth/me/`, { headers: { Authorization: `Bearer ${token}` } })
             const data = await res.json().catch(() => ({}))
-           
+
             if (!res.ok) { setUserError("Failed to load user"); setUser(null); return }
             if (data.role === 'uni' || localStorage.getItem('user_type') === 'uni') {
                 const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
@@ -98,7 +102,7 @@ export default function Homepage() {
     const closeComments = () => { setSelectedPost(null); };
 
     useEffect(() => {
-     
+
         if (!location.state?.openPost) return;
 
         const openPost = location.state.openPost;
@@ -160,16 +164,36 @@ export default function Homepage() {
         }
     }, [user]);
 
-    const loadPosts = async () => {
-        if (!token) { setLoading(false); setError("No token found"); return }
+    const loadPosts = async (currentOffset = 0) => {
+        if (!token) { setLoading(false); setError("No token found"); return; }
+        currentOffset === 0 ? setLoading(true) : setLoadingMore(true);
         try {
-            const res = await fetch(`${API}/api/posts/feed/?limit=20`, { headers: { Authorization: `Bearer ${token}` } })
-            const data = await res.json().catch(() => [])
-            if (!res.ok) { setError(data?.message || "Failed to load posts"); setPosts([]); return }
-            setPosts(Array.isArray(data) ? data : [])
-        } catch { setError("Something went wrong"); setPosts([]) }
-        finally { setLoading(false) }
-    }
+            const res = await fetch(
+                `${API}/api/posts/feed/?limit=20&offset=${currentOffset}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            const data = await res.json().catch(() => []);
+            if (!res.ok) { setError(data?.message || "Failed to load posts"); return; }
+            const incoming = Array.isArray(data) ? data : (data.results || []);
+            setPosts(prev => currentOffset === 0 ? incoming : [...prev, ...incoming]);
+            setHasMore(incoming.length === 20); // if less than 20 returned, no more pages
+            setOffset(currentOffset + incoming.length);
+        } catch { setError("Something went wrong"); }
+        finally { setLoading(false); setLoadingMore(false); }
+    };
+    useEffect(() => {
+        if (!sentinelRef.current) return;
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+                    loadPosts(offset);
+                }
+            },
+            { threshold: 0.1 }
+        );
+        observer.observe(sentinelRef.current);
+        return () => observer.disconnect();
+    }, [hasMore, loadingMore, loading, offset]);
 
     const fetchJoined = async () => {
         const res = await fetch(`${API}/api/communities/?filter=joined`, { headers: { Authorization: `Bearer ${token}` } });
@@ -292,8 +316,8 @@ export default function Homepage() {
 
         const fetchPostContent = async () => {
             try {
-                // Search feed first, then fall back to activity
-                const res = await fetch(`${API}/api/posts/feed/?limit=50`, {
+
+                const res = await fetch(`${API}/api/posts/${pendingOpen.postId}/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (res.ok) {
@@ -507,6 +531,13 @@ export default function Homepage() {
                                     {posts.map(post => (
                                         <PostCard key={post.id} post={post} openComments={openComments} />
                                     ))}
+                                    <div ref={sentinelRef} style={{ height: 1 }} />
+                                    {loadingMore && (
+                                        <p style={{ textAlign: "center", padding: "16px 0", color: "rgba(255,255,255,0.4)", fontSize: "0.875rem" }}>
+                                            Loading more posts...
+                                        </p>
+                                    )}
+
                                 </div>
                             )}
                         </div>
@@ -534,6 +565,13 @@ export default function Homepage() {
                                     {posts.map(post => (
                                         <PostCard key={post.id} post={post} openComments={openComments} />
                                     ))}
+                                    <div ref={sentinelRef} style={{ height: 1 }} />
+                                    {loadingMore && (
+                                        <p style={{ textAlign: "center", padding: "16px 0", color: "rgba(255,255,255,0.4)", fontSize: "0.875rem" }}>
+                                            Loading more posts...
+                                        </p>
+                                    )}
+
                                 </div>
                             )}
                         </div>
@@ -710,16 +748,30 @@ export default function Homepage() {
                                     style={{ display: "flex", alignItems: "center", background: "transparent", border: "none", padding: "2px 8px", cursor: "pointer" }}
                                     onClick={e => { e.stopPropagation(); setModalCommunityDropdownOpen(prev => !prev); }}
                                 >
-                                    <span style={{ position: "relative", zIndex: 0, marginRight: "-15px", background: "#262626", borderRadius: 20, padding: "1px 30px 1px 15px", color: "rgba(255,255,255,0.45)", fontSize: 12, whiteSpace: "nowrap" }}>
+                                    <span style={{
+                                        position: "relative", zIndex: 0, marginRight: "-15px",
+                                        background: theme === "light" ? "#E8E8E8" : "#262626",
+                                        borderRadius: 20, padding: "1px 30px 1px 15px",
+                                        color: theme === "light" ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.45)",
+                                        fontSize: 12, whiteSpace: "nowrap"
+                                    }}>
                                         {selectedCommunity ? selectedCommunity.name : "Community"}
                                     </span>
                                     <span style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center", width: 25, height: 25, background: "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))", borderRadius: "50%", fontSize: 20, color: "white", flexShrink: 0 }}>▾</span>
                                 </button>
                                 {modalCommunityDropdownOpen && (
-                                    <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, minWidth: 200, background: "#2a2a2a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: 6, zIndex: 100, display: "flex", flexDirection: "column", gap: 2, boxShadow: "0 10px 30px rgba(0,0,0,0.4)" }}
+                                    <div style={{
+                                        position: "absolute", top: "calc(100% + 6px)", right: 0,
+                                        minWidth: 200,
+                                        background: theme === "light" ? "#ffffff" : "#2a2a2a",
+                                        border: theme === "light" ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.1)",
+                                        borderRadius: 14, padding: 6, zIndex: 100,
+                                        display: "flex", flexDirection: "column", gap: 2,
+                                        boxShadow: "0 10px 30px rgba(0,0,0,0.2)"
+                                    }}
                                         onClick={e => e.stopPropagation()}>
                                         <div
-                                            style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, fontSize: 13, color: "rgba(255,255,255,0.75)", cursor: "pointer" }}
+                                            style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, fontSize: 13, color: theme === "light" ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.75)", cursor: "pointer" }}
                                             onClick={() => { setSelectedCommunity(null); setModalCommunityDropdownOpen(false); }}
                                             onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
                                             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
@@ -729,9 +781,13 @@ export default function Homepage() {
                                         {joinedCommunities.map(c => (
                                             <div
                                                 key={c.id}
-                                                style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, fontSize: 13, color: selectedCommunity?.id === c.id ? "#c084fc" : "rgba(255,255,255,0.75)", background: selectedCommunity?.id === c.id ? "rgba(168,85,247,0.15)" : "transparent", cursor: "pointer" }}
+                                                style={{
+                                                    display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, fontSize: 13,
+                                                    color: selectedCommunity?.id === c.id ? "#c084fc" : theme === "light" ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.75)",
+                                                    background: selectedCommunity?.id === c.id ? "rgba(168,85,247,0.15)" : "transparent", cursor: "pointer"
+                                                }}
                                                 onClick={() => { setSelectedCommunity(c); setModalCommunityDropdownOpen(false); }}
-                                                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
+                                                onMouseEnter={e => e.currentTarget.style.background = theme === "light" ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.07)"}
                                                 onMouseLeave={e => e.currentTarget.style.background = selectedCommunity?.id === c.id ? "rgba(168,85,247,0.15)" : "transparent"}
                                             >
                                                 {c.avatar && <img src={c.avatar.startsWith("http") ? c.avatar : `${API}${c.avatar}`} alt="" style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />}

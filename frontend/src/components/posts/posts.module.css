@@ -1073,3 +1073,16 @@
   background: rgba(0,0,0,0.12);
   color: #1a1a1a;
 }
+[data-theme="light"] .followedBtn {
+  background: #74419B;
+  color: #ffffff;
+  border: none;
+}
+
+[data-theme="light"] .followedBtn:hover {
+  opacity: 0.85;
+}
+
+[data-theme="light"] .bellBtn img {
+  filter: brightness(0) saturate(100%) invert(35%) sepia(20%) saturate(600%) hue-rotate(220deg) brightness(90%);
+}

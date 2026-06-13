@@ -515,3 +515,193 @@
 .content::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.25);
 }
+/* ════════════════════════════════════════
+   LIGHT MODE — COMMENTS MODAL
+   ════════════════════════════════════════ */
+
+[data-theme="light"] .overlay {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .modal {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.15);
+  color: #1a1a1a;
+}
+
+/* Header */
+[data-theme="light"] .header {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .header h3 {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .closeButton {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .closeButton:hover {
+  color: #1a1a1a;
+}
+
+/* Post content */
+[data-theme="light"] .authorName {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .time {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .postText {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="light"] .readMore {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .readMore:hover {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+/* Actions row */
+[data-theme="light"] .actions {
+  border-top-color: rgba(0, 0, 0, 0.08);
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .actionBtn {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="light"] .actionBtn img {
+  filter: brightness(0) saturate(100%) invert(35%) sepia(20%)
+    saturate(600%) hue-rotate(220deg) brightness(90%);
+}
+
+[data-theme="light"] .liked img {
+  filter: none;
+}
+
+/* Comments section */
+[data-theme="light"] .commentsSection {
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+[data-theme="light"] .commentBubble {
+  background: #f2f2f2;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .commentAuthor {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .commentBubble p {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+[data-theme="light"] .commentActions {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .commentActions span:hover {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .deleteBtn {
+  color: #d63b6e;
+}
+
+/* Replies */
+[data-theme="light"] .replyBubble {
+  background: #ebebeb;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+[data-theme="light"] .replyBubble p {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+[data-theme="light"] .replyBubble b {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .viewRepliesToggle {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .viewRepliesToggle:hover {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .toggleLine {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="light"] .replyBar {
+  background: #f0f0f0;
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .closeReplyBtn {
+  background: #d0d0d0;
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .closeReplyBtn:hover {
+  background: #bbbbbb;
+}
+
+/* Input */
+[data-theme="light"] .inputContainer {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .inputWrapper {
+  background: #f2f2f2;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .inputWrapper input {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .inputWrapper input::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+/* Files */
+[data-theme="light"] .fileItem {
+  background: #f0f0f0;
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .fileItem:hover {
+  background: #e4e4e4;
+}
+
+/* Scrollbar */
+[data-theme="light"] .content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+.commentsCount {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+}
+
+[data-theme="light"] .commentsCount {
+  color: rgba(0, 0, 0, 0.5);
+}

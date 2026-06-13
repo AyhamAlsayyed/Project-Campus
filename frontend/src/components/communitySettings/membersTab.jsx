@@ -14,18 +14,6 @@ import InfoIcon from '../../Assets/icons/info.png';
 import { useNavigate } from 'react-router-dom';
 const API = 'http://localhost:8000';
 
-const renderIcon = (src, color, width = '18px', height = '18px') => (
-    <div style={{
-        width, height,
-        backgroundColor: color,
-        maskImage: `url(${src})`,
-        WebkitMaskImage: `url(${src})`,
-        maskSize: 'contain', WebkitMaskSize: 'contain',
-        maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
-        maskPosition: 'center', WebkitMaskPosition: 'center',
-        display: 'inline-block', flexShrink: 0,
-    }} />
-);
 
 // ── Role helpers ──
 const getRoleTier = (member) => {
@@ -48,7 +36,7 @@ const isMember = (member) => getRoleTier(member) === 2;
 // What actions can currentUserRole perform on a target member?
 const canAct = () => true;
 export default function MembersTab({ communityId, onBack, currentUserRole = 'member' }) {
-  
+
     const [allMembers, setAllMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -85,7 +73,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                 // 👇 Add this — derive role from the fetched list directly
                 const loginUser = JSON.parse(localStorage.getItem('login_user'));
                 const me = data.find(m => m.username === loginUser?.username);
-               
+
                 if (me) setCurrentRole(me.role);
 
             } catch (err) {
@@ -239,7 +227,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
             <div className={styles.headerRow}>
                 <div className={styles.headerLeft}>
                     <button className={styles.backBtn} onClick={onBack}>
-                        {renderIcon(ArrowLeft, '#E6E6E6', '20px', '20px')}
+                        <img src={ArrowLeft} className={styles.iconBack} alt="Back" />
                     </button>
                     <h2 className={styles.headerTitle}>Members</h2>
                 </div>
@@ -254,7 +242,9 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
             <div className={styles.controlsRow}>
                 <div className={styles.searchWrapper}>
                     <div className={styles.searchIcon}>
-                        {renderIcon(SearchIcon, '#808080', '18px', '18px')}
+                        <div className={styles.searchIcon}>
+                            <img src={SearchIcon} className={styles.iconSearch} alt="" />
+                        </div>
                     </div>
                     <input
                         type="text"
@@ -265,7 +255,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                     />
                     {searchQuery && (
                         <button className={styles.clearSearch} onClick={() => setSearchQuery('')}>
-                            {renderIcon(XIcon, '#808080', '14px', '14px')}
+                            <img src={XIcon} className={styles.iconX} alt="Clear" />
                         </button>
                     )}
                 </div>
@@ -276,9 +266,10 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                         className={`${styles.filterBtn} ${activeFilters.length > 0 ? styles.filterActive : ''}`}
                         onClick={() => { setIsFilterOpen(p => !p); setIsSortOpen(false); }}
                     >
-                        {renderIcon(FilterIcon, activeFilters.length > 0 ? '#c72cff' : '#CCCCCC')}
+                        <img src={FilterIcon} className={`${styles.iconFilter} ${activeFilters.length > 0 ? styles.iconFilterActive : ''}`} alt="" />
                         Filter {activeFilters.length > 0 ? `(${activeFilters.length})` : ''}
                     </button>
+
 
                     {isFilterOpen && (
                         <div className={styles.dropdownMenu}>
@@ -302,7 +293,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                             <div className={styles.dropdownDivider} />
                             <div className={styles.dropdownItem} onClick={() => setActiveFilters([])}>
                                 <div className={styles.dropdownItemLeft}>
-                                    {renderIcon(XIcon, '#CCCCCC', '14px', '14px')} Clear filters
+                                    <img src={XIcon} className={styles.iconX} alt="" /> Clear filters
                                 </div>
                             </div>
                         </div>
@@ -315,7 +306,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                         className={`${styles.sortBtn} ${sortMode ? styles.filterActive : ''}`}
                         onClick={() => { setIsSortOpen(p => !p); setIsFilterOpen(false); }}
                     >
-                        {renderIcon(SortIcon, sortMode ? '#c72cff' : '#CCCCCC', '30px', '30px')}
+                        <img src={SortIcon} className={`${styles.iconSort} ${sortMode ? styles.iconFilterActive : ''}`} alt="" />
                     </button>
                     {isSortOpen && (
                         <div className={styles.dropdownMenu} style={{ right: 0, left: 'auto', minWidth: 200 }}>
@@ -336,7 +327,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                                     <div className={styles.dropdownDivider} />
                                     <div className={styles.dropdownItem} onClick={() => { setSortMode(null); setIsSortOpen(false); }}>
                                         <div className={styles.dropdownItemLeft}>
-                                            {renderIcon(XIcon, '#CCCCCC', '14px', '14px')} Clear sort
+                                             <img src={XIcon} className={styles.iconX} alt="" /> Clear sort
                                         </div>
                                     </div>
                                 </>
@@ -363,7 +354,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                     const canKick = myTier < theirTier;
                     const canMakeAdmin = canKick && isMember(member);
                     const canRemoveAdmin = myTier === 0 && isAdmin(member);
-                   
+
 
 
                     const displayRole = getDisplayRole(member);
@@ -416,13 +407,13 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                                                 navigate(`/profile/${member.id}`);
                                             }
                                         }}>
-                                            {renderIcon(DefaultPfp, '#CCCCCC')} View profile
+                                             <img src={DefaultPfp} className={styles.iconAction} alt="" /> View profile
                                         </div>
                                         <div className={styles.actionDivider} />
                                         {canMakeAdmin && (
                                             <>
                                                 <div className={styles.actionItem} onClick={() => handleAction('make-admin', member)}>
-                                                    {renderIcon(MakeAdminIcon, '#CCCCCC')} Make admin
+                                                    <img src={MakeAdminIcon} className={styles.iconAction} alt="" /> Make admin
                                                 </div>
                                                 <div className={styles.actionDivider} />
                                             </>
@@ -431,7 +422,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                                         {canRemoveAdmin && (
                                             <>
                                                 <div className={styles.actionItem} onClick={() => handleAction('remove-admin', member)}>
-                                                    {renderIcon(MakeAdminIcon, '#CCCCCC')} Remove admin
+                                                    <img src={MakeAdminIcon} className={styles.iconAction} alt="" /> Remove admin
                                                 </div>
                                                 <div className={styles.actionDivider} />
                                             </>
@@ -440,19 +431,19 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                                         {canKick && (
                                             <>
                                                 <div className={styles.actionItem} onClick={() => handleAction('kick', member)}>
-                                                    {renderIcon(LeaveIcon, '#CCCCCC')} Kick member
+                                                     <img src={LeaveIcon} className={styles.iconAction} alt="" /> Kick member
                                                 </div>
                                                 <div className={styles.actionDivider} />
                                             </>
                                         )}
 
                                         <div className={`${styles.actionItem} ${styles.dangerText}`} onClick={() => handleAction('block', member)}>
-                                            {renderIcon(BlockIcon, '#D4145A')} Block user
+                                            <img src={BlockIcon} className={styles.iconDanger} alt="" /> Block user
                                         </div>
                                         <div className={styles.actionDivider} />
 
                                         <div className={`${styles.actionItem} ${styles.dangerText}`} onClick={() => handleAction('report', member)}>
-                                            {renderIcon(InfoIcon, '#D4145A')} Report user
+                                            <img src={InfoIcon} className={styles.iconDanger} alt="" /> Report user
                                         </div>
                                     </div>
                                 )}

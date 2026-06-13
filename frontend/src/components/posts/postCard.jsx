@@ -149,7 +149,7 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
   };
   useEffect(() => {
     const handler = (e) => {
-    
+
       if (String(e.detail.pageId) === String(post.author?.id)) {
         setIsFollowed(e.detail.is_followed);
         if (!e.detail.is_followed) setIsNotified(false);
@@ -522,7 +522,7 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
                     alt="notifications"
                     width={isNotified ? 16 : 20}
                     height={isNotified ? 18 : 20}
-                    style={{ filter: 'brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)' }}
+                    className={styles.bellIcon}
                   />
                 </button>
               )}

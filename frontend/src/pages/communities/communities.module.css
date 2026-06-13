@@ -881,3 +881,78 @@
     background: #2a2a2a;
     color: white;
 }
+[data-theme="light"] .communitiesContainer {
+  background: linear-gradient(-90deg, #A0279C, #6923A2);
+}
+
+[data-theme="light"] .innerContainer {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .pill {
+  background-color: #662D91;
+}
+
+[data-theme="light"] .rightCard {
+  background: #ffffff;
+}
+[data-theme="light"] .onHoldContainer {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .pendingText {
+  color: #333333;
+}
+
+[data-theme="light"] .onHoldDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .promoContainer {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .promoTitle {
+  color: #662D91;
+}
+
+[data-theme="light"] .promoText {
+  color: #555555;
+}
+
+[data-theme="light"] .promoIconColored {
+  background: linear-gradient(-90deg, #A0279C, #6923A2);
+}
+[data-theme="light"] .darkContainer {
+  background: linear-gradient(135deg, #f5f5f5, #ffffff);
+}
+[data-theme= "light"] .title{
+  color: #1A1A1A;
+}
+[data-theme="light"] .filterBtn {
+  background-color: white;
+  color: #662D91;
+}
+
+[data-theme="light"] .filterBtn:hover {
+  background-color: #f3e8ff;
+  color: #4a1f6e;
+}
+
+[data-theme="light"] .filterBtn.active {
+  background-color: #662D91;
+  color: #ffffff;
+}
+.createCommunityIcon {
+  width: 25px;
+  height: 25px;
+  filter: brightness(0) invert(0.9);
+}
+
+[data-theme="light"] .createCommunityIcon {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .createCommunityBtn:hover {
+  background-color: #f3e8ff;
+}

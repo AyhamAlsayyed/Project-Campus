@@ -414,3 +414,130 @@
 .rejectBtn:hover {
     background-color: #4d4d4d;
 }
+/* ── ICONS ── */
+.iconBack {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) saturate(100%) invert(1);
+}
+
+.iconHelp {
+  width: 25px;
+  height: 25px;
+  filter: brightness(0) saturate(100%) invert(1);
+  cursor: pointer;
+}
+
+.iconSort {
+  width: 30px;
+  height: 30px;
+  filter: brightness(0) saturate(100%) invert(1);
+}
+
+.iconAction {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) saturate(100%) invert(80%);
+}
+
+.iconDanger {
+  width: 18px;
+  height: 18px;
+  filter: invert(20%) sepia(90%) saturate(600%) hue-rotate(320deg) brightness(90%);
+}
+
+/* ── LIGHT MODE ── */
+[data-theme="light"] .membersContainer {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .headerTitle {
+  color: #662D91;
+}
+
+[data-theme="light"] .centeredDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .joinRequestsBtn,
+[data-theme="light"] .postRequestsBtn,
+[data-theme="light"] .tabBtnCustom {
+  border-color: #e0e0e0;
+  color: #662D91;
+}
+
+[data-theme="light"] .tabBtnCustomActive {
+  background-color: #662D91;
+  color: #ffffff;
+  border-color: #662D91;
+}
+
+[data-theme="light"] .sortBtn {
+  background-color: #f3e8ff;
+}
+
+[data-theme="light"] .sortBtn:hover {
+  background-color: #e9d5ff;
+}
+
+[data-theme="light"] .dropdownMenu {
+  background-color: #ffffff;
+  border-color: #e0e0e0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .dropdownItem {
+  color: #333333;
+}
+
+[data-theme="light"] .dropdownItem:hover {
+  background-color: #f3e8ff;
+}
+
+[data-theme="light"] .dropdownDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .memberName {
+  color: #333333;
+}
+
+[data-theme="light"] .userType {
+  color: #888888;
+}
+
+[data-theme="light"] .dot {
+  background-color: #aaaaaa;
+}
+
+[data-theme="light"] .dotsBtn:hover .dot {
+  background-color: #662D91;
+}
+
+[data-theme="light"] .rejectBtn {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .rejectBtn:hover {
+  background-color: #e9d5ff;
+}
+
+[data-theme="light"] .selectCircleIndicator {
+  border-color: #662D91;
+}
+
+[data-theme="light"] .rowSelectCircle {
+  border-color: #662D91;
+}
+
+[data-theme="light"] .selectableWrapperHighlighted {
+  background-color: #f3e8ff !important;
+}
+
+[data-theme="light"] .iconBack,
+[data-theme="light"] .iconHelp,
+[data-theme="light"] .iconSort,
+[data-theme="light"] .iconAction {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
