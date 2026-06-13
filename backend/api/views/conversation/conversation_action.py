@@ -1,11 +1,16 @@
+from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ...models import Conversation, ConversationMember, Friendship
+
+User = get_user_model()
 
 
 @api_view(["POST"])
@@ -29,9 +34,45 @@ def toggle_mute(request, conversation_id):
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_or_leave_chat(request, conversation_id):
-    member = get_object_or_404(ConversationMember, conversation_id=conversation_id, user=request.user)
-    member.delete()
-    return Response(status=204)
+    current_user = get_object_or_404(User, id=request.user.id)
+    member = get_object_or_404(
+        ConversationMember.objects.select_related("conversation"),
+        conversation_id=conversation_id,
+        user=request.user,
+    )
+
+    conversation = member.conversation
+
+    if conversation.is_academic and conversation.created_by_id == current_user.id:
+        return Response(
+            {"error": "The owner of an academic group cannot leave."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    was_admin = member.role == ConversationMember.Role.ADMIN
+    is_group = conversation.is_group
+
+    with transaction.atomic():
+        member.delete()
+
+        if is_group and was_admin:
+            other_admins_exist = ConversationMember.objects.filter(
+                conversation_id=conversation_id, role=ConversationMember.Role.ADMIN
+            ).exists()
+
+            if not other_admins_exist:
+                oldest_member = (
+                    ConversationMember.objects.filter(conversation_id=conversation_id)
+                    .order_by("joined_at")
+                    .select_for_update()
+                    .first()
+                )
+
+                if oldest_member:
+                    oldest_member.role = ConversationMember.Role.ADMIN
+                    oldest_member.save(update_fields=["role"])
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(["DELETE"])

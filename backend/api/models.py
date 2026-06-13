@@ -38,6 +38,62 @@ def validate_exactly_one(instance, field_a, field_b):
         raise ValidationError(f"Exactly one of '{field_a}' or '{field_b}' must be set.")
 
 
+class UserDegree(models.Model):
+    id = models.BigAutoField(primary_key=True)
+
+    class DegreeType(models.TextChoices):
+        DIPLOMA = "Diploma"
+        BACHELOR = "Bachelor"
+        MASTER = "Master"
+        PHD = "PhD"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="degrees",
+        db_column="user_id",
+    )
+
+    degree_type = models.CharField(max_length=20, choices=DegreeType.choices)
+    major = models.CharField(max_length=100, blank=True)
+    institution = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        db_table = "user_degree"
+
+    def __str__(self):
+        username = self.user.username if self.user else f"User {self.user_id}"
+        return f"{username} - {self.degree_type} in {self.major or 'General'}"
+
+
+class EmailVerification(models.Model):
+    id = models.BigAutoField(primary_key=True)
+
+    username = models.CharField(max_length=150)
+    academic_email = models.EmailField(db_column="academic_email")
+    code = models.CharField(max_length=6)
+
+    is_verified = models.BooleanField(default=False)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def set_expiry(self, minutes=10):
+        self.expires_at = timezone.now() + timedelta(minutes=minutes)
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    class Meta:
+        db_table = "email_verification"
+        indexes = [
+            models.Index(fields=["academic_email"]),
+        ]
+
+    def __str__(self):
+        status = "Verified" if self.is_verified else "Pending"
+        return f"Verification for {self.username} ({status})"
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -94,62 +150,6 @@ class UserProfile(models.Model):
     def __str__(self):
         username = self.user.username if self.user else f"User {self.user_id}"
         return f"Profile of {username}"
-
-
-class UserDegree(models.Model):
-    id = models.BigAutoField(primary_key=True)
-
-    class DegreeType(models.TextChoices):
-        DIPLOMA = "Diploma"
-        BACHELOR = "Bachelor"
-        MASTER = "Master"
-        PHD = "PhD"
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="degrees",
-        db_column="user_id",
-    )
-
-    degree_type = models.CharField(max_length=20, choices=DegreeType.choices)
-    major = models.CharField(max_length=100, blank=True)
-    institution = models.CharField(max_length=255, blank=True)
-
-    class Meta:
-        db_table = "user_degree"
-
-    def __str__(self):
-        username = self.user.username if self.user else f"User {self.user_id}"
-        return f"{username} - {self.degree_type} in {self.major or 'General'}"
-
-
-class EmailVerification(models.Model):
-    id = models.BigAutoField(primary_key=True)
-
-    username = models.CharField(max_length=150)
-    academic_email = models.EmailField(db_column="academic_email")
-    code = models.CharField(max_length=6)
-
-    is_verified = models.BooleanField(default=False)
-    expires_at = models.DateTimeField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def set_expiry(self, minutes=10):
-        self.expires_at = timezone.now() + timedelta(minutes=minutes)
-
-    def is_expired(self):
-        return timezone.now() > self.expires_at
-
-    class Meta:
-        db_table = "email_verification"
-        indexes = [
-            models.Index(fields=["academic_email"]),
-        ]
-
-    def __str__(self):
-        status = "Verified" if self.is_verified else "Pending"
-        return f"Verification for {self.username} ({status})"
 
 
 class Page(models.Model):
@@ -1036,7 +1036,6 @@ class ConversationMember(models.Model):
     )
 
     class Role(models.TextChoices):
-        OWNER = "owner", "Owner"
         ADMIN = "admin", "Admin"
         MEMBER = "member", "Member"
 
@@ -1149,8 +1148,15 @@ class Message(models.Model):
 
     def __str__(self):
         sender_name = self.sender.username if self.sender else "System"
+        if self.conversation.is_group:
+            group_name = self.conversation.name or f"Group #{self.conversation.conversation_id}"
+            destination = f"Group '{group_name}'"
+        else:
+            destination = f"DM Chat ({self.conversation.conversation_id})"
+
         snippet = f": {self.content[:25]}..." if self.content else " [Media/Shared Content]"
-        return f"Msg #{self.message_id} from {sender_name}{snippet}"
+
+        return f"{sender_name} in {destination}{snippet}"
 
 
 class MessageMedia(models.Model):

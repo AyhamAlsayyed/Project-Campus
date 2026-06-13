@@ -137,7 +137,7 @@ def create_group_conversation(request):
             created_by=user,
         )
 
-        ConversationMember.objects.create(conversation=new_group, user=user, role=ConversationMember.Role.OWNER)
+        ConversationMember.objects.create(conversation=new_group, user=user, role=ConversationMember.Role.ADMIN)
 
         membership_objects = [
             ConversationMember(conversation=new_group, user=invited_user, role=ConversationMember.Role.MEMBER)
@@ -183,10 +183,7 @@ def send_message(request, conversation_id):
 
     if conv.is_group:
         if not conv.allow_members_to_send_messages:
-            is_privileged = (
-                current_member_state.role in [ConversationMember.Role.ADMIN, ConversationMember.Role.OWNER]
-                or conv.created_by == user
-            )
+            is_privileged = current_member_state.role == ConversationMember.Role.ADMIN
             if not is_privileged:
                 raise PermissionDenied("Only administrators can send messages to this group right now.")
     else:

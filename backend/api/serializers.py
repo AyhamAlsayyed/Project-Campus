@@ -345,22 +345,40 @@ class UserSerializer(serializers.ModelSerializer):
         if self._should_restrict_data(obj):
             return None
 
-        return CommunityMember.objects.filter(user=obj, status="approved").count()
+        return obj.instructor_profile.community_picks.count()
 
 
 class UserMinimalSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
     user_type = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "avatar", "user_type"]
+        fields = ["id", "username", "full_name", "avatar"]
+
+    def get_full_name(self, obj):
+        if hasattr(obj, "page") and obj.page:
+            return obj.page.page_full_name
+
+        if hasattr(obj, "profile") and obj.profile:
+            return obj.profile.full_name
+
+        return ""
 
     def get_avatar(self, obj):
         request = self.context.get("request")
-        if hasattr(obj, "profile") and obj.profile.profile_image and request:
+
+        if hasattr(obj, "page") and obj.page:
+            page = obj.page
+            if page.profile_image and request:
+                return request.build_absolute_uri(page.profile_image.url)
+            return None
+
+        if hasattr(obj, "profile") and obj.profile and obj.profile.profile_image and request:
             return request.build_absolute_uri(obj.profile.profile_image.url)
         return None
+
     def get_user_type(self, obj):
         if hasattr(obj, "page") and obj.page:
             return "page"
@@ -377,6 +395,181 @@ class TeachingPositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeachingPosition
         fields = ["position_id", "institution_name", "employment_type"]
+
+
+class ConversationSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source="conversation.conversation_id", read_only=True)
+    name = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
+    preview = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
+    time = serializers.SerializerMethodField()
+    last_message_time = serializers.SerializerMethodField()
+    unread_count = serializers.SerializerMethodField()
+    is_group = serializers.BooleanField(source="conversation.is_group", read_only=True)
+    is_academic = serializers.BooleanField(source="conversation.is_academic", read_only=True)
+    status = serializers.SerializerMethodField()
+    user_status = serializers.SerializerMethodField()
+    conversations_owner = serializers.SerializerMethodField()
+    other_member_id = serializers.SerializerMethodField()
+    allow_members_to_edit_settings = serializers.BooleanField(
+        source="conversation.allow_members_to_edit_settings", read_only=True
+    )
+    allow_members_to_send_messages = serializers.BooleanField(
+        source="conversation.allow_members_to_send_messages", read_only=True
+    )
+    allow_members_to_add_others = serializers.BooleanField(
+        source="conversation.allow_members_to_add_others", read_only=True
+    )
+
+    class Meta:
+        model = ConversationMember
+        fields = [
+            "id",
+            "name",
+            "avatar",
+            "description",
+            "role",
+            "preview",
+            "time",
+            "last_message_time",
+            "unread_count",
+            "is_pinned",
+            "is_muted",
+            "is_group",
+            "is_academic",
+            "status",
+            "user_status",
+            "conversations_owner",
+            "other_member_id",
+            "allow_members_to_edit_settings",
+            "allow_members_to_send_messages",
+            "allow_members_to_add_others",
+        ]
+
+    def _get_other_member(self, obj):
+        request = self.context.get("request")
+        if not request:
+            return None
+
+        conv = obj.conversation
+        all_members = conv.members.all()
+        return next((m for m in all_members if m.user != request.user), None)
+
+    def get_name(self, obj):
+        conv = obj.conversation
+        if conv.is_group:
+            return conv.name or "Group"
+
+        other_member_obj = self._get_other_member(obj)
+        if other_member_obj:
+            other_user = other_member_obj.user
+            return other_user.username if other_user else "Deleted Account"
+        return "Unknown"
+
+    def get_avatar(self, obj):
+        request = self.context.get("request")
+        conv = obj.conversation
+        if conv.is_group:
+            if request and conv.image:
+                return request.build_absolute_uri(conv.image.url)
+            return ""
+
+        other_member_obj = self._get_other_member(obj)
+        if other_member_obj and other_member_obj.user:
+            return get_user_avatar(request, other_member_obj.user)
+        return ""
+
+    def get_description(self, obj):
+        description = obj.conversation.description
+        return description if description else ""
+
+    def get_preview(self, obj):
+        last_msg = obj.conversation.last_message
+        if not last_msg:
+            return ""
+
+        request = self.context.get("request")
+        current_user = request.user if request else None
+
+        if last_msg.sender == current_user:
+            prefix = "You: "
+        elif last_msg.sender:
+            prefix = f"{last_msg.sender.username}: "
+        else:
+            prefix = "System: "
+
+        message_body = ""
+        if last_msg.content and last_msg.content.strip():
+            message_body = last_msg.content
+        elif last_msg.shared_post_id:
+            message_body = "shared a post"
+        else:
+            first_media = last_msg.media.all().first()
+            if first_media:
+                media_type = first_media.media_type
+                if media_type in ["image", "video", "audio"]:
+                    if media_type == "video":
+                        message_body = f"sent a {media_type}"
+                    else:
+                        message_body = f"sent an {media_type}"
+                elif media_type == "file":
+                    message_body = "sent an attachment"
+                else:
+                    message_body = "sent a link"
+            else:
+                message_body = "sent a message"
+
+        return f"{prefix}{message_body}"
+
+    def get_time(self, obj):
+        last_msg = obj.conversation.last_message
+        if last_msg and last_msg.sent_at:
+            return last_msg.sent_at.strftime("%H:%M")
+        return ""
+
+    def get_last_message_time(self, obj):
+        last_msg = obj.conversation.last_message
+        return last_msg.sent_at if last_msg else None
+
+    def get_unread_count(self, obj):
+        conv = obj.conversation
+        msg_query = Message.objects.filter(conversation=conv)
+
+        if obj.last_read_at:
+            msg_query = msg_query.filter(sent_at__gt=obj.last_read_at)
+        if obj.cleared_at:
+            msg_query = msg_query.filter(sent_at__gt=obj.cleared_at)
+
+        return msg_query.count()
+
+    def get_status(self, obj):
+        return obj.conversation.status
+
+    def get_user_status(self, obj):
+        conv = obj.conversation
+        if not conv.is_group:
+            other_member_obj = self._get_other_member(obj)
+            if other_member_obj and other_member_obj.user:
+                profile = getattr(other_member_obj.user, "profile", None)
+                if profile:
+                    return profile.status
+            return "offline"
+
+        return None
+
+    def get_conversations_owner(self, obj):
+        conv = obj.conversation
+        return conv.created_by.username if conv.created_by else None
+
+    def get_other_member_id(self, obj):
+        conv = obj.conversation
+        if conv.is_group:
+            return None
+        other_member_obj = self._get_other_member(obj)
+        if other_member_obj and other_member_obj.user:
+            return other_member_obj.user.id
+        return None
 
 
 class GroupMemberSerializer(serializers.ModelSerializer):
@@ -612,8 +805,9 @@ class PostSerializer(serializers.ModelSerializer):
                         status=Friendship.Status.FOLLOWING,
                         relation_type=Friendship.RelationType.USER_TO_PAGE,
                     ).first()
-                is_followed = follow_rel is not None
-                is_notified = getattr(follow_rel, "is_notified", False) if follow_rel else False
+                    is_followed = follow_rel is not None
+                    is_notified = getattr(follow_rel, "is_notified", False) if follow_rel else False
+
                 avatar = page.profile_image.url if page.profile_image else ""
                 if request and avatar:
                     avatar = request.build_absolute_uri(avatar)
@@ -727,7 +921,6 @@ class CommentSerializer(serializers.ModelSerializer):
             "has_reacted",
             "replies_count",
             "created_at",
-            
         ]
 
     def get_reactions_count(self, obj):
@@ -1115,178 +1308,7 @@ class NotificationSettingSerializer(serializers.ModelSerializer):
     """
 
 
-class ConversationSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source="conversation.conversation_id", read_only=True)
-    name = serializers.SerializerMethodField()
-    avatar = serializers.SerializerMethodField()
-    preview = serializers.SerializerMethodField()
-    description = serializers.SerializerMethodField()
-    time = serializers.SerializerMethodField()
-    last_message_time = serializers.SerializerMethodField()
-    unread_count = serializers.SerializerMethodField()
-    is_group = serializers.BooleanField(source="conversation.is_group", read_only=True)
-    is_academic = serializers.BooleanField(source="conversation.is_academic", read_only=True)
-    status = serializers.SerializerMethodField()
-    user_status = serializers.SerializerMethodField()
-    conversations_owner = serializers.SerializerMethodField()
-    other_member_id = serializers.SerializerMethodField()
-    allow_members_to_edit_settings = serializers.BooleanField(
-        source="conversation.allow_members_to_edit_settings", read_only=True
-    )
-    allow_members_to_send_messages = serializers.BooleanField(
-        source="conversation.allow_members_to_send_messages", read_only=True
-    )
-    allow_members_to_add_others = serializers.BooleanField(
-        source="conversation.allow_members_to_add_others", read_only=True
-    )
-
-    class Meta:
-        model = ConversationMember
-        fields = [
-            "id",
-            "name",
-            "avatar",
-            "description",
-            "role",
-            "preview",
-            "time",
-            "last_message_time",
-            "unread_count",
-            "is_pinned",
-            "is_muted",
-            "is_group",
-            "is_academic",
-            "status",
-            "user_status",
-            "conversations_owner",
-            "other_member_id",
-            "allow_members_to_edit_settings",
-            "allow_members_to_send_messages",
-            "allow_members_to_add_others",
-        ]
-
-    def _get_other_member(self, obj):
-        request = self.context.get("request")
-        if not request:
-            return None
-
-        conv = obj.conversation
-        all_members = conv.members.all()
-        return next((m for m in all_members if m.user != request.user), None)
-
-    def get_name(self, obj):
-        conv = obj.conversation
-        if conv.is_group:
-            return conv.name or "Group"
-
-        other_member_obj = self._get_other_member(obj)
-        if other_member_obj:
-            other_user = other_member_obj.user
-            return other_user.username if other_user else "Deleted Account"
-        return "Unknown"
-
-    def get_avatar(self, obj):
-        request = self.context.get("request")
-        conv = obj.conversation
-        if conv.is_group:
-            return request.build_absolute_uri(conv.image.url) if conv.image else ""
-
-        other_member_obj = self._get_other_member(obj)
-        if other_member_obj and other_member_obj.user:
-            return get_user_avatar(request, other_member_obj.user)
-        return ""
-
-    def get_description(self, obj):
-        description = obj.conversation.description
-        return description if description else ""
-
-    def get_preview(self, obj):
-        last_msg = obj.conversation.last_message
-        if not last_msg:
-            return ""
-
-        request = self.context.get("request")
-        current_user = request.user if request else None
-
-        if last_msg.sender == current_user:
-            prefix = "You: "
-        elif last_msg.sender:
-            prefix = f"{last_msg.sender.username}: "
-        else:
-            prefix = "System: "
-
-        message_body = ""
-        if last_msg.content and last_msg.content.strip():
-            message_body = last_msg.content
-        elif last_msg.shared_post_id:
-            message_body = "shared a post"
-        else:
-            first_media = last_msg.media.all().first()
-            if first_media:
-                media_type = first_media.media_type
-                if media_type in ["image", "video", "audio"]:
-                    message_body = f"sent a {media_type}" if media_type == "video" else f"sent an {media_type}"
-                elif media_type == "file":
-                    message_body = "sent an attachment"
-                else:
-                    message_body = "sent a link"
-            else:
-                message_body = "sent a message"
-
-        return f"{prefix}{message_body}"
-
-    def get_time(self, obj):
-        last_msg = obj.conversation.last_message
-        if last_msg and last_msg.sent_at:
-            return last_msg.sent_at.strftime("%H:%M")
-        return ""
-
-    def get_last_message_time(self, obj):
-        last_msg = obj.conversation.last_message
-        return last_msg.sent_at if last_msg else None
-
-    def get_unread_count(self, obj):
-        conv = obj.conversation
-        msg_query = Message.objects.filter(conversation=conv)
-
-        if obj.last_read_at:
-            msg_query = msg_query.filter(sent_at__gt=obj.last_read_at)
-        if obj.cleared_at:
-            msg_query = msg_query.filter(sent_at__gt=obj.cleared_at)
-
-        return msg_query.count()
-
-    def get_status(self, obj):
-        return obj.conversation.status
-
-    def get_user_status(self, obj):
-        conv = obj.conversation
-        if not conv.is_group:
-            other_member_obj = self._get_other_member(obj)
-            if other_member_obj and other_member_obj.user:
-                profile = getattr(other_member_obj.user, "profile", None)
-                if profile:
-                    return profile.status
-            return "offline"
-
-        return None
-
-    def get_conversations_owner(self, obj):
-        conv = obj.conversation
-        return conv.created_by.username if conv.created_by else None
-
-    def get_other_member_id(self, obj):
-        conv = obj.conversation
-        if conv.is_group:
-            return None
-        other_member_obj = self._get_other_member(obj)
-        if other_member_obj and other_member_obj.user:
-            return other_member_obj.user.id
-        return None
-
-
 class MessageMediaSerializer(serializers.ModelSerializer):
-    # Maps internal 'media_id' safely to explicit output tracking ID
     id = serializers.IntegerField(source="media_id", read_only=True)
 
     class Meta:
@@ -1295,12 +1317,10 @@ class MessageMediaSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
-    # Maps internal 'message_id' column to frontend 'id'
     id = serializers.IntegerField(source="message_id", read_only=True)
     sender = UserMinimalSerializer(read_only=True)
     media = MessageMediaSerializer(many=True, read_only=True)
 
-    # Return string representation of the shared post summary if present
     shared_post_title = serializers.CharField(source="shared_post.title", read_only=True)
 
     class Meta:

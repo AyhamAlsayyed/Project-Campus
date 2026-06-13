@@ -35,6 +35,7 @@ def create_post(request):
 
     post_type_input = request.data.get("post_type", Post.PostType.NORMAL)
     is_announcement = post_type_input == Post.PostType.ANNOUNCEMENT
+    is_academic = post_type_input == Post.PostType.ACADEMY
 
     if is_announcement and not medias:
         return Response({"error": "An image is required for the announcement."}, status=status.HTTP_400_BAD_REQUEST)
@@ -45,6 +46,12 @@ def create_post(request):
             community = Community.objects.get(pk=community_id)
         except Community.DoesNotExist:
             return Response({"error": "Community not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if is_academic and not hasattr(user, "instructor_profile"):
+        return Response(
+            {"error": "Only instructors are allowed to create academy posts."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
     post = Post.objects.create(content_text=content, author=user, community=community, post_type=post_type_input)
 
@@ -73,6 +80,7 @@ def create_post(request):
     recipient_users = set()
     notification_content_text = f"{user.username} posted something new"
     db_enum_type = Notification.Type.POST_CREATED
+    notification_type_key = "friend_post"
 
     has_page = Page.objects.filter(user=user).first()
 
@@ -109,6 +117,36 @@ def create_post(request):
             else:
                 recipient_users.update(User.objects.exclude(id=user.id))
 
+    elif is_academic:
+        if community:
+            notification_type_key = "community_post"
+            notification_content_text = f"New Academic material posted by {user.username} in {community.name}"
+
+            members = (
+                CommunityMember.objects.filter(community=community, status=CommunityMember.Status.APPROVED)
+                .exclude(user=user)
+                .exclude(is_muted=True)
+                .select_related("user")
+            )
+            recipient_users.update([m.user for m in members if m.user])
+        else:
+            notification_type_key = "friend_post"
+            notification_content_text = f"New Academic materials posted by {user.username}"
+
+            friendships = (
+                Friendship.objects.filter(
+                    Q(user1=user) | Q(user2=user),
+                    status=Friendship.Status.ACCEPTED,
+                    relation_type=Friendship.RelationType.USER_TO_USER,
+                )
+                .exclude(is_muted=True)
+                .select_related("user1", "user2")
+            )
+            for friendship in friendships:
+                friend = friendship.user2 if friendship.user1 == user else friendship.user1
+                if friend:
+                    recipient_users.add(friend)
+
     elif has_page:
         notification_type_key = "page_post"
         notification_content_text = f"New post from {has_page.page_full_name}"
@@ -125,7 +163,6 @@ def create_post(request):
     elif community:
         notification_type_key = "community_post"
         notification_content_text = f"{user.username} posted in {community.name}"
-        db_enum_type = Notification.Type.ANNOUNCEMENTS
 
         members = (
             CommunityMember.objects.filter(community=community, status=CommunityMember.Status.APPROVED)
@@ -136,8 +173,6 @@ def create_post(request):
         recipient_users.update([m.user for m in members if m.user])
 
     else:
-        notification_type_key = "friend_post"
-
         friendships = (
             Friendship.objects.filter(
                 Q(user1=user) | Q(user2=user),

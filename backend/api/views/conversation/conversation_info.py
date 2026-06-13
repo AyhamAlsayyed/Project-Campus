@@ -69,11 +69,7 @@ def add_member_to_group(request, conv_id):
     if not conv.is_group:
         raise ValidationError({"detail": "Cannot add members to a private direct message conversation."})
 
-    is_privileged = (
-        current_member_state.role in [ConversationMember.Role.ADMIN, ConversationMember.Role.OWNER]
-        or conv.created_by == user
-        or not conv.is_private
-    )
+    is_privileged = current_member_state.role == ConversationMember.Role.ADMIN or not conv.is_private
 
     if not is_privileged:
         raise PermissionDenied("Only administrators can add new members to this group.")
@@ -112,7 +108,6 @@ def get_group_members(request, conv_id):
 
     ordered_memberships = members.annotate(
         role_priority=Case(
-            When(role=ConversationMember.Role.OWNER, then=Value(3)),
             When(role=ConversationMember.Role.ADMIN, then=Value(2)),
             When(role=ConversationMember.Role.MEMBER, then=Value(1)),
             default=Value(0),

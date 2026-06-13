@@ -49,7 +49,6 @@ def get_or_create_direct_conversation(current_user, target_user):
             raise PermissionDenied("You must follow or be connected to this page to message them.")
 
     else:
-        # --- TARGET IS A STANDARD USER ---
         profile = getattr(target_user, "profile", None)
         if not profile:
             raise ValidationError("Target user does not have an active profile.")
@@ -68,7 +67,6 @@ def get_or_create_direct_conversation(current_user, target_user):
                     relation_type=Friendship.RelationType.USER_TO_PAGE,
                 ).exists()
             else:
-                # user to user
                 is_mutual = Friendship.objects.filter(
                     (Q(user1=current_user, user2=target_user) | Q(user1=target_user, user2=current_user)),
                     status=Friendship.Status.ACCEPTED,
@@ -83,7 +81,6 @@ def get_or_create_direct_conversation(current_user, target_user):
         ConversationMember.objects.create(conversation=new_conv, user=current_user)
         ConversationMember.objects.create(conversation=new_conv, user=target_user)
 
-        # Notify recipient unless it's a page (or customize page notification logic)
         if not is_target_a_page:
             send_global_notification(
                 sender=current_user,

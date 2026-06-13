@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -61,14 +62,47 @@ def leave_community(request, pk):
     community = get_object_or_404(Community, pk=pk)
 
     try:
-        membership = CommunityMember.objects.get(community=community, user=request.user)
+        membership = CommunityMember.objects.select_related("community").get(community=community, user=request.user)
     except CommunityMember.DoesNotExist:
         raise ValidationError({"detail": "You are not a member of this community."})
 
-    # for now the owner cant leave but i might make it so that the oldest admin became the owner
-    if membership.role == CommunityMember.Role.OWNER:
-        raise PermissionDenied("The owner can't leave")
+    was_owner = membership.role == CommunityMember.Role.OWNER
 
-    membership.delete()
+    with transaction.atomic():
+        membership.delete()
 
-    return Response({"detail": "You have successfully left the community."}, status=status.HTTP_200_OK)
+        if not was_owner:
+            return Response({"detail": "You have successfully left the community."}, status=status.HTTP_200_OK)
+
+        successor = (
+            CommunityMember.objects.filter(community=community, role=CommunityMember.Role.ADMIN)
+            .order_by("joined_at")
+            .select_for_update()
+            .first()
+        )
+
+        if not successor:
+            successor = (
+                CommunityMember.objects.filter(community=community, role=CommunityMember.Role.MEMBER)
+                .order_by("joined_at")
+                .select_for_update()
+                .first()
+            )
+
+        if not successor:
+            community.delete()
+            return Response(
+                {"detail": "You were the last member. The community has been deleted."},
+                status=status.HTTP_200_OK,
+            )
+
+        successor.role = CommunityMember.Role.OWNER
+        successor.save(update_fields=["role"])
+
+        community.owner = successor.user
+        community.save(update_fields=["owner"])
+
+    return Response(
+        {"detail": f"You successfully left. Ownership transferred to {successor.user.username}."},
+        status=status.HTTP_200_OK,
+    )

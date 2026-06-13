@@ -71,9 +71,7 @@ def update_group_privacy_settings(request, conv_id):
     if not conv.is_group:
         return Response({"error": "This conversation is not a group."}, status=status.HTTP_400_BAD_REQUEST)
 
-    is_privileged = (
-        member.role in [ConversationMember.Role.ADMIN, ConversationMember.Role.OWNER] or conv.created_by == request.user
-    )
+    is_privileged = member.role == ConversationMember.Role.ADMIN
     if not is_privileged:
         raise PermissionDenied("Only group administrators can modify conversation permission structures.")
 

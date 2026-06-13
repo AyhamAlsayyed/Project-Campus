@@ -27,18 +27,12 @@ def toggle_group_admin(request, conv_id):
             {"error": "This action is only valid for group conversations."}, status=status.HTTP_400_BAD_REQUEST
         )
 
-    if request_sender_membership.role not in [ConversationMember.Role.OWNER, ConversationMember.Role.ADMIN]:
+    if request_sender_membership.role == ConversationMember.Role.MEMBER:
         raise PermissionDenied("You do not have permission to manage roles in this group.")
 
     target_membership = get_object_or_404(ConversationMember, conversation_id=conv_id, user_id=target_member_id)
 
-    if target_membership.role == ConversationMember.Role.OWNER:
-        return Response({"error": "The group owner's role cannot be modified."}, status=status.HTTP_400_BAD_REQUEST)
-
     if target_membership.role == ConversationMember.Role.ADMIN:
-        if request_sender_membership.role != ConversationMember.Role.OWNER:
-            raise PermissionDenied("Only the group owner can demote an administrator.")
-
         target_membership.role = ConversationMember.Role.MEMBER
         target_membership.save(update_fields=["role"])
         return Response(
@@ -68,25 +62,29 @@ def remove_member_from_group(request, conv_id):
         return Response({"error": "You cannot kick yourself."}, status=status.HTTP_400_BAD_REQUEST)
 
     request_sender_membership = get_object_or_404(
-        ConversationMember.objects.select_related("conversation"), conversation_id=conv_id, user=current_user
+        ConversationMember.objects.select_related("conversation"),
+        conversation_id=conv_id,
+        user=current_user,
     )
 
     if not request_sender_membership.conversation.is_group:
-        return Response({"error": "This action is only valid for group's."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "This action is only valid for groups."}, status=status.HTTP_400_BAD_REQUEST)
 
-    if request_sender_membership.role not in [ConversationMember.Role.OWNER, ConversationMember.Role.ADMIN]:
+    if request_sender_membership.role == ConversationMember.Role.MEMBER:
         raise PermissionDenied("You do not have permission to remove members.")
 
-    target_membership = get_object_or_404(ConversationMember, conversation_id=conv_id, user_id=target_member_id)
+    target_membership = get_object_or_404(
+        ConversationMember.objects.select_related("conversation"),
+        conversation_id=conv_id,
+        user_id=target_member_id,
+    )
 
-    if target_membership.role == ConversationMember.Role.OWNER:
-        raise PermissionDenied("The group owner cannot be removed from the group.")
-
-    if (
-        request_sender_membership.role == ConversationMember.Role.ADMIN
-        and target_membership.role == ConversationMember.Role.ADMIN
-    ):
-        raise PermissionDenied("Only the owner can remove other admin's.")
+    conversation = target_membership.conversation
+    if conversation.is_academic and conversation.created_by_id == int(target_member_id):
+        return Response(
+            {"error": "The owner of an academic group cannot be removed."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
     target_membership.delete()
 
