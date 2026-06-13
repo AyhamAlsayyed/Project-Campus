@@ -1086,3 +1086,45 @@
 [data-theme="light"] .bellBtn img {
   filter: brightness(0) saturate(100%) invert(35%) sepia(20%) saturate(600%) hue-rotate(220deg) brightness(90%);
 }
+[data-theme="light"] .postRequestActions {
+  border-top-color: #e0e0e0;
+}
+
+[data-theme="light"] .acceptPostBtn {
+  color: #662D91;
+}
+
+[data-theme="light"] .rejectPostBtn {
+  color: #D4145A;
+}
+
+[data-theme="light"] .verticalDivider {
+  background-color: #e0e0e0;
+}
+.reportedActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #333;
+}
+
+[data-theme="light"] .reportedActions {
+  border-top-color: #e0e0e0;
+}
+
+[data-theme="light"] .reportedActions button {
+  color: #662D91 !important;
+}
+
+[data-theme="light"] .reportedActions button img {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%) !important;
+}
+css.acceptIcon {
+  color: #ffffff;
+}
+
+[data-theme="light"] .acceptIcon {
+  color: #662D91;
+}

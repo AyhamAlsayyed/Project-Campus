@@ -1914,3 +1914,330 @@
 .checkoutCancelBtn:hover {
   color: #ffffff;
 }
+/* ── LIGHT MODE ── */
+[data-theme="light"] .darkContainer {
+  background: linear-gradient(135deg, #f5f5f5, #ffffff);
+}
+
+[data-theme="light"] .title {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+[data-theme="light"] .yourEventsTitleText {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+/* EVENTS highlight color */
+[data-theme="light"] .highlight {
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: #93278F;
+  color: #93278F;
+}
+
+/* Main event card */
+[data-theme="light"] .eventCard {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .orgNameRow h3 {
+  color: #333333;
+}
+
+[data-theme="light"] .orgText p {
+  color: #888888;
+}
+
+/* Verified badge in main events - blue */
+[data-theme="light"] .cardHeader .orgInfo img[alt="verified"] {
+  filter: invert(55%) sepia(80%) saturate(400%) hue-rotate(165deg) brightness(95%);
+}
+
+/* Banner overlay in main events - #432EB2 */
+[data-theme="light"] .bannerOverlay {
+  background: linear-gradient(to bottom, rgba(67, 46, 178, 0.15), rgba(67, 46, 178, 0.8));
+}
+
+/* Recommended overlay - #9A288E */
+[data-theme="light"] .recOverlay {
+  background: linear-gradient(to bottom, rgba(154, 40, 142, 0.6) 0%, rgba(154, 40, 142, 0.92) 100%);
+}
+
+[data-theme="light"] .dateWidget {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .dateText p {
+  color: #333333;
+}
+
+[data-theme="light"] .middleDivider {
+  background-color: #e0e0e0;
+}
+
+/* Buttons */
+[data-theme="light"] .manageEventsBtn {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .followedBtn {
+  background: #74419B;
+  color: #ffffff;
+}
+
+/* Pill */
+[data-theme="light"] .pill {
+  background-color: #662D91;
+  color: #ffffff;
+  border-color: transparent;
+}
+
+/* Right card */
+[data-theme="light"] .rightCard {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .separator {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* On-hold container */
+[data-theme="light"] .onHoldContainer {
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .pendingText {
+  color: #333333;
+}
+
+[data-theme="light"] .onHoldDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .totalText {
+  color: #333333;
+}
+
+[data-theme="light"] .checkoutSubInfo span {
+  color: #666666;
+}
+
+/* Promo container */
+[data-theme="light"] .promoContainer {
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .promoTitle {
+  color: #662D91;
+}
+
+[data-theme="light"] .promoText {
+  color: #555555;
+}
+
+/* Manage Events Modal */
+[data-theme="light"] .manageModalBox {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .manageModalTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .manageModalDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .manageTabBtn {
+  color: #333333;
+}
+
+[data-theme="light"] .manageTabActive {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .manageVerticalLine {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .manageEventsMonth {
+  color: #333333;
+}
+
+[data-theme="light"] .manageMonthToggle {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .manageMonthDropdown {
+  background-color: #ffffff;
+  border-color: #e0e0e0;
+}
+
+[data-theme="light"] .manageMonthNavBtn {
+  color: #333333;
+}
+
+[data-theme="light"] .manageMonthYear {
+  color: #333333;
+}
+
+[data-theme="light"] .manageMonthBtnActive {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .manageMonthBtnInactive {
+  color: #888888;
+}
+
+[data-theme="light"] .noEventsText {
+  color: #888888;
+}
+
+[data-theme="light"] .eventItemDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .manageEditForm {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .manageEditInput,
+[data-theme="light"] .manageEditTextarea,
+[data-theme="light"] .manageEditSegment,
+[data-theme="light"] .manageEditSegmentYear {
+  background: #f3e8ff;
+  border-color: rgba(102, 45, 145, 0.2);
+  color: #333333;
+}
+
+[data-theme="light"] .manageEditSectionLabel {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .manageEditSep {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .manageEditAmPm {
+  border-color: rgba(102, 45, 145, 0.2);
+}
+
+[data-theme="light"] .manageEditAmPmBtn {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .manageEditCancelBtn {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #555555;
+}
+
+[data-theme="light"] .iconSmallBack {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+/* Checkout Modal */
+[data-theme="light"] .checkoutModalContent {
+  background-color: #ffffff;
+  border-color: #e0e0e0;
+}
+
+[data-theme="light"] .checkoutLabel {
+  color: #555555;
+}
+
+[data-theme="light"] .checkoutInput {
+  background-color: #f3e8ff;
+  color: #333333;
+  border-color: rgba(102, 45, 145, 0.15);
+}
+
+[data-theme="light"] .checkoutInput::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .checkoutCancelBtn {
+  color: #555555;
+}
+
+[data-theme="light"] .checkoutCancelBtn:hover {
+  color: #333333;
+}
+/* Your Events cards - date badge light mode */
+[data-theme="light"] .yourEventDateBadge {
+  background-color: #ffffff;
+  border-color: rgba(102, 45, 145, 0.15);
+}
+
+[data-theme="light"] .yourEventDateBadge p {
+  color: #662D91;
+}
+
+/* Date widget in main event banner */
+[data-theme="light"] .dateWidget {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(102, 45, 145, 0.15);
+}
+
+[data-theme="light"] .dateText p {
+  color: #662D91;
+}
+
+/* Reminder button - not set */
+[data-theme="light"] .reminderBtn {
+  background: #662D91 !important;
+  color: #ffffff;
+}
+
+/* Reminder button - set (the inline style uses rgba white) */
+[data-theme="light"] .reminderBtn[style*="rgba(255,255,255"] {
+  background: #f3e8ff !important;
+  color: #662D91 !important;
+  border: 1px solid #662D91;
+}
+
+/* On-hold empty text */
+[data-theme="light"] .checkoutList p {
+  color: rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Your event bottom overlay text */
+[data-theme="light"] .yourEventBottomOverlay h3 {
+  color: #ffffff;
+}
+
+[data-theme="light"] .yourEventBottomOverlay p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="light"] .yourEventReadMore {
+  color: rgba(255, 255, 255, 0.7);
+}
+.reminderBtnSet {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme="light"] .reminderBtnSet {
+  background: #f3e8ff !important;
+  color: #662D91 !important;
+  border: 1px solid #662D91;
+}
+[data-theme="light"] .yourEventBottomOverlay {
+  background: linear-gradient(to bottom, rgba(67, 46, 178, 0.1), rgba(67, 46, 178, 0.85));
+}
+.verifiedIcon {
+  filter: brightness(0) invert(1);
+}
+
+[data-theme="light"] .verifiedIcon {
+  filter: invert(60%) sepia(80%) saturate(400%) hue-rotate(165deg) brightness(95%);
+}

@@ -271,7 +271,10 @@
 .actionDropdown {
   position: absolute;
   top: 100%;
+  bottom: auto;
   right: 0;
+  margin-top: 8px;
+  margin-bottom: 0;
   background-color: #333333;
   border-radius: 12px;
   padding: 8px 0;
@@ -281,6 +284,12 @@
   z-index: 20;
 }
 
+.actionDropdownUp {
+  top: auto;
+  bottom: 100%;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
 .actionItem {
   display: flex;
   align-items: center;
@@ -561,11 +570,3 @@
   padding-left: 44px;
 }
 
-[data-theme="light"] .searchIcon {
-  position: absolute;
-  left: 7px;
-  display: flex;
-  align-items: center;
-  pointer-events: none;
-  z-index: 1;
-}

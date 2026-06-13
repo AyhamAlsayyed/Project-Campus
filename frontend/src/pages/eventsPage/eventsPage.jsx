@@ -19,7 +19,12 @@ export default function EventsPage() {
     const API = "http://localhost:8000";
 
     const [user, setUser] = useState(null);
-    const [theme, setTheme] = useState("dark");
+    const [theme, setTheme] = useState(
+        () => document.documentElement.getAttribute('data-theme') || 'dark'
+    );
+    useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme);
+    }, [theme]);
     const [events, setEvents] = useState([]);
     const [recommendedEvents, setRecommendedEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -349,7 +354,7 @@ export default function EventsPage() {
                                                 <div className={styles.orgText}>
                                                     <div className={styles.orgNameRow}>
                                                         <h3>{event.orgName}</h3>
-                                                        <img src={VerifiedBadge} alt="verified" style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', marginLeft: 3 }} />
+                                                        <img src={VerifiedBadge} alt="verified" className={styles.verifiedIcon} style={{ width: 18, height: 18, marginLeft: 3 }} />
                                                     </div>
                                                     <p>{event.pageType}</p>
                                                 </div>
@@ -382,9 +387,9 @@ export default function EventsPage() {
                                                         <p>Ends — {formatDate(event.endDate)}</p>
                                                     </div>
                                                     <button
-                                                        className={styles.reminderBtn}
+                                                        className={`${styles.reminderBtn} ${reminders[event.id] ? styles.reminderBtnSet : ''}`}
                                                         onClick={() => handleReminder(event.id)}
-                                                        style={{ background: reminders[event.id] ? "rgba(255,255,255,0.2)" : "#7b1fa2", transition: "background 0.2s" }}
+                                                        
                                                     >
                                                         {reminders[event.id] ? "✓ Reminder set" : "Set reminder"}
                                                     </button>

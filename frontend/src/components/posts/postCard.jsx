@@ -742,7 +742,7 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
       {/* --- SWAPPED ACTIONS FOR REQUEST MODE --- */}
       {
         isReportedMode ? (
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #333' }}>
+         <div className={styles.reportedActions}>
             <button onClick={() => onDismiss?.(post.id || post.post_id)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
               <img src={XIcon} alt="Dismiss" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
               Dismiss
@@ -763,7 +763,7 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
         ) : isRequestMode ? (
           <div className={styles.postRequestActions}>
             <button className={styles.acceptPostBtn} onClick={() => onAcceptPost?.(post.id || post.post_id)}>
-              <Check size={18} strokeWidth={3} color="#ffffff" />
+             <Check size={18} strokeWidth={3} className={styles.acceptIcon} />
               Accept
             </button>
             <div className={styles.verticalDivider}></div>

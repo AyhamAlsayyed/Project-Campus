@@ -3745,3 +3745,600 @@ body {
     color: #fff;
     font-weight: 600;
 }
+/* ── VERIFIED BADGE ── */
+.verifiedIconBlue {
+  filter: brightness(0) invert(1);
+}
+
+[data-theme="light"] .verifiedIconBlue {
+  filter: invert(55%) sepia(80%) saturate(400%) hue-rotate(165deg) brightness(95%);
+}
+
+[data-theme="light"] .pageVerifiedBadge {
+  filter: invert(55%) sepia(80%) saturate(400%) hue-rotate(165deg) brightness(95%);
+}
+
+/* ── LIGHT MODE ── */
+[data-theme="light"] .darkContainer {
+  background: linear-gradient(135deg, #f5f5f5, #ffffff);
+}
+
+[data-theme="light"] .profileContent {
+  background: linear-gradient(-90deg, #A0279C, #6923A2);
+}
+
+[data-theme="light"] .profileCard {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .notice {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .username {
+  color: #333333;
+}
+
+[data-theme="light"] .role {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .fullName {
+  color: #333333;
+}
+
+[data-theme="light"] .uni {
+  color: #666666;
+}
+
+[data-theme="light"] .department {
+  color: #444444;
+}
+
+[data-theme="light"] .employmentType {
+  color: #666666;
+}
+
+[data-theme="light"] .friendsCount {
+  color: #666666;
+}
+
+[data-theme="light"] .bio {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="light"] .dot {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="light"] .hr {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .tabBtn {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .tabActive {
+  color: #662D91;
+  background: rgba(102, 45, 145, 0.08);
+}
+
+[data-theme="light"] .editText {
+  color: #662D91;
+}
+
+[data-theme="light"] .messageBtn {
+  background: rgba(0, 0, 0, 0.06);
+  color: #333333;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .friendsBtn {
+  background: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .coverPlaceholder {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .coverDropdown {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .coverDropdownItem:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .coverDropdownItemNormal {
+  color: #333333;
+}
+
+[data-theme="light"] .activitiesDropdown {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .activitiesDropdownItem {
+  color: #333333;
+}
+
+/* Photos grid */
+[data-theme="light"] .photosGrid {
+  background-color: #f3e8ff;
+}
+
+/* Friends grid */
+[data-theme="light"] .friendsGrid {
+  background-color: #f3e8ff;
+}
+
+[data-theme="light"] .friendCard {
+  background: rgba(102, 45, 145, 0.05);
+  border-color: rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .friendCard:hover {
+  background: rgba(102, 45, 145, 0.1);
+  border-color: rgba(102, 45, 145, 0.3);
+}
+
+[data-theme="light"] .friendName {
+  color: #333333;
+}
+
+/* Right section widgets */
+[data-theme="light"] .calendarWidget,
+[data-theme="light"] .remindersWidgetInstructor,
+[data-theme="light"] .picksWidgetWrap {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .calendarWidgetTitle,
+[data-theme="light"] .remindersWidgetTitle,
+[data-theme="light"] .picksWidgetTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .remindersMonthToggle {
+  color: #662D91;
+  border-bottom-color: #662D91;
+}
+
+[data-theme="light"] .remindersDivider {
+  background: #e0e0e0;
+}
+
+[data-theme="light"] .remindersNextLabel {
+  color: #888888;
+}
+
+[data-theme="light"] .remindersNextTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .picksWidgetCount {
+  color: #888888;
+}
+
+[data-theme="light"] .picksManageBtn {
+  background: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .monthPickerDropdown {
+  background: #ffffff;
+  border-color: #e0e0e0;
+}
+
+[data-theme="light"] .monthPickerNavBtn:not(:disabled) {
+  color: #333333;
+}
+
+[data-theme="light"] .monthPickerYear {
+  color: #333333;
+}
+
+[data-theme="light"] .monthBtnInactive {
+  color: #666666;
+}
+
+[data-theme="light"] .calendarDayNormal {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* Review widget */
+[data-theme="light"] .reviewWidget {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .reviewWidgetTitle {
+  color: #333333;
+}
+
+/* Picks card (other user) */
+[data-theme="light"] .picksCard {
+  background: #ffffff;
+}
+
+[data-theme="light"] .picksTitle {
+  color: #333333;
+}
+
+/* Your events widget */
+[data-theme="light"] .yourEventsWrapper {
+  background: #ffffff;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .yourEventsPill {
+  background-color: #662D91;
+  border-color: #662D91;
+  color: #ffffff;
+}
+
+[data-theme="light"] .yourEventsTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .eventsDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .manageEventsBtn {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .readMoreText {
+  color: #662D91;
+}
+
+/* Promotions widget */
+[data-theme="light"] .promotionsContainer {
+  background-color: #ffffff;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .promoTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .promoDesc {
+  color: #666666;
+}
+
+/* Manage events modal */
+[data-theme="light"] .manageModalBox {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .manageModalTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .manageModalDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .manageTabBtn {
+  color: #333333;
+}
+
+[data-theme="light"] .manageTabActive {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .manageVerticalLine {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .manageEventsMonth {
+  color: #333333;
+}
+
+[data-theme="light"] .manageMonthToggle {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .manageMonthDropdown {
+  background-color: #ffffff;
+  border-color: #e0e0e0;
+}
+
+[data-theme="light"] .manageMonthNavBtn {
+  color: #333333;
+}
+
+[data-theme="light"] .manageMonthYear {
+  color: #333333;
+}
+
+[data-theme="light"] .manageMonthBtnActive {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .manageMonthBtnInactive {
+  color: #666666;
+}
+
+[data-theme="light"] .noEventsText {
+  color: #888888;
+}
+
+[data-theme="light"] .eventItemDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .manageEditForm {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .manageEditInput,
+[data-theme="light"] .manageEditTextarea,
+[data-theme="light"] .manageEditSegment,
+[data-theme="light"] .manageEditSegmentYear {
+  background: #f3e8ff;
+  border-color: rgba(102, 45, 145, 0.2);
+  color: #333333;
+}
+
+[data-theme="light"] .manageEditSep {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .manageEditSectionLabel {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .manageEditAmPm {
+  border-color: rgba(102, 45, 145, 0.2);
+}
+
+[data-theme="light"] .manageEditAmPmBtn {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .manageEditCancelBtn {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #555555;
+}
+
+[data-theme="light"] .iconSmallBack {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .iconBigEvents {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+/* Reminders popup */
+[data-theme="light"] .remindersPopupBox {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .remindersPopupTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .remindersPopupDivider {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .remindersEventSeparator {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .remindersHostName {
+  color: #333333;
+}
+
+[data-theme="light"] .remindersHostBio {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .remindersBellWrap {
+  background: #f3e8ff;
+}
+
+[data-theme="light"] .remindersFollowedBtn {
+  background: #662D91;
+  color: #ffffff;
+}
+
+[data-theme="light"] .remindersFollowBtn {
+  background: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .eventCardDropdown {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .eventCardDropdownItem:hover {
+  background: #f3e8ff;
+}
+
+[data-theme="light"] .eventCardDropdownDividerLine {
+  background: #e0e0e0;
+}
+
+[data-theme="light"] .eventCardDropdownIconNormal {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .remindersEventTitle {
+  color: #ffffff;
+}
+
+[data-theme="light"] .remindersInfoBox {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="light"] .remindersInfoLabel,
+[data-theme="light"] .remindersInfoText {
+  color: #ffffff;
+}
+
+/* Picks modal */
+[data-theme="light"] .picksModalBox {
+  background: #ffffff;
+}
+
+[data-theme="light"] .picksModalHeading {
+  color: #333333;
+}
+
+[data-theme="light"] .picksModalSubtext {
+  color: #666666;
+}
+
+[data-theme="light"] .picksModalHeader {
+  border-bottom-color: #e0e0e0;
+}
+
+[data-theme="light"] .picksModalCount {
+  color: #888888;
+}
+
+[data-theme="light"] .picksModalCloseBtn {
+  color: #888888;
+}
+
+[data-theme="light"] .picksModalEmptyText {
+  color: #888888;
+}
+
+/* Picks popup */
+[data-theme="light"] .picksPopupBox {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .picksPopupTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .picksPopupDesc {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+[data-theme="light"] .picksPopupCloseBtn {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+/* Edit profile card */
+[data-theme="light"] .editCard {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .whiteHeaderText {
+  color: #333333;
+}
+
+[data-theme="light"] .savePill {
+  color: #333333;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .savePill:hover {
+  background: #f3e8ff;
+}
+
+[data-theme="light"] .editAvatarCircle {
+  background: #f3e8ff;
+  border-color: #ffffff;
+}
+
+[data-theme="light"] .editCoverSection {
+  background: #f3e8ff;
+}
+
+[data-theme="light"] .bioPanelRightContainer {
+  background: #f3e8ff;
+  border-color: rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .designBioTextareaFixed {
+  color: #333333;
+}
+
+[data-theme="light"] .designBioTextareaFixed::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .inputPairRow input {
+  color: #333333;
+  border-color: rgba(102, 45, 145, 0.2);
+}
+
+[data-theme="light"] .inputPairRow input::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .insetFieldsPanel {
+  background: #f9f0ff;
+  border-color: rgba(102, 45, 145, 0.08);
+}
+
+[data-theme="light"] .sectionLabelDivider {
+  color: #333333;
+}
+
+[data-theme="light"] .dividerLine {
+  background: #e0e0e0;
+}
+
+[data-theme="light"] .fieldValueText {
+  color: #333333;
+}
+
+[data-theme="light"] .detailsTitleMain {
+  color: #333333;
+}
+
+[data-theme="light"] .detailsSubtextHeader {
+  color: #888888;
+}
+
+/* Unfriend modal */
+[data-theme="light"] .unfriendModal {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .unfriendUsername {
+  color: #333333;
+}
+
+[data-theme="light"] .unfriendFriendsCount {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .unfriendWarningText {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="light"] .unfriendWarningName {
+  color: #333333;
+}
+
+[data-theme="light"] .unfriendCancelBtn {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #555555;
+}
+
+[data-theme="light"] .remindersArrow {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}

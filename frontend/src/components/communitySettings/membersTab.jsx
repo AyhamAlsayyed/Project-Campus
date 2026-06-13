@@ -50,6 +50,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
     const [toast, setToast] = useState(null);
     const [currentRole, setCurrentRole] = useState(currentUserRole);
     const navigate = useNavigate();
+    const loginUser = JSON.parse(localStorage.getItem('login_user'));
 
     const filterRef = useRef(null);
     const sortRef = useRef(null);
@@ -241,11 +242,11 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
             {/* Search & Controls */}
             <div className={styles.controlsRow}>
                 <div className={styles.searchWrapper}>
+
                     <div className={styles.searchIcon}>
-                        <div className={styles.searchIcon}>
-                            <img src={SearchIcon} className={styles.iconSearch} alt="" />
-                        </div>
+                        <img src={SearchIcon} className={styles.iconSearch} alt="" />
                     </div>
+
                     <input
                         type="text"
                         placeholder="Searching for someone?"
@@ -327,7 +328,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                                     <div className={styles.dropdownDivider} />
                                     <div className={styles.dropdownItem} onClick={() => { setSortMode(null); setIsSortOpen(false); }}>
                                         <div className={styles.dropdownItemLeft}>
-                                             <img src={XIcon} className={styles.iconX} alt="" /> Clear sort
+                                            <img src={XIcon} className={styles.iconX} alt="" /> Clear sort
                                         </div>
                                     </div>
                                 </>
@@ -347,7 +348,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                     </div>
                 )}
 
-                {!loading && visibleMembers.map((member) => {
+                {!loading && visibleMembers.map((member, index) => {
                     const myTier = getRoleTier({ role: currentRole });
 
                     const theirTier = getRoleTier(member);
@@ -362,6 +363,8 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                     const memberIsAdmin = isAdmin(member);
                     const memberName = member.name || member.full_name || member.username || 'Unknown';
                     const isActing = actionLoading === member.id;
+                    const isLast = index >= visibleMembers.length - 2;
+                    const isMe = member.username === loginUser?.username;
 
                     return (
                         <div key={member.id} className={`${styles.memberItem} ${isActing ? styles.memberActing : ''}`}>
@@ -385,69 +388,67 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                                 </div>
                             </div>
 
-                            <div className={styles.actionBtnWrapper} ref={activeActionMenu === member.id ? actionMenuRef : null}>
-                                <button
-                                    className={styles.dotsBtn}
-                                    onClick={() => setActiveActionMenu(p => p === member.id ? null : member.id)}
-                                    disabled={isActing}
-                                >
-                                    {isActing
-                                        ? <div className={styles.spinner} />
-                                        : <><div className={styles.dot} /><div className={styles.dot} /><div className={styles.dot} /></>
-                                    }
-                                </button>
+                            {!isMe && (
+                                <div className={styles.actionBtnWrapper} ref={activeActionMenu === member.id ? actionMenuRef : null}>
+                                    <button
+                                        className={styles.dotsBtn}
+                                        onClick={() => setActiveActionMenu(p => p === member.id ? null : member.id)}
+                                        disabled={isActing}
+                                    >
+                                        {isActing
+                                            ? <div className={styles.spinner} />
+                                            : <><div className={styles.dot} /><div className={styles.dot} /><div className={styles.dot} /></>
+                                        }
+                                    </button>
 
-                                {activeActionMenu === member.id && (
-                                    <div className={styles.actionDropdown}>
-                                        <div className={styles.actionItem} onClick={() => {
-                                            setActiveActionMenu(null);
-                                            if (member.type === 'page') {
-                                                navigate(`/page/${member.id}`);
-                                            } else {
-                                                navigate(`/profile/${member.id}`);
-                                            }
-                                        }}>
-                                             <img src={DefaultPfp} className={styles.iconAction} alt="" /> View profile
+                                    {activeActionMenu === member.id && (
+                                        <div className={`${styles.actionDropdown} ${isLast ? styles.actionDropdownUp : ''}`}>
+                                            <div className={styles.actionItem} onClick={() => {
+                                                setActiveActionMenu(null);
+                                                if (member.type === 'page') {
+                                                    navigate(`/page/${member.id}`);
+                                                } else {
+                                                    navigate(`/profile/${member.id}`);
+                                                }
+                                            }}>
+                                                <img src={DefaultPfp} className={styles.iconAction} alt="" /> View profile
+                                            </div>
+                                            <div className={styles.actionDivider} />
+                                            {canMakeAdmin && (
+                                                <>
+                                                    <div className={styles.actionItem} onClick={() => handleAction('make-admin', member)}>
+                                                        <img src={MakeAdminIcon} className={styles.iconAction} alt="" /> Make admin
+                                                    </div>
+                                                    <div className={styles.actionDivider} />
+                                                </>
+                                            )}
+                                            {canRemoveAdmin && (
+                                                <>
+                                                    <div className={styles.actionItem} onClick={() => handleAction('remove-admin', member)}>
+                                                        <img src={MakeAdminIcon} className={styles.iconAction} alt="" /> Remove admin
+                                                    </div>
+                                                    <div className={styles.actionDivider} />
+                                                </>
+                                            )}
+                                            {canKick && (
+                                                <>
+                                                    <div className={styles.actionItem} onClick={() => handleAction('kick', member)}>
+                                                        <img src={LeaveIcon} className={styles.iconAction} alt="" /> Kick member
+                                                    </div>
+                                                    <div className={styles.actionDivider} />
+                                                </>
+                                            )}
+                                            <div className={`${styles.actionItem} ${styles.dangerText}`} onClick={() => handleAction('block', member)}>
+                                                <img src={BlockIcon} className={styles.iconDanger} alt="" /> Block user
+                                            </div>
+                                            <div className={styles.actionDivider} />
+                                            <div className={`${styles.actionItem} ${styles.dangerText}`} onClick={() => handleAction('report', member)}>
+                                                <img src={InfoIcon} className={styles.iconDanger} alt="" /> Report user
+                                            </div>
                                         </div>
-                                        <div className={styles.actionDivider} />
-                                        {canMakeAdmin && (
-                                            <>
-                                                <div className={styles.actionItem} onClick={() => handleAction('make-admin', member)}>
-                                                    <img src={MakeAdminIcon} className={styles.iconAction} alt="" /> Make admin
-                                                </div>
-                                                <div className={styles.actionDivider} />
-                                            </>
-                                        )}
-
-                                        {canRemoveAdmin && (
-                                            <>
-                                                <div className={styles.actionItem} onClick={() => handleAction('remove-admin', member)}>
-                                                    <img src={MakeAdminIcon} className={styles.iconAction} alt="" /> Remove admin
-                                                </div>
-                                                <div className={styles.actionDivider} />
-                                            </>
-                                        )}
-
-                                        {canKick && (
-                                            <>
-                                                <div className={styles.actionItem} onClick={() => handleAction('kick', member)}>
-                                                     <img src={LeaveIcon} className={styles.iconAction} alt="" /> Kick member
-                                                </div>
-                                                <div className={styles.actionDivider} />
-                                            </>
-                                        )}
-
-                                        <div className={`${styles.actionItem} ${styles.dangerText}`} onClick={() => handleAction('block', member)}>
-                                            <img src={BlockIcon} className={styles.iconDanger} alt="" /> Block user
-                                        </div>
-                                        <div className={styles.actionDivider} />
-
-                                        <div className={`${styles.actionItem} ${styles.dangerText}`} onClick={() => handleAction('report', member)}>
-                                            <img src={InfoIcon} className={styles.iconDanger} alt="" /> Report user
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     );
                 })}

@@ -17,7 +17,9 @@ import RemovePersonIcon from '../../Assets/icons/remove-person.png';
 import MessagesIcon from '../../Assets/icons/messages.png';
 
 export default function Universities() {
-    const [theme, setTheme] = useState("dark");
+    const [theme, setTheme] = useState(
+        () => document.documentElement.getAttribute('data-theme') || 'dark'
+    );
     const [user, setUser] = useState(null);
     const [userError, setUserError] = useState("");
     const [newsIndex, setNewsIndex] = useState(0);
@@ -207,6 +209,9 @@ export default function Universities() {
     const filteredDoctors = doctors.filter(d =>
         d.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme);
+    }, [theme]);
 
     const toggleTheme = () => setTheme(prev => prev === "light" ? "dark" : "light")
 
@@ -450,7 +455,7 @@ export default function Universities() {
 
                     {!isUniversity && (
                         <div className={styles.rightCardWrapper}>
-                            <div className={styles.rightCard}>
+                            <div className={styles.rightCard} style={{marginTop:0}}>
                                 <div className={styles.relatedEventsHeader}>
                                     <img src={Events} alt="events" style={{ width: 30, height: 30 }} />
                                     <span className={styles.relatedEventsTitle}>Related events</span>

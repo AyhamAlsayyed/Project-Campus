@@ -172,7 +172,12 @@ function MonthPicker({ date, setDate, onClose }) {
 // ─── main component ──────────────────────────────────────────────────────────
 
 export default function ProfilePage({ type }) {
-    const [theme, setTheme] = useState('dark');
+    const [theme, setTheme] = useState(
+        () => document.documentElement.getAttribute('data-theme') || 'dark'
+    );
+    useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme);
+    }, [theme]);
     const [user, setUser] = useState(null);
     const [friendStatus, setFriendStatus] = useState('none');
     const [currentUser, setCurrentUser] = useState(null);
@@ -351,7 +356,7 @@ export default function ProfilePage({ type }) {
             currentUser.page_id === Number(userId);
 
         if (isOwn && user?.type === 'page') { loadOwnPageEvents(); return; }
-        if (isOwn && user?.role === 'instructor') { loadCommunityPicks(); return; }  
+        if (isOwn && user?.role === 'instructor') { loadCommunityPicks(); return; }
         if (isOwn) return;
         if (user.role === 'instructor') loadCommunityPicks();
         if (user.type !== 'page') loadFriends(userId);
@@ -963,7 +968,7 @@ export default function ProfilePage({ type }) {
                                             <>
                                                 <div className={`${styles.nameRow} ${styles.pageNameRow}`}>
                                                     <h2 className={styles.username} style={{ fontSize: "19px" }}>{username}</h2>
-                                                    {user?.is_verified && <img src={VerifiedBadge} alt="verified" className={styles.pageVerifiedBadge} />}
+                                                    <img src={VerifiedBadge} alt="verified" className={`${styles.pageVerifiedBadge} ${styles.verifiedIconBlue}`} />
                                                 </div>
                                                 <div className={`${styles.subRow} ${styles.pageFollowersMeta}`}>
                                                     {user?.category && <span className={styles.department}>{user.category}</span>}
@@ -1186,7 +1191,7 @@ export default function ProfilePage({ type }) {
                                                                         {event.organization_name || user?.username}
                                                                     </h3>
                                                                     {user?.is_verified && (
-                                                                        <img src={VerifiedBadge} alt="verified" style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', marginLeft: 3 }} />
+                                                                        <img src={VerifiedBadge} alt="verified" className={styles.verifiedIconBlue} style={{ width: 18, height: 18, marginLeft: 3 }} />
                                                                     )}
                                                                 </div>
                                                                 <p style={{ margin: '2px 0 0 0', color: '#999', fontSize: '0.85rem' }}>
