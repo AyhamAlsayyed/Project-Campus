@@ -4,6 +4,7 @@ from .views.auth.login import login
 from .views.auth.signup.send_code import send_code
 from .views.auth.signup.signup import signup
 from .views.auth.signup.verify_code import verify_code
+from .views.auth.TFA import send_2fa_code, verify_2fa_code
 from .views.comment.comments import comment_list, create_comment
 from .views.communities.community import (  # delete_community,
     check_community_request_status,
@@ -84,6 +85,13 @@ from .views.pages.pages import (
     toggle_follow_page,
     toggle_page_notifications,
 )
+from .views.pages.promotions import (
+    delete_page_promotion,
+    get_page_community_promotions,
+    get_page_event_promotions,
+    get_page_post_promotions,
+    get_page_promotions,
+)
 from .views.pages.subscription import (  # subscribe_to_plan,; cancel_subscription,
     get_current_subscription,
 )
@@ -119,6 +127,7 @@ from .views.user.user import (
     get_events,
     me,
     profile_view,
+    update_password,
     update_profile,
 )
 
@@ -148,6 +157,10 @@ urlpatterns += [
     path("friends/decline/", decline_friend_request),  #
     path("friends/unfriend/", unfriend),  #
     path("conversations/create/<int:user_id>/", create_dm),
+    # settings
+    path("settings/password/", update_password),
+    path("auth/2fa/send/", send_2fa_code),
+    path("auth/2fa/verify/", verify_2fa_code),
 ]
 # post
 urlpatterns += [
@@ -243,7 +256,14 @@ urlpatterns += [
     path("pages/<int:page_id>/review/", rate_page),
     path("pages/<int:page_id>/events/", page_events),
     path("pages/<int:page_id>/notify/", toggle_page_notifications),
+    # subscriptions
     path("subscriptions/current/", get_current_subscription),
+    # promotions
+    path("promotions/", get_page_promotions),
+    path("posts/promotions/", get_page_post_promotions),
+    path("communities/promotions/", get_page_community_promotions),
+    path("events/promotions/", get_page_event_promotions),
+    path("promotions/<int:promotion_id>/delete/", delete_page_promotion),
     # university
     path("university/news/", university_news),
     path("university/events/", university_events),

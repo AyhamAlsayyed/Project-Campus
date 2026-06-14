@@ -1,7 +1,9 @@
 import json
 import re
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, update_session_auth_hash
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -272,3 +274,45 @@ def check_username(request):
     if User.objects.filter(username__iexact=username).exists():
         return Response({"message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
     return Response({"message": "Username is valid"}, status=status.HTTP_200_OK)
+
+
+@api_view(["PUT", "POST"])
+@permission_classes([IsAuthenticated])
+def update_password(request):
+    """
+    Safely handles updating the authenticated user's account password.
+    """
+    print(request.data)
+    user = request.user
+    current_password = request.data.get("current_password")
+    new_password = request.data.get("new_password")
+
+    if not current_password or not new_password:
+        return Response(
+            {"message": "Both currentPassword and newPassword are required."}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not user.check_password(current_password):
+        return Response(
+            {"message": "Incorrect current password. Please try again."}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if current_password == new_password:
+        return Response(
+            {"message": "Your new password cannot be identical to your current password."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        validate_password(new_password, user=user)
+    except ValidationError as e:
+        return Response(
+            {"message": "Password security check failed", "errors": e.messages}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    user.set_password(new_password)
+    user.save()
+
+    update_session_auth_hash(request, user)
+
+    return Response({"message": "Password updated successfully."}, status=status.HTTP_200_OK)

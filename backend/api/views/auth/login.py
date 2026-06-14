@@ -56,7 +56,7 @@ def login(request):
                 is_premium = True
 
             if tier == Subscription.Tier.UNIVERSITY:
-                user_type = "uni"
+                user_type = "university"
 
             if getattr(user.page, "profile_image", None):
                 try:

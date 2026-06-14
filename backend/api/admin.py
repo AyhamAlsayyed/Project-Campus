@@ -24,6 +24,7 @@ from .models import (
     Post,
     PostMedia,
     PostReaction,
+    Promotion,
     Report,
     SavedPost,
     Student,
@@ -65,3 +66,4 @@ admin.site.register(Report)
 admin.site.register(UniversityDomain)
 admin.site.register(UserDegree)
 admin.site.register(NotificationSetting)
+admin.site.register(Promotion)

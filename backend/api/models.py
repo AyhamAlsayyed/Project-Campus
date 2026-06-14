@@ -1412,3 +1412,44 @@ class NotificationSetting(models.Model):
     def __str__(self):
         username = self.user.username if self.user else f"User {self.user_id}"
         return f"Notification Settings for {username}"
+
+
+class Promotion(models.Model):
+    promotion_id = models.BigAutoField(primary_key=True, db_column="promotion_id")
+
+    content_type_obj = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        db_column="content_type_id",
+    )
+    object_id = models.PositiveBigIntegerField()
+    promoted_content = GenericForeignKey("content_type_obj", "object_id")
+
+    promoted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="promotions",
+        db_column="promoted_by_id",
+    )
+
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField()
+
+    class Status(models.TextChoices):
+        ONHOLD = "ONHOLD", "ONHOLD"
+        ACTIVE = "active", "Active"
+        EXPIRED = "expired", "Expired"
+        CANCELLED = "cancelled", "Cancelled"
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.ACTIVE,
+    )
+
+    class Meta:
+        db_table = "promotion"
+
+    def __str__(self):
+        content_type = self.content_type_obj.name if self.content_type_obj else "Unknown"
+        return f"{self.promoted_by.username} promoted {content_type}"

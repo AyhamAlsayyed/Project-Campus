@@ -19,6 +19,7 @@ from .models import (
     PageRating,
     Post,
     PostMedia,
+    Promotion,
     Subscription,
     TeachingPosition,
     UserDegree,
@@ -1336,3 +1337,21 @@ class MessageSerializer(serializers.ModelSerializer):
             "media",
         ]
         read_only_fields = ["sent_at"]
+
+
+class PromotionSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source="promotion_id", read_only=True)
+    promoted_by_username = serializers.CharField(source="promoted_by.username", read_only=True)
+    content_type_name = serializers.CharField(source="content_type_obj.model", read_only=True)
+
+    class Meta:
+        model = Promotion
+        fields = [
+            "id",
+            "object_id",
+            "content_type_name",
+            "promoted_by_username",
+            "start_date",
+            "end_date",
+            "status",
+        ]

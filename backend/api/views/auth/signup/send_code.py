@@ -21,6 +21,11 @@ def is_valid_academic_email_domain(email):
     return UniversityDomain.objects.filter(domain=domain, is_active=True).exists()
 
 
+def is_valid_personal_email_format(email):
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    return bool(re.match(pattern, email))
+
+
 User = get_user_model()
 
 
@@ -32,9 +37,16 @@ def send_code(request):
 
     username = (request.data.get("username") or "").strip()
     academic_email = (request.data.get("academicEmail") or "").strip().lower()
+    personal_email = (request.data.get("personalEmail") or "").strip().lower()
 
-    if not username or not academic_email:
-        return Response({"message": "username and academicEmail  are required"}, status=status.HTTP_400_BAD_REQUEST)
+    target_email = academic_email or personal_email
+    is_academic = bool(academic_email)
+
+    if not username or not target_email:
+        return Response(
+            {"message": "username and either academicEmail or personalEmail are required"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     if not re.fullmatch(r"[a-z]+", username):
         return Response(
@@ -46,14 +58,17 @@ def send_code(request):
     if User.objects.filter(username__iexact=username).exists():
         return Response({"message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Enform domain
-    if not is_valid_academic_email_domain(academic_email):
-        return Response(
-            {"message": "academicEmail is invalid or domain not supported"}, status=status.HTTP_400_BAD_REQUEST
-        )
+    # Enforce email specific domain/format checks
+    if is_academic:
+        if not is_valid_academic_email_domain(target_email):
+            return Response(
+                {"message": "academicEmail is invalid or domain not supported"}, status=status.HTTP_400_BAD_REQUEST
+            )
+    else:
+        if not is_valid_personal_email_format(target_email):
+            return Response({"message": "personalEmail format is invalid"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # prevent spam
-    last = EmailVerification.objects.filter(academic_email=academic_email).order_by("-created_at").first()
+    last = EmailVerification.objects.filter(academic_email=target_email).order_by("-created_at").first()
 
     if last and (timezone.now() - last.created_at).total_seconds() < 60:
         return Response({"message": "Please wait!!"}, status=status.HTTP_429_TOO_MANY_REQUESTS)
@@ -61,9 +76,9 @@ def send_code(request):
     code = f"{random.randint(0, 999999):06d}"
 
     # remove old pending codes
-    EmailVerification.objects.filter(academic_email=academic_email, is_verified=False).delete()
+    EmailVerification.objects.filter(academic_email=target_email, is_verified=False).delete()
 
-    v = EmailVerification(username=username, academic_email=academic_email, code=code)
+    v = EmailVerification(username=username, academic_email=target_email, code=code)
     v.set_expiry(minutes=10)
     v.save()
 
@@ -72,7 +87,7 @@ def send_code(request):
             subject="ProjectCampus - verification code",
             message=f"Welcome to Project Campus! Your verification code is: {code}",
             from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[academic_email],
+            recipient_list=[target_email],
             fail_silently=False,
         )
         return Response({"message": "Verification code sent"}, status=status.HTTP_200_OK)

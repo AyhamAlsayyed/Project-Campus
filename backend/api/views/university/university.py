@@ -15,6 +15,14 @@ def file_url(request, f):
 
 
 def get_user_university(user):
+    """
+    Finds the relevant university page context.
+    Supports University page owners, students, and instructors.
+    """
+    page = getattr(user, "page", None)
+    if page and getattr(page, "page_type", None) == "university":
+        return page
+
     student = getattr(user, "student_profile", None)
     if student and student.university_page:
         return student.university_page
