@@ -127,3 +127,37 @@
     color: rgba(255, 255, 255, 0.75);
     line-height: 1.4;
 }
+[data-theme="light"] .recentlyContactedWrapper {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .pill {
+  background-color: #662D91;
+  border-color: #662D91;
+  color: #ffffff;
+}
+
+[data-theme="light"] .contactCard {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .detailsSection h4 {
+  color: #662D91;
+}
+
+[data-theme="light"] .detailsSection p {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="light"] .degreeText {
+  color: rgba(0, 0, 0, 0.65);
+}
+.darkerBg {
+  background: #2a2a2a;
+}
+
+[data-theme="light"] .darkerBg {
+  background: #ffffff;
+}

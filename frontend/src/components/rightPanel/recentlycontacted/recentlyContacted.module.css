@@ -241,3 +241,61 @@
     transparent
   );
 }
+[data-theme="light"] .recentlyContactedWrapper {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .pill {
+  background-color: #662D91;
+  border-color: #662D91;
+  color: #ffffff;
+}
+
+[data-theme="light"] .searchContactWrap {
+  background: rgba(102, 45, 145, 0.08);
+}
+
+[data-theme="light"] .searchInput {
+  color: #333333;
+}
+
+[data-theme="light"] .searchInput::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .contactName {
+  color: #333333;
+}
+
+[data-theme="light"] .contactStatus {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .contactMessage {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .contactTime {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .contactCard:hover {
+  background-color: rgba(102, 45, 145, 0.05);
+}
+
+[data-theme="light"] .divider {
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+}
+
+[data-theme="light"] .statusDot {
+  border-color: #ffffff;
+}
+.messageIcon {
+  filter: brightness(0) invert(1);
+}
+
+[data-theme="light"] .messageIcon {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}

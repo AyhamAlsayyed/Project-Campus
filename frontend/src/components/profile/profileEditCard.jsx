@@ -32,7 +32,7 @@ const SubLabel = ({ children, topPad = true }) => (
     </div>
 );
 
-export default function ProfileEditCard({ styles, edit, setIsEditing, user, API, token }) {
+export default function ProfileEditCard({ styles, edit, setIsEditing, user, API, token, theme }) {
     const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, target: null });
 
     // Degrees
@@ -58,6 +58,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
     const [showTitleDropdown, setShowTitleDropdown] = useState(false);
     const [titleDropdownPos, setTitleDropdownPos] = useState({ top: 0, left: 0 });
     const titleBtnRef = useRef(null);
+    const isLight = theme === 'light';
     useEffect(() => {
         if (!showTitleDropdown) return;
         const close = () => setShowTitleDropdown(false);
@@ -111,32 +112,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
     }, [showCoverDropdown]);
 
     // Shared input style
-    const inlineInput = (flex = 1) => ({
-        flex, background: '#262626', border: '1px solid #444',
-        borderRadius: 12, padding: '9px 14px', color: 'white',
-        outline: 'none', fontSize: 13, boxSizing: 'border-box'
-    });
 
-    const addBtn = {
-        background: 'rgba(139,45,255,0.2)', border: '1px solid rgba(139,45,255,0.4)',
-        color: '#c084fc', borderRadius: 10, padding: '8px 14px',
-        cursor: 'pointer', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap'
-    };
-
-    const dashedAddBtn = {
-        background: 'transparent', border: '1px dashed rgba(139,45,255,0.35)',
-        borderRadius: 10, color: 'rgba(139,45,255,0.8)', padding: '7px 14px',
-        cursor: 'pointer', fontSize: 13, fontWeight: 500, width: '100%', marginTop: 4
-    };
-
-    const cancelIconBtn = {
-        background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', padding: 4
-    };
-
-    const trashBtn = {
-        background: 'transparent', border: 'none', color: '#e91e63',
-        cursor: 'pointer', marginLeft: 'auto', padding: 4
-    };
 
     return (
         <div className={styles.editCard}>
@@ -354,14 +330,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                                             setFormData(p => ({ ...p, title: t }));
                                                             setShowTitleDropdown(false);
                                                         }}
-                                                        style={{
-                                                            display: "flex", alignItems: "center",
-                                                            width: "100%", padding: "10px 16px",
-                                                            background: formData.title === t ? "rgba(255,255,255,0.06)" : "transparent",
-                                                            border: "none", color: "rgba(255,255,255,0.85)",
-                                                            fontSize: "0.88rem", fontWeight: formData.title === t ? 600 : 400,
-                                                            cursor: "pointer",
-                                                        }}
+                                                        className={styles.editFormInput}
+                                                        style={{ borderRadius: 24, padding: "14px 40px 14px 15px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, display: "flex", justifyContent: "flex-start" }}
                                                         onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
                                                         onMouseLeave={e => e.currentTarget.style.background = formData.title === t ? "rgba(255,255,255,0.06)" : "transparent"}
                                                     >
@@ -377,18 +347,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
 
                                     {/* Username */}
                                     <input
-                                        style={{
-                                            flex: 1, background: "#262626",
-                                            border: `1px solid ${usernameError
-                                                ? '#ff4b4b'
-                                                : !usernameChecking && formData.username && !usernameError && formData.username !== user?.username
-                                                    ? '#4ade80'
-                                                    : '#444'
-                                                }`,
-                                            borderRadius: 24, padding: "14px 16px", color: "white",
-                                            outline: "none", fontSize: 14, boxSizing: "border-box",
-                                            transition: "border-color 0.2s"
-                                        }}
+                                        className={`${styles.editFormInput} ${usernameError ? styles.editFormInputError : (!usernameChecking && formData.username && formData.username !== user?.username ? styles.editFormInputValid : '')}`}
+                                        style={{ flex: 1 }}
                                         type="text"
                                         value={formData.username}
                                         placeholder="Username"
@@ -398,11 +358,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
 
                                 {/* Row 2: Full name — matches full width of row above */}
                                 <input
-                                    style={{
-                                        width: "100%", background: "#262626", border: "1px solid #444",
-                                        borderRadius: 24, padding: "14px 16px", color: "white",
-                                        outline: "none", fontSize: 14, boxSizing: "border-box"
-                                    }}
+                                    className={styles.editFormInput}
                                     type="text"
                                     value={formData.fullName}
                                     placeholder="Full Name"
@@ -413,22 +369,13 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                 <div style={{ display: "flex", gap: 12 }}>
                                     <input
                                         readOnly
-                                        style={{
-                                            flex: 1, background: "#2F2F2F", border: "1px solid #2F2F2F",
-                                            borderRadius: 24, padding: "14px 16px", color: "#616161",
-                                            outline: "none", fontSize: 14, boxSizing: "border-box",
-                                            cursor: "not-allowed",
-                                        }}
+                                        className={styles.editFormInputReadOnly}
                                         type="text"
                                         value={formData.university}
                                         placeholder="University"
                                     />
                                     <input
-                                        style={{
-                                            flex: 1, background: "#262626", border: "1px solid #444",
-                                            borderRadius: 24, padding: "14px 16px", color: "white",
-                                            outline: "none", fontSize: 14, boxSizing: "border-box"
-                                        }}
+                                        className={styles.editFormInput}
                                         type="text"
                                         value={formData.major}
                                         placeholder="Major"
@@ -442,13 +389,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                 <div style={{ display: "flex", gap: 12 }}>
                                     <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
                                         <input
-                                            className={`${styles.inputPairRow} ${usernameError ? styles.invalidInput : ''}`}
-                                            style={{
-                                                width: "100%", background: "#262626",
-                                                border: `1px solid ${usernameError ? '#ff4b4b' : '#444'}`,
-                                                borderRadius: 24, padding: "14px 16px",
-                                                color: "white", outline: "none", fontSize: 14, boxSizing: "border-box"
-                                            }}
+                                            className={`${styles.editFormInput} ${usernameError ? styles.editFormInputError : ''}`}
                                             type="text"
                                             value={formData.username}
                                             placeholder="Username"
@@ -456,11 +397,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                         />
                                     </div>
                                     <input
-                                        style={{
-                                            flex: 1, background: "#262626", border: "1px solid #444",
-                                            borderRadius: 24, padding: "14px 16px", color: "white",
-                                            outline: "none", fontSize: 14, boxSizing: "border-box"
-                                        }}
+                                        className={styles.editFormInput}
+                                        style={{ flex: 1 }}
                                         type="text"
                                         value={formData.fullName}
                                         placeholder="Real Name"
@@ -470,22 +408,15 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                 <div style={{ display: "flex", gap: 12 }}>
                                     <input
                                         readOnly
-                                        style={{
-                                            flex: 1, background: "#262626", border: "1px solid #444",
-                                            borderRadius: 24, padding: "14px 16px", color: "white",
-                                            outline: "none", fontSize: 14, boxSizing: "border-box",
-                                            opacity: 0.4, cursor: "not-allowed",
-                                        }}
+                                        className={styles.editFormInputReadOnly}
+                                        style={{ opacity: 0.4 }}
                                         type="text"
                                         value={formData.university}
                                         placeholder="University"
                                     />
                                     <input
-                                        style={{
-                                            flex: 1, background: "#262626", border: "1px solid #444",
-                                            borderRadius: 24, padding: "14px 16px", color: "white",
-                                            outline: "none", fontSize: 14, boxSizing: "border-box"
-                                        }}
+                                        className={styles.editFormInput}
+                                        style={{ flex: 1 }}
                                         type="text"
                                         value={formData.major}
                                         placeholder="Major"
@@ -497,19 +428,12 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                     </div>
 
                     {/* Right: Bio */}
-                    <div style={{
-                        flex: 1, background: "#262626", borderRadius: 16,
-                        border: "1px solid #2a2a2a", padding: 16, display: "flex"
-                    }}>
+                    <div className={styles.editFormBioWrap}>
                         <textarea
                             value={formData.bio}
                             placeholder="Bio..."
                             onChange={e => setFormData(p => ({ ...p, bio: e.target.value }))}
-                            style={{
-                                flex: 1, background: "transparent", border: "none",
-                                color: "white", width: "100%", outline: "none",
-                                resize: "none", fontSize: 14, lineHeight: 1.5, fontFamily: "inherit"
-                            }}
+                            className={styles.editFormBioTextarea}
                         />
                     </div>
                 </div>
@@ -520,15 +444,15 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                     </p>
                 )}
 
-                <div style={{ borderTop: "1px solid #999999", width: "70%", margin: "20px auto 24px" }} />
+                <div className={styles.editFormDividerLine} />
 
 
 
 
                 {/* Details header */}
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 24, marginBottom: 24 }}>
-                    <h2 style={{ fontSize: 28, fontWeight: 700, margin: 0, color: "white", width: 110, flexShrink: 0 }}>Details</h2>
-                    <p style={{ color: "#888", fontSize: 13, lineHeight: 1.5, flex: 1, margin: "4px 0 0" }}>
+                    <h2 className={styles.detailsTitleMain}>Details</h2>
+                    <p className={styles.detailsSubtextHeader}>
                         Please provide accurate profile information, as errors may affect your account. You can adjust your privacy
                         settings to control profile visibility.
                     </p>
@@ -599,37 +523,25 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                 placeholder="MM"
                                 value={formData.birthday.month}
                                 onChange={e => setFormData(p => ({ ...p, birthday: { ...p.birthday, month: e.target.value } }))}
-                                style={{
-                                    width: 48, background: '#262626', border: '1px solid #444',
-                                    borderRadius: 10, padding: '8px 0', color: 'white',
-                                    outline: 'none', fontSize: 13, textAlign: 'center'
-                                }}
+                                className={styles.editFormBirthdayInput} style={{ width: 48 }}
                             />
-                            <span style={{ color: '#555', fontSize: 16 }}>/</span>
+                            <span className={styles.editFormBirthdaySep}>/</span>
                             <input
                                 type="text"
                                 maxLength={2}
                                 placeholder="DD"
                                 value={formData.birthday.day}
                                 onChange={e => setFormData(p => ({ ...p, birthday: { ...p.birthday, day: e.target.value } }))}
-                                style={{
-                                    width: 48, background: '#262626', border: '1px solid #444',
-                                    borderRadius: 10, padding: '8px 0', color: 'white',
-                                    outline: 'none', fontSize: 13, textAlign: 'center'
-                                }}
+                                className={styles.editFormBirthdayInput} style={{ width: 48 }}
                             />
-                            <span style={{ color: '#555', fontSize: 16 }}>/</span>
+                            <span className={styles.editFormBirthdaySep}>/</span>
                             <input
                                 type="text"
                                 maxLength={4}
                                 placeholder="YYYY"
                                 value={formData.birthday.year}
                                 onChange={e => setFormData(p => ({ ...p, birthday: { ...p.birthday, year: e.target.value } }))}
-                                style={{
-                                    width: 64, background: '#262626', border: '1px solid #444',
-                                    borderRadius: 10, padding: '8px 0', color: 'white',
-                                    outline: 'none', fontSize: 13, textAlign: 'center'
-                                }}
+                                className={styles.editFormBirthdayInput} style={{ width: 64 }}
                             />
                         </div>
                     </div>
@@ -644,7 +556,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                             <select
                                                 value={editingDegree.title}
                                                 onChange={e => setEditingDegree(p => ({ ...p, title: e.target.value }))}
-                                                style={inlineInput(1)}
+                                                className={styles.editFormInlineInput} style={{ flex: 1 }}
                                             >
                                                 <option value="">Degree type</option>
                                                 <option value="High School Diploma">Diploma</option>
@@ -656,16 +568,17 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                                 placeholder="Field e.g. Computer Science"
                                                 value={editingDegree.field}
                                                 onChange={e => setEditingDegree(p => ({ ...p, field: e.target.value }))}
-                                                style={inlineInput(1.5)}
+                                                className={styles.editFormInlineInput} style={{ flex: 1.5 }}
                                             />
                                             <input
                                                 placeholder="Institution e.g. Harvard University"
                                                 value={editingDegree.institution}
                                                 onChange={e => setEditingDegree(p => ({ ...p, institution: e.target.value }))}
-                                                style={inlineInput(1.5)}
+                                                className={styles.editFormInlineInput} style={{ flex: 1.5 }}
+
                                             />
                                             <button
-                                                style={addBtn}
+                                               className={styles.editFormAddBtn}
                                                 onClick={() => {
                                                     if (!editingDegree.title.trim()) return;
                                                     setFormData(p => ({
@@ -677,7 +590,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                             >
                                                 Save
                                             </button>
-                                            <button style={cancelIconBtn} onClick={() => setEditingDegreeIdx(null)}>
+                                            <button className={styles.editFormCancelIconBtn} onClick={() => setEditingDegreeIdx(null)}>
                                                 <X size={16} />
                                             </button>
                                         </div>
@@ -697,7 +610,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                                     <Edit2 size={14} />
                                                 </button>
                                                 <button
-                                                    style={trashBtn}
+                                                    className={styles.editFormTrashBtn}
                                                     onClick={() => setFormData(p => ({ ...p, degrees: p.degrees.filter((_, idx) => idx !== i) }))}
                                                 >
                                                     <Trash2 size={14} />
@@ -713,7 +626,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     <select
                                         value={newDegree.title}
                                         onChange={e => setNewDegree(p => ({ ...p, title: e.target.value }))}
-                                        style={inlineInput(1)}
+                                        className={styles.editFormInlineInput} style={{ flex: 1 }}
+
                                     >
                                         <option value="">Degree type</option>
                                         <option value="High School Diploma">Diploma</option>
@@ -728,7 +642,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                             const val = e.target.value;
                                             setNewDegree(p => ({ ...p, field: val.charAt(0).toUpperCase() + val.slice(1) }));
                                         }}
-                                        style={inlineInput(1.5)}
+                                        className={styles.editFormInlineInput} style={{ flex: 1.5 }}
+
                                     />
                                     <input
                                         placeholder="Institution e.g. Harvard University"
@@ -737,10 +652,11 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                             const val = e.target.value;
                                             setNewDegree(p => ({ ...p, institution: val.charAt(0).toUpperCase() + val.slice(1) }));
                                         }}
-                                        style={inlineInput(1.5)}
+                                        className={styles.editFormInlineInput} style={{ flex: 1.5 }}
+
                                     />
                                     <button
-                                        style={addBtn}
+                                        className={styles.editFormAddBtn}
                                         onClick={() => {
                                             if (!newDegree.title.trim()) return;
                                             setFormData(p => ({ ...p, degrees: [...(p.degrees || []), newDegree] }));
@@ -750,12 +666,12 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     >
                                         Add
                                     </button>
-                                    <button style={cancelIconBtn} onClick={() => { setShowAddDegree(false); setNewDegree({ title: '', field: '', institution: '' }); }}>
+                                    <button className={styles.editFormCancelIconBtn} onClick={() => { setShowAddDegree(false); setNewDegree({ title: '', field: '', institution: '' }); }}>
                                         <X size={16} />
                                     </button>
                                 </div>
                             ) : (
-                                <button style={dashedAddBtn} onClick={() => setShowAddDegree(true)}>
+                                <button className={styles.editFormDashedBtn} onClick={() => setShowAddDegree(true)}>
                                     + Add Degree
                                 </button>
                             )}
@@ -786,7 +702,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                         </span>
                                     </span>
                                     <button
-                                        style={trashBtn}
+                                        className={styles.editFormTrashBtn}
                                         onClick={() => setFormData(p => ({ ...p, teachingPositions: p.teachingPositions.filter((_, idx) => idx !== i) }))}
                                     >
                                         <Trash2 size={14} />
@@ -800,22 +716,18 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                         placeholder="Institution name"
                                         value={newPosition.institution}
                                         onChange={e => setNewPosition(p => ({ ...p, institution: e.target.value }))}
-                                        style={inlineInput(2)}
+                                        className={styles.editFormInlineInput} style={{ flex: 2 }}
                                     />
                                     <select
                                         value={newPosition.type}
                                         onChange={e => setNewPosition(p => ({ ...p, type: e.target.value }))}
-                                        style={{
-                                            flex: 1, background: '#262626', border: '1px solid #444',
-                                            borderRadius: 12, padding: '9px 14px', color: 'white',
-                                            outline: 'none', fontSize: 13, cursor: 'pointer'
-                                        }}
+                                        className={styles.editFormSelect} style={{ flex: 1 }}
                                     >
                                         <option value="primary">Primary</option>
                                         <option value="parttime">Part-time</option>
                                     </select>
                                     <button
-                                        style={addBtn}
+                                        className={styles.editFormAddBtn}
                                         onClick={() => {
                                             if (!newPosition.institution.trim()) return;
                                             setFormData(p => ({ ...p, teachingPositions: [...(p.teachingPositions || []), newPosition] }));
@@ -825,12 +737,12 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     >
                                         Add
                                     </button>
-                                    <button style={cancelIconBtn} onClick={() => { setShowAddPosition(false); setNewPosition({ institution: '', type: 'parttime' }); }}>
+                                    <button className={styles.editFormCancelIconBtn}onClick={() => { setShowAddPosition(false); setNewPosition({ institution: '', type: 'parttime' }); }}>
                                         <X size={16} />
                                     </button>
                                 </div>
                             ) : (
-                                <button style={dashedAddBtn} onClick={() => setShowAddPosition(true)}>
+                                <button className={styles.editFormDashedBtn} onClick={() => setShowAddPosition(true)}>
                                     + Add Teaching Position
                                 </button>
                             )}
@@ -847,7 +759,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                         </span>
                                     </span>
                                     <button
-                                        style={trashBtn}
+                                        className={styles.editFormTrashBtn}
                                         onClick={() => setFormData(p => ({ ...p, degrees: p.degrees.filter((_, idx) => idx !== i) }))}
                                     >
                                         <Trash2 size={14} />
@@ -861,16 +773,17 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                         placeholder="Institution"
                                         value={newEducation.institution}
                                         onChange={e => setNewEducation(p => ({ ...p, institution: e.target.value }))}
-                                        style={inlineInput(1.5)}
+                                        className={styles.editFormInlineInput} style={{ flex: 1.5 }}
                                     />
                                     <input
                                         placeholder="Degree obtained"
                                         value={newEducation.degree}
                                         onChange={e => setNewEducation(p => ({ ...p, degree: e.target.value }))}
-                                        style={inlineInput(1)}
+                                        className={styles.editFormInlineInput} style={{ flex: 1 }}
+
                                     />
                                     <button
-                                        style={addBtn}
+                                        className={styles.editFormAddBtn}
                                         onClick={() => {
                                             if (!newEducation.institution.trim()) return;
                                             setFormData(p => ({ ...p, educationEntries: [...(p.educationEntries || []), newEducation] }));
@@ -880,12 +793,12 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     >
                                         Add
                                     </button>
-                                    <button style={cancelIconBtn} onClick={() => { setShowAddEducation(false); setNewEducation({ institution: '', degree: '' }); }}>
+                                    <button className={styles.editFormCancelIconBtn} onClick={() => { setShowAddEducation(false); setNewEducation({ institution: '', degree: '' }); }}>
                                         <X size={16} />
                                     </button>
                                 </div>
                             ) : (
-                                <button style={dashedAddBtn} onClick={() => setShowAddEducation(true)}>
+                                <button className={styles.editFormDashedBtn} onClick={() => setShowAddEducation(true)}>
                                     + Add Education
                                 </button>
                             )}

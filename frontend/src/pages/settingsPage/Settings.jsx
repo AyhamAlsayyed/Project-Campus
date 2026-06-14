@@ -1,58 +1,39 @@
 import styles from './settings.module.css';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import Header from '../../components/pagelayout/header/header';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Setting from '../../Assets/icons/setting.png';
 
-// Fully reusable Custom Dropdown Component
+const API = "http://localhost:8000";
+
+const authHeaders = () => ({
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('access')}`
+});
+
+// ── Custom Dropdown ──────────────────────────────────────────────────────────
 const CustomSelect = ({ options, value, onChange, disabled, minWidth = '250px' }) => {
+
     const [isOpen, setIsOpen] = useState(false);
-    const dropdownRef = useRef(null);
-
-    const toggle = () => {
-        if (!disabled) setIsOpen(!isOpen);
-    };
-
-    // Close when clicking outside
+    const ref = useRef(null);
+    const toggle = () => { if (!disabled) setIsOpen(o => !o); };
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setIsOpen(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
     }, []);
-
     return (
-        <div className={styles.customDropdownContainer} ref={dropdownRef}>
+        <div className={styles.customDropdownContainer} ref={ref}>
             <div className={styles.customDropdownOuter}>
-                <div
-                    className={`${styles.customDropdownValueBox} ${disabled ? styles.disabledElement : ''}`}
-                    style={{ minWidth }}
-                    onClick={toggle}
-                >
-                    {value}
-                </div>
-                {/* Arrow perfectly positioned OUTSIDE on the right */}
-                <div
-                    className={`${styles.customDropdownArrow} ${isOpen ? styles.customDropdownArrowOpen : ''} ${disabled ? styles.disabledElement : ''}`}
-                    onClick={toggle}
-                />
+                <div className={`${styles.customDropdownValueBox} ${disabled ? styles.disabledElement : ''}`} style={{ minWidth }} onClick={toggle}>{value}</div>
+                <div className={`${styles.customDropdownArrow} ${isOpen ? styles.customDropdownArrowOpen : ''} ${disabled ? styles.disabledElement : ''}`} onClick={toggle} />
             </div>
-
             {isOpen && !disabled && (
                 <div className={styles.customDropdownMenu}>
-                    {options.map((opt, index) => (
+                    {options.map((opt, i) => (
                         <div key={opt}>
-                            <div
-                                className={styles.customDropdownOption}
-                                onClick={() => { onChange(opt); setIsOpen(false); }}
-                            >
-                                {opt}
-                            </div>
-                            {/* Exact 50% width divider between items */}
-                            {index < options.length - 1 && <div className={styles.customDropdownDivider} />}
+                            <div className={styles.customDropdownOption} onClick={() => { onChange(opt); setIsOpen(false); }}>{opt}</div>
+                            {i < options.length - 1 && <div className={styles.customDropdownDivider} />}
                         </div>
                     ))}
                 </div>
@@ -61,126 +42,348 @@ const CustomSelect = ({ options, value, onChange, disabled, minWidth = '250px' }
     );
 };
 
+// ── Toast ────────────────────────────────────────────────────────────────────
+const Toast = ({ message, type, onClose }) => {
+    useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t); }, [onClose]);
+    return (
+        <div style={{
+            position: 'fixed', bottom: '28px', right: '28px', zIndex: 9999,
+            background: type === 'error' ? '#D4145A' : '#2e7d32',
+            color: '#fff', padding: '12px 20px', borderRadius: '10px',
+            fontWeight: 600, fontSize: '0.9rem', boxShadow: '0 4px 16px rgba(0,0,0,0.4)'
+        }}>{message}</div>
+    );
+};
+
+// ── Main Component ───────────────────────────────────────────────────────────
 export default function Settings() {
     const [theme, setTheme] = useState('dark');
     const [currentUser, setCurrentUser] = useState(null);
     const [activeTab, setActiveTab] = useState('Account');
+    const [loading, setLoading] = useState(false);
+    const [toast, setToast] = useState(null);
+    const token = localStorage.getItem("access");
+  
 
-    // Section 3: Notification Toggles State
+    const showToast = useCallback((message, type = 'success') => setToast({ message, type }), []);
+
+    // ── Notification state ───────────────────────────────────────────────────
     const [masterNotif, setMasterNotif] = useState(true);
     const [notifState, setNotifState] = useState({
-        friendRequestReceived: true,
-        friendRequestAccepted: true,
-        someoneReacted: true,
-        someoneCommented: true,
-        someoneReplied: true,
-        newPostCommunity: true,
-        joinRequestStatus: true,
-        eventStartingSoon: true,
-        eventDaysBefore: '1 Day before',
-        eventUpdatedCancelled: true,
-        eventHasStarted: true,
-        pageAnnouncement: true,
-        dmExisting: true,
-        dmRequest: true,
-        courseGroupChat: true,
-        passwordChangedSuccess: true,
-        emailUpdatedSuccess: true
+        friendRequestReceived: true, friendRequestAccepted: true,
+        someoneReacted: true, someoneCommented: true, someoneReplied: true,
+        newPostCommunity: true, joinRequestStatus: true,
+        eventStartingSoon: true, eventDaysBefore: '1 Day before',
+        eventUpdatedCancelled: true, eventHasStarted: true,
+        pageAnnouncement: true, dmExisting: true, dmRequest: true,
+        courseGroupChat: true, passwordChangedSuccess: true, emailUpdatedSuccess: true
     });
 
-    // Section 2: Privacy States
+    // ── Privacy state ────────────────────────────────────────────────────────
     const [accountPrivacy, setAccountPrivacy] = useState('Public');
     const [whoCanMessage, setWhoCanMessage] = useState('Everyone');
     const [whoCanSeeFriends, setWhoCanSeeFriends] = useState('Everyone');
-    const [blockedUsers, setBlockedUsers] = useState([
-        { id: 1, username: 'johndoe22', university: 'PTUK', pfp: 'https://via.placeholder.com/40' },
-        { id: 2, username: 'sara_smith', university: 'An-Najah', pfp: 'https://via.placeholder.com/40' }
-    ]);
+    const [blockedUsers, setBlockedUsers] = useState([]);
     const [blockedSearch, setBlockedSearch] = useState('');
 
-    // Modal Control States
+    // ── Modal state ──────────────────────────────────────────────────────────
     const [activeModal, setActiveModal] = useState(null);
-
-    // Form Input States
     const [newEmail, setNewEmail] = useState('');
     const [emailStep, setEmailStep] = useState(1);
     const [verificationCode, setVerificationCode] = useState('');
-
     const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
     const [passwordStrength, setPasswordStrength] = useState('');
-
     const [deactivatePassword, setDeactivatePassword] = useState('');
     const [deleteConfirmText, setDeleteConfirmText] = useState('');
     const [deletePassword, setDeletePassword] = useState('');
 
-    // Section 5: Language State
+    // ── Misc state ───────────────────────────────────────────────────────────
     const [language, setLanguage] = useState('English');
-
-    // Section 7: Help & Support Form States
     const [contactForm, setContactForm] = useState({ subject: 'Technical Issue', message: '', screenshot: null });
     const [contactSubmitted, setContactSubmitted] = useState(false);
     const [bugForm, setBugForm] = useState({ subject: 'Bug Report', message: '', actionTrack: '', screenshot: null });
     const [bugSubmitted, setBugSubmitted] = useState(false);
-
-    // Section 8: Data & Storage States
-    const [cacheSize, setCacheSize] = useState('24.5 MB');
+    const [cacheSize, setCacheSize] = useState('...');
     const [autoplayMedia, setAutoplayMedia] = useState('Always');
 
-    const toggleTheme = () => {
-        setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
-    };
-
+    // ── Fetch current user ───────────────────────────────────────────────────
     useEffect(() => {
         const fetchUser = async () => {
-            const token = localStorage.getItem("access");
+            const token = localStorage.getItem('access');
+            console.log('token:', token);
+            console.log('API:', API);
+            if (!token) return;
             try {
-                const res = await fetch("http://localhost:8000/api/auth/me/", {
+                const res = await fetch(`${API}/api/auth/me/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                const data = await res.json();
-                if (res.ok) {
-                    setCurrentUser(data);
-                }
-            } catch (err) {
-                console.error(err);
+                console.log('status:', res.status);          // ← add this
+                const data = await res.json().catch(() => ({}));
+                console.log('data:', data);                   // ← and this
+                if (!res.ok) return;
+                setCurrentUser(data);
+                console.log('currentUser set to:', data);     // ← and this
+            } catch (e) {
+                console.error('fetch error:', e);             // ← and this
             }
         };
         fetchUser();
     }, []);
 
+
+    // ── Fetch settings on tab change ─────────────────────────────────────────
     useEffect(() => {
-        if (!passwordForm.new) {
-            setPasswordStrength('');
-            return;
-        }
-        if (passwordForm.new.length < 6) {
-            setPasswordStrength('Weak');
-        } else if (passwordForm.new.length < 10 || !/[A-Z]/.test(passwordForm.new) || !/[0-9]/.test(passwordForm.new)) {
-            setPasswordStrength('Medium');
-        } else {
-            setPasswordStrength('Strong');
-        }
+        const fetchTabData = async () => {
+            try {
+                if (activeTab === 'Privacy') {
+                    const res = await fetch(`${API}/api/settings/privacy/`, { headers: authHeaders() });
+                    if (res.ok) {
+                        const d = await res.json();
+                        setAccountPrivacy(d.account_privacy === 'private' ? 'Private' : 'Public');
+                        setWhoCanMessage(d.who_can_message || 'Everyone');
+                        setWhoCanSeeFriends(d.who_can_see_friends || 'Everyone');
+                    }
+                }
+                if (activeTab === 'Privacy') {
+                    const res = await fetch(`${API}/api/settings/blocked/`, { headers: authHeaders() });
+                    if (res.ok) {
+                        const d = await res.json();
+                        setBlockedUsers(d.map(u => ({
+                            id: u.id,
+                            username: u.username,
+                            university: u.university || '',
+                            pfp: u.profile_picture || 'https://via.placeholder.com/40'
+                        })));
+                    }
+                }
+                if (activeTab === 'Notifications') {
+                    const res = await fetch(`${API}/api/settings/notifications/`, { headers: authHeaders() });
+                    if (res.ok) {
+                        const d = await res.json();
+                        setMasterNotif(d.master_enabled ?? true);
+                        setNotifState(prev => ({ ...prev, ...d }));
+                    }
+                }
+                if (activeTab === 'Appearance' || activeTab === 'Language') {
+                    const res = await fetch(`${API}/api/settings/appearance/`, { headers: authHeaders() });
+                    if (res.ok) {
+                        const d = await res.json();
+                        if (d.theme) setTheme(d.theme);
+                        if (d.language) setLanguage(d.language);
+                    }
+                }
+                if (activeTab === 'Data & Storage') {
+                    const res = await fetch(`${API}/api/settings/storage/`, { headers: authHeaders() });
+                    if (res.ok) {
+                        const d = await res.json();
+                        setCacheSize(d.cache_size || '0.0 MB');
+                        setAutoplayMedia(d.autoplay_media === 'never' ? 'Never' : 'Always');
+                    }
+                }
+            } catch (err) { console.error(err); }
+        };
+        fetchTabData();
+    }, [activeTab]);
+
+    // ── Password strength ────────────────────────────────────────────────────
+    useEffect(() => {
+        if (!passwordForm.new) { setPasswordStrength(''); return; }
+        if (passwordForm.new.length < 6) setPasswordStrength('Weak');
+        else if (passwordForm.new.length < 10 || !/[A-Z]/.test(passwordForm.new) || !/[0-9]/.test(passwordForm.new)) setPasswordStrength('Medium');
+        else setPasswordStrength('Strong');
     }, [passwordForm.new]);
 
-    const handleNotificationChange = (key, value) => {
-        setNotifState(prev => ({ ...prev, [key]: value }));
+    const handleNotificationChange = (key, value) => setNotifState(prev => ({ ...prev, [key]: value }));
+
+    // ── Save helpers ─────────────────────────────────────────────────────────
+    const savePrivacy = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`${API}/api/settings/privacy/`, {
+                method: 'PATCH', headers: authHeaders(),
+                body: JSON.stringify({
+                    account_privacy: accountPrivacy.toLowerCase(),
+                    who_can_message: whoCanMessage,
+                    who_can_see_friends: whoCanSeeFriends
+                })
+            });
+            if (res.ok) showToast('Privacy settings saved.');
+            else showToast('Failed to save privacy settings.', 'error');
+        } catch { showToast('Network error.', 'error'); }
+        setLoading(false);
+    };
+
+    const saveNotifications = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`${API}/api/settings/notifications/`, {
+                method: 'PATCH', headers: authHeaders(),
+                body: JSON.stringify({ master_enabled: masterNotif, ...notifState })
+            });
+            if (res.ok) showToast('Notification preferences saved.');
+            else showToast('Failed to save notifications.', 'error');
+        } catch { showToast('Network error.', 'error'); }
+        setLoading(false);
+    };
+
+    const saveAppearance = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`${API}/api/settings/appearance/`, {
+                method: 'PATCH', headers: authHeaders(),
+                body: JSON.stringify({ theme, language })
+            });
+            if (res.ok) showToast('Appearance saved.');
+            else showToast('Failed to save appearance.', 'error');
+        } catch { showToast('Network error.', 'error'); }
+        setLoading(false);
+    };
+
+    const saveStorage = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`${API}/api/settings/storage/`, {
+                method: 'PATCH', headers: authHeaders(),
+                body: JSON.stringify({ autoplay_media: autoplayMedia.toLowerCase() })
+            });
+            if (res.ok) showToast('Storage preferences saved.');
+            else showToast('Failed to save.', 'error');
+        } catch { showToast('Network error.', 'error'); }
+        setLoading(false);
+    };
+
+    // ── Account modals ───────────────────────────────────────────────────────
+    const handleSendEmailCode = async () => {
+        if (!newEmail) return;
+        setLoading(true);
+        try {
+            const res = await fetch(`${API}/api/settings/email/`, {
+                method: 'PATCH', headers: authHeaders(),
+                body: JSON.stringify({ email: newEmail })
+            });
+            if (res.ok) { setEmailStep(2); showToast('Verification code sent.'); }
+            else { const d = await res.json(); showToast(d.detail || 'Failed to send code.', 'error'); }
+        } catch { showToast('Network error.', 'error'); }
+        setLoading(false);
+    };
+
+    const handleVerifyEmail = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`${API}/api/settings/email/verify/`, {
+                method: 'POST', headers: authHeaders(),
+                body: JSON.stringify({ email: newEmail, code: verificationCode })
+            });
+            if (res.ok) { showToast('Email updated successfully.'); setActiveModal(null); }
+            else { const d = await res.json(); showToast(d.detail || 'Invalid code.', 'error'); }
+        } catch { showToast('Network error.', 'error'); }
+        setLoading(false);
+    };
+
+    const handleChangePassword = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`${API}/api/settings/password/`, {
+                method: 'POST', headers: authHeaders(),
+                body: JSON.stringify({ current_password: passwordForm.current, new_password: passwordForm.new })
+            });
+            if (res.ok) { showToast('Password changed successfully.'); setActiveModal(null); }
+            else { const d = await res.json(); showToast(d.detail || 'Incorrect current password.', 'error'); }
+        } catch { showToast('Network error.', 'error'); }
+        setLoading(false);
+    };
+
+    const handleDeactivate = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`${API}/api/settings/deactivate/`, {
+                method: 'POST', headers: authHeaders(),
+                body: JSON.stringify({ password: deactivatePassword })
+            });
+            if (res.ok) {
+                showToast('Account deactivated. Logging out...');
+                setTimeout(() => { localStorage.clear(); window.location.href = '/'; }, 2000);
+            } else { const d = await res.json(); showToast(d.detail || 'Incorrect password.', 'error'); }
+        } catch { showToast('Network error.', 'error'); }
+        setLoading(false);
+    };
+
+    const handleDeleteAccount = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`${API}/api/settings/delete/`, {
+                method: 'DELETE', headers: authHeaders(),
+                body: JSON.stringify({ password: deletePassword })
+            });
+            if (res.ok) {
+                showToast('Account deletion initiated. Check your email.');
+                setTimeout(() => { localStorage.clear(); window.location.href = '/'; }, 2500);
+            } else { const d = await res.json(); showToast(d.detail || 'Incorrect password.', 'error'); }
+        } catch { showToast('Network error.', 'error'); }
+        setLoading(false);
+    };
+
+    const handleUnblock = async (userId) => {
+        try {
+            const res = await fetch(`${API}/api/settings/blocked/${userId}/`, {
+                method: 'DELETE', headers: authHeaders()
+            });
+            if (res.ok) {
+                setBlockedUsers(prev => prev.filter(u => u.id !== userId));
+                showToast('User unblocked.');
+            } else showToast('Failed to unblock.', 'error');
+        } catch { showToast('Network error.', 'error'); }
+    };
+
+    const handleClearCache = async () => {
+        if (!window.confirm('Clear locally cached media and data?')) return;
+        try {
+            await fetch(`${API}/api/settings/storage/clear-cache/`, { method: 'POST', headers: authHeaders() });
+        } catch { /* best-effort */ }
+        localStorage.removeItem('cached_media');
+        sessionStorage.clear();
+        setCacheSize('0.0 MB');
+        showToast('Cache cleared.');
+    };
+
+    const handleContactSubmit = async () => {
+        setLoading(true);
+        try {
+            const form = new FormData();
+            form.append('subject', contactForm.subject);
+            form.append('message', contactForm.message);
+            if (contactForm.screenshot) form.append('screenshot', contactForm.screenshot);
+            const res = await fetch(`${API}/api/support/contact/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${localStorage.getItem('access')}` },
+                body: form
+            });
+            if (res.ok) setContactSubmitted(true);
+            else showToast('Failed to submit ticket.', 'error');
+        } catch { showToast('Network error.', 'error'); }
+        setLoading(false);
+    };
+
+    const handleBugSubmit = async () => {
+        setLoading(true);
+        try {
+            const form = new FormData();
+            form.append('message', bugForm.message);
+            form.append('action_track', bugForm.actionTrack);
+            if (bugForm.screenshot) form.append('screenshot', bugForm.screenshot);
+            const res = await fetch(`${API}/api/support/bug/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${localStorage.getItem('access')}` },
+                body: form
+            });
+            if (res.ok) setBugSubmitted(true);
+            else showToast('Failed to submit bug report.', 'error');
+        } catch { showToast('Network error.', 'error'); }
+        setLoading(false);
     };
 
     const handleLanguageChange = (lang) => {
-        const confirmSwitch = window.confirm("Switching language will reload the page. Continue?");
-        if (confirmSwitch) {
-            setLanguage(lang);
-        }
-    };
-
-    const handleClearCache = () => {
-        const confirmClear = window.confirm("Are you sure you want to clear your locally cached media and data?");
-        if (confirmClear) {
-            localStorage.removeItem('cached_media');
-            sessionStorage.clear();
-            setCacheSize('0.0 MB');
-            alert("Cache cleared successfully (Frontend only).");
-        }
+        if (window.confirm('Switching language will reload the page. Continue?')) setLanguage(lang);
     };
 
     const navItems = [
@@ -195,31 +398,33 @@ export default function Settings() {
     ];
 
     const renderSolidIcon = (src, color, width = '20px', height = '20px') => (
-        <div
-            style={{
-                width,
-                height,
-                backgroundColor: color,
-                maskImage: `url(${src})`,
-                WebkitMaskImage: `url(${src})`,
-                maskSize: 'contain',
-                WebkitMaskSize: 'contain',
-                maskRepeat: 'no-repeat',
-                WebkitMaskRepeat: 'no-repeat',
-                maskPosition: 'center',
-                WebkitMaskPosition: 'center',
-                display: 'inline-block'
-            }}
-        />
+        <div style={{
+            width, height, backgroundColor: color,
+            maskImage: `url(${src})`, WebkitMaskImage: `url(${src})`,
+            maskSize: 'contain', WebkitMaskSize: 'contain',
+            maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+            maskPosition: 'center', WebkitMaskPosition: 'center',
+            display: 'inline-block'
+        }} />
+    );
+
+    const SaveBar = ({ onSave }) => (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '28px' }}>
+            <button className={styles.primaryBtn} onClick={onSave} disabled={loading}>
+                {loading ? 'Saving...' : 'Save Changes'}
+            </button>
+        </div>
     );
 
     return (
         <div className={styles.darkContainer}>
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
             <div className={`${styles.header} ${styles.page}`}>
-                <Header theme={theme} toggleTheme={toggleTheme} user={currentUser} />
+                <Header theme={theme} toggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')} user={currentUser} />
             </div>
             <div className={`${styles.page} ${styles.content}`}>
-                <SideBarNav variant={"profile"} currentUser={currentUser} />
+                <SideBarNav variant="profile" currentUser={currentUser} />
 
                 <div className={styles.settingsMainContainer}>
                     <div className={styles.innerContainer}>
@@ -231,9 +436,9 @@ export default function Settings() {
                                 <div className={styles.settingRow}>
                                     <div>
                                         <label className={styles.settingLabel}>Email Address</label>
-                                        <p className={styles.settingDescription}>ay***@ptuk.edu.ps</p>
+                                        <p className={styles.settingDescription}>{currentUser?.email ? currentUser.email.replace(/(.{2})(.*)(@)/, '$1***$3') : '—'}</p>
                                     </div>
-                                    <button className={styles.settingActionBtn} onClick={() => { setEmailStep(1); setActiveModal('email'); }}>Update</button>
+                                    <button className={styles.settingActionBtn} onClick={() => { setEmailStep(1); setNewEmail(''); setVerificationCode(''); setActiveModal('email'); }}>Update</button>
                                 </div>
                                 <div className={styles.settingRow}>
                                     <div>
@@ -242,7 +447,6 @@ export default function Settings() {
                                     </div>
                                     <button className={styles.settingActionBtn} onClick={() => { setPasswordForm({ current: '', new: '', confirm: '' }); setActiveModal('password'); }}>Change</button>
                                 </div>
-
                                 <div className={styles.settingRow}>
                                     <div>
                                         <label className={styles.settingLabel}>Deactivate Account</label>
@@ -250,7 +454,6 @@ export default function Settings() {
                                     </div>
                                     <button className={styles.settingActionBtn} onClick={() => { setDeactivatePassword(''); setActiveModal('deactivate'); }}>Deactivate</button>
                                 </div>
-
                                 <div className={`${styles.settingRow} ${styles.destructiveRow}`}>
                                     <div>
                                         <label className={styles.settingLabelDestructive}>Delete Account</label>
@@ -272,8 +475,8 @@ export default function Settings() {
                                     </div>
                                     <p className={styles.contextualNote}>
                                         {accountPrivacy === 'Public'
-                                            ? "Any registered Campus user can view your profile and posts."
-                                            : "Only friends can see your full profile and posts; others see only name, university, and profile picture."}
+                                            ? 'Any registered Campus user can view your profile and posts.'
+                                            : 'Only friends can see your full profile and posts.'}
                                     </p>
                                 </div>
                                 <div className={styles.settingRowColumn}>
@@ -281,27 +484,23 @@ export default function Settings() {
                                     <CustomSelect
                                         options={['Everyone', 'Friends Only', 'Nobody']}
                                         value={accountPrivacy === 'Private' ? 'Friends Only' : whoCanMessage}
-                                        onChange={(val) => setWhoCanMessage(val)}
+                                        onChange={setWhoCanMessage}
                                         disabled={accountPrivacy === 'Private'}
                                     />
-                                    {accountPrivacy === 'Private' && <p className={styles.fieldNote}>Note: if you are in private mode, then only friends can message you.</p>}
-                                    <p className={styles.fieldNote}>Note: a new messenger who's not your friend yet, would go to the request section.</p>
+                                    {accountPrivacy === 'Private' && <p className={styles.fieldNote}>In private mode, only friends can message you.</p>}
                                 </div>
                                 <div className={styles.settingRowColumn}>
                                     <label className={styles.settingLabel}>Who Can See Your Friends List</label>
-                                    <CustomSelect
-                                        options={['Everyone', 'Friends Only', 'Only Me']}
-                                        value={whoCanSeeFriends}
-                                        onChange={(val) => setWhoCanSeeFriends(val)}
-                                    />
+                                    <CustomSelect options={['Everyone', 'Friends Only', 'Only Me']} value={whoCanSeeFriends} onChange={setWhoCanSeeFriends} />
                                 </div>
                                 <div className={styles.settingRow}>
                                     <div>
                                         <label className={styles.settingLabel}>Blocked Accounts</label>
-                                        <p className={styles.settingDescription}>{blockedUsers.length} users currently blocked. Blocked users cannot view your profile, send messages, or interact with your content.</p>
+                                        <p className={styles.settingDescription}>{blockedUsers.length} users currently blocked.</p>
                                     </div>
                                     <button className={styles.settingActionBtn} onClick={() => setActiveModal('blocked')}>Manage</button>
                                 </div>
+                                <SaveBar onSave={savePrivacy} />
                             </div>
                         )}
 
@@ -318,60 +517,55 @@ export default function Settings() {
                                         <span className={styles.switchSlider}></span>
                                     </label>
                                 </div>
-
                                 <div className={styles.nestedNotificationGrid}>
-                                    <h3 className={styles.subGridHeader}>Social</h3>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText}>Friend request received</span>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.friendRequestReceived} onChange={(e) => handleNotificationChange('friendRequestReceived', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText}>Friend request accepted</span>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.friendRequestAccepted} onChange={(e) => handleNotificationChange('friendRequestAccepted', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText}>Someone reacted to your post</span>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.someoneReacted} onChange={(e) => handleNotificationChange('someoneReacted', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText}>Someone commented on your post</span>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.someoneCommented} onChange={(e) => handleNotificationChange('someoneCommented', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText}>Someone replied to your comment</span>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.someoneReplied} onChange={(e) => handleNotificationChange('someoneReplied', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
-
-                                    <h3 className={styles.subGridHeader}>Communities</h3>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText}>New post in a community you follow</span>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.newPostCommunity} onChange={(e) => handleNotificationChange('newPostCommunity', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText}>Your community join request was approved or rejected</span>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.joinRequestStatus} onChange={(e) => handleNotificationChange('joinRequestStatus', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
+                                    {[
+                                        {
+                                            header: 'Social', items: [
+                                                ['friendRequestReceived', 'Friend request received'],
+                                                ['friendRequestAccepted', 'Friend request accepted'],
+                                                ['someoneReacted', 'Someone reacted to your post'],
+                                                ['someoneCommented', 'Someone commented on your post'],
+                                                ['someoneReplied', 'Someone replied to your comment'],
+                                            ]
+                                        },
+                                        {
+                                            header: 'Communities', items: [
+                                                ['newPostCommunity', 'New post in a community you follow'],
+                                                ['joinRequestStatus', 'Your community join request was approved or rejected'],
+                                            ]
+                                        },
+                                        {
+                                            header: 'Announcements', items: [
+                                                ['pageAnnouncement', 'New announcement from a Page you follow'],
+                                            ]
+                                        },
+                                        {
+                                            header: 'Messages', items: [
+                                                ['dmExisting', 'New direct message (existing conversations)'],
+                                                ['dmRequest', 'New message requests'],
+                                                ['courseGroupChat', 'New message in a course group chat'],
+                                            ]
+                                        },
+                                        {
+                                            header: 'Account & Security', items: [
+                                                ['passwordChangedSuccess', 'Password changed successfully'],
+                                                ['emailUpdatedSuccess', 'Email address updated'],
+                                            ]
+                                        },
+                                    ].map(({ header, items }) => (
+                                        <div key={header}>
+                                            <h3 className={styles.subGridHeader}>{header}</h3>
+                                            {items.map(([key, label]) => (
+                                                <div key={key} className={styles.toggleRow}>
+                                                    <span className={styles.toggleText}>{label}</span>
+                                                    <label className={styles.switchContainer}>
+                                                        <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState[key]} onChange={(e) => handleNotificationChange(key, e.target.checked)} />
+                                                        <span className={styles.switchSlider}></span>
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ))}
 
                                     <h3 className={styles.subGridHeader}>Events</h3>
                                     <div className={styles.toggleRow}>
@@ -390,76 +584,25 @@ export default function Settings() {
                                             </label>
                                         </div>
                                     </div>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText}>An event you follow has been updated or cancelled</span>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.eventUpdatedCancelled} onChange={(e) => handleNotificationChange('eventUpdatedCancelled', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText}>An event has started</span>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.eventHasStarted} onChange={(e) => handleNotificationChange('eventHasStarted', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
+                                    {[
+                                        ['eventUpdatedCancelled', 'An event you follow has been updated or cancelled'],
+                                        ['eventHasStarted', 'An event has started'],
+                                    ].map(([key, label]) => (
+                                        <div key={key} className={styles.toggleRow}>
+                                            <span className={styles.toggleText}>{label}</span>
+                                            <label className={styles.switchContainer}>
+                                                <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState[key]} onChange={(e) => handleNotificationChange(key, e.target.checked)} />
+                                                <span className={styles.switchSlider}></span>
+                                            </label>
+                                        </div>
+                                    ))}
 
-                                    <h3 className={styles.subGridHeader}>Announcements</h3>
-                                    <div className={styles.toggleRow}>
+                                    <div className={styles.toggleRow} style={{ marginTop: '12px' }}>
                                         <span className={styles.toggleText}>New official announcement from your university (Mandatory)</span>
                                         <input type="checkbox" className={styles.uiCheckbox} checked readOnly disabled />
                                     </div>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText}>New announcement from a Page you follow</span>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.pageAnnouncement} onChange={(e) => handleNotificationChange('pageAnnouncement', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
-
-                                    <h3 className={styles.subGridHeader}>Messages</h3>
-                                    <div className={styles.toggleRow}>
-                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span className={styles.toggleText}>New direct message received</span>
-                                            <span className={styles.fieldNote} style={{ paddingLeft: 0 }}>Existing Message Conversions</span>
-                                        </div>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.dmExisting} onChange={(e) => handleNotificationChange('dmExisting', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText} style={{ paddingLeft: '14px', fontSize: '0.9rem', color: '#B3B3B3' }}>• New Message Requests</span>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.dmRequest} onChange={(e) => handleNotificationChange('dmRequest', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText}>New message in a course group chat</span>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.courseGroupChat} onChange={(e) => handleNotificationChange('courseGroupChat', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
-
-                                    <h3 className={styles.subGridHeader}>Account & Security</h3>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText}>Password changed successfully</span>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.passwordChangedSuccess} onChange={(e) => handleNotificationChange('passwordChangedSuccess', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText}>Email address updated</span>
-                                        <label className={styles.switchContainer}>
-                                            <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.emailUpdatedSuccess} onChange={(e) => handleNotificationChange('emailUpdatedSuccess', e.target.checked)} />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
                                 </div>
+                                <SaveBar onSave={saveNotifications} />
                             </div>
                         )}
 
@@ -470,18 +613,13 @@ export default function Settings() {
                                 <div className={styles.radioGroup}>
                                     {['dark', 'light', 'system'].map((t) => (
                                         <label key={t} className={styles.radioOption}>
-                                            <input
-                                                type="radio"
-                                                name="theme"
-                                                value={t}
-                                                checked={theme === t}
-                                                onChange={() => setTheme(t)}
-                                            />
+                                            <input type="radio" name="theme" value={t} checked={theme === t} onChange={() => setTheme(t)} />
                                             <div className={styles.radioCircle} />
                                             <span className={styles.radioLabel}>{t.charAt(0).toUpperCase() + t.slice(1)}</span>
                                         </label>
                                     ))}
                                 </div>
+                                <SaveBar onSave={saveAppearance} />
                             </div>
                         )}
 
@@ -490,30 +628,16 @@ export default function Settings() {
                             <div className={styles.settingsFormGroup}>
                                 <label className={styles.settingLabel}>Interface Language</label>
                                 <div className={styles.radioGroup}>
-                                    <label className={styles.radioOption}>
-                                        <input
-                                            type="radio"
-                                            name="lang"
-                                            value="English"
-                                            checked={language === 'English'}
-                                            onChange={() => handleLanguageChange('English')}
-                                        />
-                                        <div className={styles.radioCircle} />
-                                        <span className={styles.radioLabel}>English</span>
-                                    </label>
-                                    <label className={styles.radioOption}>
-                                        <input
-                                            type="radio"
-                                            name="lang"
-                                            value="Arabic"
-                                            checked={language === 'Arabic'}
-                                            onChange={() => handleLanguageChange('Arabic')}
-                                        />
-                                        <div className={styles.radioCircle} />
-                                        <span className={styles.radioLabel}>العربية (Arabic)</span>
-                                    </label>
+                                    {[['English', 'English'], ['Arabic', 'العربية (Arabic)']].map(([val, label]) => (
+                                        <label key={val} className={styles.radioOption}>
+                                            <input type="radio" name="lang" value={val} checked={language === val} onChange={() => handleLanguageChange(val)} />
+                                            <div className={styles.radioCircle} />
+                                            <span className={styles.radioLabel}>{label}</span>
+                                        </label>
+                                    ))}
                                 </div>
                                 {language === 'Arabic' && <p className={styles.fieldNote}>Layout rendering set to RTL framework structure.</p>}
+                                <SaveBar onSave={saveAppearance} />
                             </div>
                         )}
 
@@ -524,13 +648,13 @@ export default function Settings() {
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                                         <div>
                                             <label className={styles.settingLabel}>Two-Factor Authentication (2FA)</label>
-                                            <p className={styles.settingDescription}>Keep your account completely safe and secure from external vulnerability monitoring access activity.</p>
+                                            <p className={styles.settingDescription}>Keep your account completely safe and secure.</p>
                                         </div>
                                         <button className={styles.settingActionBtn}>Configure</button>
                                     </div>
                                     <div className={styles.verificationRequirementBox}>
                                         <p style={{ margin: 0, fontWeight: 500, color: '#E6E6E6', fontSize: '0.9rem' }}>Requirement Checklist:</p>
-                                        <p className={styles.settingDescription} style={{ marginTop: '4px' }}>A student account must have assigned at least a verified phone number or a secondary email framework linked.</p>
+                                        <p className={styles.settingDescription} style={{ marginTop: '4px' }}>A verified phone number or secondary email must be linked.</p>
                                     </div>
                                 </div>
                             </div>
@@ -541,76 +665,67 @@ export default function Settings() {
                             <div className={styles.settingsFormGroup}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                                     <label className={styles.settingLabel}>Frequently Asked Questions</label>
-                                    <button className={styles.settingActionBtn} onClick={() => alert("Directing to full Help Page resources...")}>Go to Help Page</button>
+                                    <button className={styles.settingActionBtn} onClick={() => window.open('/help', '_blank')}>Go to Help Page</button>
                                 </div>
-                                <details className={styles.faqAccordion}>
-                                    <summary>How do I join a community?</summary>
-                                    <p>Navigate to the Communities tab and click "Join" on your preferred group.</p>
-                                </details>
-                                <details className={styles.faqAccordion}>
-                                    <summary>How do I report a post?</summary>
-                                    <p>Click the three dots on the top right of any post and select "Report".</p>
-                                </details>
-                                <details className={styles.faqAccordion}>
-                                    <summary>How do I change my university?</summary>
-                                    <p>University affiliations are synchronized through registration protocols. Contact registrar support portals to address systematic mapping changes.</p>
-                                </details>
+                                {[
+                                    ['How do I join a community?', 'Navigate to the Communities tab and click "Join" on your preferred group.'],
+                                    ['How do I report a post?', 'Click the three dots on the top right of any post and select "Report".'],
+                                    ['How do I change my university?', 'University affiliations are synced through registration. Contact your registrar to update.'],
+                                ].map(([q, a]) => (
+                                    <details key={q} className={styles.faqAccordion}>
+                                        <summary>{q}</summary>
+                                        <p>{a}</p>
+                                    </details>
+                                ))}
 
                                 <hr style={{ border: 'none', height: '1px', backgroundColor: '#4D4D4D', margin: '20px 0' }} />
 
-                                {/* CONTACT US FORM */}
                                 <div className={styles.settingRowColumn}>
                                     <label className={styles.settingLabel}>Contact Us</label>
                                     {contactSubmitted ? (
                                         <div className={styles.formSuccessState}>
-                                            <p>Your support ticket has been submitted successfully! We will verify details and reach out.</p>
-                                            <button className={styles.settingActionBtn} onClick={() => setContactSubmitted(false)}>Submit Another Ticket</button>
+                                            <p>Your support ticket has been submitted successfully!</p>
+                                            <button className={styles.settingActionBtn} onClick={() => { setContactSubmitted(false); setContactForm({ subject: 'Technical Issue', message: '', screenshot: null }); }}>Submit Another Ticket</button>
                                         </div>
                                     ) : (
                                         <>
-                                            <CustomSelect
-                                                options={['Technical Issue', 'Account Problem', 'Report Abuse', 'Other']}
-                                                value={contactForm.subject}
-                                                onChange={(val) => setContactForm({ ...contactForm, subject: val })}
-                                            />
-                                            <textarea className={styles.supportTextArea} placeholder="Describe your issue or inquiry (Max 500 characters)..." maxLength={500} value={contactForm.message} onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })} />
+                                            <CustomSelect options={['Technical Issue', 'Account Problem', 'Report Abuse', 'Other']} value={contactForm.subject} onChange={(val) => setContactForm({ ...contactForm, subject: val })} />
+                                            <textarea className={styles.supportTextArea} placeholder="Describe your issue (max 500 characters)..." maxLength={500} value={contactForm.message} onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })} />
                                             <div className={styles.formFooterActions}>
                                                 <label className={styles.fileUploadLabel}>
-                                                    Upload Screenshot (Image Only)
+                                                    Upload Screenshot
                                                     <input type="file" accept="image/*" className={styles.hiddenFileInput} onChange={(e) => setContactForm({ ...contactForm, screenshot: e.target.files[0] })} />
                                                 </label>
                                                 {contactForm.screenshot && <span className={styles.fileNameText}>{contactForm.screenshot.name}</span>}
-                                                <button className={styles.primaryBtn} onClick={() => setContactSubmitted(true)}>Send Ticket</button>
+                                                <button className={styles.primaryBtn} onClick={handleContactSubmit} disabled={loading || !contactForm.message.trim()}>
+                                                    {loading ? 'Sending...' : 'Send Ticket'}
+                                                </button>
                                             </div>
                                         </>
                                     )}
                                 </div>
 
-                                {/* REPORT A BUG FORM */}
                                 <div className={styles.settingRowColumn}>
                                     <label className={styles.settingLabel}>Report a Bug</label>
                                     {bugSubmitted ? (
                                         <div className={styles.formSuccessState}>
-                                            <p>Bug log successfully transmitted to QA engineers. Thank you for making Campus cleaner!</p>
-                                            <button className={styles.settingActionBtn} onClick={() => setBugSubmitted(false)}>Log Another Bug</button>
+                                            <p>Bug report submitted. Thank you!</p>
+                                            <button className={styles.settingActionBtn} onClick={() => { setBugSubmitted(false); setBugForm({ subject: 'Bug Report', message: '', actionTrack: '', screenshot: null }); }}>Log Another Bug</button>
                                         </div>
                                     ) : (
                                         <>
-                                            <CustomSelect
-                                                options={['Bug Report']}
-                                                value={bugForm.subject}
-                                                onChange={() => { }}
-                                                disabled={true}
-                                            />
-                                            <textarea className={styles.supportTextArea} placeholder="What occurred? Describe the bug in detail (Max 500 characters)..." maxLength={500} value={bugForm.message} onChange={(e) => setBugForm({ ...bugForm, message: e.target.value })} />
-                                            <textarea className={styles.supportTextArea} style={{ height: '70px' }} placeholder="What were you doing when this happened? (Optional extra context)" value={bugForm.actionTrack} onChange={(e) => setBugForm({ ...bugForm, actionTrack: e.target.value })} />
+                                            <CustomSelect options={['Bug Report']} value={bugForm.subject} onChange={() => { }} disabled />
+                                            <textarea className={styles.supportTextArea} placeholder="Describe the bug in detail (max 500 characters)..." maxLength={500} value={bugForm.message} onChange={(e) => setBugForm({ ...bugForm, message: e.target.value })} />
+                                            <textarea className={styles.supportTextArea} style={{ height: '70px' }} placeholder="What were you doing when this happened? (Optional)" value={bugForm.actionTrack} onChange={(e) => setBugForm({ ...bugForm, actionTrack: e.target.value })} />
                                             <div className={styles.formFooterActions}>
                                                 <label className={styles.fileUploadLabel}>
-                                                    Upload Bug Proof Screenshot
+                                                    Upload Screenshot
                                                     <input type="file" accept="image/*" className={styles.hiddenFileInput} onChange={(e) => setBugForm({ ...bugForm, screenshot: e.target.files[0] })} />
                                                 </label>
                                                 {bugForm.screenshot && <span className={styles.fileNameText}>{bugForm.screenshot.name}</span>}
-                                                <button className={styles.primaryBtn} onClick={() => setBugSubmitted(true)}>Send Bug Report</button>
+                                                <button className={styles.primaryBtn} onClick={handleBugSubmit} disabled={loading || !bugForm.message.trim()}>
+                                                    {loading ? 'Sending...' : 'Send Bug Report'}
+                                                </button>
                                             </div>
                                         </>
                                     )}
@@ -618,9 +733,9 @@ export default function Settings() {
 
                                 <div className={styles.aboutPlatformBox}>
                                     <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '10px' }}>
-                                        <a href="#privacy" className={styles.policyLink} onClick={() => alert("Redirecting to Privacy Policy Page...")}>Privacy Policy</a>
+                                        <a href="/privacy" className={styles.policyLink}>Privacy Policy</a>
                                         <span style={{ color: '#4D4D4D' }}>|</span>
-                                        <a href="#about" className={styles.policyLink} onClick={() => alert("Redirecting to About us Page...")}>About us</a>
+                                        <a href="/about" className={styles.policyLink}>About us</a>
                                     </div>
                                     <p style={{ marginTop: '10px' }}><strong>Project Campus™</strong> Version 1.0.0</p>
                                     <p className={styles.tagline}>Released: June 2026 • "A Unified Academic Social Platform."</p>
@@ -634,51 +749,36 @@ export default function Settings() {
                                 <div className={styles.settingRow}>
                                     <div>
                                         <label className={styles.settingLabel}>Clear Cache</label>
-                                        <p className={styles.settingDescription}>Locally cached media and data file assets system weight. Estimated storage size: <strong>{cacheSize}</strong></p>
+                                        <p className={styles.settingDescription}>Estimated storage size: <strong>{cacheSize}</strong></p>
                                     </div>
                                     <button className={styles.settingActionBtn} onClick={handleClearCache}>Clear Cache</button>
                                 </div>
                                 <div className={styles.settingRowColumn}>
                                     <label className={styles.settingLabel}>Auto-Play Media</label>
-                                    <p className={styles.settingDescription} style={{ marginBottom: '4px' }}>Controls whether video blocks and animated asset contents systematically auto-play execution tracks while scrolling feeds.</p>
-                                    <CustomSelect
-                                        options={['Always', 'Never']}
-                                        value={autoplayMedia}
-                                        onChange={(val) => setAutoplayMedia(val)}
-                                    />
+                                    <p className={styles.settingDescription} style={{ marginBottom: '4px' }}>Controls whether videos auto-play while scrolling.</p>
+                                    <CustomSelect options={['Always', 'Never']} value={autoplayMedia} onChange={setAutoplayMedia} />
                                 </div>
+                                <SaveBar onSave={saveStorage} />
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* RIGHT COLUMN: SETTINGS NAVIGATION */}
+                {/* RIGHT NAV */}
                 <div className={styles.rightSection}>
                     <div className={styles.settingsNavContainer}>
                         <div className={styles.settingsNavHeader}>
                             {renderSolidIcon(Setting, '#E6E6E6', '25px', '25px')}
                             <h2 className={styles.settingsNavTitle}>Settings</h2>
                         </div>
-
                         <div className={styles.centeredDivider} />
-
                         <div className={styles.settingsNavList}>
                             {navItems.map((item) => {
-                                const isActive = activeTab === item.key;
+                                const active = activeTab === item.key;
                                 return (
-                                    <div
-                                        key={item.key}
-                                        onClick={() => setActiveTab(item.key)}
-                                        className={`${styles.settingsNavItem} ${isActive ? styles.settingsNavItemActive : ''}`}
-                                    >
-                                        {isActive && (
-                                            <div className={styles.activeArrowWrapper}>
-                                                <div className={styles.activeGradientArrow} />
-                                            </div>
-                                        )}
-                                        <span className={`${styles.settingsNavText} ${isActive ? styles.navTextActive : styles.navTextDefault}`}>
-                                            {item.label}
-                                        </span>
+                                    <div key={item.key} onClick={() => setActiveTab(item.key)} className={`${styles.settingsNavItem} ${active ? styles.settingsNavItemActive : ''}`}>
+                                        {active && <div className={styles.activeArrowWrapper}><div className={styles.activeGradientArrow} /></div>}
+                                        <span className={`${styles.settingsNavText} ${active ? styles.navTextActive : styles.navTextDefault}`}>{item.label}</span>
                                     </div>
                                 );
                             })}
@@ -687,28 +787,27 @@ export default function Settings() {
                 </div>
             </div>
 
-            {/* INTERACTIVE SPECIFICATION MODALS */}
+            {/* MODALS */}
             {activeModal === 'email' && (
                 <div className={styles.modalOverlay}>
                     <div className={styles.modalContent}>
-                        <h3>Update Academic Email</h3>
+                        <h3>Update Email</h3>
                         {emailStep === 1 ? (
                             <>
-                                <p className={styles.settingDescription} style={{ marginBottom: '14px' }}>Enter your brand new authorized academic email domain registration marker address.</p>
+                                <p className={styles.settingDescription} style={{ marginBottom: '14px' }}>Enter your new academic email address.</p>
                                 <input type="email" placeholder="e.g. username@ptuk.edu.ps" className={styles.modalInput} value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
                                 <div className={styles.modalActions}>
                                     <button className={styles.settingActionBtn} onClick={() => setActiveModal(null)}>Cancel</button>
-                                    <button className={styles.primaryBtn} onClick={() => { if (newEmail) setEmailStep(2); }}>Send Verification Code</button>
+                                    <button className={styles.primaryBtn} onClick={handleSendEmailCode} disabled={loading || !newEmail}>{loading ? 'Sending...' : 'Send Verification Code'}</button>
                                 </div>
                             </>
                         ) : (
                             <>
-                                <p className={styles.settingDescription} style={{ marginBottom: '14px' }}>A systematic verification security token code block has been targeted to: <strong>{newEmail}</strong></p>
-                                <input type="text" placeholder="Enter Code Token" className={styles.modalInput} value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} />
-                                <p className={styles.fieldNote} style={{ paddingLeft: 0, color: '#D4145A' }}>Notice: Upon completion confirmation, your previous email tracking layout receives an instant primary security system alert prompt.</p>
+                                <p className={styles.settingDescription} style={{ marginBottom: '14px' }}>A code was sent to <strong>{newEmail}</strong></p>
+                                <input type="text" placeholder="Enter code" className={styles.modalInput} value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} />
                                 <div className={styles.modalActions}>
                                     <button className={styles.settingActionBtn} onClick={() => setEmailStep(1)}>Back</button>
-                                    <button className={styles.primaryBtn} onClick={() => { alert("Email tracking successfully modified mapping updates."); setActiveModal(null); }}>Confirm Code</button>
+                                    <button className={styles.primaryBtn} onClick={handleVerifyEmail} disabled={loading || !verificationCode}>{loading ? 'Verifying...' : 'Confirm Code'}</button>
                                 </div>
                             </>
                         )}
@@ -719,28 +818,22 @@ export default function Settings() {
             {activeModal === 'password' && (
                 <div className={styles.modalOverlay}>
                     <div className={styles.modalContent}>
-                        <h3>Change Account Password</h3>
-                        <p className={styles.settingDescription}>Input current and configuration tracking parameters below to rebuild key structural security entry codes.</p>
-
-                        <label className={styles.modalLabel}>Current Password</label>
-                        <input type="password" className={styles.modalInput} value={passwordForm.current} onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })} />
-
-                        <label className={styles.modalLabel}>New Password</label>
-                        <input type="password" className={styles.modalInput} value={passwordForm.new} onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })} />
-
-                        {passwordStrength && (
-                            <div className={styles.strengthIndicatorContainer}>
-                                <span>Strength Metric: </span>
-                                <span className={`${styles.strengthLabel} ${styles['strength' + passwordStrength]}`}>{passwordStrength}</span>
+                        <h3>Change Password</h3>
+                        {['current', 'new', 'confirm'].map((field) => (
+                            <div key={field}>
+                                <label className={styles.modalLabel}>{field === 'current' ? 'Current Password' : field === 'new' ? 'New Password' : 'Confirm New Password'}</label>
+                                <input type="password" className={styles.modalInput} value={passwordForm[field]} onChange={(e) => setPasswordForm({ ...passwordForm, [field]: e.target.value })} />
+                                {field === 'new' && passwordStrength && (
+                                    <div className={styles.strengthIndicatorContainer}>
+                                        <span>Strength: </span>
+                                        <span className={`${styles.strengthLabel} ${styles['strength' + passwordStrength]}`}>{passwordStrength}</span>
+                                    </div>
+                                )}
                             </div>
-                        )}
-
-                        <label className={styles.modalLabel}>Confirm New Password</label>
-                        <input type="password" className={styles.modalInput} value={passwordForm.confirm} onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })} />
-
+                        ))}
                         <div className={styles.modalActions} style={{ marginTop: '20px' }}>
                             <button className={styles.settingActionBtn} onClick={() => setActiveModal(null)}>Cancel</button>
-                            <button className={styles.primaryBtn} disabled={!passwordForm.current || !passwordForm.new || passwordForm.new !== passwordForm.confirm} onClick={() => { alert("Account access password successfully rotated."); setActiveModal(null); }}>Update Password</button>
+                            <button className={styles.primaryBtn} disabled={loading || !passwordForm.current || !passwordForm.new || passwordForm.new !== passwordForm.confirm} onClick={handleChangePassword}>{loading ? 'Updating...' : 'Update Password'}</button>
                         </div>
                     </div>
                 </div>
@@ -750,30 +843,12 @@ export default function Settings() {
                 <div className={styles.modalOverlay}>
                     <div className={styles.modalContent}>
                         <h3>Deactivate Account</h3>
-                        <p className={styles.settingDescription} style={{ color: '#fff', fontWeight: 500 }}>
-                            Your account will be hidden and all activity paused. All posts and data are preserved but hidden during deactivation.
-                        </p>
-                        <p className={styles.fieldNote} style={{ paddingLeft: 0, margin: '10px 0' }}>
-                            You can reactivate your account by simply logging back in within 30 days.
-                        </p>
-
-                        <label className={styles.modalLabel}>Confirm Password to Deactivate</label>
-                        <input
-                            type="password"
-                            className={styles.modalInput}
-                            value={deactivatePassword}
-                            onChange={(e) => setDeactivatePassword(e.target.value)}
-                        />
-
+                        <p className={styles.settingDescription}>Your account will be hidden. You can reactivate by logging back in within 30 days.</p>
+                        <label className={styles.modalLabel}>Confirm Password</label>
+                        <input type="password" className={styles.modalInput} value={deactivatePassword} onChange={(e) => setDeactivatePassword(e.target.value)} />
                         <div className={styles.modalActions} style={{ marginTop: '20px' }}>
                             <button className={styles.settingActionBtn} onClick={() => setActiveModal(null)}>Cancel</button>
-                            <button
-                                className={styles.primaryBtn}
-                                disabled={!deactivatePassword}
-                                onClick={() => { alert("Account successfully deactivated. You will now be logged out."); setActiveModal(null); }}
-                            >
-                                Deactivate
-                            </button>
+                            <button className={styles.primaryBtn} disabled={loading || !deactivatePassword} onClick={handleDeactivate}>{loading ? 'Deactivating...' : 'Deactivate'}</button>
                         </div>
                     </div>
                 </div>
@@ -782,19 +857,15 @@ export default function Settings() {
             {activeModal === 'delete' && (
                 <div className={styles.modalOverlay}>
                     <div className={styles.modalContent} style={{ borderColor: '#D4145A' }}>
-                        <h3 style={{ color: '#D4145A' }}>Irreversible Destructive Execution Warning</h3>
-                        <p className={styles.settingDescription} style={{ color: '#fff', fontWeight: 500 }}>This completely deletes all account data parameters, associated posts, network configurations, and direct chat logs instantly. Data drops are permanent.</p>
-                        <p className={styles.fieldNote} style={{ paddingLeft: 0, margin: '10px 0' }}>A 24-hour baseline grace window sequence security automated verification mail tracking link will trigger prior to execution.</p>
-
-                        <label className={styles.modalLabel}>Type "DELETE" to authorize sequence tracking</label>
+                        <h3 style={{ color: '#D4145A' }}>Delete Account</h3>
+                        <p className={styles.settingDescription}>This permanently deletes all your data. This cannot be undone.</p>
+                        <label className={styles.modalLabel}>Type "DELETE" to confirm</label>
                         <input type="text" className={styles.modalInput} placeholder="DELETE" value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)} />
-
-                        <label className={styles.modalLabel}>Confirm Accountability Password</label>
+                        <label className={styles.modalLabel}>Confirm Password</label>
                         <input type="password" className={styles.modalInput} value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} />
-
                         <div className={styles.modalActions} style={{ marginTop: '20px' }}>
                             <button className={styles.settingActionBtn} onClick={() => setActiveModal(null)}>Abort</button>
-                            <button className={styles.deleteBtn} disabled={deleteConfirmText !== 'DELETE' || !deletePassword} onClick={() => { alert("Destructive sequence initialized. Final 24h grace tracking check link sent via mail context registry."); setActiveModal(null); }}>Permanently Remove Account</button>
+                            <button className={styles.deleteBtn} disabled={loading || deleteConfirmText !== 'DELETE' || !deletePassword} onClick={handleDeleteAccount}>{loading ? 'Processing...' : 'Permanently Delete Account'}</button>
                         </div>
                     </div>
                 </div>
@@ -804,13 +875,10 @@ export default function Settings() {
                 <div className={styles.modalOverlay}>
                     <div className={styles.modalContent} style={{ maxWidth: '500px', width: '90%' }}>
                         <h3>Manage Blocked Accounts</h3>
-                        <p className={styles.settingDescription} style={{ marginBottom: '14px' }}>Blocked entities cannot target your view frame profiles, send chats, or review posts.</p>
-
-                        <input type="text" placeholder="Search blocked users by username..." className={styles.modalInput} value={blockedSearch} onChange={(e) => setBlockedSearch(e.target.value)} />
-
+                        <input type="text" placeholder="Search by username..." className={styles.modalInput} value={blockedSearch} onChange={(e) => setBlockedSearch(e.target.value)} />
                         <div className={styles.blockedListContainer}>
                             {blockedUsers.filter(u => u.username.toLowerCase().includes(blockedSearch.toLowerCase())).length === 0 ? (
-                                <p className={styles.emptyStateText}>You haven't blocked anyone matching those query metrics.</p>
+                                <p className={styles.emptyStateText}>No blocked users found.</p>
                             ) : (
                                 blockedUsers.filter(u => u.username.toLowerCase().includes(blockedSearch.toLowerCase())).map(user => (
                                     <div key={user.id} className={styles.blockedUserRow}>
@@ -818,10 +886,10 @@ export default function Settings() {
                                             <img src={user.pfp} alt={user.username} className={styles.blockedPfp} />
                                             <div>
                                                 <p style={{ margin: 0, fontWeight: 600, color: '#fff' }}>@{user.username}</p>
-                                                <p style={{ margin: 0, fontSize: '0.8rem', color: '#B3B3B3' }}>{user.university} University</p>
+                                                <p style={{ margin: 0, fontSize: '0.8rem', color: '#B3B3B3' }}>{user.university}</p>
                                             </div>
                                         </div>
-                                        <button className={styles.settingActionBtn} style={{ fontSize: '0.8rem', padding: '6px 12px' }} onClick={() => setBlockedUsers(blockedUsers.filter(u => u.id !== user.id))}>Unblock</button>
+                                        <button className={styles.settingActionBtn} style={{ fontSize: '0.8rem', padding: '6px 12px' }} onClick={() => handleUnblock(user.id)}>Unblock</button>
                                     </div>
                                 ))
                             )}

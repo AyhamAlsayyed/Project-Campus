@@ -30,7 +30,7 @@ export default function UserDetails({ user, hidePill = false, darker = false }) 
         <div className={styles.container} style={{ width: "100%", boxSizing: "border-box" }}>
             <div className={styles.recentlyContactedWrap} style={{ width: "100%", boxSizing: "border-box" }}>
                 {!hidePill && <div className={styles.pill}><p>Details</p></div>}
-                <div className={styles.recentlyContactedWrapper} style={{ width: "100%", boxSizing: "border-box" }}>
+                <div className={`${styles.recentlyContactedWrapper} ${darker ? styles.darkerBg : ''}`} style={{ width: "100%", boxSizing: "border-box" }}>
                     <div className={styles.contactList} style={{ width: "100%", boxSizing: "border-box" }}>
                         <div className={styles.contactCard} style={{ width: "100%", boxSizing: "border-box" }}>
                             <div className={styles.detailsSection} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -91,7 +91,8 @@ export default function UserDetails({ user, hidePill = false, darker = false }) 
                     </div>
                 )}
 
-                <div className={styles.recentlyContactedWrapper} style={{ width: "100%", boxSizing: "border-box", ...(darker && { background: "#2a2a2a" }) }}>
+                <div className={`${styles.recentlyContactedWrapper} ${darker ? styles.darkerBg : ''}`} style={{ width: "100%", boxSizing: "border-box" }}>
+
                     <div className={styles.contactList} style={{ width: "100%", boxSizing: "border-box" }}>
 
                         <div className={styles.contactCard} style={{ width: "100%", boxSizing: "border-box" }}>

@@ -1,6 +1,5 @@
 import styles from "./posts.module.css";
 import { useState, useRef, useEffect } from "react";
-// ADDED Check and X to the lucide-react imports!
 import { Trash2, MoreHorizontal, Bookmark, Ban, Flag, Check, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import Like from '../../Assets/icons/like.png';
@@ -426,19 +425,10 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
   };
 
   const MenuDivider = () => (
-    <div style={{
-      display: "flex",
-      justifyContent: "center",
-      padding: "2px 0"
-    }}>
-      <div style={{
-        width: "50%",
-        height: 1,
-        background: "#4D4D4D"
-      }} />
+    <div className={styles.menuDividerWrap}>
+      <div className={styles.menuDividerLine} />
     </div>
   );
-
   return (
     <article className={styles.card}>
       {showDeleteConfirm && (
@@ -493,14 +483,8 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
               )}
               {isPinned && isOwnProfile && (
                 <>
-                  <img
-                    src={Pin}
-                    alt="pinned"
-                    width={20}
-                    height={20}
-                    style={{ filter: 'brightness(0) invert(1)', opacity: 0.7 }}
-                  />
-                  <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '16px' }}>Pinned</span>
+                  <img src={Pin} alt="pinned" width={20} height={20} className={styles.pinnedIcon} />
+                  <span className={styles.pinnedText}>Pinned</span>
                 </>
               )}
             </div>
@@ -553,34 +537,20 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
 
             {showMenu && createPortal(
               <div
-                style={{
-                  position: "fixed",
-                  top: menuPosition.top,
-                  right: menuPosition.right,
-                  zIndex: 9999,
-                  background: "#333333",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  borderRadius: 14,
-                  padding: "6px 0",
-                  minWidth: 150,
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.7)"
-                }}
+                className={styles.postDropdownMenu}
+                style={{ position: "fixed", top: menuPosition.top, right: menuPosition.right, zIndex: 9999 }}
                 ref={menuRef}
               >
                 {isAdmin && communityContext ? (
                   <>
-                    <button className={styles.menuItem} onClick={() => handleMenuAction('save')} style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    <button className={styles.menuItem} onClick={() => handleMenuAction('save')} style={menuItemStyle}>
                       <img src={SaveIcon} width={13} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
-                      <span style={{ color: "#C2C2C2" }}>{isSaved ? "Unsave" : "Save post"}</span>
+                     <span className={styles.menuItemText}>{isSaved ? "Unsave" : "Save post"}</span>
                     </button>
                     <MenuDivider />
-                    <button className={styles.menuItem} onClick={() => handleMenuAction('highlight')} style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    <button className={styles.menuItem} onClick={() => handleMenuAction('highlight')} style={menuItemStyle}>
                       <img src={HighLight} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
-                      <span style={{ color: "#C2C2C2" }}>{isHighlighted ? "Remove highlight" : "Highlight post"}</span>
+                     <span className={styles.menuItemText}>{isHighlighted ? "Remove highlight" : "Highlight post"}</span>
                     </button>
                     <MenuDivider />
                     <button className={styles.menuItem} onClick={async () => {
@@ -594,73 +564,55 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
                         });
                         if (res.ok) setIsKicked(true);
                       }
-                    }} style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      }} style={menuItemStyle}>
                       <img src={LeaveIcon} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
-                      <span style={{ color: "#C2C2C2" }}>Kick member</span>
+                     <span className={styles.menuItemText}>Kick member</span>
                     </button>
                     <MenuDivider />
-                    <button className={styles.menuItem} onClick={() => handleMenuAction('delete')} style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    <button className={styles.menuItem} onClick={() => handleMenuAction('delete')} style={menuItemStyle}>
                       <img src={DeletePost} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(80%)", flexShrink: 0 }} />
-                      <span style={{ color: "#C2C2C2" }}>Delete post</span>
+                      <span className={styles.menuItemText}>Delete post</span>
                     </button>
                     <MenuDivider />
-                    <button className={styles.menuItem} onClick={() => handleMenuAction('block')} style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    <button className={styles.menuItem} onClick={() => handleMenuAction('block')} style={menuItemStyle}>
                       <img src={Block} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
-                      <span style={{ color: "#D4145A" }}>{isBlocked ? "Unblock user" : "Block user"}</span>
+                    <span className={styles.menuItemDanger}>{isBlocked ? "Unblock user" : "Block user"}</span>
                     </button>
                     <MenuDivider />
-                    <button className={styles.menuItem} onClick={() => { setShowMenu(false); setShowReport(true); }} style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    <button className={styles.menuItem} onClick={() => { setShowMenu(false); setShowReport(true); }} style={menuItemStyle}>
                       <img src={Report} width={16} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
-                      <span style={{ color: "#D4145A" }}>Report user</span>
+                      <span className={styles.menuItemDanger}>Report user</span>
                     </button>
                   </>
                 ) : (
                   <>
                     {isOwnProfile && (
                       <>
-                        <button className={styles.menuItem} onClick={() => handleMenuAction('pin')} style={menuItemStyle}
-                          onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <button className={styles.menuItem} onClick={() => handleMenuAction('pin')} style={menuItemStyle}>
                           <img src={Pin} width={14} alt="" style={{ filter: "brightness(0) saturate(100%) invert(76%)", flexShrink: 0 }} />
                           <span style={{ color: "#C2C2C2" }}>{isPinned ? "Unpin Post" : "Pin Post"}</span>
                         </button>
                         <MenuDivider />
                       </>
                     )}
-                    <button className={styles.menuItem} onClick={() => handleMenuAction('save')} style={menuItemStyle}
-                      onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    <button className={styles.menuItem} onClick={() => handleMenuAction('save')} style={menuItemStyle}>
                       <Bookmark size={14} fill={isSaved ? "#C2C2C2" : "none"} color="#C2C2C2" />
                       <span style={{ color: "#C2C2C2" }}>{isSaved ? "Unsave" : "Save"}</span>
                     </button>
                     <MenuDivider />
                     {isOwnProfile ? (
-                      <button className={styles.menuItem} onClick={() => handleMenuAction('delete')} style={menuItemStyle}
-                        onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <button className={styles.menuItem} onClick={() => handleMenuAction('delete')} style={menuItemStyle}>
                         <Trash2 size={14} color="#D4145A" />
                         <span style={{ color: "#D4145A" }}>Delete Post</span>
                       </button>
                     ) : (
                       <>
-                        <button className={styles.menuItem} onClick={() => { setShowMenu(false); setShowReport(true); }} style={menuItemStyle}
-                          onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <button className={styles.menuItem} onClick={() => { setShowMenu(false); setShowReport(true); }} style={menuItemStyle}>
                           <img src={InfoIcon} width={14} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
                           <span style={{ color: "#D4145A" }}>Report</span>
                         </button>
                         <MenuDivider />
-                        <button className={styles.menuItem} onClick={() => handleMenuAction('block')} style={menuItemStyle}
-                          onMouseEnter={e => e.currentTarget.style.background = "#464646"}
-                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <button className={styles.menuItem} onClick={() => handleMenuAction('block')} style={menuItemStyle}>
                           <img src={Block} width={14} alt="" style={{ filter: "brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg)", flexShrink: 0 }} />
                           <span style={{ color: "#D4145A" }}>{isBlocked ? "Unblock" : "Block"}</span>
                         </button>
@@ -742,7 +694,7 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
       {/* --- SWAPPED ACTIONS FOR REQUEST MODE --- */}
       {
         isReportedMode ? (
-         <div className={styles.reportedActions}>
+          <div className={styles.reportedActions}>
             <button onClick={() => onDismiss?.(post.id || post.post_id)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
               <img src={XIcon} alt="Dismiss" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
               Dismiss
@@ -763,7 +715,7 @@ export default function PostCard({ post, openComments, isOwnProfile, hasPinnedPo
         ) : isRequestMode ? (
           <div className={styles.postRequestActions}>
             <button className={styles.acceptPostBtn} onClick={() => onAcceptPost?.(post.id || post.post_id)}>
-             <Check size={18} strokeWidth={3} className={styles.acceptIcon} />
+              <Check size={18} strokeWidth={3} className={styles.acceptIcon} />
               Accept
             </button>
             <div className={styles.verticalDivider}></div>

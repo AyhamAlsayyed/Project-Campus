@@ -4342,3 +4342,311 @@ body {
 [data-theme="light"] .remindersArrow {
   filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
 }
+.activitiesItemActive {
+  background: rgba(221, 219, 224, 0.11);
+  color: #f0e7f8;
+  font-weight: 600;
+}
+
+[data-theme="light"] .activitiesDropdown {
+  background: #ffffff;
+  border-color: rgba(102, 45, 145, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .activitiesDropdownItem {
+  color: #333333;
+}
+
+[data-theme="light"] .activitiesItemActive {
+  background: rgba(102, 45, 145, 0.1);
+  color: #662D91;
+}
+
+/* Edit panel inputs light mode */
+[data-theme="light"] .inputPairRow input {
+  border-color: rgba(102, 45, 145, 0.25);
+  color: #333333;
+  background: #ffffff;
+}
+
+[data-theme="light"] .inputPairRow input::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .bInput {
+  color: #333333 !important;
+  background: transparent !important;
+}
+
+[data-theme="light"] .birthdayInputsGroup {
+  background: #f3e8ff;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .editCard {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .detailsTopDivider {
+  border-top-color: #e0e0e0;
+}
+.activityIcon {
+  filter: invert(100%) sepia(100%) grayscale(200%) brightness(80%);
+}
+
+.activityIconActive {
+  filter: invert(100%) sepia(100%) grayscale(200%) brightness(150%);
+}
+
+[data-theme="light"] .activityIcon {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .activityIconActive {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+/* ════════════════════════════════════════
+   EDIT FORM — INPUT CLASSES
+   ════════════════════════════════════════ */
+
+.editFormInput {
+  background: #262626;
+  border: 1px solid #444;
+  border-radius: 24px;
+  padding: 14px 16px;
+  color: white;
+  outline: none;
+  fontSize: 14px;
+  box-sizing: border-box;
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.editFormInput::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.editFormInputReadOnly {
+  background: #2f2f2f;
+  border: 1px solid #2f2f2f;
+  border-radius: 24px;
+  padding: 14px 16px;
+  color: #616161;
+  outline: none;
+  font-size: 14px;
+  box-sizing: border-box;
+  cursor: not-allowed;
+  flex: 1;
+  font-family: inherit;
+}
+
+.editFormInputError {
+  border-color: #ff4b4b !important;
+}
+
+.editFormInputValid {
+  border-color: #4ade80 !important;
+}
+
+.editFormBioWrap {
+  flex: 1;
+  background: #262626;
+  border-radius: 16px;
+  border: 1px solid #2a2a2a;
+  padding: 16px;
+  display: flex;
+}
+
+.editFormBioTextarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: white;
+  width: 100%;
+  outline: none;
+  resize: none;
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: inherit;
+}
+
+.editFormBioTextarea::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.editFormBirthdayInput {
+  background: #262626;
+  border: 1px solid #444;
+  border-radius: 10px;
+  padding: 8px 0;
+  color: white;
+  outline: none;
+  font-size: 13px;
+  text-align: center;
+  font-family: inherit;
+}
+
+.editFormBirthdaySep {
+  color: #555;
+  font-size: 16px;
+}
+
+/* Smaller inline inputs (degrees, positions) */
+.editFormInlineInput {
+  background: #262626;
+  border: 1px solid #444;
+  border-radius: 12px;
+  padding: 9px 14px;
+  color: white;
+  outline: none;
+  font-size: 13px;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.editFormInlineInput::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.editFormSelect {
+  background: #262626;
+  border: 1px solid #444;
+  border-radius: 12px;
+  padding: 9px 14px;
+  color: white;
+  outline: none;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.editFormAddBtn {
+  background: rgba(139, 45, 255, 0.2);
+  border: 1px solid rgba(139, 45, 255, 0.4);
+  color: #c084fc;
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.editFormDashedBtn {
+  background: transparent;
+  border: 1px dashed rgba(139, 45, 255, 0.35);
+  border-radius: 10px;
+  color: rgba(139, 45, 255, 0.8);
+  padding: 7px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  width: 100%;
+  margin-top: 4px;
+  font-family: inherit;
+}
+
+.editFormCancelIconBtn {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.editFormTrashBtn {
+  background: transparent;
+  border: none;
+  color: #e91e63;
+  cursor: pointer;
+  margin-left: auto;
+  padding: 4px;
+}
+
+.editFormDividerLine {
+  border-top: 1px solid #999999;
+  width: 70%;
+  margin: 20px auto 24px;
+}
+
+/* ── Light mode overrides ── */
+[data-theme="light"] .editFormInput {
+  background: #f3e8ff;
+  border-color: rgba(102, 45, 145, 0.25);
+  color: #333333;
+}
+
+[data-theme="light"] .editFormInput::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .editFormInputReadOnly {
+  background: #ede4f7;
+  border-color: #ede4f7;
+  color: #aaaaaa;
+}
+
+[data-theme="light"] .editFormBioWrap {
+  background: #f3e8ff;
+  border-color: rgba(102, 45, 145, 0.15);
+}
+
+[data-theme="light"] .editFormBioTextarea {
+  color: #333333;
+}
+
+[data-theme="light"] .editFormBioTextarea::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .editFormBirthdayInput {
+  background: #f3e8ff;
+  border-color: rgba(102, 45, 145, 0.25);
+  color: #333333;
+}
+
+[data-theme="light"] .editFormBirthdaySep {
+  color: #aaaaaa;
+}
+
+[data-theme="light"] .editFormInlineInput {
+  background: #f3e8ff;
+  border-color: rgba(102, 45, 145, 0.25);
+  color: #333333;
+}
+
+[data-theme="light"] .editFormInlineInput::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .editFormSelect {
+  background: #f3e8ff;
+  border-color: rgba(102, 45, 145, 0.25);
+  color: #333333;
+}
+
+[data-theme="light"] .editFormAddBtn {
+  background: rgba(102, 45, 145, 0.15);
+  border-color: rgba(102, 45, 145, 0.35);
+  color: #662D91;
+}
+
+[data-theme="light"] .editFormDashedBtn {
+  border-color: rgba(102, 45, 145, 0.4);
+  color: #662D91;
+}
+
+[data-theme="light"] .editFormCancelIconBtn {
+  color: #aaaaaa;
+}
+
+[data-theme="light"] .editFormTrashBtn {
+  color: #d63b6e;
+}
+
+[data-theme="light"] .editFormDividerLine {
+  border-top-color: #e0e0e0;
+}

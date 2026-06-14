@@ -143,7 +143,7 @@ export default function FriendsSuggestion() {
                                             alt="message"
                                             width={20}
                                             height={20}
-                                            style={{ filter: 'brightness(0) invert(1)', flexShrink: 0 }}
+                                            className={styles.messageIcon} style={{ flexShrink: 0 }}
                                         />
                                     </div>
                                 </div>

@@ -894,7 +894,9 @@
     gap: 12px;
     align-items: center;
 }
-
+.bellIcon {
+  filter: brightness(0) saturate(100%) invert(60%);
+}
 .bellBtn {
     background: rgba(255, 255, 255, 0.1);
     border: none;
@@ -1127,4 +1129,88 @@ css.acceptIcon {
 
 [data-theme="light"] .acceptIcon {
   color: #662D91;
+}
+.pinnedIcon {
+  filter: brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+.pinnedText {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 16px;
+}
+
+[data-theme="light"] .pinnedIcon {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .pinnedText {
+  color: rgba(102, 45, 145, 0.6);
+}
+
+/* Dropdown menu */
+.postDropdownMenu {
+  background: #333333;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 6px 0;
+  min-width: 150px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="light"] .postDropdownMenu {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.menuItemBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.menuItemBtn:hover {
+  background: #464646;
+}
+
+[data-theme="light"] .menuItemBtn:hover {
+  background: #f3e8ff;
+}
+
+.menuItemText {
+  color: #C2C2C2;
+  font-size: 0.9rem;
+}
+
+[data-theme="light"] .menuItemText {
+  color: #333333;
+}
+
+.menuItemDanger {
+  color: #D4145A;
+  font-size: 0.9rem;
+}
+
+.menuDividerWrap {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0;
+}
+
+.menuDividerLine {
+  width: 50%;
+  height: 1px;
+  background: #4D4D4D;
+}
+
+[data-theme="light"] .menuDividerLine {
+  background: #e0e0e0;
 }

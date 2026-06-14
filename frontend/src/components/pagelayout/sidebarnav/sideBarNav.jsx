@@ -41,8 +41,10 @@ export default function SidebarNav({ variant = "default", currentUser }) {
   const userType = localStorage.getItem("user_type");
   const isPage =
     currentUser?.user_type === 'page' ||
+    currentUser?.user_type === 'uni' ||
     currentUser?.role === 'cafe' ||
-    userType === 'page'
+    userType === 'page' ||
+    userType === 'uni';
 
 
   const userId = currentUser?.id || localStorage.getItem("user_id");
@@ -86,7 +88,8 @@ export default function SidebarNav({ variant = "default", currentUser }) {
   const mainItems = variant === "profile" ? profileMainItems : defaultMainItems;
   const footerItems = variant === "profile" ? profileFooterItems : defaultFooterItems;
 
-  if (variant === "profile" && !currentUser) return null;
+  
+  if (variant === "profile" && !userId) return null;
 
 
   return (

@@ -178,6 +178,7 @@ export default function ProfilePage({ type }) {
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
     }, [theme]);
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
     const [user, setUser] = useState(null);
     const [friendStatus, setFriendStatus] = useState('none');
     const [currentUser, setCurrentUser] = useState(null);
@@ -896,7 +897,7 @@ export default function ProfilePage({ type }) {
                         {showCreateEvent ? (
                             <CreateEventForm {...createEvent.formProps} onBack={() => setShowCreateEvent(false)} />
                         ) : isEditing ? (
-                            <ProfileEditCard styles={styles} edit={edit} setIsEditing={setIsEditing} user={user} API={API} token={token} />
+                            <ProfileEditCard styles={styles} edit={edit} setIsEditing={setIsEditing} user={user} API={API} token={token} theme={theme} />
                         ) : isBlocked ? (
                             <div className={styles.profileCard}>
                                 <div className={styles.coverWrap}>
@@ -1007,7 +1008,7 @@ export default function ProfilePage({ type }) {
                                                         </div>
                                                         <button className={styles.editProfileBtn} onClick={() => setIsEditing(true)}>
                                                             <span className={styles.editText}>Edit</span>
-                                                            <div style={maskStyle(Edit)} />
+                                                            <div style={maskStyle(Edit, 20, isLight ? '#662D91' : '#999999')} />
                                                         </button>
                                                     </div>
                                                     <div className={styles.subRow}>
@@ -1111,13 +1112,9 @@ export default function ProfilePage({ type }) {
                                                             <button key={key}
                                                                 onClick={() => { setActivitiesFilter(key); setActivitiesDropdownOpen(false); }}
                                                                 className={styles.activitiesDropdownItem}
-                                                                style={{
-                                                                    background: activitiesFilter === key ? 'rgba(221,219,224,0.11)' : 'transparent',
-                                                                    color: activitiesFilter === key ? '#f0e7f8' : 'rgba(255,255,255,0.8)',
-                                                                    fontWeight: activitiesFilter === key ? 600 : 400,
-                                                                }}
+                                                                className={`${styles.activitiesDropdownItem} ${activitiesFilter === key ? styles.activitiesItemActive : ''}`}
                                                             >
-                                                                <img src={icon} alt={label} style={{ width: 18, height: 18, filter: activitiesFilter === key ? 'invert(100%) sepia(100%) grayscale(200%) brightness(150%)' : 'invert(100%) sepia(100%) grayscale(200%) brightness(80%)' }} />
+                                                               <img src={icon} alt={label} className={activitiesFilter === key ? styles.activityIconActive : styles.activityIcon} style={{ width: 18, height: 18 }} />
                                                                 {label}
                                                             </button>
                                                         ))}
