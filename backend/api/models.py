@@ -1099,7 +1099,7 @@ class ConversationMember(models.Model):
 
 
 class Message(models.Model):
-    message_id = models.BigAutoField(primary_key=True, db_column="media_id")
+    message_id = models.BigAutoField(primary_key=True, db_column="message_id")
 
     conversation = models.ForeignKey(
         Conversation,
@@ -1136,8 +1136,7 @@ class Message(models.Model):
         super().save(*args, **kwargs)
 
         if self.conversation.last_message_id != self.message_id:
-            self.conversation.last_message = self
-            self.conversation.save(update_fields=["last_message"])
+            Conversation.objects.filter(pk=self.conversation_id).update(last_message=self)
 
     class Meta:
         db_table = "message"

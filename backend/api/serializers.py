@@ -355,7 +355,7 @@ class UserMinimalSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "username", "full_name", "avatar"]
+        fields = ["id", "username", "full_name", "avatar", "user_type"]
 
     def get_full_name(self, obj):
         if hasattr(obj, "page") and obj.page:

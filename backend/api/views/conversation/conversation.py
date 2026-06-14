@@ -64,9 +64,7 @@ def get_messages(request, conversation_id):
             "parent_message__sender",
             "shared_post",
         )
-        .prefetch_related(
-            "media",
-        )
+        .prefetch_related("media")
         .order_by("sent_at")
     )
 
