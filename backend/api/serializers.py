@@ -1321,7 +1321,7 @@ class MessageSerializer(serializers.ModelSerializer):
     sender = UserMinimalSerializer(read_only=True)
     media = MessageMediaSerializer(many=True, read_only=True)
 
-    shared_post_title = serializers.CharField(source="shared_post.title", read_only=True)
+    shared_post = PostSerializer(read_only=True)
 
     class Meta:
         model = Message
@@ -1331,7 +1331,6 @@ class MessageSerializer(serializers.ModelSerializer):
             "sender",
             "content",
             "shared_post",
-            "shared_post_title",
             "parent_message",
             "sent_at",
             "media",
