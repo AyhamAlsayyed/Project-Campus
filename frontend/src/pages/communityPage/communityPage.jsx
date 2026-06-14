@@ -17,17 +17,17 @@ import NotificationActive from '../../Assets/icons/notifications-active.png'
 import Leave from '../../Assets/icons/leave.png'
 import Setting from '../../Assets/icons/setting.png'
 import ProfilePicture from '../../Assets/icons/default-pfp.png'
-
+import useTheme from '../../hooks/useTheme';
 import CommunitySettingsNav from '../../components/communitySettings/CommunitySettingsNav';
 import CommunityInfoPanel from '../../components/communitySettings/CommunityInfoPanel';
 import MembersTab from '../../components/communitySettings/membersTab';
 import RequestsTab from '../../components/communitySettings/requestsTab';
 import CommunityPosts from '../../components/communitySettings/CommunityPosts';
 import DeleteCommunityModal from '../../components/communitySettings/deleteCommunityModal';
-
+import API from '../../config';
 export default function CommunityPage() {
     const [user, setUser] = useState(null)
-    const [theme, setTheme] = useState('dark');
+    const { theme, toggleTheme } = useTheme();
     const [posts, setPosts] = useState([]);
     const [filter, setFilter] = useState("recent");
     const [community, setCommunity] = useState(null);
@@ -61,9 +61,6 @@ export default function CommunityPage() {
         }
     }, [activeSettingsTab]);
     const displayedTab = activeSettingsTab === 'Delete' ? prevSettingsTab : activeSettingsTab;
-
-    const API = "http://localhost:8000"
-
     const handleToggleNotification = async () => {
         const prev = isNotified;
         setIsNotified(!prev);
@@ -103,7 +100,7 @@ export default function CommunityPage() {
     }, [mobileMenuOpen]);
 
     const openComments = (postId) => { setSelectedPostId(postId); setIsCommentModalOpen(true); };
-    const toggleTheme = () => setTheme(p => p === 'light' ? 'dark' : 'light');
+    
 
     const resetPostState = () => {
         setContent(""); setImages([]); setFiles([]); setPollOptions(["", ""]); setIsPollOpen(false);

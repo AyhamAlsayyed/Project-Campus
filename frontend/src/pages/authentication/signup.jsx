@@ -10,18 +10,16 @@ import imageOne from '../../Assets/Pictures/login-1.png';
 import imageTwo from '../../Assets/Pictures/login-2.png';
 import imageThree from '../../Assets/Pictures/login-3.png';
 import imageFour from '../../Assets/Pictures/login-4.png';
-
+import API from '../../config';
+import useTheme from '../../hooks/useTheme';
 export default function Signup() {
     const navigate = useNavigate();
     const [language, setLanguage] = useState('en');
-    const [theme, setTheme] = useState('dark');
+    const { theme, toggleTheme } = useTheme();
     const [step, setStep] = useState(0);
     const [loading, setLoading] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     
-    const toggleTheme = () => {
-        setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'));
-    };
 
     const slides = [
         { image: imageOne, },
@@ -76,7 +74,7 @@ export default function Signup() {
         }
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/auth/send_code/', {
+            const response = await fetch(`${API}/api/auth/send_code/`, {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username: form.username, academicEmail: form.academicEmail })
@@ -103,7 +101,7 @@ export default function Signup() {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:8000/api/auth/verify_code/', {
+            const response = await fetch(`${API}/api/auth/verify_code/`, {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ academicEmail: form.academicEmail, code: form.code })
@@ -133,7 +131,7 @@ export default function Signup() {
         }
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/auth/signup/', {
+            const response = await fetch(`${API}/api/auth/signup/`, {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -160,7 +158,7 @@ export default function Signup() {
         setError('');
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/auth/send_code/', {
+            const response = await fetch(`${API}/api/auth/send_code/`, {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

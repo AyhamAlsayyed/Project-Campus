@@ -217,3 +217,50 @@ body {
     color: #666;
     margin: 0;
 }
+/* ════════════════════════════════════════
+   LIGHT MODE — JOINED COMMUNITIES
+   ════════════════════════════════════════ */
+
+[data-theme="light"] .darkContainer {
+    background: linear-gradient(135deg, #f5f5f5, #ffffff);
+}
+
+[data-theme="light"] .title {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .innerContainer {
+    background-color: #ffffff;
+}
+
+[data-theme="light"] .postContainer {
+    background: linear-gradient(-90deg, #A0279C, #6923A2);
+}
+
+[data-theme="light"] .dividerOne {
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+}
+
+[data-theme="light"] .rightCard {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(102, 45, 145, 0.1);
+    backdrop-filter: none;
+}
+
+[data-theme="light"] .pill {
+    background-color: #662D91;
+    border-color: #662D91;
+    color: #ffffff;
+}
+
+[data-theme="light"] .dividerTwo {
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+}
+
+[data-theme="light"] .emptyTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .emptySubtitle {
+    color: #888888;
+}

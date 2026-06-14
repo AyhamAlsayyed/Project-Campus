@@ -20,6 +20,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import MobileCreatePost from '../../components/createPost/MobileCreatePost/mobileCreatePost';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import Calender from '../../Assets/icons/calender.png'
+import API from '../../config';
+import useTheme from '../../hooks/useTheme';
 export default function Homepage() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -27,8 +29,7 @@ export default function Homepage() {
     const pendingStateRef = useRef(null);
     const [modalCommunityDropdownOpen, setModalCommunityDropdownOpen] = useState(false);
 
-    const [theme, setTheme] = useState("dark")
-    const toggleTheme = () => setTheme(prev => prev === "light" ? "dark" : "light")
+    const { theme, toggleTheme } = useTheme();
     const [posts, setPosts] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
@@ -70,7 +71,7 @@ export default function Homepage() {
         setAnnImageError(false);
     };
 
-    const API = "http://localhost:8000"
+   
     const token = localStorage.getItem("access")
 
 

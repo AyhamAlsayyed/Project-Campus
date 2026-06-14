@@ -3,8 +3,8 @@ import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import Header from '../../components/pagelayout/header/header';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Setting from '../../Assets/icons/setting.png';
-
-const API = "http://localhost:8000";
+import useTheme from '../../hooks/useTheme';
+import API from '../../config';
 
 const authHeaders = () => ({
     'Content-Type': 'application/json',
@@ -57,13 +57,14 @@ const Toast = ({ message, type, onClose }) => {
 
 // ── Main Component ───────────────────────────────────────────────────────────
 export default function Settings() {
-    const [theme, setTheme] = useState('dark');
+    const { theme, toggleTheme } = useTheme();
+    const [appearanceTheme, setAppearanceTheme] = useState(theme);
     const [currentUser, setCurrentUser] = useState(null);
     const [activeTab, setActiveTab] = useState('Account');
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState(null);
     const token = localStorage.getItem("access");
-  
+
 
     const showToast = useCallback((message, type = 'success') => setToast({ message, type }), []);
 
@@ -168,7 +169,7 @@ export default function Settings() {
                     const res = await fetch(`${API}/api/settings/appearance/`, { headers: authHeaders() });
                     if (res.ok) {
                         const d = await res.json();
-                        if (d.theme) setTheme(d.theme);
+                        if (d.theme) setAppearanceTheme(d.theme); 
                         if (d.language) setLanguage(d.language);
                     }
                 }
@@ -228,10 +229,12 @@ export default function Settings() {
 
     const saveAppearance = async () => {
         setLoading(true);
+        document.documentElement.setAttribute('data-theme', appearanceTheme);
+        localStorage.setItem('theme', appearanceTheme);
         try {
             const res = await fetch(`${API}/api/settings/appearance/`, {
                 method: 'PATCH', headers: authHeaders(),
-                body: JSON.stringify({ theme, language })
+                body: JSON.stringify({ theme: appearanceTheme, language })
             });
             if (res.ok) showToast('Appearance saved.');
             else showToast('Failed to save appearance.', 'error');
@@ -421,7 +424,7 @@ export default function Settings() {
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
             <div className={`${styles.header} ${styles.page}`}>
-                <Header theme={theme} toggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')} user={currentUser} />
+                <Header theme={theme} toggleTheme={toggleTheme} user={currentUser} />
             </div>
             <div className={`${styles.page} ${styles.content}`}>
                 <SideBarNav variant="profile" currentUser={currentUser} />
@@ -613,7 +616,7 @@ export default function Settings() {
                                 <div className={styles.radioGroup}>
                                     {['dark', 'light', 'system'].map((t) => (
                                         <label key={t} className={styles.radioOption}>
-                                            <input type="radio" name="theme" value={t} checked={theme === t} onChange={() => setTheme(t)} />
+                                            <input type="radio" name="theme" value={t} checked={theme === t} onChange={() => setAppearanceTheme(t)} />
                                             <div className={styles.radioCircle} />
                                             <span className={styles.radioLabel}>{t.charAt(0).toUpperCase() + t.slice(1)}</span>
                                         </label>
@@ -768,7 +771,7 @@ export default function Settings() {
                 <div className={styles.rightSection}>
                     <div className={styles.settingsNavContainer}>
                         <div className={styles.settingsNavHeader}>
-                            {renderSolidIcon(Setting, '#E6E6E6', '25px', '25px')}
+                            {renderSolidIcon(Setting, theme === 'light' ? '#662D91' : '#E6E6E6', '25px', '25px')}
                             <h2 className={styles.settingsNavTitle}>Settings</h2>
                         </div>
                         <div className={styles.centeredDivider} />

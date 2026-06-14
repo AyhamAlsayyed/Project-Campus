@@ -450,3 +450,127 @@
 .darkLogisticsAddressInput:focus {
     border-color: #4D4D4D;
 }
+/* ── LIGHT MODE ── */
+[data-theme="light"] .createEventMiddleContainer {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .formMainHeaderTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .backArrowImg {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .helpIconImg {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .divider75,
+[data-theme="light"] .divider50 {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .formLabelField {
+  color: #333333;
+}
+
+[data-theme="light"] .formHintSubtitle {
+  color: #888888;
+}
+
+[data-theme="light"] .eventTextInputMiddle {
+  background-color: #f3e8ff;
+  color: #333333;
+  border-color: rgba(102, 45, 145, 0.15);
+}
+
+[data-theme="light"] .eventTextInputMiddle::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .eventTextAreaMiddle {
+  background-color: #f3e8ff;
+  color: #333333;
+  border-color: rgba(102, 45, 145, 0.15);
+}
+
+[data-theme="light"] .eventTextAreaMiddle::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .floatingCharCounterDisplay {
+  color: #888888;
+}
+
+[data-theme="light"] .disabledCreateBtn {
+  background: #e0e0e0;
+  color: #aaaaaa;
+}
+
+/* Right sidebar */
+[data-theme="light"] .createEventRightContainer {
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .durationPillHeaderBadge {
+  background-color: #662D91;
+  color: #ffffff;
+}
+
+[data-theme="light"] .logisticsSectionTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .segmentedInputControl,
+[data-theme="light"] .segmentedInputControlYear {
+  background-color: #f3e8ff;
+  color: #333333;
+}
+
+[data-theme="light"] .dateSeparator {
+  color: #999999;
+}
+
+[data-theme="light"] .timeSeparator {
+  color: #999999;
+}
+
+[data-theme="light"] .atTimePrefixLabel {
+  color: #666666;
+}
+
+[data-theme="light"] .amPmActiveBoxSelection {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .amPmExternalArrowIcon {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .amPmDropdownFloatingMenu {
+  background-color: #ffffff;
+  border-color: #e0e0e0;
+}
+
+[data-theme="light"] .amPmDropdownFloatingMenu div {
+  color: #333333;
+}
+
+[data-theme="light"] .amPmDropdownFloatingMenu div:hover {
+  background-color: #f3e8ff;
+}
+
+[data-theme="light"] .darkLogisticsAddressInput {
+  background-color: #f3e8ff;
+  color: #333333;
+  border-color: rgba(102, 45, 145, 0.15);
+}
+
+[data-theme="light"] .darkLogisticsAddressInput::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}

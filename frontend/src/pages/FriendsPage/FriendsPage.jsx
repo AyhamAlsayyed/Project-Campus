@@ -13,9 +13,10 @@ import ReportModal from '../../components/posts/ReportModal';
 import RemoveFriendIcon from '../../Assets/icons/remove-person.png'
 import Block from '../../Assets/icons/block.png'
 import InfoIcon from '../../Assets/icons/info.png'
-
+import API from '../../config';
+import useTheme from '../../hooks/useTheme'
 export default function FriendsPage() {
-    const [theme, setTheme] = useState('dark')
+    const { theme, toggleTheme } = useTheme()
     const [currentUser, setCurrentUser] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [friends, setFriends] = useState([]);
@@ -30,7 +31,6 @@ export default function FriendsPage() {
     const [activeMenu, setActiveMenu] = useState(null);
     const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
     const token = localStorage.getItem("access");
-    const API = "http://localhost:8000";
     const navigate = useNavigate();
     const [reportTargetId, setReportTargetId] = useState(null);
     const handleOpenComments = (postObject) => {
@@ -44,9 +44,7 @@ export default function FriendsPage() {
     const { userId } = useParams();
     const isOwnProfile = currentUser?.id === Number(userId);
 
-    const toggleTheme = () => {
-        setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
-    };
+  
     const filteredFriends = friends.filter(friend =>
         friend.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (friend.major && friend.major.toLowerCase().includes(searchTerm.toLowerCase()))

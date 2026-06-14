@@ -14,17 +14,12 @@ import BellOff from '../../Assets/icons/mute.png';
 import ArrowLeftIcon from '../../Assets/icons/arrow-left.png';
 import AdIcon from '../../Assets/icons/ad.png';
 import { createPortal } from 'react-dom';
-
+import API from '../../config';
+import useTheme from '../../hooks/useTheme';
 export default function EventsPage() {
-    const API = "http://localhost:8000";
-
     const [user, setUser] = useState(null);
-    const [theme, setTheme] = useState(
-        () => document.documentElement.getAttribute('data-theme') || 'dark'
-    );
-    useEffect(() => {
-        document.documentElement.setAttribute("data-theme", theme);
-    }, [theme]);
+    const { theme, toggleTheme } = useTheme();
+    
     const [events, setEvents] = useState([]);
     const [recommendedEvents, setRecommendedEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -59,10 +54,10 @@ export default function EventsPage() {
 
     const location = useLocation();
     const navigate = useNavigate();
-    const toggleTheme = () => setTheme(prev => prev === "light" ? "dark" : "light");
+
     const [highlightId, setHighlightId] = useState(location.state?.highlightId || null);
 
-    // Ref to always have the latest page_id available in callbacks (avoids stale closure)
+    
     const pageIdRef = useRef(null);
 
     const durationOptions = [

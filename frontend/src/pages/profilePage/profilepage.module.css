@@ -4650,3 +4650,40 @@ body {
 [data-theme="light"] .editFormDividerLine {
   border-top-color: #e0e0e0;
 }
+[data-theme="light"] .manageEditSaveBtn {
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.9), rgba(49, 32, 169, 0.9));
+  color: #ffffff;
+}
+
+[data-theme="light"] .manageEditInput::placeholder,
+[data-theme="light"] .manageEditTextarea::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .manageEditAmPmActive {
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.85), rgba(49, 32, 169, 0.85));
+  color: #ffffff;
+}
+
+[data-theme="light"] .manageEditAmPmBtn {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+/* Action row buttons */
+[data-theme="light"] .manageActionBtnDelete {
+  color: #d63b6e;
+}
+
+[data-theme="light"] .manageActionBtnUpdate {
+  color: #333333;
+}
+
+/* Icon filters */
+[data-theme="light"] .iconRed {
+  filter: invert(28%) sepia(80%) saturate(1200%) hue-rotate(310deg) brightness(90%);
+}
+
+[data-theme="light"] .iconWhite {
+  filter: brightness(0) saturate(100%) invert(28%) sepia(44%)
+    saturate(800%) hue-rotate(255deg) brightness(85%);
+}

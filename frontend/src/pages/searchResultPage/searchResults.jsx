@@ -6,7 +6,7 @@ import PostCard from '../../components/posts/postCard'
 import styles from './searchResults.module.css'
 import CommunityCard from '../../components/communityCard/communityCard'
 
-const API = "http://localhost:8000";
+import API from '../../config';
 
 export default function SearchResults() {
     const [theme, setTheme] = useState('dark');

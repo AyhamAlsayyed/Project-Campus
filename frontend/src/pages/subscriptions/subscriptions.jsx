@@ -4,10 +4,10 @@ import SidebarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import Stars from '../../Assets/icons/stars.png';
 import { useState, useEffect } from 'react';
 
-const API = "http://localhost:8000";
-
+import API from '../../config';
+import useTheme from '../../hooks/useTheme';
 export default function Subscriptions() {
-    const [theme, setTheme] = useState('dark');
+   const { theme, toggleTheme } = useTheme();
     const [currentUser, setCurrentUser] = useState(null);
     const [subscription, setSubscription] = useState(null);  // active subscription
     const [loading, setLoading] = useState(true);
@@ -15,7 +15,7 @@ export default function Subscriptions() {
     const [subscribing, setSubscribing] = useState(false);
     const token = localStorage.getItem("access");
 
-    const toggleTheme = () => setTheme(p => p === 'light' ? 'dark' : 'light');
+   
 
     const loadCurrentUser = async () => {
         try {

@@ -44,13 +44,10 @@ button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, span, a, li {
   font-family: inherit;
 }
 body {
-  background-color: #1a1a1a;
+  background-color: var(--bg-main);
   transition: background-color 0.3s ease;
 }
 
-[data-theme="light"] body {
-  background-color: #E6E6E6;
-}
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }

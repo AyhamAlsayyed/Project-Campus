@@ -4,12 +4,12 @@ import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
 import { useNavigate } from "react-router-dom";
 import CommunityCard from '../../components/communityCard/communityCard'
+import API from '../../config';
+import useTheme from '../../hooks/useTheme'
 export default function FollowedCommunities() {
-    const [theme, setTheme] = useState('dark');
+    const { theme, toggleTheme } = useTheme();
     const [searchTerm, setSearchTerm] = useState('');
-    const toggleTheme = () => {
-        setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
-    }
+  
     const [userLoading, setUserLoading] = useState(true);
     const [userError, setUserError] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
@@ -32,11 +32,9 @@ export default function FollowedCommunities() {
                 const headers = { Authorization: `Bearer ${token}` };
 
                 const [userRes, joinedRes, recommendedRes] = await Promise.all([
-                    fetch("http://localhost:8000/api/auth/me/", { headers }),
-
-                    fetch("http://localhost:8000/api/communities/?filter=joined", { headers }),
-
-                    fetch("http://localhost:8000/api/communities/?filter=recommended", { headers })
+                    fetch(`${API}/api/auth/me/`, { headers }),
+                    fetch(`${API}/api/communities/?filter=joined`, { headers }),
+                    fetch(`${API}/api/communities/?filter=recommended`, { headers })
                 ]);
 
                 if (userRes.ok) setCurrentUser(await userRes.json());
@@ -75,7 +73,7 @@ export default function FollowedCommunities() {
                 const token = localStorage.getItem("access");
                 if (!token) return;
 
-                const res = await fetch("http://localhost:8000/api/auth/me/", {
+                const res = await fetch(`${API}/api/auth/me/`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

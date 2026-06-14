@@ -1,27 +1,15 @@
-html {
-    height: auto;
-    min-height: auto;
-    display: flow-root;
-}
 
-body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    background: transparent;
-    background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
-    background-attachment: fixed;
-    background-size: cover;
-}
+
 
 .darkContainer {
-    min-height: 100%;
     box-sizing: border-box;
     font-family: "Aktiv Grotesk", sans-serif;
     display: flex;
     flex-direction: column;
     position: relative;
-    overflow: visible;
+    overflow: hidden;
+    min-height: 100vh;
+  
 }
 
 .page {
@@ -578,4 +566,162 @@ body {
     height: 14px;
     filter: brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(500%) hue-rotate(300deg);
     flex-shrink: 0;
+}
+/* ════════════════════════════════════════
+   LIGHT MODE — FRIENDS PAGE
+   ════════════════════════════════════════ */
+
+[data-theme="light"] .darkContainer {
+    background: linear-gradient(135deg, #f5f5f5, #ffffff);
+}
+
+[data-theme="light"] .innerContainer {
+    background-color: #ffffff;
+}
+
+[data-theme="light"] .postContainer {
+    background: linear-gradient(-90deg, #A0279C, #6923A2);
+}
+
+[data-theme="light"] .title {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .rightCard {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(102, 45, 145, 0.1);
+    backdrop-filter: none; 
+}
+
+[data-theme="light"] .pill {
+    background-color: #662D91;
+    border-color: #662D91;
+    color: #ffffff;
+}
+
+[data-theme="light"] .friendName {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .friendMajor {
+    color: #888888;
+}
+
+[data-theme="light"] .divider {
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+}
+
+[data-theme="light"] .actionBtn {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .actionBtn:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .messageIcon {
+    filter: brightness(0) saturate(100%) invert(28%) sepia(50%)
+        saturate(800%) hue-rotate(255deg) brightness(90%) contrast(90%);
+}
+
+[data-theme="light"] .searchContactWrap {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .searchInput {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .searchInput::placeholder {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .viewAllBtn {
+    background-color: #f3e8ff;
+    color: #662D91;
+}
+
+[data-theme="light"] .viewAllBtn:hover {
+    background-color: #e9d5ff;
+}
+
+[data-theme="light"] .emptyTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .emptySubtitle {
+    color: #888888;
+}
+
+[data-theme="light"] .noDataText {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .popupContent {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .popupHeader {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .popupHeader h3 {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .closePopupBtn {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .closePopupBtn:hover {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .portalMenu {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .portalMenuItem {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="light"] .portalMenuItem:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .portalMenuItemDanger {
+    color: #d63b6e;
+}
+
+[data-theme="light"] .portalMenuItemDanger:hover {
+    background: rgba(214, 59, 110, 0.08);
+}
+
+[data-theme="light"] .portalMenuDividerLine {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .portalMenuIcon {
+    filter: brightness(0) saturate(100%) invert(28%) sepia(44%)
+        saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .portalMenuIconDanger {
+    filter: brightness(0) saturate(100%) invert(30%) sepia(80%)
+        saturate(600%) hue-rotate(300deg) brightness(90%);
+}
+
+[data-theme="light"] .statusDot.online {
+    border-color: #ffffff;
+}
+
+[data-theme="light"] .statusDot.offline {
+    border-color: #ffffff;
+    background-color: #c0c0c0;
 }

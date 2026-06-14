@@ -311,3 +311,91 @@ body {
     width: 100%;
     margin-top: auto;
 }
+/* ════════════════════════════════════════
+   LIGHT MODE — SUBSCRIPTIONS
+   ════════════════════════════════════════ */
+[data-theme="light"] .darkContainer {
+    background: linear-gradient(135deg, #f5f5f5, #ffffff);
+}
+
+[data-theme="light"] .basicCard {
+    background-color: #ffffff;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .premiumCard {
+    background-color: #ffffff;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .basicTitle {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .premiumTitleCard {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .premiumTitle {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .subscriptionText {
+    color: #666666;
+}
+
+[data-theme="light"] .featuresList {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .featuresList li::marker {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .pinkList {
+    color: #C43BB8;
+}
+
+[data-theme="light"] .pinkList li::marker {
+    color: #C43BB8;
+}
+
+[data-theme="light"] .daysLeftText {
+    color: #333333;
+}
+
+[data-theme="light"] .endingDateText {
+    color: #666666;
+}
+
+[data-theme="light"] .progressBarBackground {
+    background-color: #e0e0e0;
+}
+
+[data-theme="light"] .divider {
+    background-color: #e0e0e0;
+}
+
+[data-theme="light"] .perMonthText {
+    color: #666666;
+}
+
+[data-theme="light"] .cancelBtn {
+    background-color: #e0e0e0;
+    color: #333333;
+}
+
+[data-theme="light"] .cancelBtn:hover {
+    background-color: #d0d0d0;
+}
+
+[data-theme="light"] .oldPrice {
+    color: #888888;
+}
+
+[data-theme="light"] .activeSubscriptionOverlay {
+    background: rgba(200, 200, 200, 0.45);
+}
+[data-theme="light"] .progressBarFill {
+    background: linear-gradient(90deg, #8625A0 0%, #C43BB8 100%);
+}

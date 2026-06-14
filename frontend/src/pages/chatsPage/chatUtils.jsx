@@ -1,4 +1,6 @@
-export const API = "http://localhost:8000";
+import API from '../../config';
+
+export { API };
 
 export const normalizeMessages = (data) =>
     (Array.isArray(data) ? data : []).map(msg => ({
@@ -12,6 +14,7 @@ export const normalizeMessages = (data) =>
             : msg.time,
         date: msg.sent_at || msg.date,
         reply_to_details: msg.parent_message || msg.reply_to_details,
+        post: msg.shared_post || msg.post || null, 
     }));
 
 export const getSenderName = (sender) => {

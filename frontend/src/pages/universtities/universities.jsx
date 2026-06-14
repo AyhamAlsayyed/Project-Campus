@@ -15,11 +15,10 @@ import BinIcon from '../../Assets/icons/bin.png'
 import AddFriendIcon from '../../Assets/icons/add-friend.png';
 import RemovePersonIcon from '../../Assets/icons/remove-person.png';
 import MessagesIcon from '../../Assets/icons/messages.png';
-
+import API from '../../config';
+import useTheme from '../../hooks/useTheme'
 export default function Universities() {
-    const [theme, setTheme] = useState(
-        () => document.documentElement.getAttribute('data-theme') || 'dark'
-    );
+    const { theme, toggleTheme } = useTheme();
     const [user, setUser] = useState(null);
     const [userError, setUserError] = useState("");
     const [newsIndex, setNewsIndex] = useState(0);
@@ -41,7 +40,7 @@ export default function Universities() {
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteStatus, setInviteStatus] = useState(null);
     const [removingDoctorId, setRemovingDoctorId] = useState(null);
-    const API = "http://localhost:8000";
+  
     const [loading, setLoading] = useState(true);
     const dropdownRef = useRef(null);
 
@@ -213,7 +212,7 @@ export default function Universities() {
         document.documentElement.setAttribute("data-theme", theme);
     }, [theme]);
 
-    const toggleTheme = () => setTheme(prev => prev === "light" ? "dark" : "light")
+   
 
     return (
         <div className={styles.darkContainer}>

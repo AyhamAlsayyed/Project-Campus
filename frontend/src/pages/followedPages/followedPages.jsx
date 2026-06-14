@@ -14,10 +14,11 @@ import Info from '../../Assets/icons/info.png';
 import { useParams } from "react-router-dom";
 import Block from '../../Assets/icons/block.png';
 import ReportModal from '../../components/posts/ReportModal';
-
+import API from '../../config';
+import useTheme from '../../hooks/useTheme'
 export default function FollowedPages() {
     const navigate = useNavigate();
-    const [theme, setTheme] = useState('dark');
+    const { theme, toggleTheme } = useTheme();
     const [currentUser, setCurrentUser] = useState(null);
     const [selectedPostId, setSelectedPostId] = useState(null)
     const [showAllPopup, setShowAllPopup] = useState(false);
@@ -66,9 +67,6 @@ export default function FollowedPages() {
         }
     };
 
-    const toggleTheme = () => {
-        setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
-    }
 
     useEffect(() => {
         const handleGlobalClick = () => {
@@ -87,14 +85,14 @@ export default function FollowedPages() {
                 if (!token) return;
 
                 // 1. User
-                const userRes = await fetch("http://localhost:8000/api/auth/me/", {
+                const userRes = await fetch(`${API}/api/auth/me/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const userData = await userRes.json();
 
 
                 if (userData.role === 'university' || localStorage.getItem('user_type') === 'university') {
-                    const pageRes = await fetch("http://localhost:8000/api/pages/${userData.id}/", {
+                    const pageRes = await fetch(`${API}/api/pages/${userData.id}/`, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
                     if (pageRes.ok) {
@@ -106,10 +104,10 @@ export default function FollowedPages() {
                 setCurrentUser(userData);
                 // 2. Fetch followed pages + posts
                 const [pagesRes, postsRes] = await Promise.all([
-                    fetch("http://localhost:8000/api/pages/followed/", {
+                    fetch(`${API}/api/pages/followed/`, {
                         headers: { Authorization: `Bearer ${token}` },
                     }),
-                    fetch("http://localhost:8000/api/posts/feed/", {
+                    fetch(`${API}/api/posts/feed/`, {
                         headers: { Authorization: `Bearer ${token}` },
                     }),
                 ]);
@@ -166,7 +164,7 @@ export default function FollowedPages() {
                 const token = localStorage.getItem("access");
                 if (!token) return;
 
-                const res = await fetch("http://localhost:8000/api/pages/recommended/", {
+                const res = await fetch(`${API}/api/pages/recommended/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
@@ -177,7 +175,7 @@ export default function FollowedPages() {
                     ...p,
                     id: p.page_id,
                     avatar: p.profile_image
-                        ? (p.profile_image.startsWith("http") ? p.profile_image : `http://localhost:8000${p.profile_image}`)
+                        ? (p.profile_image.startsWith("http") ? p.profile_image : `${API}${p.profile_image}`)
                         : "/default-avatar.png",
                     name: p.page_full_name || p.page_name || "Unknown Page",
                     category: p.page_type || "Page"
@@ -199,7 +197,7 @@ export default function FollowedPages() {
                 const token = localStorage.getItem("access");
                 if (!token) return;
 
-                const res = await fetch("http://localhost:8000/api/auth/me/", {
+                const res = await fetch(`${API}/api/auth/me/`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -275,9 +273,7 @@ export default function FollowedPages() {
                                             src={VerifiedBadge}
                                             alt="Verified"
                                             className={styles.verifiedIcon}
-                                            style={{
-                                                filter: "invert(87%) sepia(5%) saturate(297%) hue-rotate(185deg) brightness(96%) contrast(85%)"
-                                            }}
+                                          
                                         />
                                     </div>
                                 </div>

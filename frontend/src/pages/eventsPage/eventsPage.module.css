@@ -301,7 +301,7 @@
 
 .rightSection {
   position: sticky;
-  flex: 0 0 420px;
+  flex: 0 0 400px;
   top: 100px;
   margin: 5% 1% 0 0;
   gap: 70px;

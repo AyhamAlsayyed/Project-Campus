@@ -38,7 +38,7 @@ body {
     margin: 0 auto;
     --left-col: 300px;
     --right-col: 380px;
-    --col-gap: 40px;
+    --col-gap: 65px;
 }
 
 .header {
@@ -875,4 +875,191 @@ body {
 .radioLabel {
     color: #E6E6E6;
     font-weight: 500;
+}
+/* ════════════════════════════════════════
+   LIGHT MODE — SETTINGS
+   ════════════════════════════════════════ */
+[data-theme="light"] .darkContainer {
+    background: linear-gradient(135deg, #f5f5f5, #ffffff);
+}
+[data-theme="light"] .innerContainer {
+    background-color: #ffffff;
+}
+
+[data-theme="light"] .settingsMainContainer {
+    background: linear-gradient(-90deg, #A0279C, #6923A2);
+}
+
+[data-theme="light"] .sectionHeading {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .settingLabel {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .settingLabelMaster {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .settingDescription {
+    color: #555555;
+}
+
+[data-theme="light"] .settingActionBtn {
+    background: rgba(0, 0, 0, 0.08);
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .settingActionBtn:hover {
+    background: rgba(0, 0, 0, 0.14);
+}
+
+[data-theme="light"] .toggleText {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .subGridHeader {
+    color: #333333;
+}
+
+[data-theme="light"] .toggleRowMaster {
+    border-bottom-color: #e0e0e0;
+}
+
+[data-theme="light"] .segmentedSelector {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .segmentedOptionActive {
+    background: #e9d5ff;
+    color: #662D91;
+}
+
+[data-theme="light"] .segmentedOption {
+    color: #555555;
+}
+
+[data-theme="light"] .customDropdownValueBox {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .customDropdownMenu {
+    background: #ffffff;
+    border-color: #d0d0d0;
+}
+
+[data-theme="light"] .customDropdownOption {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .customDropdownOption:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .customDropdownDivider {
+    background: #e0e0e0;
+}
+
+[data-theme="light"] .customDropdownArrow {
+    background-color: #555555;
+}
+
+[data-theme="light"] .settingsNavContainer {
+    background-color: #ffffff;
+    border: 1px solid rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .settingsNavTitle {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .centeredDivider {
+    background-color: #e0e0e0;
+}
+
+[data-theme="light"] .navTextActive {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .navTextDefault {
+    color: #888888;
+}
+
+[data-theme="light"] .contextualNote,
+[data-theme="light"] .fieldNote {
+    color: #666666;
+}
+
+[data-theme="light"] .verificationRequirementBox {
+    background: rgba(134, 37, 160, 0.06);
+}
+
+[data-theme="light"] .faqAccordion {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .faqAccordion summary {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .faqAccordion p {
+    color: #555555;
+}
+
+[data-theme="light"] .supportTextArea {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .modalContent {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .modalContent h3 {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .modalLabel {
+    color: #333333;
+}
+
+[data-theme="light"] .modalInput {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .blockedListContainer {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .blockedUserRow {
+    border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .radioOption:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .radioLabel {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .aboutPlatformBox {
+    border-top-color: #e0e0e0;
+    color: #555555;
+}
+
+[data-theme="light"] .formSuccessState {
+    color: #1a1a1a;
+}
+[data-theme="light"] .customDropdownArrow {
+    background-color: #662D91;
 }

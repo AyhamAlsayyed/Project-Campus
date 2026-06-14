@@ -11,11 +11,12 @@ import imageTwo from '../../Assets/Pictures/login-2.png';
 import imageThree from '../../Assets/Pictures/login-3.png';
 import imageFour from '../../Assets/Pictures/login-4.png';
 import Stars from '../../Assets/icons/stars.png';
-
+import API from  '../../config'
+import useTheme from '../../hooks/useTheme';
 export default function Login() {
     const navigate = useNavigate();
     const [language, setLanguage] = useState('en');
-    const [theme, setTheme] = useState('dark');
+    const { theme, toggleTheme } = useTheme();
     
     const t = (TEXT[language] || TEXT.en).auth.Login;
     const [username, setUsername] = useState('');
@@ -24,15 +25,13 @@ export default function Login() {
     const [showExpiredPopup, setShowExpiredPopup] = useState(false);
     const [subscribing, setSubscribing] = useState(false);
 
-    const toggleTheme = () => {
-        setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'));
-    };
+  
 
     const handleSubscribe = async (plan) => {
         try {
             setSubscribing(true);
             const token = localStorage.getItem("access");
-            const res = await fetch('http://localhost:8000/api/subscriptions/subscribe/', {
+            const res = await fetch(`${API}/api/subscriptions/subscribe/`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -61,7 +60,7 @@ export default function Login() {
     const handlesubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('http://localhost:8000/api/auth/login/', {
+            const response = await fetch(`${API}/api/auth/login/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -84,7 +83,7 @@ export default function Login() {
                 setError("No tokens returned from server");
                 return;
             }
-            const subRes = await fetch('http://localhost:8000/api/subscriptions/current/', {
+            const subRes = await fetch(`${API}/api/subscriptions/current/`, {
                 headers: { Authorization: `Bearer ${data.access}` }
             });
 

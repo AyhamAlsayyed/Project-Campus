@@ -22,9 +22,10 @@ import ArrowLeftIcon from '../../Assets/icons/arrow-left.png';
 import CreateCommunityIcon from '../../Assets/icons/create-group.png';
 import CreateCommunityForm from '../../components/createCommunity/CreateCommunity';
 import CommunityPermissions from '../../components/createCommunity/CommunityPermissions';
-
+import API from '../../config';
+import useTheme from '../../hooks/useTheme';
 export default function Community() {
-    const [theme, setTheme] = useState('dark');
+    const { theme, toggleTheme } = useTheme();
     const [loading, setLoading] = useState(true)
     const [user, setUser] = useState(null)
     const [communities, setCommunities] = useState([]);
@@ -77,8 +78,6 @@ export default function Community() {
             setPrevTab(activeTab);
         }
     }, [activeTab]);
-
-    const API = "http://localhost:8000";
     const token = localStorage.getItem("access");
     useEffect(() => {
         const fetchOwned = async () => {
@@ -226,7 +225,7 @@ export default function Community() {
 
     useEffect(() => { loadUser(); }, []);
 
-    const toggleTheme = () => setTheme(p => p === 'light' ? 'dark' : 'light');
+
 
     const avatarSrc = user?.avatar
         ? user.avatar.startsWith("http") ? user.avatar : `${API}${user.avatar}`
@@ -461,7 +460,7 @@ export default function Community() {
                                                         padding: "8px", cursor: "pointer", transition: "background 0.2s"
                                                     }}
                                                 >
-                                                   <img src={CreateCommunityIcon} alt="" className={styles.createCommunityIcon} />
+                                                    <img src={CreateCommunityIcon} alt="" className={styles.createCommunityIcon} />
                                                 </div>
                                             )}
                                         </div>
@@ -690,7 +689,7 @@ export default function Community() {
                                             Request one and we'll review it.
                                         </p>
                                         {requestSent ? (
-                                            <span style={{ color: "white", fontSize: "0.85rem", fontWeight: 500, letterSpacing: 1 }}>
+                                            <span className={styles.waitingText}>
                                                 Waiting...
                                             </span>
                                         ) : (

@@ -7,12 +7,12 @@ import { useChats } from '../../components/chat/Usechats';
 import ChatListPanel from '../../components/chat/ChatlistPanel';
 import ChatRequestsPanel from '../../components/chat/Chatrequestspanel';
 import AcademicGroupsPanel from '../../components/chat/Academicgroupspanel';
-
+import useTheme from '../../hooks/useTheme';
 // Downloaded only when the user first opens a chat
 const ActiveChat = lazy(() => import('./ActiveChats'));
  
 export default function ChatsPage() {
-    const [theme, setTheme] = useState('dark');
+    const { theme, toggleTheme } = useTheme();
     const ctx = useChats();
  
     const showActiveChat = !ctx.showCreateGroup && !!ctx.selectedChat;
@@ -20,7 +20,7 @@ export default function ChatsPage() {
     return (
         <div className={styles.darkContainer}>
             <div className={`${styles.header} ${styles.page}`}>
-                <Header theme={theme} setTheme={setTheme} user={ctx.user} />
+               <Header theme={theme} toggleTheme={toggleTheme} user={ctx.user} />
             </div>
  
             <div className={`${styles.content} ${styles.page}`}>

@@ -40,7 +40,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "cn1lr481-8000.uks1.devtunnels.ms",
-    "mv8f3wcb-8000.euw.devtunnels.ms",
+    'mv8f3wcb-8000.euw.devtunnels.ms',
     
 
 ]
@@ -70,7 +70,7 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://cn1lr481-3000.uks1.devtunnels.ms",
-    "https://mv8f3wcb-3000.euw.devtunnels.ms",
+    'https://mv8f3wcb-3000.euw.devtunnels.ms',
   
 ]
 

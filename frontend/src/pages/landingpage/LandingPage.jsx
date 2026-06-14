@@ -4,11 +4,11 @@ import LanguageDropDown from '../../components/pagelayout/languageDrop';
 import { TEXT } from '../../i18n';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import useTheme from '../../hooks/useTheme';
 
 export default function LandingPage() {
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [theme, setTheme] = useState('dark');
+   
     const [language, setLanguage] = useState('en');
     const t = (TEXT[language] || TEXT.en).landing;
     const slides = t.slides || [];
@@ -17,9 +17,8 @@ export default function LandingPage() {
     useEffect(() => {
         document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
     }, [language]);
-    const toggleTheme = () => {
-        setTheme((prevTheme) => (prevTheme == 'dark' ? 'light' : 'dark'));
-    }
+    const { theme, toggleTheme } = useTheme();
+    
 
     useEffect(() => {
         const interval = setInterval(() => {

@@ -33,7 +33,7 @@ import { useCreateEvent } from '../../components/createEvent/useCreateEvent';
 import CreateEventForm from '../../components/createEvent/CreateEventForm';
 import CreateEventRightSidebar from '../../components/createEvent/CreateEventRightSidebar';
 import ReportModal from '../../components/posts/ReportModal';
-
+import API from '../../config';
 import { AlertCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
@@ -41,7 +41,7 @@ import {
     X, Check, MoreHorizontal, Ban,
 } from 'lucide-react';
 
-const API = 'http://localhost:8000';
+import useTheme from '../../hooks/useTheme';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -172,12 +172,8 @@ function MonthPicker({ date, setDate, onClose }) {
 // ─── main component ──────────────────────────────────────────────────────────
 
 export default function ProfilePage({ type }) {
-    const [theme, setTheme] = useState(
-        () => document.documentElement.getAttribute('data-theme') || 'dark'
-    );
-    useEffect(() => {
-        document.documentElement.setAttribute("data-theme", theme);
-    }, [theme]);
+    const { theme, toggleTheme } = useTheme();
+
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
     const [user, setUser] = useState(null);
     const [friendStatus, setFriendStatus] = useState('none');
@@ -372,7 +368,7 @@ export default function ProfilePage({ type }) {
             currentUser.page_id === Number(userId);
 
         if (isOwn && user?.type === 'page') { loadOwnPageEvents(); return; }
-        if (isOwn) return;
+        if (isOwn) loadReminders();
         if (user.role === 'instructor') loadCommunityPicks();
         if (user.type !== 'page') loadFriends(userId);
     }, [user, currentUser, userId]);
@@ -752,9 +748,10 @@ export default function ProfilePage({ type }) {
         });
     };
 
-    const toggleTheme = () => setTheme(p => p === 'light' ? 'dark' : 'light');
+    
 
     // ─── render helpers ──────────────────────────────────────────────────────
+    
 
     const renderManageEventsList = () => {
         const now = new Date();
@@ -1114,7 +1111,7 @@ export default function ProfilePage({ type }) {
                                                                 className={styles.activitiesDropdownItem}
                                                                 className={`${styles.activitiesDropdownItem} ${activitiesFilter === key ? styles.activitiesItemActive : ''}`}
                                                             >
-                                                               <img src={icon} alt={label} className={activitiesFilter === key ? styles.activityIconActive : styles.activityIcon} style={{ width: 18, height: 18 }} />
+                                                                <img src={icon} alt={label} className={activitiesFilter === key ? styles.activityIconActive : styles.activityIcon} style={{ width: 18, height: 18 }} />
                                                                 {label}
                                                             </button>
                                                         ))}
