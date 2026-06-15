@@ -40,6 +40,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = [
             "full_name",
             "academic_email",
+            "recovery_email",
             "bio",
             "status",
             "primary_phone",
@@ -985,7 +986,9 @@ class CommunitySerializer(serializers.ModelSerializer):
         if not obj.banner_image:
             return None
         try:
-            return request.build_absolute_uri(obj.banner_image.url)
+            if request is not None:
+                return request.build_absolute_uri(obj.banner_image.url)
+            return obj.banner_image.url
         except Exception:
             return None
 
@@ -1126,7 +1129,6 @@ class EventSerializer(serializers.ModelSerializer):
     organization_name = serializers.CharField(source="page.page_full_name")
     page_type = serializers.CharField(source="page.page_type")
     avatar = serializers.SerializerMethodField()
-    banner = serializers.SerializerMethodField()
 
     is_muted = serializers.SerializerMethodField()
     is_followed = serializers.BooleanField(read_only=True)
@@ -1140,7 +1142,6 @@ class EventSerializer(serializers.ModelSerializer):
             "organization_name",
             "page_type",
             "avatar",
-            "banner",
             "is_muted",
             "is_followed",
             "is_reminded",
@@ -1156,15 +1157,6 @@ class EventSerializer(serializers.ModelSerializer):
         if obj.page and obj.page.profile_image:
             try:
                 return request.build_absolute_uri(obj.page.profile_image.url)
-            except Exception:
-                return None
-        return None
-
-    def get_banner(self, obj):
-        request = self.context.get("request")
-        if obj.page and obj.page.banner_image:
-            try:
-                return request.build_absolute_uri(obj.page.banner_image.url)
             except Exception:
                 return None
         return None
@@ -1259,11 +1251,38 @@ class NotificationSerializer(serializers.ModelSerializer):
             except Comment.DoesNotExist:
                 return None
 
+        if model_class.__name__ == "Reply" or (hasattr(model_class, "__name__") and model_class.__name__ == "Reply"):
+            try:
+                reply = model_class.objects.select_related("comment", "comment__post").get(pk=obj.object_id)
+                target_post = reply.comment.post
+                return {
+                    "post_id": target_post.post_id,
+                    "comment_id": reply.comment.comment_id,
+                    "reply_id": reply.pk,
+                    "post": PostSerializer(target_post, context=self.context).data,
+                }
+            except Exception:
+                return None
+
         if model_class == Community:
-            return obj.object_id
+            try:
+                community = Community.objects.get(pk=obj.object_id)
+                return {
+                    "community_id": community.pk,
+                    "community": CommunitySerializer(community, context=self.context).data,
+                }
+            except Community.DoesNotExist:
+                return None
 
         if model_class == Event:
-            return obj.object_id
+            try:
+                event = Event.objects.get(pk=obj.object_id)
+                return {
+                    "event_id": event.pk,
+                    "event": EventSerializer(event, context=self.context).data,
+                }
+            except Event.DoesNotExist:
+                return None
 
         if model_class == Friendship or obj.type in ["friend_request", "follow"]:
             if obj.actor:
@@ -1342,21 +1361,44 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class PromotionSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source="promotion_id", read_only=True)
-    promoted_by_username = serializers.CharField(source="promoted_by.username", read_only=True)
-    content_type_name = serializers.CharField(source="content_type_obj.model", read_only=True)
+    target_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Promotion
         fields = [
-            "id",
+            "promotion_id",
             "object_id",
-            "content_type_name",
-            "promoted_by_username",
             "start_date",
             "end_date",
             "status",
             "duration",
             "duration_idx",
             "cost",
+            "target_details",
         ]
+        read_only_fields = ["promotion_id", "start_date"]
+
+    def get_target_details(self, obj):
+        """
+        Polymorphic lookup using the GenericForeignKey to serialize
+        the related object details.
+        """
+        target_instance = obj.promoted_content
+        if not target_instance or not obj.content_type_obj:
+            return None
+
+        model_name = obj.content_type_obj.model
+
+        try:
+            if model_name == "post":
+                return PostSerializer(target_instance, context=self.context).data
+
+            elif model_name == "community":
+                return CommunitySerializer(target_instance, context=self.context).data
+
+            elif model_name == "event":
+                return EventSerializer(target_instance, context=self.context).data
+        except NameError:
+            return {"id": target_instance.pk, "display_name": str(target_instance)}
+
+        return None

@@ -69,7 +69,9 @@ def create_generic_promotion(request, model_class):
     cost_input = request.data.get("cost", 0)
     duration_idx_input = request.data.get("duration_idx", 2)
 
-    serializer = PromotionSerializer(data={"object_id": target_object_id, "end_date": computed_end_date})
+    serializer = PromotionSerializer(
+        data={"object_id": target_object_id, "end_date": computed_end_date}, context={"request": request}
+    )
 
     if serializer.is_valid():
         serializer.save(
@@ -140,13 +142,16 @@ def get_page_post_promotions(request):
 @permission_classes([IsAuthenticated])
 def get_page_community_promotions(request):
     """Handles Fetching and Creating promotions for Communities."""
-    print(request.data)
+
     if request.method == "POST":
         return create_generic_promotion(request, Community)
 
     page_user, community_type = get_page_user_and_content_type(request.user, Community)
     promotions = Promotion.objects.filter(promoted_by=page_user, content_type_obj=community_type)
-    return Response(PromotionSerializer(promotions, many=True).data, status=status.HTTP_200_OK)
+
+    return Response(
+        PromotionSerializer(promotions, many=True, context={"request": request}).data, status=status.HTTP_200_OK
+    )
 
 
 @api_view(["GET", "POST"])
