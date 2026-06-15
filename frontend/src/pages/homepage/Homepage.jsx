@@ -22,6 +22,7 @@ import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import Calender from '../../Assets/icons/calender.png'
 import API from '../../config';
 import useTheme from '../../hooks/useTheme';
+
 export default function Homepage() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -50,15 +51,26 @@ export default function Homepage() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const mobileMenuRef = useRef(null)
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024)
+    
+    // Announcement States
     const [isAnnouncement, setIsAnnouncement] = useState(false);
     const [announcementTitle, setAnnouncementTitle] = useState('');
     const [announcementDesc, setAnnouncementDesc] = useState('');
     const [announcementDuration, setAnnouncementDuration] = useState(0);
     const [annImageError, setAnnImageError] = useState(false);
+
+    // Promote States
+    const [isPromote, setIsPromote] = useState(false);
+    const [promoteTitle, setPromoteTitle] = useState('');
+    const [promoteContent, setPromoteContent] = useState('');
+    const [promoteDesc, setPromoteDesc] = useState('');
+    const [promoteDuration, setPromoteDuration] = useState(0);
+
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const sentinelRef = useRef(null);
+
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 1024)
         window.addEventListener("resize", check)
@@ -68,13 +80,25 @@ export default function Homepage() {
     const resetPostState = () => {
         setContent(""); setImages([]); setFiles([]); setPollOptions(["", ""]); setIsPollOpen(false);
         setIsAnnouncement(false); setAnnouncementTitle(''); setAnnouncementDesc(''); setAnnouncementDuration(0);
+        setIsPromote(false); setPromoteTitle(''); setPromoteContent(''); setPromoteDesc(''); setPromoteDuration(0);
         setAnnImageError(false);
     };
 
-   
+    const handleAnnouncementToggle = () => {
+        setIsAnnouncement(prev => {
+            if (!prev) setIsPromote(false);
+            return !prev;
+        });
+    };
+
+    const handlePromoteToggle = () => {
+        setIsPromote(prev => {
+            if (!prev) setIsAnnouncement(false);
+            return !prev;
+        });
+    };
+
     const token = localStorage.getItem("access")
-
-
 
     const loadUser = async () => {
         if (!token) { setUserLoading(false); setUserError("No token found"); return }
@@ -103,7 +127,6 @@ export default function Homepage() {
     const closeComments = () => { setSelectedPost(null); };
 
     useEffect(() => {
-
         if (!location.state?.openPost) return;
 
         const openPost = location.state.openPost;
@@ -132,13 +155,12 @@ export default function Homepage() {
         };
 
         if (user) {
-            // User already loaded (navigating from another page while logged in)
             handleOpenPost(openPost);
         } else {
-            // User not yet loaded, store for when it arrives
             pendingStateRef.current = openPost;
         }
     }, [location.state, user]);
+
     useEffect(() => {
         if (!user || !pendingStateRef.current) return;
         const data = pendingStateRef.current;
@@ -177,11 +199,12 @@ export default function Homepage() {
             if (!res.ok) { setError(data?.message || "Failed to load posts"); return; }
             const incoming = Array.isArray(data) ? data : (data.results || []);
             setPosts(prev => currentOffset === 0 ? incoming : [...prev, ...incoming]);
-            setHasMore(incoming.length === 20); // if less than 20 returned, no more pages
+            setHasMore(incoming.length === 20);
             setOffset(currentOffset + incoming.length);
         } catch { setError("Something went wrong"); }
         finally { setLoading(false); setLoadingMore(false); }
     };
+
     useEffect(() => {
         if (!sentinelRef.current) return;
         const observer = new IntersectionObserver(
@@ -219,17 +242,20 @@ export default function Homepage() {
     const handleCreatePost = async () => {
         if (isAnnouncement && localStorage.getItem("user_type") === "university") {
             if (!announcementTitle.trim() || !announcementDesc.trim() || images.length === 0) return;
+        } else if (isPromote && (localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page")) {
+            if (!promoteTitle.trim() || !promoteContent.trim() || !promoteDesc.trim() || images.length === 0) return;
         } else {
             if (!content.trim() && !images.length && !files.length && !isPollOpen) return;
         }
 
-        const postContent = isAnnouncement ? announcementDesc : content;
+        const postContent = isPromote ? promoteContent : (isAnnouncement ? announcementDesc : content);
 
         const optimisticPost = {
             id: `temp-${Date.now()}`,
             content_text: postContent,
             created_at: new Date().toISOString(),
             is_announcement: isAnnouncement && localStorage.getItem("user_type") === "university",
+            is_promote: isPromote && (localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page"),
             is_academic: isAnnouncement && user?.role === "instructor",
             author: {
                 id: user?.id,
@@ -254,15 +280,21 @@ export default function Homepage() {
         try {
             const formData = new FormData();
             formData.append("content", postContent);
+            
             if (isAnnouncement) {
                 formData.append("title", announcementTitle);
                 formData.append("post_type", "announcement");
                 formData.append("duration", ["1 week", "1 month", "3 months", "6 months", "1 year"][announcementDuration]);
+            } else if (isPromote) {
+                formData.append("title", promoteTitle);
+                formData.append("description", promoteDesc);
+                formData.append("post_type", "promote");
+                formData.append("duration", ["1 week", "1 month", "3 months", "6 months", "1 year"][promoteDuration]);
             }
+
             if (isAnnouncement && user?.role === "instructor") {
                 formData.append("is_academic", "true");
             }
-
 
             images.forEach(img => formData.append("images", img));
             files.forEach(file => formData.append("files", file));
@@ -303,6 +335,7 @@ export default function Homepage() {
         document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [mobileMenuOpen]);
+
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const openPostId = params.get('openPost');
@@ -312,12 +345,12 @@ export default function Homepage() {
         setPendingOpen({ postId: Number(openPostId), commentId: highlightCommentId ? Number(highlightCommentId) : null });
         navigate('/home', { replace: true });
     }, [location.search]);
+
     useEffect(() => {
         if (!pendingOpen || !user) return;
 
         const fetchPostContent = async () => {
             try {
-
                 const res = await fetch(`${API}/api/posts/${pendingOpen.postId}/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -346,7 +379,6 @@ export default function Homepage() {
                 }
             } catch (err) {
                 console.error(err);
-
                 setSelectedPost({ id: pendingOpen.postId, highlightCommentId: pendingOpen.commentId });
             }
             setPendingOpen(null);
@@ -355,15 +387,13 @@ export default function Homepage() {
         fetchPostContent();
     }, [pendingOpen, user]);
 
-
     useEffect(() => {
-
         loadPosts();
         loadUser();
         fetchJoined()
         fetchWeather();
-
     }, [])
+
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
     }, [theme]);
@@ -375,7 +405,6 @@ export default function Homepage() {
 
     return (
         <div className={styles.darkContainer} data-theme={theme}>
-
             {/* ══════════════════════════════════════
                     MOBILE HEADER BAR
                 ══════════════════════════════════════ */}
@@ -394,7 +423,6 @@ export default function Homepage() {
                 ══════════════════════════════════════ */}
             {isMobile && mobileMenuOpen && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 9998 }}>
-
                     <div
                         style={{
                             position: "absolute", inset: 0,
@@ -402,7 +430,6 @@ export default function Homepage() {
                         }}
                         onClick={() => setMobileMenuOpen(false)}
                     />
-                    {/* Panel */}
                     <div
                         ref={mobileMenuRef}
                         style={{
@@ -415,7 +442,6 @@ export default function Homepage() {
                         }}
                         onClick={e => e.stopPropagation()}
                     >
-                        {/* X */}
                         <button
                             style={{
                                 position: "absolute", top: 14, right: 14, zIndex: 10,
@@ -429,7 +455,6 @@ export default function Homepage() {
                             <X size={16} color="white" />
                         </button>
 
-
                         <div style={{
                             display: "flex", alignItems: "center", gap: 10,
                             padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)"
@@ -439,8 +464,6 @@ export default function Homepage() {
                                 CAMPUS
                             </span>
                         </div>
-
-                        {/* SideBarNav fills the rest */}
                         <div style={{ flex: 1, overflowY: "auto" }}>
                             <SideBarNav onClose={() => setMobileMenuOpen(false)} />
                         </div>
@@ -459,12 +482,10 @@ export default function Homepage() {
                         user={user}
                         onOpenPost={(postId, commentId, post) => {
                             if (location.pathname !== '/home') {
-                                // Navigate with post data in state
                                 navigate('/home', {
                                     state: { openPost: { post, postId, commentId } }
                                 });
                             } else {
-                                // Already on home, open directly
                                 if (post) {
                                     setSelectedPost({
                                         ...post,
@@ -487,17 +508,13 @@ export default function Homepage() {
             )}
 
             {/* ══════════════════════════════════════
-                    MOBILE BODY: WeeklyNews → CreatePost → Feed
+                    MOBILE BODY
                 ══════════════════════════════════════ */}
             {isMobile && (
                 <div style={{ display: "flex", flexDirection: "column", width: "100%", boxSizing: "border-box" }}>
-
-                    {/* Weekly News */}
                     <div style={{ padding: "12px 10px 0 10px" }}>
                         <WeeklyNews />
                     </div>
-
-                    {/* Create post — community style */}
                     <div style={{ padding: "12px 10px 0 10px" }}>
                         <MobileCreatePost
                             avatarSrc={avatarSrc}
@@ -507,8 +524,6 @@ export default function Homepage() {
                             setIsPollOpen={setIsPollOpen}
                         />
                     </div>
-
-                    {/* Posts feed */}
                     <div
                         className={styles.postContainer}
                         style={{
@@ -517,10 +532,7 @@ export default function Homepage() {
                             borderRadius: "20px 20px 0 0"
                         }}
                     >
-                        <div
-                            className={styles.innerContainer}
-                            style={{ borderRadius: "20px 20px 0 0", width: "100%", boxSizing: "border-box" }}
-                        >
+                        <div className={styles.innerContainer} style={{ borderRadius: "20px 20px 0 0", width: "100%", boxSizing: "border-box" }}>
                             {error ? (
                                 <div className={styles.errorBox}><p>{error}</p></div>
                             ) : loading ? (
@@ -538,7 +550,6 @@ export default function Homepage() {
                                             Loading more posts...
                                         </p>
                                     )}
-
                                 </div>
                             )}
                         </div>
@@ -547,7 +558,7 @@ export default function Homepage() {
             )}
 
             {/* ══════════════════════════════════════
-                    DESKTOP BODY: 3-column layout
+                    DESKTOP BODY
                 ══════════════════════════════════════ */}
             {!isMobile && (
                 <div className={`${styles.content} ${styles.page}`}>
@@ -572,7 +583,6 @@ export default function Homepage() {
                                             Loading more posts...
                                         </p>
                                     )}
-
                                 </div>
                             )}
                         </div>
@@ -614,7 +624,7 @@ export default function Homepage() {
                             <button className={styles.closeButton} onClick={() => { setIsModalOpen(false); resetPostState(); setModalCommunityDropdownOpen(false); }}>✕</button>
                         </div>
 
-                        {/* Name row + announcement toggle on the right */}
+                        {/* Name row + toggles on the right */}
                         <div className={styles.leftSide}>
                             <img
                                 src={avatarSrc}
@@ -623,10 +633,12 @@ export default function Homepage() {
                                 onError={e => { e.currentTarget.src = ProfilePicture; }}
                             />
                             <strong>{user?.full_name || user?.page_full_name || user?.username}</strong>
+                            
                             {(localStorage.getItem("user_type") === "university" ||
                                 localStorage.getItem("user_type") === "page" ||
                                 user?.role === "instructor") && (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginLeft: 'auto' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
                                         <span style={{ color: '#ADADAD', fontSize: '0.85rem' }}>
                                             {user?.role === "instructor" ? "Academic?" : "Announcement?"}
                                         </span>
@@ -634,19 +646,33 @@ export default function Homepage() {
                                             <input
                                                 type="checkbox"
                                                 checked={isAnnouncement}
-                                                onChange={() => setIsAnnouncement(p => !p)}
+                                                onChange={handleAnnouncementToggle}
                                             />
                                             <span className={styles.switchSlider}></span>
                                         </label>
                                     </div>
-                                )}
+                                    {(localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page") && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                                            <span style={{ color: '#ADADAD', fontSize: '0.85rem' }}>
+                                                Promote?
+                                            </span>
+                                            <label className={styles.switch}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isPromote}
+                                                    onChange={handlePromoteToggle}
+                                                />
+                                                <span className={styles.switchSlider}></span>
+                                            </label>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
+                        {/* ANNOUNCEMENT FIELDS */}
                         {isAnnouncement && localStorage.getItem("user_type") === "university" ? (
                             <div className={styles.announcementFields}>
-
-
-
                                 <input
                                     type="text"
                                     placeholder="Announcement title..."
@@ -688,7 +714,60 @@ export default function Homepage() {
                                     </div>
                                 </div>
                             </div>
+                        ) : isPromote && (localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page") ? (
+                            /* PROMOTE FIELDS */
+                            <div className={styles.announcementFields}>
+                                <input
+                                    type="text"
+                                    placeholder="Promote title..."
+                                    value={promoteTitle}
+                                    onChange={e => setPromoteTitle(e.target.value)}
+                                    className={styles.announcementTitleInput}
+                                />
+                                <textarea
+                                    placeholder="Promote content..."
+                                    value={promoteContent}
+                                    onChange={e => setPromoteContent(e.target.value)}
+                                    className={styles.announcementDescInput}
+                                    style={{ minHeight: '60px' }}
+                                />
+                                <textarea
+                                    placeholder="Promote description..."
+                                    value={promoteDesc}
+                                    onChange={e => setPromoteDesc(e.target.value)}
+                                    className={styles.announcementDescInput}
+                                    style={{ minHeight: '60px' }}
+                                />
+                                <div className={styles.announcementFieldDivider} />
+                                <div className={styles.annDurationRow}>
+                                    <span className={styles.annDurationLabel}>
+                                        <img src={Calender} alt="" style={{ width: 16, height: 16, filter: 'brightness(0) saturate(100%) invert(31%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)', flexShrink: 0 }} />
+                                        Duration
+                                    </span>
+                                    <div className={styles.annSliderWrapper}>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="4"
+                                            value={promoteDuration}
+                                            onChange={e => setPromoteDuration(Number(e.target.value))}
+                                            className={styles.annRangeInput}
+                                        />
+                                        <div className={styles.annTrackBase} />
+                                        <div className={styles.annTrackFill} style={{ width: `${(promoteDuration / 4) * 100}%` }} />
+                                        <div className={styles.annNodesRow}>
+                                            {["1 week", "1 month", "3 months", "6 months", "1 year"].map((label, i) => (
+                                                <div key={i} className={styles.annNode} onClick={() => setPromoteDuration(i)}>
+                                                    <div className={`${styles.annNodeDot} ${i === promoteDuration ? styles.annNodeDotActive : i < promoteDuration ? styles.annNodeDotPassed : ''}`} />
+                                                    <span className={`${styles.annNodeLabel} ${i === promoteDuration ? styles.annNodeLabelActive : ''}`}>{label}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         ) : (
+                            /* STANDARD FIELDS */
                             <textarea
                                 value={content}
                                 onChange={e => setContent(e.target.value)}
@@ -820,19 +899,19 @@ export default function Homepage() {
                                 <button type="button" onClick={() => setPollOptions([...pollOptions, ""])} className={styles.addOption}>+ Add Option</button>
                             </div>
                         )}
+
                         {annImageError && (
                             <div className={styles.annImageWarning}>
                                 <span className={styles.annImageWarningIcon}>📸</span>
                                 <div>
                                     <p className={styles.annImageWarningTitle}>Image required</p>
-                                    <p className={styles.annImageWarningDesc}>Announcements need a cover image to stand out in the feed.</p>
+                                    <p className={styles.annImageWarningDesc}>
+                                        {isPromote ? "Promotions need a cover image to stand out in the feed." : "Announcements need a cover image to stand out in the feed."}
+                                    </p>
                                 </div>
                                 <button className={styles.annImageWarningClose} onClick={() => setAnnImageError(false)}>✕</button>
                             </div>
                         )}
-
-
-
 
                         <button
                             className={styles.postButton}
@@ -841,11 +920,17 @@ export default function Homepage() {
                                     if (images.length === 0) { setAnnImageError(true); return; }
                                     if (!announcementTitle.trim() || !announcementDesc.trim()) return;
                                 }
+                                if (isPromote && (localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page")) {
+                                    if (images.length === 0) { setAnnImageError(true); return; }
+                                    if (!promoteTitle.trim() || !promoteContent.trim() || !promoteDesc.trim()) return;
+                                }
                                 handleCreatePost();
                             }}
                             disabled={
                                 isAnnouncement
                                     ? (!announcementTitle.trim() || !announcementDesc.trim())
+                                    : isPromote
+                                    ? (!promoteTitle.trim() || !promoteContent.trim() || !promoteDesc.trim())
                                     : (!content.trim() && !images.length && !files.length && !isPollOpen)
                             }
                         >
@@ -854,9 +939,6 @@ export default function Homepage() {
                     </div>
                 </div>
             )}
-
-
-
 
             {selectedPost && (
                 <CommentModal post={selectedPost} onClose={closeComments} currentUser={user} />

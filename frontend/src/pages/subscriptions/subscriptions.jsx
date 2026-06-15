@@ -52,7 +52,7 @@ export default function Subscriptions() {
     }, []);
 
     const handleSubscribe = async (plan) => {
-        // If already on this plan, do nothing
+        
         if (subscription?.plan === plan) return;
         try {
             setSubscribing(true);
