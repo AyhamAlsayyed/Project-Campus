@@ -42,24 +42,29 @@ def send_code(request):
     target_email = academic_email or personal_email
     is_academic = bool(academic_email)
 
-    if not username or not target_email:
+    if not target_email:
         return Response(
-            {"message": "username and either academicEmail or personalEmail are required"},
+            {"message": "academicEmail or personalEmail are required"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    if not re.fullmatch(r"[a-z]+", username):
+    if not username and academic_email:
         return Response(
-            {"message": "Username must contain only lowercase letters"},
+            {"message": "username is required"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # Enforce username uniqueness
-    if User.objects.filter(username__iexact=username).exists():
-        return Response({"message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Enforce email specific domain/format checks
     if is_academic:
+        if not re.fullmatch(r"[a-z]+", username):
+            return Response(
+                {"message": "Username must contain only lowercase letters"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Enforce username uniqueness
+        if User.objects.filter(username__iexact=username).exists():
+            return Response({"message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
+
         if not is_valid_academic_email_domain(target_email):
             return Response(
                 {"message": "academicEmail is invalid or domain not supported"}, status=status.HTTP_400_BAD_REQUEST

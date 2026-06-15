@@ -1,7 +1,7 @@
 import json
 import re
 
-from django.contrib.auth import get_user_model, update_session_auth_hash
+from django.contrib.auth import get_user_model, logout, update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -10,7 +10,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import EventReminder, UserDegree
+from ...models import EventReminder, NotificationSetting, UserDegree, UserProfile
 from ...serializers import PageSerializer, TeachingPosition, UserSerializer
 
 
@@ -316,3 +316,221 @@ def update_password(request):
     update_session_auth_hash(request, user)
 
     return Response({"message": "Password updated successfully."}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def deactivate_account(request):
+    """
+    Deactivates the user account using Django's built-in 'is_active' flag.
+    Logs the user out immediately after deactivating.
+    """
+    user = request.user
+
+    current_password = request.data.get("password")
+    if not current_password or not user.check_password(current_password):
+        return Response({"message": "Incorrect password."}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.is_active = False
+    user.save(update_fields=["is_active"])
+
+    logout(request)
+
+    return Response({"message": "Your account has been successfully deactivated."}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST", "DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_account(request):
+    """
+    Permanently deletes the user account from the database.
+    """
+    user = request.user
+
+    current_password = request.data.get("password")
+    if not current_password or not user.check_password(current_password):
+        return Response(
+            {"message": "Password verification required to permanently delete your account."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    user.delete()
+
+    return Response(
+        {"message": "Your account has been permanently deleted. We are sorry to see you go."}, status=status.HTTP_200_OK
+    )
+
+
+@api_view(["POST", "PATCH"])
+@permission_classes([IsAuthenticated])
+def update_2fa_email(request):
+    """
+    POST/PATCH: Sets or updates the logged-in user's 2FA verification email.
+    """
+    user = request.user
+
+    email_input = request.data.get("recovery_email")
+
+    if not email_input:
+        return Response({"message": "The field 'recovery_email' is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    clean_email = email_input.strip().lower()
+
+    email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    if not re.match(email_pattern, clean_email):
+        return Response({"message": "Invalid email address format string."}, status=status.HTTP_400_BAD_REQUEST)
+
+    profile, created = UserProfile.objects.get_or_create(user=user)
+
+    profile.recovery_email = clean_email
+    profile.save(update_fields=["recovery_email"])
+
+    return Response(
+        {"message": "2FA verification email updated successfully.", "verification_email": profile.recovery_email},
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["GET", "PUT", "PATCH"])
+@permission_classes([IsAuthenticated])
+def manage_privacy_settings(request):
+    """
+    GET: Fetches the user's current profile privacy settings mapped to frontend expectations.
+    PUT/PATCH: Updates the profile privacy settings, safely accepting multiple string formats.
+    """
+    print(request.data)
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == "GET":
+        return Response(
+            {
+                "account_privacy": profile.privacy,
+                "who_can_message": profile.message_privacy,
+                "who_can_see_friends": profile.friends_list_privacy,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    account_privacy = request.data.get("account_privacy")
+    who_can_message = request.data.get("who_can_message")
+    who_can_see_friends = request.data.get("who_can_see_friends")
+
+    modified_fields = []
+
+    if account_privacy is not None:
+        clean_privacy = str(account_privacy).strip().lower()
+        if clean_privacy in UserProfile.Privacy.values:
+            profile.privacy = clean_privacy
+            modified_fields.append("privacy")
+
+    if who_can_message is not None:
+        clean_msg = str(who_can_message).strip().upper().replace(" ", "_")
+        if clean_msg in UserProfile.MessagePrivacy.values:
+            profile.message_privacy = clean_msg
+            modified_fields.append("message_privacy")
+
+    if who_can_see_friends is not None:
+        clean_friends = str(who_can_see_friends).strip().upper().replace(" ", "_")
+        if clean_friends == "ONLY_ME":
+            clean_friends = "ONLY_ME"
+
+        if clean_friends in UserProfile.FriendsListPrivacy.values:
+            profile.friends_list_privacy = clean_friends
+            modified_fields.append("friends_list_privacy")
+
+    if modified_fields:
+        profile.save(update_fields=modified_fields)
+        return Response(
+            {
+                "message": "Privacy settings updated successfully.",
+                "account_privacy": profile.privacy,
+                "who_can_message": profile.message_privacy,
+                "who_can_see_friends": profile.friends_list_privacy,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    return Response({"message": "No valid privacy fields provided for updates."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET", "PUT", "PATCH"])
+@permission_classes([IsAuthenticated])
+def manage_notification_settings(request):
+    """
+    GET: Fetches the notification preferences.
+    PUT/PATCH: Safely maps, parses, and updates chosen parameters while ignoring ignored ones.
+    """
+    print("Incoming Request Data:", request.data)
+    settings_obj, created = NotificationSetting.objects.get_or_create(user=request.user)
+
+    if request.method == "GET":
+        return Response(
+            {
+                "master_enabled": settings_obj.enable_all,
+                "friend_request": settings_obj.friend_request,
+                "someoneReacted": settings_obj.post_reacted,
+                "someoneCommented": settings_obj.post_commented,
+                "someoneReplied": settings_obj.comment_replied,
+                "newPostCommunity": settings_obj.community_new_post,
+                "joinRequestStatus": settings_obj.community_join_request_status,
+                "eventUpdatedCancelled": settings_obj.event_updated_cancelled,
+                "pageAnnouncement": settings_obj.page_announcement,
+                "dmExisting": settings_obj.dm_existing_chat,
+                "dmRequest": settings_obj.dm_new_request,
+                "courseGroupChat": settings_obj.group_chat,
+                "passwordChangedSuccess": settings_obj.password_changed,
+                "emailUpdatedSuccess": settings_obj.email_updated,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    data = request.data
+    modified_fields = []
+
+    def parse_bool(value):
+        if isinstance(value, str):
+            return value.strip().lower() in ("true", "1", "yes")
+        return bool(value)
+
+    if "master_enabled" in data:
+        new_val = parse_bool(data.get("master_enabled"))
+        if settings_obj.enable_all != new_val:
+            settings_obj.enable_all = new_val
+            modified_fields.append("enable_all")
+
+    mapping_dictionary = {
+        "master_enabled": "enable_all",
+        "friendRequest": "friend_request",
+        "someoneReacted": "post_reacted",
+        "someoneCommented": "post_commented",
+        "someoneReplied": "comment_replied",
+        "newPostCommunity": "community_new_post",
+        "joinRequestStatus": "community_join_request_status",
+        "eventUpdatedCancelled": "event_updated_cancelled",
+        "pageAnnouncement": "page_announcement",
+        "dmExisting": "dm_existing_chat",
+        "dmRequest": "dm_new_request",
+        "courseGroupChat": "group_chat",
+        "passwordChangedSuccess": "password_changed",
+        "emailUpdatedSuccess": "email_updated",
+    }
+
+    for request_key, db_field in mapping_dictionary.items():
+        if request_key in data:
+            incoming_value = parse_bool(data.get(request_key))
+            current_db_value = getattr(settings_obj, db_field)
+
+            if current_db_value != incoming_value:
+                setattr(settings_obj, db_field, incoming_value)
+                if db_field not in modified_fields:
+                    modified_fields.append(db_field)
+
+    if modified_fields:
+        settings_obj.save(update_fields=modified_fields)
+        print(f"Successfully updated database fields: {modified_fields}")
+        return Response(
+            {"message": "Notification preferences updated successfully.", "updated_fields": modified_fields},
+            status=status.HTTP_200_OK,
+        )
+
+    return Response({"message": "Settings match database state. No changes made."}, status=status.HTTP_200_OK)
