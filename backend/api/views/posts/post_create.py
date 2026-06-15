@@ -29,16 +29,33 @@ User = get_user_model()
 def create_post(request):
     user = request.user
     content = request.data.get("content", "")
+    description = request.data.get("description", "")
     medias = request.FILES.getlist("images")
     files = request.FILES.getlist("files")
     community_id = request.data.get("community")
+    post_title = request.data.get("title", "")
 
     post_type_input = request.data.get("post_type", Post.PostType.NORMAL)
     is_announcement = post_type_input == Post.PostType.ANNOUNCEMENT
     is_academic = post_type_input == Post.PostType.ACADEMY
+    is_ad = post_type_input == Post.PostType.ADVERTISEMENT
 
-    if is_announcement and not medias:
-        return Response({"error": "An image is required for the announcement."}, status=status.HTTP_400_BAD_REQUEST)
+    if (is_announcement or is_ad) and not medias:
+        return Response(
+            {"error": "An image is required for the announcement and advertisement."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if (is_announcement or is_ad) and post_title == "":
+        return Response(
+            {"error": "A title is required for the announcement and advertisement."}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if (is_announcement or is_ad) and description == "":
+        return Response(
+            {"error": "A description is required for the announcement and advertisement."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     community = None
     if community_id:
@@ -53,7 +70,14 @@ def create_post(request):
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    post = Post.objects.create(content_text=content, author=user, community=community, post_type=post_type_input)
+    post = Post.objects.create(
+        title=post_title,
+        content_text=content,
+        description=description,
+        author=user,
+        community=community,
+        post_type=post_type_input,
+    )
 
     media_index = 0
     for media in medias:
@@ -118,34 +142,22 @@ def create_post(request):
                 recipient_users.update(User.objects.exclude(id=user.id))
 
     elif is_academic:
-        if community:
-            notification_type_key = "community_post"
-            notification_content_text = f"New Academic material posted by {user.username} in {community.name}"
+        notification_type_key = "friend_post"
+        notification_content_text = f"New Academic material posted by {user.username}"
 
-            members = (
-                CommunityMember.objects.filter(community=community, status=CommunityMember.Status.APPROVED)
-                .exclude(user=user)
-                .exclude(is_muted=True)
-                .select_related("user")
+        friendships = (
+            Friendship.objects.filter(
+                Q(user1=user) | Q(user2=user),
+                status=Friendship.Status.ACCEPTED,
+                relation_type=Friendship.RelationType.USER_TO_USER,
             )
-            recipient_users.update([m.user for m in members if m.user])
-        else:
-            notification_type_key = "friend_post"
-            notification_content_text = f"New Academic materials posted by {user.username}"
-
-            friendships = (
-                Friendship.objects.filter(
-                    Q(user1=user) | Q(user2=user),
-                    status=Friendship.Status.ACCEPTED,
-                    relation_type=Friendship.RelationType.USER_TO_USER,
-                )
-                .exclude(is_muted=True)
-                .select_related("user1", "user2")
-            )
-            for friendship in friendships:
-                friend = friendship.user2 if friendship.user1 == user else friendship.user1
-                if friend:
-                    recipient_users.add(friend)
+            .exclude(is_muted=True)
+            .select_related("user1", "user2")
+        )
+        for friendship in friendships:
+            friend = friendship.user2 if friendship.user1 == user else friendship.user1
+            if friend:
+                recipient_users.add(friend)
 
     elif has_page:
         notification_type_key = "page_post"

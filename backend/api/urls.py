@@ -92,8 +92,10 @@ from .views.pages.promotions import (
     get_page_post_promotions,
     get_page_promotions,
 )
-from .views.pages.subscription import (  # subscribe_to_plan,; cancel_subscription,
+from .views.pages.subscription import (
+    cancel_subscription,
     get_current_subscription,
+    subscribe_to_plan,
 )
 from .views.posts.post_action import (
     delete_post,
@@ -113,7 +115,7 @@ from .views.university.university import (
     university_info,
     university_news,
 )
-from .views.user.block import toggle_block_user  # ,blocked_accounts_list
+from .views.user.block import blocked_accounts_list, toggle_block_user
 from .views.user.friends import (
     accept_friend_request,
     decline_friend_request,
@@ -124,7 +126,11 @@ from .views.user.friends import (
 from .views.user.recently_contacted import recently_contacted
 from .views.user.user import (
     check_username,
+    deactivate_account,
+    delete_account,
     get_events,
+    manage_notification_settings,
+    manage_privacy_settings,
     me,
     profile_view,
     update_password,
@@ -161,6 +167,11 @@ urlpatterns += [
     path("settings/password/", update_password),
     path("auth/2fa/send/", send_2fa_code),
     path("auth/2fa/verify/", verify_2fa_code),
+    path("settings/deactivate/", deactivate_account),
+    path("settings/delete/", delete_account),
+    path("settings/blocked/", blocked_accounts_list),
+    path("settings/privacy/", manage_privacy_settings),
+    path("settings/notifications/", manage_notification_settings),
 ]
 # post
 urlpatterns += [
@@ -258,6 +269,8 @@ urlpatterns += [
     path("pages/<int:page_id>/notify/", toggle_page_notifications),
     # subscriptions
     path("subscriptions/current/", get_current_subscription),
+    path("subscriptions/subscribe/", subscribe_to_plan),
+    path("subscriptions/cancel/", cancel_subscription),
     # promotions
     path("promotions/", get_page_promotions),
     path("posts/promotions/", get_page_post_promotions),
@@ -289,17 +302,3 @@ urlpatterns += [
     path("notifications/", get_notifications),
     path("notifications/<int:notification_id>/", notification_delete_mark),
 ]
-# not yet used urls
-"""
-urlpatterns += [
-    #settings
-    path("", blocked_accounts_list),
-    #page_user
-    path("page/profile/update/", update_page_profile),
-
-    path("", ),
-    path("", ),
-    path("", ),
-    path("", ),
-]
-"""

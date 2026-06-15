@@ -104,6 +104,7 @@ class UserProfile(models.Model):
 
     full_name = models.CharField(max_length=255, blank=True)
     academic_email = models.EmailField(blank=True)
+    recovery_email = models.EmailField(blank=True)
     profile_image = models.ImageField(upload_to="profiles/", blank=True, null=True)
     banner_image = models.ImageField(upload_to="banners/", blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
@@ -123,7 +124,7 @@ class UserProfile(models.Model):
     class FriendsListPrivacy(models.TextChoices):
         EVERYONE = "EVERYONE", "Everyone"
         FRIENDS_ONLY = "FRIENDS_ONLY", "Friends Only"
-        NOBODY = "NOBODY", "Nobody"
+        ONLY_ME = "ONLY_ME", "Only Me"
 
     class MessagePrivacy(models.TextChoices):
         EVERYONE = "EVERYONE", "Everyone"
@@ -699,6 +700,7 @@ class Post(models.Model):
     post_id = models.BigAutoField(primary_key=True, db_column="post_id")
     title = models.CharField(max_length=255, null=True, blank=True)
     content_text = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
 
     class PostType(models.TextChoices):
         ANNOUNCEMENT = "announcement", "Announcement"
@@ -1394,7 +1396,6 @@ class NotificationSetting(models.Model):
     community_new_post = models.BooleanField(default=True)
     community_join_request_status = models.BooleanField(default=True)
 
-    new_event = models.BooleanField(default=True)
     event_updated_cancelled = models.BooleanField(default=True)
 
     page_announcement = models.BooleanField(default=True)
@@ -1435,9 +1436,8 @@ class Promotion(models.Model):
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField()
 
-   
-    duration = models.CharField(max_length=20, blank=True, default="")  
-    duration_idx = models.PositiveSmallIntegerField(default=2)           
+    duration = models.CharField(max_length=20, blank=True, default="")
+    duration_idx = models.PositiveSmallIntegerField(default=2)
     cost = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
 
     class Status(models.TextChoices):

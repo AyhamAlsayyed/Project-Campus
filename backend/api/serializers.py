@@ -887,7 +887,9 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = [
             "post_id",
+            "title",
             "content_text",
+            "description",
             "post_type",
             "author",
             "community",
