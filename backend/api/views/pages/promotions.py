@@ -66,6 +66,9 @@ def create_generic_promotion(request, model_class):
 
     computed_end_date = calculate_end_date(duration_input)
 
+    cost_input = request.data.get("cost", 0)
+    duration_idx_input = request.data.get("duration_idx", 2)
+
     serializer = PromotionSerializer(data={"object_id": target_object_id, "end_date": computed_end_date})
 
     if serializer.is_valid():
@@ -74,6 +77,9 @@ def create_generic_promotion(request, model_class):
             content_type_obj=content_type,
             object_id=target_object_id,
             status=Promotion.Status.ONHOLD,
+            duration=duration_input,
+            duration_idx=duration_idx_input,
+            cost=cost_input,
         )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

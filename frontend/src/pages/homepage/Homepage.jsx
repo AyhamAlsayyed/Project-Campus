@@ -83,7 +83,7 @@ export default function Homepage() {
             const data = await res.json().catch(() => ({}))
 
             if (!res.ok) { setUserError("Failed to load user"); setUser(null); return }
-            if (data.role === 'uni' || localStorage.getItem('user_type') === 'uni') {
+            if (data.role === 'uni' || localStorage.getItem('user_type') === 'university') {
                 const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -217,7 +217,7 @@ export default function Homepage() {
     const handleFileUpload = (e) => { setFiles(prev => [...prev, ...Array.from(e.target.files)]); setIsModalOpen(true); };
 
     const handleCreatePost = async () => {
-        if (isAnnouncement && localStorage.getItem("user_type") === "uni") {
+        if (isAnnouncement && localStorage.getItem("user_type") === "university") {
             if (!announcementTitle.trim() || !announcementDesc.trim() || images.length === 0) return;
         } else {
             if (!content.trim() && !images.length && !files.length && !isPollOpen) return;
@@ -229,7 +229,7 @@ export default function Homepage() {
             id: `temp-${Date.now()}`,
             content_text: postContent,
             created_at: new Date().toISOString(),
-            is_announcement: isAnnouncement && localStorage.getItem("user_type") === "uni",
+            is_announcement: isAnnouncement && localStorage.getItem("user_type") === "university",
             is_academic: isAnnouncement && user?.role === "instructor",
             author: {
                 id: user?.id,
@@ -623,7 +623,7 @@ export default function Homepage() {
                                 onError={e => { e.currentTarget.src = ProfilePicture; }}
                             />
                             <strong>{user?.full_name || user?.page_full_name || user?.username}</strong>
-                            {(localStorage.getItem("user_type") === "uni" ||
+                            {(localStorage.getItem("user_type") === "university" ||
                                 localStorage.getItem("user_type") === "page" ||
                                 user?.role === "instructor") && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
@@ -642,7 +642,7 @@ export default function Homepage() {
                                 )}
                         </div>
 
-                        {isAnnouncement && localStorage.getItem("user_type") === "uni" ? (
+                        {isAnnouncement && localStorage.getItem("user_type") === "university" ? (
                             <div className={styles.announcementFields}>
 
 
@@ -837,7 +837,7 @@ export default function Homepage() {
                         <button
                             className={styles.postButton}
                             onClick={() => {
-                                if (isAnnouncement && localStorage.getItem("user_type") === "uni") {
+                                if (isAnnouncement && localStorage.getItem("user_type") === "university") {
                                     if (images.length === 0) { setAnnImageError(true); return; }
                                     if (!announcementTitle.trim() || !announcementDesc.trim()) return;
                                 }

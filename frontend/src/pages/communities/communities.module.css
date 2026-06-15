@@ -762,7 +762,6 @@
 
 .createCommunityBtn {
   border-radius: 50%;
-  /* Changed from 50px for a perfect circle */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -987,4 +986,239 @@
 
 [data-theme="light"] .waitingText {
   color: #662D91;
+}
+/* ── Promo Modal Dropdown ── */
+.pmDropdownWrapper {
+  position: relative;
+  margin-bottom: 22px;
+}
+
+.pmDropdownTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.15s;
+}
+
+.pmDropdownTriggerText {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.pmDropdownTriggerTextSelected {
+  color: white;
+}
+
+.pmDropdownArrow {
+  width: 14px;
+  height: 14px;
+  filter: brightness(0) invert(1);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.pmDropdownList {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #333333;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.pmDropdownScroll {
+  max-height: 132px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.pmDropdownItem {
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.15s;
+  background: transparent;
+}
+
+.pmDropdownItemSelected {
+  color: white;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.pmDropdownItem:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.pmDropdownDivider {
+  height: 1px;
+  background: #4D4D4D;
+  width: 100%;
+}
+
+.pmDropdownInCart {
+  font-size: 0.75rem;
+  color: #a855f7;
+}
+
+/* Light mode */
+[data-theme="light"] .promoModalContent {
+  background-color: #ffffff;
+  border-color: #e0e0e0;
+}
+
+[data-theme="light"] .pmTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .pmDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .pmSubText {
+  color: #666666;
+}
+
+[data-theme="light"] .pmSectionTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .pmSliderTrack {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .pmDot {
+  background-color: #cccccc;
+}
+
+[data-theme="light"] .pmDotLabel {
+  color: #666666;
+}
+
+[data-theme="light"] .pmLabelActive {
+  color: #333333;
+}
+
+[data-theme="light"] .pmTotalCost {
+  color: #333333;
+}
+
+[data-theme="light"] .pmCostValue {
+  color: #662D91;
+}
+
+[data-theme="light"] .pmNote {
+  color: #666666;
+}
+
+[data-theme="light"] .pmDoneBtn {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .pmDoneBtn:hover {
+  background-color: #e9d5ff;
+}
+
+[data-theme="light"] .pmAdIcon {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .pmBackIcon {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .pmDropdownTrigger {
+  background: #f3e8ff;
+  border-color: rgba(102, 45, 145, 0.2);
+}
+
+[data-theme="light"] .pmDropdownTriggerText {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .pmDropdownTriggerTextSelected {
+  color: #333333;
+}
+
+[data-theme="light"] .pmDropdownArrow {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .pmDropdownList {
+  background: #ffffff;
+  border-color: #e0e0e0;
+}
+
+[data-theme="light"] .pmDropdownItem {
+  color: #555555;
+}
+
+[data-theme="light"] .pmDropdownItemSelected {
+  color: #662D91;
+  background: #f3e8ff;
+}
+
+[data-theme="light"] .pmDropdownItem:hover {
+  background: #f3e8ff;
+}
+
+[data-theme="light"] .pmDropdownDivider {
+  background: #e0e0e0;
+}
+
+[data-theme="light"] .checkoutModalContent {
+  background-color: #ffffff;
+  border-color: #e0e0e0;
+}
+
+[data-theme="light"] .checkoutModalContent h2 {
+  color: #333333;
+}
+
+[data-theme="light"] .checkoutLabel {
+  color: #555555;
+}
+
+[data-theme="light"] .checkoutInput {
+  background-color: #f3e8ff;
+  color: #333333;
+  border-color: rgba(102, 45, 145, 0.15);
+}
+
+[data-theme="light"] .checkoutInput::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .checkoutCancelBtn {
+  color: #555555;
+}
+
+[data-theme="light"] .totalText {
+  color: #333333;
+}
+
+[data-theme="light"] .checkoutSubInfo span {
+  color: #666666;
+}
+.pmNoItems {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1rem;
+  margin: -5px 0 18px;
+}
+
+[data-theme="light"] .pmNoItems {
+  color: rgba(0, 0, 0, 0.4);
 }

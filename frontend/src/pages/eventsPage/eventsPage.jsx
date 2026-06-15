@@ -16,10 +16,11 @@ import AdIcon from '../../Assets/icons/ad.png';
 import { createPortal } from 'react-dom';
 import API from '../../config';
 import useTheme from '../../hooks/useTheme';
+import DefaultBanner from '../../Assets/Pictures/default-community-banner.png'
 export default function EventsPage() {
     const [user, setUser] = useState(null);
     const { theme, toggleTheme } = useTheme();
-    
+
     const [events, setEvents] = useState([]);
     const [recommendedEvents, setRecommendedEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -29,7 +30,7 @@ export default function EventsPage() {
     const [popupEvent, setPopupEvent] = useState(null);
     const [showCreateEvent, setShowCreateEvent] = useState(false);
 
-    // Manage Events modal
+
     const [showManageEvents, setShowManageEvents] = useState(false);
     const [activeEventTab, setActiveEventTab] = useState('upcoming');
     const [manageEventsDate, setManageEventsDate] = useState(new Date());
@@ -57,7 +58,7 @@ export default function EventsPage() {
 
     const [highlightId, setHighlightId] = useState(location.state?.highlightId || null);
 
-    
+
     const pageIdRef = useRef(null);
 
     const durationOptions = [
@@ -68,19 +69,29 @@ export default function EventsPage() {
         { label: '1 year', cost: 49.99 }
     ];
 
-    const isUserPage = ["page", "university", "uni"].includes(localStorage.getItem("user_type"));
+    const isUserPage = ["page", "university"].includes(localStorage.getItem("user_type"));
 
     const loadOwnPageEvents = async () => {
         const token = localStorage.getItem("access");
         const pageId = pageIdRef.current;
         if (!pageId) return;
         try {
-            const res = await fetch(`${API}/api/pages/${pageId}/events/`, {
+            const evRes = await fetch(`${API}/api/pages/${pageId}/events/`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            if (res.ok) {
-                const data = await res.json();
-                setOwnPageEvents(Array.isArray(data) ? data : []);
+            if (evRes.ok) {
+                const evData = await evRes.json();
+                const now = new Date();
+                const eventsArr = (Array.isArray(evData) ? evData : []).sort((a, b) => {
+                    const aDate = new Date(a.start_date);
+                    const bDate = new Date(b.start_date);
+                    const aUpcoming = aDate >= now;
+                    const bUpcoming = bDate >= now;
+                    if (aUpcoming && !bUpcoming) return -1;
+                    if (!aUpcoming && bUpcoming) return 1;
+                    return aDate - bDate;
+                });
+                setOwnPageEvents(eventsArr);
             }
         } catch (e) { console.error(e); }
     };
@@ -131,9 +142,11 @@ export default function EventsPage() {
                         avatar: event.avatar
                             ? (event.avatar.startsWith("http") ? event.avatar : `${API}${event.avatar}`)
                             : "/default-avatar.png",
-                        banner: event.banner
-                            ? (event.banner.startsWith("http") ? event.banner : `${API}${event.banner}`)
-                            : "",
+                        banner: (event.image || event.banner)
+                            ? ((event.image || event.banner).startsWith("http")
+                                ? (event.image || event.banner)
+                                : `${API}${event.image || event.banner}`)
+                            : DefaultBanner,
                         isFollowed: event.is_followed,
                         isNotified: event.is_notified || false,
                         startDate: event.start_date,
@@ -178,16 +191,16 @@ export default function EventsPage() {
                     const data = await res.json();
                     setPromoCart(data.map(item => ({
                         id: item.id,
-                        eventId: item.event_id,
+                        eventId: item.object_id,
                         event: {
-                            title: item.event_title,
-                            image: item.event_image,
-                            banner: item.event_banner,
-                            description: item.event_description,
+                            title: item.object_name || `Event #${item.object_id}`,
+                            banner: item.object_banner || null,
+                            image: item.object_banner || null,
+                            description: null,
                         },
-                        durationIdx: item.duration_idx,
-                        label: item.duration,
-                        cost: item.cost,
+                        durationIdx: item.duration_idx ?? 2,
+                        label: item.duration || 'Unknown',
+                        cost: parseFloat(item.cost) || 0,
                     })));
                 }
             } catch (err) { console.error("Failed to load promo cart:", err); }
@@ -311,7 +324,7 @@ export default function EventsPage() {
                                                     <img
                                                         src={event.image
                                                             ? (event.image.startsWith('http') ? event.image : `${API}${event.image}`)
-                                                            : '/default-banner.png'}
+                                                            : DefaultBanner}
                                                         className={styles.yourEventBannerImg}
                                                         alt="Event Banner"
                                                     />
@@ -384,7 +397,7 @@ export default function EventsPage() {
                                                     <button
                                                         className={`${styles.reminderBtn} ${reminders[event.id] ? styles.reminderBtnSet : ''}`}
                                                         onClick={() => handleReminder(event.id)}
-                                                        
+
                                                     >
                                                         {reminders[event.id] ? "✓ Reminder set" : "Set reminder"}
                                                     </button>
@@ -428,10 +441,11 @@ export default function EventsPage() {
                                                     No promotions queued. Use "Manage" below to add one.
                                                 </p>
                                             ) : promoCart.map(item => {
-                                                const imgSrc = item.event.image
-                                                    ? (item.event.image.startsWith('http') ? item.event.image : `${API}${item.event.image}`)
-                                                    : (item.event.banner
-                                                        ? (item.event.banner.startsWith('http') ? item.event.banner : `${API}${item.event.banner}`)
+                                                const eventData = item.event || {};
+                                                const imgSrc = eventData.banner
+                                                    ? (eventData.banner.startsWith('http') ? eventData.banner : `${API}${eventData.banner}`)
+                                                    : (eventData.image
+                                                        ? (eventData.image.startsWith('http') ? eventData.image : `${API}${eventData.image}`)
                                                         : '/default-banner.png');
                                                 return (
                                                     <div key={item.eventId} className={styles.checkoutItemWrap}>
@@ -448,7 +462,7 @@ export default function EventsPage() {
                                                                 <button className={styles.detailsBtn} onClick={async () => {
                                                                     const token = localStorage.getItem("access");
                                                                     if (item.id) {
-                                                                        await fetch(`${API}/api/events/promotions/${item.id}/delete/`, {
+                                                                        await fetch(`${API}/api/promotions/${item.id}/delete/`, {
                                                                             method: "DELETE",
                                                                             headers: { Authorization: `Bearer ${token}` }
                                                                         });
@@ -501,7 +515,7 @@ export default function EventsPage() {
                                             {recommendedEvents.map((rec, index) => (
                                                 <div key={rec.id} className={styles.recItemWrapper}>
                                                     <div className={styles.recCard}>
-                                                        <img src={rec.banner} className={styles.recBanner} alt="" />
+                                                        <img src={rec.banner || DefaultBanner} className={styles.recBanner} alt="" />
                                                         <div className={styles.recOverlay}>
                                                             <div className={styles.recHeader}>
                                                                 <div className={styles.recOrgInfo} onClick={() => navigate(`/profile/${rec.pageId}`)} style={{ cursor: 'pointer' }}>
@@ -603,7 +617,12 @@ export default function EventsPage() {
 
                                         const cartItem = {
                                             eventId: selectedPromoEventId,
-                                            event: eventObj,
+                                            event: {
+                                                title: eventObj.title,
+                                                banner: eventObj.image || null,
+                                                image: eventObj.image || null,
+                                                description: eventObj.description || null,
+                                            },
                                             durationIdx: promoDurationIdx,
                                             label: durationOptions[promoDurationIdx].label,
                                             cost: durationOptions[promoDurationIdx].cost,
@@ -612,7 +631,7 @@ export default function EventsPage() {
                                         try {
                                             const existingItem = promoCart.find(item => item.eventId === selectedPromoEventId);
                                             if (existingItem) {
-                                                await fetch(`${API}/api/events/promotions/${existingItem.id}/delete/`, {
+                                                await fetch(`${API}/api/promotions/${existingItem.id}/delete/`, {
                                                     method: "DELETE",
                                                     headers: { Authorization: `Bearer ${token}` }
                                                 });
@@ -662,16 +681,17 @@ export default function EventsPage() {
                                 <div style={{ position: 'relative', marginBottom: 22 }}>
                                     <div
                                         onClick={() => setIsEventDropdownOpen(p => !p)}
-                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#2a2a2a', borderRadius: 8, padding: '10px 12px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
+                                        className={styles.pmDropdownTrigger}
                                     >
-                                        <span style={{ color: selectedPromoEventId ? 'white' : 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>
+                                        <span className={`${styles.pmDropdownTriggerText} ${selectedPromoEventId ? styles.pmDropdownTriggerTextSelected : ''}`}>
                                             {selectedPromoEventId ? ownPageEvents.find(e => e.id === selectedPromoEventId)?.title : '— Choose an event —'}
                                         </span>
-                                        <img src={ArrowLeftIcon} alt="" style={{ width: 14, height: 14, filter: 'brightness(0) invert(1)', transform: isEventDropdownOpen ? 'rotate(90deg)' : 'rotate(270deg)', transition: 'transform 0.2s ease', flexShrink: 0 }} />
+                                        <img src={ArrowLeftIcon} alt="" className={styles.pmDropdownArrow}
+                                            style={{ transform: isEventDropdownOpen ? 'rotate(90deg)' : 'rotate(270deg)' }} />
                                     </div>
                                     {isEventDropdownOpen && (
-                                        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: '#333333', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', zIndex: 100, overflow: 'hidden' }}>
-                                            <div style={{ maxHeight: 132, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.15) transparent' }}>
+                                        <div className={styles.pmDropdownList}>
+                                            <div className={styles.pmDropdownScroll}>
                                                 {ownPageEvents.map((ev, i) => (
                                                     <div key={ev.id}>
                                                         <div
@@ -681,14 +701,14 @@ export default function EventsPage() {
                                                                 if (existing) setPromoDurationIdx(existing.durationIdx);
                                                                 setIsEventDropdownOpen(false);
                                                             }}
-                                                            style={{ padding: '10px 12px', cursor: 'pointer', color: selectedPromoEventId === ev.id ? 'white' : 'rgba(255,255,255,0.75)', fontSize: '0.9rem', background: selectedPromoEventId === ev.id ? 'rgba(255,255,255,0.07)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'background 0.15s' }}
+                                                            className={`${styles.pmDropdownItem} ${selectedPromoEventId === ev.id ? styles.pmDropdownItemSelected : ''}`}
                                                             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
                                                             onMouseLeave={e => e.currentTarget.style.background = selectedPromoEventId === ev.id ? 'rgba(255,255,255,0.07)' : 'transparent'}
                                                         >
                                                             <span>{ev.title}</span>
                                                             {promoCart.find(c => c.eventId === ev.id) && <span style={{ fontSize: '0.75rem', color: '#a855f7' }}>✓ in cart</span>}
                                                         </div>
-                                                        {i !== ownPageEvents.length - 1 && <div style={{ height: 1, background: '#4D4D4D', margin: '0 10px' }} />}
+                                                        {i !== ownPageEvents.length - 1 && <div className={styles.pmDropdownDivider} />}
                                                     </div>
                                                 ))}
                                             </div>

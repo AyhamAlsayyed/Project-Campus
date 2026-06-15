@@ -18,6 +18,7 @@ import EventsPage from "./pages/eventsPage/eventsPage";
 import SearchResultsPage from './pages/searchResultPage/searchResults.jsx'
 import Subscriptions from "./pages/subscriptions/subscriptions";
 import Settings from "./pages/settingsPage/Settings.jsx";
+import PageEventsPage from "./pages/pageEventsProfilePage/PageEvents.jsx";
 
 function App() {
   return (
@@ -144,11 +145,19 @@ function App() {
             </ProtectedRoute>
           }
         />
-          <Route
+        <Route
           path="/settings"
           element={
             <ProtectedRoute>
               <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile/:userId/pageEvents"
+          element={
+            <ProtectedRoute>
+              <PageEventsPage />
             </ProtectedRoute>
           }
         />

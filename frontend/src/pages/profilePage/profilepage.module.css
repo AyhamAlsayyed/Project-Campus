@@ -4687,3 +4687,207 @@ body {
   filter: brightness(0) saturate(100%) invert(28%) sepia(44%)
     saturate(800%) hue-rotate(255deg) brightness(85%);
 }
+/* ── Promotions Modal ── */
+.promoMgmtBox {
+  background-color: #333333;
+  width: 620px;
+  min-height: 600px;
+  max-height: 85vh;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 24px;
+}
+.manageModalTitle{
+  font-size: 1.6rem;
+}
+.promoMgmtBody {
+  padding: 14px 7% 0 7%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.promoStatusFilters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.promoStatusBtn {
+  padding: 7px 20px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.87rem;
+  font-weight: 400;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.2s;
+  text-transform: capitalize;
+}
+
+.promoStatusBtnActive {
+  background: linear-gradient(135deg, #5D2296, #8C2590);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.promoMgmtList {
+  display: flex;
+  flex-direction: column;
+  max-height: 420px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  padding-right: 6px;
+}
+
+.promoMgmtItem {
+  display: flex;
+  gap: 17px;
+  align-items: center;
+  padding: 15px 5px;
+}
+
+.promoMgmtThumb {
+  width: 100px;
+  height: 70px;
+  border-radius: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #2a2a2a;
+}
+
+.promoMgmtThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.promoMgmtThumbPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #5D2296, #8C2590);
+}
+
+.promoMgmtInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.promoMgmtNameRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.promoMgmtName {
+  color: white;
+  font-weight: 700;
+  font-size: 1.05rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.promoMgmtStatusBadge {
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.promoMgmtStatusOnhold {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+}
+
+.promoMgmtStatusActive {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+}
+
+.promoMgmtStatusExpired {
+  background: rgba(158, 158, 158, 0.15);
+  color: #9e9e9e;
+}
+
+.promoMgmtStatusCancelled {
+  background: rgba(244, 67, 54, 0.15);
+  color: #f44336;
+}
+
+.promoMgmtMeta {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.promoMgmtMetaLabel {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.83rem;
+}
+
+.promoMgmtMetaValue {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.83rem;
+}
+.iconSmallBack{
+  width: 20px;
+  height: 20px;
+}
+.promoMgmtRemoveBtn {
+  background: rgba(232, 77, 112, 0.12);
+  border: none;
+  border-radius: 12px;
+  padding: 10px 17px;
+  color: #e84d70;
+  font-size: 0.87rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.promoMgmtRemoveBtn:hover {
+  background: rgba(232, 77, 112, 0.22);
+}
+
+.promoMgmtEmpty {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 50px 0;
+  font-style: italic;
+}
+
+/* Light mode */
+[data-theme="light"] .promoMgmtBox {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .promoStatusBtn {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .promoMgmtThumb {
+  background: #f3e8ff;
+}
+
+[data-theme="light"] .promoMgmtName {
+  color: #333333;
+}
+
+[data-theme="light"] .promoMgmtMetaLabel {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .promoMgmtMetaValue {
+  color: rgba(0, 0, 0, 0.65);
+}

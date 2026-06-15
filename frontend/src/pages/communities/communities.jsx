@@ -39,8 +39,8 @@ export default function Community() {
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [activeCommunity, setActiveCommunity] = useState(null);
     const [activeTab, setActiveTab] = useState('Community info');
-    const isUserPage = ["page", "uni"].includes(localStorage.getItem("user_type"));
-    const isUni = localStorage.getItem("user_type") === "uni";
+    const isUserPage = ["page", "university"].includes(localStorage.getItem("user_type"));
+    const isUni = localStorage.getItem("user_type") === "university";
     const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
     const [promoDurationIdx, setPromoDurationIdx] = useState(2);
     const [showCreateCommunityModal, setShowCreateCommunityModal] = useState(false);
@@ -109,11 +109,16 @@ export default function Community() {
                     const data = await res.json();
                     setPromoCart(data.map(item => ({
                         id: item.id,
-                        communityId: item.community_id,
-                        community: ownedCommunities.find(c => c.id === item.community_id) || { name: item.community_name },
-                        durationIdx: item.duration_idx,
-                        label: item.duration,
-                        cost: item.cost,
+                        communityId: item.object_id,
+                        community: {
+                            name: item.object_name || `Community #${item.object_id}`,
+                            banner: item.object_banner || null,
+                            image: item.object_banner || null,
+                            description: null,
+                        },
+                        durationIdx: item.duration_idx ?? 2,
+                        label: item.duration || 'Unknown',
+                        cost: parseFloat(item.cost) || 0,
                     })));
                 }
             } catch (err) { console.error("Failed to load promo cart:", err); }
@@ -599,7 +604,7 @@ export default function Community() {
                                                                 className={styles.detailsBtn}
                                                                 onClick={async () => {
                                                                     if (item.id) {
-                                                                        await fetch(`${API}/api/communities/promotions/${item.id}/delete`, {
+                                                                        await fetch(`${API}/api/promotions/${item.id}/delete/`, {
                                                                             method: "DELETE",
                                                                             headers: { Authorization: `Bearer ${token}` }
                                                                         });
@@ -756,7 +761,7 @@ export default function Community() {
                                         try {
                                             const existingItem = promoCart.find(item => item.communityId === selectedPromoCommunityId);
                                             if (existingItem) {
-                                                await fetch(`${API}/api/communities/promotions/${existingItem.id}/delete/`, {
+                                                await fetch(`${API}/api/promotions/${existingItem.id}/delete/`, {
                                                     method: "DELETE",
                                                     headers: { Authorization: `Bearer ${token}` }
                                                 });
@@ -802,21 +807,14 @@ export default function Community() {
 
                             <h3 className={styles.pmSectionTitle}>Select community</h3>
                             {ownedCommunities.length === 0 ? (
-                                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', margin: '0 0 18px' }}>
-                                    No communities found. Create one first.
-                                </p>
+                                <p className={styles.pmNoItems}>No communities found. Create one first.</p>
                             ) : (
-                                <div style={{ position: 'relative', marginBottom: 22 }}>
-                                    {/* Trigger row */}
+                                <div className={styles.pmDropdownWrapper}>
                                     <div
                                         onClick={() => setIsCommunityDropdownOpen(p => !p)}
-                                        style={{
-                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                            background: '#2a2a2a', borderRadius: 8, padding: '10px 12px',
-                                            cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)',
-                                        }}
+                                        className={styles.pmDropdownTrigger}
                                     >
-                                        <span style={{ color: selectedPromoCommunityId ? 'white' : 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>
+                                        <span className={`${styles.pmDropdownTriggerText} ${selectedPromoCommunityId ? styles.pmDropdownTriggerTextSelected : ''}`}>
                                             {selectedPromoCommunityId
                                                 ? ownedCommunities.find(c => c.id === selectedPromoCommunityId)?.name
                                                 : '— Choose a community —'}
@@ -824,29 +822,13 @@ export default function Community() {
                                         <img
                                             src={ArrowLeftIcon}
                                             alt=""
-                                            style={{
-                                                width: 14, height: 14,
-                                                filter: 'brightness(0) invert(1)',
-                                                transform: isCommunityDropdownOpen ? 'rotate(90deg)' : 'rotate(270deg)',
-                                                transition: 'transform 0.2s ease',
-                                                flexShrink: 0,
-                                            }}
+                                            className={styles.pmDropdownArrow}
+                                            style={{ transform: isCommunityDropdownOpen ? 'rotate(90deg)' : 'rotate(270deg)' }}
                                         />
                                     </div>
-
-                                    {/* Dropdown list */}
                                     {isCommunityDropdownOpen && (
-                                        <div style={{
-                                            position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
-                                            background: '#333333', borderRadius: 8,
-                                            border: '1px solid rgba(255,255,255,0.08)',
-                                            zIndex: 100, overflow: 'hidden',
-                                        }}>
-                                            <div style={{
-                                                maxHeight: 132, overflowY: 'auto',
-                                                scrollbarWidth: 'thin',
-                                                scrollbarColor: 'rgba(255,255,255,0.15) transparent',
-                                            }}>
+                                        <div className={styles.pmDropdownList}>
+                                            <div className={styles.pmDropdownScroll}>
                                                 {ownedCommunities.map((c, i) => (
                                                     <div key={c.id}>
                                                         <div
@@ -856,24 +838,15 @@ export default function Community() {
                                                                 if (existing) setPromoDurationIdx(existing.durationIdx);
                                                                 setIsCommunityDropdownOpen(false);
                                                             }}
-                                                            style={{
-                                                                padding: '10px 12px', cursor: 'pointer',
-                                                                color: selectedPromoCommunityId === c.id ? 'white' : 'rgba(255,255,255,0.75)',
-                                                                fontSize: '0.9rem',
-                                                                background: selectedPromoCommunityId === c.id ? 'rgba(255,255,255,0.07)' : 'transparent',
-                                                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                                                transition: 'background 0.15s',
-                                                            }}
-                                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
-                                                            onMouseLeave={e => e.currentTarget.style.background = selectedPromoCommunityId === c.id ? 'rgba(255,255,255,0.07)' : 'transparent'}
+                                                            className={`${styles.pmDropdownItem} ${selectedPromoCommunityId === c.id ? styles.pmDropdownItemSelected : ''}`}
                                                         >
                                                             <span>{c.name}</span>
                                                             {promoCart.find(item => item.communityId === c.id) && (
-                                                                <span style={{ fontSize: '0.75rem', color: '#a855f7' }}>✓ in cart</span>
+                                                                <span className={styles.pmDropdownInCart}>✓ in cart</span>
                                                             )}
                                                         </div>
                                                         {i !== ownedCommunities.length - 1 && (
-                                                            <div style={{ height: 1, background: '#4D4D4D', margin: '10px auto 10px auto', width: "50%" }} />
+                                                            <div className={styles.pmDropdownDivider} />
                                                         )}
                                                     </div>
                                                 ))}

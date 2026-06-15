@@ -44,7 +44,8 @@ export default function Universities() {
     const [loading, setLoading] = useState(true);
     const dropdownRef = useRef(null);
 
-    const isUniversity = localStorage.getItem("user_type") === "uni";
+    const isUniversity = localStorage.getItem("user_type") === "university";
+
 
     const durationSteps = [
         { label: "1 week", addedText: "0 months & 12 days", dateStr: "Friday - 24/6/2026" },
@@ -211,6 +212,7 @@ export default function Universities() {
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
     }, [theme]);
+   
 
    
 

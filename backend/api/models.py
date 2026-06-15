@@ -1435,6 +1435,11 @@ class Promotion(models.Model):
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField()
 
+   
+    duration = models.CharField(max_length=20, blank=True, default="")  
+    duration_idx = models.PositiveSmallIntegerField(default=2)           
+    cost = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
+
     class Status(models.TextChoices):
         ONHOLD = "ONHOLD", "ONHOLD"
         ACTIVE = "active", "Active"

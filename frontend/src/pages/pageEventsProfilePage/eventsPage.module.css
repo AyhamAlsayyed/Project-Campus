@@ -1,0 +1,545 @@
+/* =========================================
+   LAYOUT
+========================================= */
+.darkContainer {
+  min-height: 100vh;
+  box-sizing: border-box;
+  font-family: "Aktiv Grotesk", sans-serif;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: visible;
+}
+
+.page {
+  width: min(1800px, 90%);
+  margin: 0 auto;
+  --left-col: 300px;
+  --right-col: 380px;
+  --col-gap: 65px;
+}
+
+.header {
+  display: flex;
+  margin-top: 2%;
+  height: 110px;
+  width: 100%;
+}
+
+.content {
+  display: flex;
+  width: min(1800px, 100%);
+  margin: 20px auto 0 auto;
+  gap: var(--col-gap);
+  align-items: flex-start;
+}
+
+.mainContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.rightSection {
+  position: sticky;
+  flex: 0 0 380px;
+  top: 100px;
+  margin: 5% 1% 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* =========================================
+   HEADING
+========================================= */
+.title {
+  font-size: 46px;
+  font-weight: lighter;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 20px 0 0 0;
+}
+
+.highlight {
+  background: linear-gradient(30deg, #c72cff, #8b2dff);
+  font-weight: 600;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.emptyText {
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 40px;
+  font-size: 0.95rem;
+}
+
+/* =========================================
+   EVENTS LIST
+========================================= */
+.eventsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  margin-top: 40px;
+  padding-bottom: 60px;
+}
+
+.eventCard {
+  background: #333333;
+  border-radius: 40px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+/* ─── Card header ─── */
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 0 10px;
+}
+
+.orgInfo {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.orgNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.orgNameRow h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.orgText p {
+  margin: 2px 0 0 0;
+  color: #999;
+  font-size: 0.85rem;
+}
+
+.verifiedIcon {
+  filter: brightness(0) invert(1);
+}
+
+/* ─── Banner ─── */
+.bannerContainer {
+  position: relative;
+  width: 100%;
+  border-radius: 30px;
+  overflow: hidden;
+}
+
+.bannerImg {
+  width: 100%;
+  min-height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+.bannerOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 16px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.75));
+}
+
+.bannerContent h2 {
+  color: white;
+  margin: 0;
+  font-size: 2.2rem;
+  font-weight: 800;
+}
+
+.bannerContent p {
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 500px;
+  font-size: 1rem;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+
+.readMore {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: underline;
+  font-size: 0.9rem;
+}
+
+/* ─── Date widget (no reminder button) ─── */
+.dateWidget {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  background: rgba(30, 30, 30, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 15px 25px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  z-index: 3;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dateText p {
+  margin: 0;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+/* ─── Marquee ─── */
+.titleMarqueeWrapper {
+  overflow: hidden;
+  position: relative;
+  max-width: 100%;
+}
+
+.titleMarqueeWrapper::before,
+.titleMarqueeWrapper::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.titleMarqueeWrapper::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.8), transparent);
+}
+
+.titleMarqueeWrapper::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent);
+}
+
+.titleMarquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 8s linear infinite;
+  color: white;
+  font-size: 2.2rem;
+  font-weight: 800;
+}
+
+@keyframes marquee {
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* ─── Highlight pulse ─── */
+@keyframes highlightPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(158, 39, 157, 0.7); }
+  50%  { box-shadow: 0 0 0 12px rgba(158, 39, 157, 0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(158, 39, 157, 0); }
+}
+
+.highlighted {
+  animation: highlightPulse 1.5s ease-out;
+  border-color: rgba(158, 39, 157, 0.6) !important;
+}
+
+/* =========================================
+   CALENDAR WIDGET
+========================================= */
+.calendarWidget {
+  background: rgba(61, 60, 60, 0.45);
+  border-radius: 20px;
+  padding: 14px 16px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  position: relative;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.calendarWidgetHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 8px;
+}
+
+.calendarWidgetIcon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  filter: brightness(0) saturate(100%) invert(22%) sepia(80%) saturate(1300%) hue-rotate(280deg) brightness(90%);
+}
+
+.calendarWidgetTitle {
+  color: white;
+  font-weight: 700;
+  font-size: 1.3rem;
+  flex: 1;
+}
+
+.monthToggle {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 4px 10px;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.monthToggle:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* ─── Month picker dropdown ─── */
+.monthPickerDropdown {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: #252525;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+.monthPickerNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.monthPickerNavBtn {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+  transition: color 0.15s;
+}
+
+.monthPickerNavBtn:hover {
+  color: white;
+}
+
+.monthPickerNavBtn:disabled {
+  color: rgba(255, 255, 255, 0.2);
+  cursor: not-allowed;
+}
+
+.monthPickerYear {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.monthGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.monthBtn {
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.monthBtnActive {
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.9), rgba(49, 32, 169, 0.9));
+  color: #fff;
+  font-weight: 700;
+}
+
+.monthBtnInactive {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
+}
+
+.monthBtnInactive:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ─── Calendar grid ─── */
+.calendarDayLabels {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+
+.calendarDayLabel {
+  text-align: center;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.35);
+  padding: 4px 0;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calendarDay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: 2px auto;
+  border-radius: 50%;
+  font-size: 0.78rem;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.calendarDayEmpty {
+  color: transparent;
+  cursor: default;
+  background: transparent;
+}
+
+.calendarDayNormal {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
+  cursor: default;
+  background: transparent;
+}
+
+.calendarDayEvent {
+  background: linear-gradient(135deg, #A4279C, #6823A3);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(164, 39, 156, 0.4);
+}
+
+.calendarDayEvent:hover {
+  transform: scale(1.12);
+}
+
+/* =========================================
+   LIGHT MODE
+========================================= */
+[data-theme="light"] .darkContainer {
+  background: linear-gradient(135deg, #f5f5f5, #ffffff);
+}
+
+[data-theme="light"] .title {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+[data-theme="light"] .highlight {
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: #93278F;
+  color: #93278F;
+}
+
+[data-theme="light"] .emptyText {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .eventCard {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .orgNameRow h3 {
+  color: #333333;
+}
+
+[data-theme="light"] .orgText p {
+  color: #888888;
+}
+
+[data-theme="light"] .verifiedIcon {
+  filter: invert(60%) sepia(80%) saturate(400%) hue-rotate(165deg) brightness(95%);
+}
+
+[data-theme="light"] .bannerOverlay {
+  background: linear-gradient(to bottom, rgba(67, 46, 178, 0.15), rgba(67, 46, 178, 0.8));
+}
+
+[data-theme="light"] .dateWidget {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(102, 45, 145, 0.15);
+}
+
+[data-theme="light"] .dateText p {
+  color: #662D91;
+}
+
+[data-theme="light"] .calendarWidget {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(102, 45, 145, 0.12);
+}
+
+[data-theme="light"] .calendarWidgetTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .monthToggle {
+  color: #662D91;
+  background: rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .monthPickerDropdown {
+  background: #ffffff;
+  border-color: #e0e0e0;
+}
+
+[data-theme="light"] .monthPickerNavBtn:not(:disabled) {
+  color: #555555;
+}
+
+[data-theme="light"] .monthPickerYear {
+  color: #333333;
+}
+
+[data-theme="light"] .monthBtnInactive {
+  color: #555555;
+}
+
+[data-theme="light"] .calendarDayLabel {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .calendarDayNormal {
+  color: rgba(0, 0, 0, 0.6);
+}

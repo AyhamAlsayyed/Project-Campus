@@ -39,25 +39,44 @@ export default function SidebarNav({ variant = "default", currentUser }) {
     return pathname === path || pathname.startsWith(path + "/");
   };
   const userType = localStorage.getItem("user_type");
-  const isPage =
-    currentUser?.user_type === 'page' ||
-    currentUser?.user_type === 'uni' ||
-    currentUser?.role === 'cafe' ||
-    userType === 'page' ||
-    userType === 'uni';
+
 
 
   const userId = currentUser?.id || localStorage.getItem("user_id");
-  const defaultMainItems = [
-    { label: "Home page", path: "/home", icon: Home },
-    isPage
-      ? { label: "Pages", path: "/pages", icon: FollowedPages }
-      : { label: "Communities", path: "/communities", icon: Community },
-    isPage
-      ? { label: "Communities", path: "/communities", icon: Community }
-      : { label: "Universities", path: "/universities", icon: University },
-    { label: "Events", path: "/events", icon: Events },
-  ];
+  const isPage =
+    currentUser?.user_type === 'page' ||
+    currentUser?.user_type === 'univeristy' || // Kept this to match your database typo
+    currentUser?.role === 'cafe' ||
+    userType === 'page' ||
+    userType === 'university';
+
+
+  const isUniversity =
+    currentUser?.user_type === 'university' ||
+    currentUser?.user_type === 'univeristy' ||
+    userType === 'university';
+
+
+  const defaultMainItems = isUniversity
+    ? [
+      { label: "Home page", path: "/home", icon: Home },
+      { label: "Communities", path: "/communities", icon: Community },
+      { label: "Universities", path: "/Universities", icon: University },
+      { label: "Events", path: "/events", icon: Events },
+    ]
+    : isPage
+      ? [
+        { label: "Home page", path: "/home", icon: Home },
+        { label: "Pages", path: "/pages", icon: FollowedPages },
+        { label: "Communities", path: "/communities", icon: Community },
+        { label: "Events", path: "/events", icon: Events },
+      ]
+      : [
+        { label: "Home page", path: "/home", icon: Home },
+        { label: "Communities", path: "/communities", icon: Community },
+        { label: "Universities", path: "/Universities", icon: University },
+        { label: "Events", path: "/events", icon: Events },
+      ];
 
   const defaultFooterItems = [
     { label: "About us", path: "/about", icon: About },
@@ -66,17 +85,27 @@ export default function SidebarNav({ variant = "default", currentUser }) {
       : { label: "Privacy Policy", path: "/privacy", icon: Privacy },
     { label: "Help", path: "/help", icon: Help },
   ];
-  const profileMainItems = [
-    {
-      label: "Profile",
-      path: isPage ? `/page/${userId}` : `/profile/${userId}`,
-      icon: Profile
-    },
-    { label: "Friends", path: `/profile/${userId}/friends`, icon: Friends },
-    { label: "Pages", path: `/profile/${userId}/pages`, icon: FollowedPages },
-    { label: "Communities", path: `/profile/${userId}/communities`, icon: Community },
-  ];
-
+  const profileMainItems = isPage
+    ? [
+      {
+        label: "Profile",
+        path: `/page/${userId}`,
+        icon: Profile
+      },
+      { label: "Pages", path: `/profile/${userId}/pages`, icon: FollowedPages },
+      { label: "Communities", path: `/profile/${userId}/communities`, icon: Community },
+      { label: "Events", path: `/profile/${userId}/pageEvents`, icon: Events },
+    ]
+    : [
+      {
+        label: "Profile",
+        path: `/profile/${userId}`,
+        icon: Profile
+      },
+      { label: "Friends", path: `/profile/${userId}/friends`, icon: Friends },
+      { label: "Pages", path: `/profile/${userId}/pages`, icon: FollowedPages },
+      { label: "Communities", path: `/profile/${userId}/communities`, icon: Community },
+    ];
   const profileFooterItems = [
     { label: "Settings", path: "/settings", icon: Settings },
     isPage
@@ -88,7 +117,7 @@ export default function SidebarNav({ variant = "default", currentUser }) {
   const mainItems = variant === "profile" ? profileMainItems : defaultMainItems;
   const footerItems = variant === "profile" ? profileFooterItems : defaultFooterItems;
 
-  
+
   if (variant === "profile" && !userId) return null;
 
 

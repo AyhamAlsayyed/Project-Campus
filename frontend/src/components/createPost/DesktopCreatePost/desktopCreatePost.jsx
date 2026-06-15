@@ -46,7 +46,7 @@ const DesktopCreatePost = ({
                 <div className={styles.greetingText}>
                     <strong className={styles.greeting}>
                         Good {timeGreeting},{" "}
-                        <span style={localStorage.getItem("user_type") === "uni" ? { fontSize: "0.8em" } : {}}>
+                        <span style={localStorage.getItem("user_type") === "university" ? { fontSize: "0.8em" } : {}}>
                             {user?.full_name || user?.page_full_name || user?.username || "User"}
                         </span>!
                     </strong>

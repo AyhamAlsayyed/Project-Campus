@@ -1354,4 +1354,7 @@ class PromotionSerializer(serializers.ModelSerializer):
             "start_date",
             "end_date",
             "status",
+            "duration",
+            "duration_idx",
+            "cost",
         ]

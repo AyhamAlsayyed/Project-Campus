@@ -147,28 +147,115 @@ function DateTimeSegments({ prefix, data, onChange }) {
     );
 }
 
-function MonthPicker({ date, setDate, onClose }) {
-    return (
-        <div className={styles.manageMonthDropdown}>
-            <div className={styles.manageMonthNav}>
-                <button onClick={() => setDate(new Date(date.getFullYear() - 1, date.getMonth(), 1))}
-                    className={styles.manageMonthNavBtn}>‹</button>
-                <span className={styles.manageMonthYear}>{date.getFullYear()}</span>
-                <button onClick={() => setDate(new Date(date.getFullYear() + 1, date.getMonth(), 1))}
-                    className={styles.manageMonthNavBtn}>›</button>
+function MonthPicker({ date, setDate, onClose, events = [], activeTab }) {
+    const [viewMode, setViewMode] = useState('calendar'); // 'calendar' | 'monthSelect'
+
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+
+    const eventDays = new Set(events.filter(e => {
+        const d = new Date(activeTab === 'history' ? e.end_date : e.start_date);
+        return d.getFullYear() === year && d.getMonth() === month;
+    }).map(e => new Date(activeTab === 'history' ? e.end_date : e.start_date).getDate()));
+
+    const cells = [
+        ...Array(firstDay).fill(null),
+        ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+    ];
+
+    if (viewMode === 'monthSelect') {
+        return (
+            <div className={styles.manageMonthDropdown}>
+                <div className={styles.manageMonthNav}>
+                    <button onClick={() => setDate(new Date(year - 1, month, 1))} className={styles.manageMonthNavBtn}>‹</button>
+                    <span className={styles.manageMonthYear} onClick={() => setViewMode('calendar')} style={{ cursor: 'pointer' }}>{year}</span>
+                    <button onClick={() => setDate(new Date(year + 1, month, 1))} className={styles.manageMonthNavBtn}>›</button>
+                </div>
+                <div className={styles.manageMonthGrid}>
+                    {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => (
+                        <button key={m}
+                            onClick={() => { setDate(new Date(year, i, 1)); setViewMode('calendar'); }}
+                            className={`${styles.manageMonthBtn} ${i === month ? styles.manageMonthBtnActive : styles.manageMonthBtnInactive}`}
+                        >{m}</button>
+                    ))}
+                </div>
             </div>
-            <div className={styles.manageMonthGrid}>
-                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => (
-                    <button key={m}
-                        onClick={() => { setDate(new Date(date.getFullYear(), i, 1)); onClose(); }}
-                        className={`${styles.manageMonthBtn} ${i === date.getMonth() ? styles.manageMonthBtnActive : styles.manageMonthBtnInactive}`}
-                    >{m}</button>
+        );
+    }
+
+    return (
+        <div className={styles.manageMonthDropdown} style={{ width: 280, padding: '12px 16px' }}>
+            {/* Header */}
+            <div className={styles.manageMonthNav}>
+                <button onClick={() => setDate(new Date(year, month - 1, 1))} className={styles.manageMonthNavBtn}>‹</button>
+                <span
+                    className={styles.manageMonthYear}
+                    onClick={() => setViewMode('monthSelect')}
+                    style={{ cursor: 'pointer', fontSize: '0.95rem' }}
+                >
+                    {date.toLocaleString('default', { month: 'long' })} {year} ▾
+                </span>
+                <button onClick={() => setDate(new Date(year, month + 1, 1))} className={styles.manageMonthNavBtn}>›</button>
+            </div>
+
+            {/* Day labels */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 4 }}>
+                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
+                    <div key={d} style={{ textAlign: 'center', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', padding: '4px 0' }}>{d}</div>
                 ))}
+            </div>
+
+            {/* Day cells */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
+                {cells.map((day, i) => {
+                    const hasEvent = day && eventDays.has(day);
+                    const isToday = day && today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
+                    const isSelected = day && date.getDate() === day;
+
+                    return (
+                        <div
+                            key={i}
+                            onClick={() => { if (day) { setDate(new Date(year, month, day)); onClose(); } }}
+                            style={{
+                                textAlign: 'center',
+                                padding: '6px 2px',
+                                borderRadius: 8,
+                                fontSize: '0.8rem',
+                                cursor: day ? 'pointer' : 'default',
+                                position: 'relative',
+                                fontWeight: hasEvent ? 700 : 400,
+                                color: !day ? 'transparent'
+                                    : hasEvent ? 'white'
+                                        : isToday ? '#c72cff'
+                                            : 'rgba(255,255,255,0.5)',
+                                background: hasEvent
+                                    ? 'linear-gradient(135deg, rgba(199,44,255,0.35), rgba(139,45,255,0.35))'
+                                    : isSelected ? 'rgba(255,255,255,0.08)'
+                                        : 'transparent',
+                                border: isToday ? '1px solid rgba(199,44,255,0.5)' : '1px solid transparent',
+                                transition: 'background 0.15s',
+                            }}
+                            onMouseEnter={e => { if (day) e.currentTarget.style.background = hasEvent ? 'linear-gradient(135deg, rgba(199,44,255,0.55), rgba(139,45,255,0.55))' : 'rgba(255,255,255,0.06)'; }}
+                            onMouseLeave={e => { if (day) e.currentTarget.style.background = hasEvent ? 'linear-gradient(135deg, rgba(199,44,255,0.35), rgba(139,45,255,0.35))' : isSelected ? 'rgba(255,255,255,0.08)' : 'transparent'; }}
+                        >
+                            {day || ''}
+                            {hasEvent && (
+                                <div style={{
+                                    position: 'absolute', bottom: 2, left: '50%', transform: 'translateX(-50%)',
+                                    width: 4, height: 4, borderRadius: '50%',
+                                    background: 'linear-gradient(135deg, #c72cff, #8b2dff)',
+                                }} />
+                            )}
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
 }
-
 // ─── main component ──────────────────────────────────────────────────────────
 
 export default function ProfilePage({ type }) {
@@ -236,6 +323,11 @@ export default function ProfilePage({ type }) {
     const [eventsTabNotify, setEventsTabNotify] = useState(false);
     const [eventsTabReminders, setEventsTabReminders] = useState({});
     const [eventsTabPopup, setEventsTabPopup] = useState(null);
+    const [showPromotionsModal, setShowPromotionsModal] = useState(false);
+    const [promotionsData, setPromotionsData] = useState({ posts: [], communities: [], events: [] });
+    const [promotionsLoading, setPromotionsLoading] = useState(false);
+    const [activePromoTab, setActivePromoTab] = useState('communities');
+    const [activePromoStatusFilter, setActivePromoStatusFilter] = useState('ONHOLD');
 
     // refs
     const menuRef = useRef(null);
@@ -390,6 +482,32 @@ export default function ProfilePage({ type }) {
         } catch (e) { console.error(e); }
     };
 
+    const loadPromotions = async () => {
+        setPromotionsLoading(true);
+        try {
+            const headers = { Authorization: `Bearer ${token}` };
+
+            const [postsRes, communitiesRes, eventsRes] = await Promise.all([
+                fetch(`${API}/api/posts/promotions/`, { headers }),
+                fetch(`${API}/api/communities/promotions/`, { headers }),
+                fetch(`${API}/api/events/promotions/`, { headers }),
+            ]);
+
+            const [postsData, communitiesData, eventsData] = await Promise.all([
+                postsRes.ok ? postsRes.json() : [],
+                communitiesRes.ok ? communitiesRes.json() : [],
+                eventsRes.ok ? eventsRes.json() : [],
+            ]);
+
+            setPromotionsData({
+                posts: postsData,
+                communities: communitiesData,
+                events: eventsData,
+            });
+        } catch (e) { console.error(e); }
+        finally { setPromotionsLoading(false); }
+    };
+
     const loadProfileUser = async () => {
         try {
             let res, raw, isPageType;
@@ -467,11 +585,18 @@ export default function ProfilePage({ type }) {
             const res = await fetch(`${API}/api/pages/${pageId}/events/`, { headers: { Authorization: `Bearer ${token}` } });
             const data = await res.json();
             if (res.ok) {
-                const events = Array.isArray(data) ? data : [];
+                const now = new Date();
+                const events = (Array.isArray(data) ? data : []).sort((a, b) => {
+                    const aDate = new Date(a.start_date);
+                    const bDate = new Date(b.start_date);
+                    const aUpcoming = aDate >= now;
+                    const bUpcoming = bDate >= now;
+                    if (aUpcoming && !bUpcoming) return -1;
+                    if (!aUpcoming && bUpcoming) return 1;
+                    return aDate - bDate;
+                });
                 setOwnPageEvents(events);
-                setPageEvents(events); // 👈 Sync directly to the main tab state too
-
-                // Initialize reminder states
+                setPageEvents(events);
                 if (events.length > 0) setEventsTabNotify(events[0].is_notified || false);
                 const reminderMap = {};
                 events.forEach(e => { reminderMap[e.id] = e.is_reminded || false; });
@@ -748,10 +873,10 @@ export default function ProfilePage({ type }) {
         });
     };
 
-    
+
 
     // ─── render helpers ──────────────────────────────────────────────────────
-    
+
 
     const renderManageEventsList = () => {
         const now = new Date();
@@ -1087,7 +1212,7 @@ export default function ProfilePage({ type }) {
                                 {/* Tabs */}
                                 <div className={styles.tabs}>
                                     {(user?.type === 'page'
-                                        ? ['Posts', 'Photos', 'Events']
+                                        ? (isOwnProfile ? ['Posts', 'Photos', 'About'] : ['Posts', 'Photos', 'Events'])
                                         : isOwnProfile ? ['Posts', 'Activities', 'About']
                                             : ['Posts', 'Photos', 'Friends']
                                     ).map(tab => (
@@ -1167,8 +1292,8 @@ export default function ProfilePage({ type }) {
                                 {activeTab === 'Events' && (
                                     <div className={styles.postsSection}>
                                         {pageEvents.length > 0 ? pageEvents.map(event => {
-                                            const bannerSrc = event.banner
-                                                ? (event.banner.startsWith('http') ? event.banner : `${API}${event.banner}`)
+                                            const bannerSrc = event.image
+                                                ? (event.image.startsWith('http') ? event.image : `${API}${event.image}`)
                                                 : '';
                                             const avatarSrc = event.avatar
                                                 ? (event.avatar.startsWith('http') ? event.avatar : `${API}${event.avatar}`)
@@ -1328,7 +1453,7 @@ export default function ProfilePage({ type }) {
                                     </div>
                                     <div className={styles.promoContentRow}>
                                         <p className={styles.promoDesc}>Track, manage, and review your active promotions and history.</p>
-                                        <button className={styles.promoManageBtn}>Manage</button>
+                                        <button className={styles.promoManageBtn} onClick={() => { loadPromotions(); setShowPromotionsModal(true); }}>Manage</button>
                                     </div>
                                 </div>
                             </>
@@ -1801,7 +1926,13 @@ export default function ProfilePage({ type }) {
                                         {manageEventsDate.toLocaleString('default', { month: 'long' })} {manageEventsDate.getFullYear()} ▾
                                     </button>
                                     {showManageMonthPicker && (
-                                        <MonthPicker date={manageEventsDate} setDate={setManageEventsDate} onClose={() => setShowManageMonthPicker(false)} />
+                                        <MonthPicker
+                                            date={manageEventsDate}
+                                            setDate={setManageEventsDate}
+                                            onClose={() => setShowManageMonthPicker(false)}
+                                            events={ownPageEvents}
+                                            activeTab={activeEventTab}
+                                        />
                                     )}
                                 </div>
                             </div>
@@ -1840,6 +1971,131 @@ export default function ProfilePage({ type }) {
                         <button onClick={() => setEventsTabPopup(null)} style={{ position: 'absolute', top: 14, right: 14, background: 'none', border: 'none', color: 'white', fontSize: '1.1rem', cursor: 'pointer' }}>✕</button>
                         <h3 style={{ color: 'white', margin: '0 0 12px' }}>{eventsTabPopup.title}</h3>
                         <p style={{ color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, margin: 0 }}>{eventsTabPopup.description}</p>
+                    </div>
+                </div>,
+                document.body
+            )}
+            {showPromotionsModal && createPortal(
+                <div className={styles.manageModalOverlay} onClick={() => setShowPromotionsModal(false)}>
+                    <div className={styles.promoMgmtBox} onClick={e => e.stopPropagation()}>
+
+                        {/* Header */}
+                        <div className={styles.manageModalHeader}>
+                            <button className={styles.manageModalBackBtn} onClick={() => setShowPromotionsModal(false)}>
+                                <img src={ArrowLeft} alt="back" className={styles.iconSmallBack} />
+                            </button>
+                            <div className={styles.manageHeaderTitleGroup}>
+                                <h2 className={styles.manageModalTitle}>Promotions</h2>
+                            </div>
+                        </div>
+                        <div className={styles.manageModalDivider} />
+
+                        {/* Type tabs */}
+                        <div className={styles.manageTabsContainer}>
+                            {['communities', 'events', 'posts'].map((tab, i, arr) => (
+                                <div key={tab} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                                    <button
+                                        className={`${styles.manageTabBtn} ${activePromoTab === tab ? styles.manageTabActive : ''}`}
+                                        onClick={() => setActivePromoTab(tab)}
+                                        style={{ textTransform: 'capitalize', flex: 1 }}
+                                    >
+                                        {tab}
+                                    </button>
+                                    {i < arr.length - 1 && <div className={styles.manageVerticalLine} />}
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className={styles.promoMgmtBody}>
+
+
+
+                            {/* List */}
+                            <div className={styles.promoMgmtList}>
+                                {promotionsLoading ? (
+                                    <p className={styles.promoMgmtEmpty}>Loading...</p>
+                                ) : (() => {
+                                    const items = (promotionsData[activePromoTab] || []).filter(p => p.status === activePromoStatusFilter);
+                                    if (items.length === 0) return (
+                                        <p className={styles.promoMgmtEmpty}>
+                                            No {activePromoStatusFilter === 'ONHOLD' ? 'on-hold' : activePromoStatusFilter} {activePromoTab} promotions.
+                                        </p>
+                                    );
+                                    return items.map((promo, index) => {
+                                        const imgSrc = promo.object_banner
+                                            ? (promo.object_banner.startsWith('http') ? promo.object_banner : `${API}${promo.object_banner}`)
+                                            : null;
+
+                                        const statusClass = {
+                                            ONHOLD: styles.promoMgmtStatusOnhold,
+                                            active: styles.promoMgmtStatusActive,
+                                            expired: styles.promoMgmtStatusExpired,
+                                            cancelled: styles.promoMgmtStatusCancelled,
+                                        }[promo.status] || styles.promoMgmtStatusExpired;
+
+                                        return (
+                                            <div key={promo.id}>
+                                                <div className={styles.promoMgmtItem}>
+                                                    <div className={styles.promoMgmtThumb}>
+                                                        {imgSrc
+                                                            ? <img src={imgSrc} alt="" />
+                                                            : <div className={styles.promoMgmtThumbPlaceholder} />
+                                                        }
+                                                    </div>
+
+                                                    <div className={styles.promoMgmtInfo}>
+                                                        <div className={styles.promoMgmtNameRow}>
+                                                            <span className={styles.promoMgmtName}>
+                                                                {promo.object_name || `Item #${promo.object_id}`}
+                                                            </span>
+                                                            <span className={`${styles.promoMgmtStatusBadge} ${statusClass}`}>
+                                                                {promo.status === 'ONHOLD' ? 'On Hold' : promo.status.charAt(0).toUpperCase() + promo.status.slice(1)}
+                                                            </span>
+                                                        </div>
+                                                        <div className={styles.promoMgmtMeta}>
+                                                            <span className={styles.promoMgmtMetaLabel}>
+                                                                Plan: <span className={styles.promoMgmtMetaValue}>{promo.duration || '—'}</span>
+                                                            </span>
+                                                            <span className={styles.promoMgmtMetaLabel}>
+                                                                Cost: <span className={styles.promoMgmtMetaValue}>${parseFloat(promo.cost || 0).toFixed(2)}</span>
+                                                            </span>
+                                                            <span className={styles.promoMgmtMetaLabel}>
+                                                                Ends: <span className={styles.promoMgmtMetaValue}>
+                                                                    {promo.end_date ? new Date(promo.end_date).toLocaleDateString() : '—'}
+                                                                </span>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    {promo.status === 'ONHOLD' && (
+                                                        <button
+                                                            className={styles.promoMgmtRemoveBtn}
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const res = await fetch(`${API}/api/promotions/${promo.id}/delete/`, {
+                                                                        method: 'DELETE',
+                                                                        headers: { Authorization: `Bearer ${token}` }
+                                                                    });
+                                                                    if (res.ok) {
+                                                                        setPromotionsData(prev => ({
+                                                                            ...prev,
+                                                                            [activePromoTab]: prev[activePromoTab].filter(p => p.id !== promo.id)
+                                                                        }));
+                                                                    }
+                                                                } catch (e) { console.error(e); }
+                                                            }}
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                {index < items.length - 1 && <div className={styles.manageModalDivider} />}
+                                            </div>
+                                        );
+                                    });
+                                })()}
+                            </div>
+                        </div>
                     </div>
                 </div>,
                 document.body
