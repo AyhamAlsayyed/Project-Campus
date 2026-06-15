@@ -64,6 +64,11 @@ export default function Settings() {
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState(null);
     const token = localStorage.getItem("access");
+    const [twoFAMethod, setTwoFAMethod] = useState('email');
+    const [twoFAInput, setTwoFAInput] = useState('');
+    const [twoFACode, setTwoFACode] = useState('');
+    const [twoFAStep, setTwoFAStep] = useState(1);
+    const [twoFAEnabled, setTwoFAEnabled] = useState(false);
 
 
     const showToast = useCallback((message, type = 'success') => setToast({ message, type }), []);
@@ -71,7 +76,7 @@ export default function Settings() {
     // ── Notification state ───────────────────────────────────────────────────
     const [masterNotif, setMasterNotif] = useState(true);
     const [notifState, setNotifState] = useState({
-        friendRequestReceived: true, friendRequestAccepted: true,
+        friend_request: true,
         someoneReacted: true, someoneCommented: true, someoneReplied: true,
         newPostCommunity: true, joinRequestStatus: true,
         eventStartingSoon: true, eventDaysBefore: '1 Day before',
@@ -227,19 +232,10 @@ export default function Settings() {
         setLoading(false);
     };
 
-    const saveAppearance = async () => {
-        setLoading(true);
+    const saveAppearance = () => {
         document.documentElement.setAttribute('data-theme', appearanceTheme);
         localStorage.setItem('theme', appearanceTheme);
-        try {
-            const res = await fetch(`${API}/api/settings/appearance/`, {
-                method: 'PATCH', headers: authHeaders(),
-                body: JSON.stringify({ theme: appearanceTheme, language })
-            });
-            if (res.ok) showToast('Appearance saved.');
-            else showToast('Failed to save appearance.', 'error');
-        } catch { showToast('Network error.', 'error'); }
-        setLoading(false);
+        showToast('Appearance saved.');
     };
 
     const saveStorage = async () => {
@@ -260,9 +256,15 @@ export default function Settings() {
         if (!newEmail) return;
         setLoading(true);
         try {
-            const res = await fetch(`${API}/api/settings/email/`, {
-                method: 'PATCH', headers: authHeaders(),
-                body: JSON.stringify({ email: newEmail })
+            const res = await fetch(`${API}/api/auth/send_code/`, {
+                method: 'POST', headers: authHeaders(),
+                body: JSON.stringify({
+                    academicEmail: newEmail,
+                    username: currentUser?.username,
+                    academicLevel: currentUser?.profile?.academic_level,
+                    major: currentUser?.profile?.major
+                })
+
             });
             if (res.ok) { setEmailStep(2); showToast('Verification code sent.'); }
             else { const d = await res.json(); showToast(d.detail || 'Failed to send code.', 'error'); }
@@ -273,7 +275,7 @@ export default function Settings() {
     const handleVerifyEmail = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${API}/api/settings/email/verify/`, {
+            const res = await fetch(`${API}/api/auth/verify_code/`, {
                 method: 'POST', headers: authHeaders(),
                 body: JSON.stringify({ email: newEmail, code: verificationCode })
             });
@@ -528,8 +530,7 @@ export default function Settings() {
                                     {[
                                         {
                                             header: 'Social', items: [
-                                                ['friendRequestReceived', 'Friend request received'],
-                                                ['friendRequestAccepted', 'Friend request accepted'],
+                                                ['friend_request', 'Friend request notifications'],
                                                 ['someoneReacted', 'Someone reacted to your post'],
                                                 ['someoneCommented', 'Someone commented on your post'],
                                                 ['someoneReplied', 'Someone replied to your comment'],
@@ -604,7 +605,11 @@ export default function Settings() {
                                 <div className={styles.radioGroup}>
                                     {['dark', 'light', 'system'].map((t) => (
                                         <label key={t} className={styles.radioOption}>
-                                            <input type="radio" name="theme" value={t} checked={theme === t} onChange={() => setAppearanceTheme(t)} />
+                                            <input type="radio" name="theme" value={t} checked={appearanceTheme === t} onChange={() => {
+                                                setAppearanceTheme(t);
+                                                document.documentElement.setAttribute('data-theme', t);
+                                                localStorage.setItem('theme', t);
+                                            }} />
                                             <div className={styles.radioCircle} />
                                             <span className={styles.radioLabel}>{t.charAt(0).toUpperCase() + t.slice(1)}</span>
                                         </label>
@@ -639,13 +644,48 @@ export default function Settings() {
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                                         <div>
                                             <label className={styles.settingLabel}>Two-Factor Authentication (2FA)</label>
-                                            <p className={styles.settingDescription}>Keep your account completely safe and secure.</p>
+                                            <p className={styles.settingDescription}>
+                                                {twoFAEnabled ? '✓ 2FA is active on your account.' : 'Keep your account completely safe and secure.'}
+                                            </p>
                                         </div>
-                                        <button className={styles.settingActionBtn}>Configure</button>
+                                        <button className={styles.settingActionBtn} onClick={() => { setTwoFAStep(1); setTwoFAInput(''); setTwoFACode(''); setActiveModal('2fa'); }}>
+                                            {twoFAEnabled ? 'Reconfigure' : 'Configure'}
+                                        </button>
                                     </div>
+
                                     <div className={styles.verificationRequirementBox}>
                                         <p style={{ margin: 0, fontWeight: 500, color: '#E6E6E6', fontSize: '0.9rem' }}>Requirement Checklist:</p>
-                                        <p className={styles.settingDescription} style={{ marginTop: '4px' }}>A verified phone number or secondary email must be linked.</p>
+                                        <p className={styles.settingDescription} style={{ marginTop: '4px' }}>
+                                            A verified phone number or secondary email must be linked.
+                                        </p>
+
+                                        {/* Secondary Email status */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
+                                            <span style={{
+                                                width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
+                                                backgroundColor: currentUser?.personal_email ? '#4caf50' : '#666'
+                                            }} />
+                                            <span style={{ fontSize: '0.85rem', color: currentUser?.personal_email ? '#E6E6E6' : '#888' }}>
+                                                Secondary Email:&nbsp;
+                                                {currentUser?.personal_email
+                                                    ? <strong>{currentUser.personal_email.replace(/(.{2})(.*)(@)/, '$1***$3')}</strong>
+                                                    : <span style={{ color: '#888' }}>Not linked</span>}
+                                            </span>
+                                        </div>
+
+                                        {/* Phone status */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                                            <span style={{
+                                                width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0,
+                                                backgroundColor: currentUser?.profile?.secondary_phone ? '#4caf50' : '#666'
+                                            }} />
+                                            <span style={{ fontSize: '0.85rem', color: currentUser?.profile?.secondary_phone ? '#E6E6E6' : '#888' }}>
+                                                Phone Number:&nbsp;
+                                                {currentUser?.profile?.secondary_phone
+                                                    ? <strong>{currentUser.profile.secondary_phone.replace(/.(?=.{2})/g, '*')}</strong>
+                                                    : <span style={{ color: '#888' }}>Not linked</span>}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -895,6 +935,149 @@ export default function Settings() {
                         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
                             <button className={styles.primaryBtn} onClick={() => setActiveModal(null)}>Done</button>
                         </div>
+                    </div>
+                </div>
+            )}
+            {activeModal === '2fa' && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.modalContent}>
+                        <h3>Two-Factor Authentication</h3>
+
+                        {twoFAStep === 1 && (
+                            <>
+                                <p className={styles.settingDescription} style={{ marginBottom: '14px' }}>
+                                    Choose a verification method to secure your account.
+                                </p>
+
+                                <div className={styles.segmentedSelector} style={{ marginBottom: '16px' }}>
+                                    <button
+                                        className={twoFAMethod === 'email' ? styles.segmentedOptionActive : styles.segmentedOption}
+                                        onClick={() => { setTwoFAMethod('email'); setTwoFAInput(currentUser?.personal_email || ''); }}>
+                                        Secondary Email
+                                    </button>
+                                    <button
+                                        className={twoFAMethod === 'phone' ? styles.segmentedOptionActive : styles.segmentedOption}
+                                        onClick={() => { setTwoFAMethod('phone'); setTwoFAInput(currentUser?.profile?.secondary_phone || ''); }}>
+                                        Phone Number
+                                    </button>
+                                </div>
+
+                                {/* Linked status banner */}
+                                {twoFAMethod === 'email' && currentUser?.personal_email && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1a2e1a', border: '1px solid #2e7d32', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
+                                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#4caf50', flexShrink: 0 }} />
+                                        <span style={{ fontSize: '0.83rem', color: '#a5d6a7' }}>
+                                            Linked: <strong>{currentUser.personal_email.replace(/(.{2})(.*)(@)/, '$1***$3')}</strong> — you can use this or enter a new one below.
+                                        </span>
+                                    </div>
+                                )}
+                                {twoFAMethod === 'phone' && currentUser?.profile?.secondary_phone && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1a2e1a', border: '1px solid #2e7d32', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
+                                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#4caf50', flexShrink: 0 }} />
+                                        <span style={{ fontSize: '0.83rem', color: '#a5d6a7' }}>
+                                            Linked: <strong>{currentUser.profile.secondary_phone.replace(/.(?=.{2})/g, '*')}</strong> — you can use this or enter a new one below.
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Not linked warning */}
+                                {twoFAMethod === 'email' && !currentUser?.personal_email && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#2a1f1f', border: '1px solid #5a3030', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
+                                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef5350', flexShrink: 0 }} />
+                                        <span style={{ fontSize: '0.83rem', color: '#ef9a9a' }}>No secondary email linked. Enter one below.</span>
+                                    </div>
+                                )}
+                                {twoFAMethod === 'phone' && !currentUser?.profile?.secondary_phone && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#2a1f1f', border: '1px solid #5a3030', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
+                                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef5350', flexShrink: 0 }} />
+                                        <span style={{ fontSize: '0.83rem', color: '#ef9a9a' }}>No phone number linked. Enter one below.</span>
+                                    </div>
+                                )}
+
+                                <label className={styles.modalLabel}>
+                                    {twoFAMethod === 'email' ? 'Secondary Email Address' : 'Phone Number'}
+                                </label>
+                                <input
+                                    type={twoFAMethod === 'email' ? 'email' : 'tel'}
+                                    placeholder={twoFAMethod === 'email' ? 'e.g. yourname@gmail.com' : 'e.g. +970591234567'}
+                                    className={styles.modalInput}
+                                    value={twoFAInput}
+                                    onChange={(e) => setTwoFAInput(e.target.value)}
+                                />
+
+                                <div className={styles.modalActions} style={{ marginTop: '20px' }}>
+                                    <button className={styles.settingActionBtn} onClick={() => setActiveModal(null)}>Cancel</button>
+                                    <button
+                                        className={styles.primaryBtn}
+                                        disabled={loading || !twoFAInput}
+                                        onClick={async () => {
+                                            setLoading(true);
+                                            try {
+                                                const body = twoFAMethod === 'email'
+                                                    ? { personalEmail: twoFAInput, username: currentUser?.username }
+                                                    : { phone: twoFAInput, username: currentUser?.username };
+
+                                                const res = await fetch(`${API}/api/auth/send_code/`, {
+                                                    method: 'POST', headers: authHeaders(),
+                                                    body: JSON.stringify(body)
+                                                });
+                                                if (res.ok) { setTwoFAStep(2); showToast('Verification code sent.'); }
+                                                else { const d = await res.json(); showToast(d.message || 'Failed to send code.', 'error'); }
+                                            } catch { showToast('Network error.', 'error'); }
+                                            setLoading(false);
+                                        }}>
+                                        {loading ? 'Sending...' : 'Send Code'}
+                                    </button>
+                                </div>
+                            </>
+                        )}
+
+                        {twoFAStep === 2 && (
+                            <>
+                                <p className={styles.settingDescription} style={{ marginBottom: '14px' }}>
+                                    Enter the code sent to <strong>{twoFAInput}</strong>
+                                </p>
+                                <input
+                                    type="text"
+                                    placeholder="6-digit code"
+                                    className={styles.modalInput}
+                                    value={twoFACode}
+                                    onChange={(e) => setTwoFACode(e.target.value)}
+                                />
+                                <div className={styles.modalActions} style={{ marginTop: '20px' }}>
+                                    <button className={styles.settingActionBtn} onClick={() => {
+                                        setTwoFAStep(1);
+                                        setTwoFAInput(currentUser?.personal_email);
+                                        setTwoFACode('');
+                                        setActiveModal('2fa');
+                                    }}>Back</button>
+                                    <button
+                                        className={styles.primaryBtn}
+                                        disabled={loading || !twoFACode}
+                                        onClick={async () => {
+                                            setLoading(true);
+                                            try {
+                                                const body = twoFAMethod === 'email'
+                                                    ? { personalEmail: twoFAInput, username: currentUser?.username, code: twoFACode }
+                                                    : { phone: twoFAInput, username: currentUser?.username, code: twoFACode };
+
+                                                const res = await fetch(`${API}/api/auth/verify_code/`, {
+                                                    method: 'POST', headers: authHeaders(),
+                                                    body: JSON.stringify(body)
+                                                });
+                                                if (res.ok) {
+                                                    setTwoFAEnabled(true);
+                                                    showToast('2FA enabled successfully.');
+                                                    setActiveModal(null);
+                                                } else { const d = await res.json(); showToast(d.message || 'Invalid code.', 'error'); }
+                                            } catch { showToast('Network error.', 'error'); }
+                                            setLoading(false);
+                                        }}>
+                                        {loading ? 'Verifying...' : 'Enable 2FA'}
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}

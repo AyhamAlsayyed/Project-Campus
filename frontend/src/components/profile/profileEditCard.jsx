@@ -74,7 +74,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    
+                    username: user?.username,
                     personalEmail: formData.secondaryEmail.trim(),
                 })
             });
