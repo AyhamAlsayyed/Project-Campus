@@ -19,6 +19,7 @@ import SearchResultsPage from './pages/searchResultPage/searchResults.jsx'
 import Subscriptions from "./pages/subscriptions/subscriptions";
 import Settings from "./pages/settingsPage/Settings.jsx";
 import PageEventsPage from "./pages/pageEventsProfilePage/PageEvents.jsx";
+import NotificationsPage from "./pages/notificationsPage/notificationsPage.jsx";
 
 function App() {
   return (
@@ -158,6 +159,14 @@ function App() {
           element={
             <ProtectedRoute>
               <PageEventsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage/>
             </ProtectedRoute>
           }
         />

@@ -28,7 +28,7 @@ def should_send_notification(recipient, notification_type):
         # community
         "community_join_status": settings_profile.community_join_request_status,
         # event
-        "new_event": settings_profile.new_event,
+      
         "event_update": settings_profile.event_updated_cancelled,
         # chat
         "dm_existing": settings_profile.dm_existing_chat,

@@ -732,7 +732,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                 <h3 className={styles.notifTitle}>Notifications</h3>
                 <div className={styles.notifHeaderActions}>
                   <img src={Read} alt="Read" onClick={handleMarkAllAsRead} style={{ width: 18, height: 18, filter: "brightness(0) invert(1)", marginLeft: 3, cursor: unreadCount > 0 ? "pointer" : "default", opacity: unreadCount > 0 ? 1 : 0.4, transition: "opacity 0.2s" }} title="Mark all notifications as read" />
-                  <span className={styles.viewAll}>view all</span>
+                  <span onClick={() => { navigate('/notifications'); setShowNotifications(false); }} className={styles.viewAll}>view all</span>
                 </div>
               </div>
               <div className={styles.notifList}>
