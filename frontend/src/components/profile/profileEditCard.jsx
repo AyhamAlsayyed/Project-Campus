@@ -58,6 +58,59 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
     const [showTitleDropdown, setShowTitleDropdown] = useState(false);
     const [titleDropdownPos, setTitleDropdownPos] = useState({ top: 0, left: 0 });
     const titleBtnRef = useRef(null);
+    // Add these state variables near your other edit states
+    const [secondaryEmailOtpSent, setSecondaryEmailOtpSent] = useState(false);
+    const [secondaryEmailOtp, setSecondaryEmailOtp] = useState('');
+    const [secondaryEmailOtpStatus, setSecondaryEmailOtpStatus] = useState(null); // 'success' | 'error' | null
+    const [secondaryEmailVerified, setSecondaryEmailVerified] = useState(false);
+    const [secondaryEmailOtpLoading, setSecondaryEmailOtpLoading] = useState(false);
+
+    const handleSendSecondaryEmailCode = async () => {
+        if (!formData.secondaryEmail?.trim()) return;
+        setSecondaryEmailOtpLoading(true);
+        setSecondaryEmailOtpStatus(null);
+        try {
+            const res = await fetch(`${API}/api/auth/send_code/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    
+                    personalEmail: formData.secondaryEmail.trim(),
+                })
+            });
+            if (res.ok) {
+                setSecondaryEmailOtpSent(true);
+            } else {
+                const data = await res.json();
+                setSecondaryEmailOtpStatus('error');
+                console.error(data.message);
+            }
+        } catch (e) { console.error(e); setSecondaryEmailOtpStatus('error'); }
+        finally { setSecondaryEmailOtpLoading(false); }
+    };
+
+    const handleVerifySecondaryEmailCode = async () => {
+        if (!secondaryEmailOtp.trim()) return;
+        setSecondaryEmailOtpLoading(true);
+        try {
+            const res = await fetch(`${API}/api/auth/verify_code/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    personalEmail: formData.secondaryEmail.trim(),
+                    code: secondaryEmailOtp.trim(),
+                })
+            });
+            if (res.ok) {
+                setSecondaryEmailVerified(true);
+                setSecondaryEmailOtpStatus('success');
+                setSecondaryEmailOtpSent(false);
+            } else {
+                setSecondaryEmailOtpStatus('error');
+            }
+        } catch (e) { setSecondaryEmailOtpStatus('error'); }
+        finally { setSecondaryEmailOtpLoading(false); }
+    };
     const isLight = theme === 'light';
     useEffect(() => {
         if (!showTitleDropdown) return;
@@ -578,7 +631,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
 
                                             />
                                             <button
-                                               className={styles.editFormAddBtn}
+                                                className={styles.editFormAddBtn}
                                                 onClick={() => {
                                                     if (!editingDegree.title.trim()) return;
                                                     setFormData(p => ({
@@ -737,7 +790,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     >
                                         Add
                                     </button>
-                                    <button className={styles.editFormCancelIconBtn}onClick={() => { setShowAddPosition(false); setNewPosition({ institution: '', type: 'parttime' }); }}>
+                                    <button className={styles.editFormCancelIconBtn} onClick={() => { setShowAddPosition(false); setNewPosition({ institution: '', type: 'parttime' }); }}>
                                         <X size={16} />
                                     </button>
                                 </div>
@@ -889,6 +942,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                         padding: 28, width: 400, boxShadow: "0 20px 50px rgba(0,0,0,0.7)",
                         border: "1px solid rgba(255,255,255,0.08)"
                     }}>
+                        {/* Header */}
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                 <Mail size={20} color="white" />
@@ -899,32 +953,158 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                 <button onClick={() => setEditView("main")} style={{ background: "none", border: "1px solid #444", color: "white", borderRadius: 20, padding: "6px 20px", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}>Save</button>
                             </div>
                         </div>
-                        <div style={{ height: 1, background: "#2a2a2a", marginBottom: 20 }} />
+                        <div style={{ height: 1, background: "#4D4D4D", marginBottom: 20 }} />
+
+                        {/* Academic Email — read only */}
                         <div style={{ marginBottom: 16 }}>
                             <label style={{ color: "#888", fontSize: "0.85rem", display: "block", marginBottom: 8 }}>
-                                Academic Email <span style={{ color: "rgba(139,45,255,0.85)", fontSize: "0.72rem", background: "rgba(139,45,255,0.12)", border: "1px solid rgba(139,45,255,0.3)", borderRadius: 6, padding: "1px 6px", marginLeft: 6 }}>Read-only</span>
+                                Academic Email
+                                <span style={{ color: "rgba(139,45,255,0.85)", fontSize: "0.72rem", background: "rgba(139,45,255,0.12)", border: "1px solid rgba(139,45,255,0.3)", borderRadius: 6, padding: "1px 6px", marginLeft: 6 }}>Read-only</span>
                             </label>
                             <div style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 12, padding: "11px 14px", color: "rgba(255,255,255,0.45)", fontSize: "0.9rem" }}>
                                 {formData.primaryEmail || 'username@university.edu'}
                             </div>
                         </div>
+
+                        <div style={{ height: 1, background: "#4D4D4D", margin: "0 auto 20px auto", width: "50%" }} />
+
+                        {/* Personal Email */}
                         <div>
-                            <label style={{ color: "#888", fontSize: "0.85rem", display: "block", marginBottom: 8 }}>Personal Email <span style={{ color: "#666", fontSize: "0.72rem" }}>(optional)</span></label>
+                            <label style={{ color: "#888", fontSize: "0.85rem", display: "block", marginBottom: 8 }}>
+                                Personal Email <span style={{ color: "#666", fontSize: "0.72rem" }}>(optional)</span>
+                            </label>
                             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                                 <input
                                     type="email"
                                     value={formData.secondaryEmail}
                                     placeholder="Add personal email"
-                                    onChange={e => setFormData(p => ({ ...p, secondaryEmail: e.target.value }))}
-                                    style={{ flex: 1, background: "#252525", border: "1px solid #333", borderRadius: 12, padding: "11px 14px", color: "white", outline: "none", fontSize: "0.9rem" }}
+                                    onChange={e => {
+                                        setFormData(p => ({ ...p, secondaryEmail: e.target.value }));
+                                        setSecondaryEmailVerified(false);
+                                        setSecondaryEmailOtpSent(false);
+                                        setSecondaryEmailOtpStatus(null);
+                                        setSecondaryEmailOtp('');
+                                    }}
+                                    style={{ flex: 1, background: "#262626", border: "1px solid #333", borderRadius: 25, padding: "11px 14px", color: "white", outline: "none", fontSize: "0.9rem" }}
                                 />
+                                {formData.secondaryEmail && !secondaryEmailVerified && (
+                                    <button
+                                        onClick={handleSendSecondaryEmailCode}
+                                        disabled={secondaryEmailOtpLoading}
+                                        style={{ background: "#4D4D4D", color: "#D1D1D1", border: "none", borderRadius: 25, padding: "10px 16px", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap", opacity: secondaryEmailOtpLoading ? 0.6 : 1 }}
+                                    >
+                                        {secondaryEmailOtpSent ? 'Resend' : 'Update'}
+                                    </button>
+                                )}
+                                {secondaryEmailVerified && (
+                                    <span style={{ color: "#4caf50", fontSize: "0.8rem", whiteSpace: "nowrap", fontWeight: 600 }}>✓ Verified</span>
+                                )}
                                 <button
-                                    onClick={() => setFormData(p => ({ ...p, secondaryEmail: '' }))}
+                                    onClick={() => {
+                                        setFormData(p => ({ ...p, secondaryEmail: '' }));
+                                        setSecondaryEmailVerified(false);
+                                        setSecondaryEmailOtpSent(false);
+                                        setSecondaryEmailOtp('');
+                                        setSecondaryEmailOtpStatus(null);
+                                    }}
                                     style={{ background: "transparent", border: "none", color: "#e91e63", cursor: "pointer", padding: 4, opacity: formData.secondaryEmail ? 1 : 0, pointerEvents: formData.secondaryEmail ? 'auto' : 'none' }}
                                 >
                                     <Trash2 size={15} />
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ══════════════════════════════════════
+    EMAIL OTP VERIFY POPUP
+══════════════════════════════════════ */}
+            {secondaryEmailOtpSent && editView === "email" && (
+                <div style={{ position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)" }} onClick={() => setSecondaryEmailOtpSent(false)} />
+                    <div style={{
+                        position: "relative", background: "#1e1e1e", borderRadius: 20,
+                        padding: 32, width: 420, boxShadow: "0 20px 50px rgba(0,0,0,0.7)",
+                        border: "1px solid rgba(255,255,255,0.08)"
+                    }}>
+                        <h3 style={{ margin: "0 0 8px", color: "white", fontWeight: 700, fontSize: "1.05rem" }}>
+                            Verifying email{" "}
+                            <span style={{ color: "#c084fc" }}>
+                                {formData.secondaryEmail?.replace(/(.{2}).*(@.*)/, '$1***$2')}
+                            </span>
+                        </h3>
+                        <p style={{ margin: "0 0 24px", color: "#777", fontSize: "0.85rem", lineHeight: 1.5 }}>
+                            A verification code was sent to your email. Do not share that code with anyone!
+                        </p>
+
+                        {/* 6 digit OTP boxes — same style as phone OTP */}
+                        <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 16 }}>
+                            {secondaryEmailOtp.padEnd(6, ' ').split('').map((d, i) => (
+                                <input
+                                    key={i}
+                                    type="text"
+                                    maxLength={1}
+                                    inputMode="numeric"
+                                    value={secondaryEmailOtp[i] || ''}
+                                    onChange={e => {
+                                        const val = e.target.value.replace(/\D/g, '');
+                                        const arr = secondaryEmailOtp.split('');
+                                        arr[i] = val;
+                                        const next = arr.join('').slice(0, 6);
+                                        setSecondaryEmailOtp(next);
+                                        setSecondaryEmailOtpStatus(null);
+                                        // auto-focus next
+                                        if (val && i < 5) {
+                                            const inputs = e.target.closest('div').querySelectorAll('input');
+                                            inputs[i + 1]?.focus();
+                                        }
+                                    }}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Backspace' && !secondaryEmailOtp[i] && i > 0) {
+                                            const inputs = e.target.closest('div').querySelectorAll('input');
+                                            inputs[i - 1]?.focus();
+                                        }
+                                    }}
+                                    style={{
+                                        width: 52, height: 56,
+                                        background: secondaryEmailOtp[i] ? "rgba(139,45,255,0.12)" : "transparent",
+                                        border: `2px solid ${secondaryEmailOtp[i] ? "rgba(139,45,255,0.7)" : "rgba(139,45,255,0.45)"}`,
+                                        borderRadius: 12, color: "white", fontSize: "1.3rem",
+                                        fontWeight: 700, textAlign: "center", outline: "none",
+                                        transition: "border-color 0.15s, background 0.15s"
+                                    }}
+                                />
+                            ))}
+                        </div>
+
+                        {secondaryEmailOtpStatus === 'error' && (
+                            <p style={{ color: "#ff4b4b", fontSize: "0.8rem", textAlign: "center", margin: "0 0 12px" }}>
+                                Invalid code. Please try again.
+                            </p>
+                        )}
+
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
+                            <button
+                                onClick={handleSendSecondaryEmailCode}
+                                disabled={secondaryEmailOtpLoading}
+                                style={{ background: "none", border: "none", color: "#888", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}
+                            >
+                                Resend
+                            </button>
+                            <button
+                                onClick={handleVerifySecondaryEmailCode}
+                                disabled={secondaryEmailOtpLoading || secondaryEmailOtp.length < 6}
+                                style={{
+                                    background: "linear-gradient(30deg, #5E23A4, #9C269D)",
+                                    border: "none", color: "white", borderRadius: 20,
+                                    padding: "10px 36px", fontWeight: 600,
+                                    cursor: secondaryEmailOtp.length < 6 ? "not-allowed" : "pointer",
+                                    fontSize: "0.9rem", opacity: (secondaryEmailOtpLoading || secondaryEmailOtp.length < 6) ? 0.6 : 1
+                                }}
+                            >
+                                {secondaryEmailOtpLoading ? '…' : 'Verify'}
+                            </button>
                         </div>
                     </div>
                 </div>

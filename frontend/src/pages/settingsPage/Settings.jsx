@@ -169,7 +169,7 @@ export default function Settings() {
                     const res = await fetch(`${API}/api/settings/appearance/`, { headers: authHeaders() });
                     if (res.ok) {
                         const d = await res.json();
-                        if (d.theme) setAppearanceTheme(d.theme); 
+                        if (d.theme) setAppearanceTheme(d.theme);
                         if (d.language) setLanguage(d.language);
                     }
                 }
@@ -439,7 +439,11 @@ export default function Settings() {
                                 <div className={styles.settingRow}>
                                     <div>
                                         <label className={styles.settingLabel}>Email Address</label>
-                                        <p className={styles.settingDescription}>{currentUser?.email ? currentUser.email.replace(/(.{2})(.*)(@)/, '$1***$3') : '—'}</p>
+                                        <p className={styles.settingDescription}>
+                                            {currentUser?.profile?.academic_email
+                                                ? currentUser.profile.academic_email.replace(/(.{2})(.*)(@)/, '$1***$3')
+                                                : '—'}
+                                        </p>
                                     </div>
                                     <button className={styles.settingActionBtn} onClick={() => { setEmailStep(1); setNewEmail(''); setVerificationCode(''); setActiveModal('email'); }}>Update</button>
                                 </div>
@@ -571,25 +575,9 @@ export default function Settings() {
                                     ))}
 
                                     <h3 className={styles.subGridHeader}>Events</h3>
-                                    <div className={styles.toggleRow}>
-                                        <span className={styles.toggleText}>An event you follow is starting soon</span>
-                                        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                                            <CustomSelect
-                                                options={['1 Day before', '2 Days before', '3 Days before', '4 Days before', '5 Days before', '6 Days before', '7 Days before']}
-                                                value={notifState.eventDaysBefore}
-                                                onChange={(val) => handleNotificationChange('eventDaysBefore', val)}
-                                                disabled={!masterNotif || !notifState.eventStartingSoon}
-                                                minWidth="160px"
-                                            />
-                                            <label className={styles.switchContainer}>
-                                                <input type="checkbox" disabled={!masterNotif} checked={masterNotif && notifState.eventStartingSoon} onChange={(e) => handleNotificationChange('eventStartingSoon', e.target.checked)} />
-                                                <span className={styles.switchSlider}></span>
-                                            </label>
-                                        </div>
-                                    </div>
+
                                     {[
                                         ['eventUpdatedCancelled', 'An event you follow has been updated or cancelled'],
-                                        ['eventHasStarted', 'An event has started'],
                                     ].map(([key, label]) => (
                                         <div key={key} className={styles.toggleRow}>
                                             <span className={styles.toggleText}>{label}</span>
@@ -797,7 +785,14 @@ export default function Settings() {
                         <h3>Update Email</h3>
                         {emailStep === 1 ? (
                             <>
-                                <p className={styles.settingDescription} style={{ marginBottom: '14px' }}>Enter your new academic email address.</p>
+                                <p className={styles.settingDescription} style={{ marginBottom: '14px' }}>
+                                    Enter your new academic email address.
+                                    {currentUser?.profile?.academic_email && (
+                                        <span style={{ color: '#888', fontSize: '0.8rem', display: 'block', marginTop: 4 }}>
+                                            Current: {currentUser.profile.academic_email}
+                                        </span>
+                                    )}
+                                </p>
                                 <input type="email" placeholder="e.g. username@ptuk.edu.ps" className={styles.modalInput} value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
                                 <div className={styles.modalActions}>
                                     <button className={styles.settingActionBtn} onClick={() => setActiveModal(null)}>Cancel</button>
