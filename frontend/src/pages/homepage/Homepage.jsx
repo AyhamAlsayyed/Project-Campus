@@ -512,8 +512,8 @@ export default function Homepage() {
                 ══════════════════════════════════════ */}
             {isMobile && (
                 <div style={{ display: "flex", flexDirection: "column", width: "100%", boxSizing: "border-box" }}>
-                    <div style={{ padding: "12px 10px 0 10px" }}>
-                        <WeeklyNews />
+                    <div style={{ padding: "12px 10px 0 10px", minWidth:450, margin: "0 auto 0 auto" }}>
+                        <WeeklyNews isMobile={true} />
                     </div>
                     <div style={{ padding: "12px 10px 0 10px" }}>
                         <MobileCreatePost

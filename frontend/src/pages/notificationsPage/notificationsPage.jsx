@@ -292,7 +292,15 @@ export default function NotificationsPage() {
                 {openMenuId === n.id && menuRect && createPortal(
                     <div
                         className={styles.actionMenu}
-                        style={{ position: 'fixed', top: menuRect.bottom + 6, left: menuRect.left + menuRect.width / 2, transform: 'translateX(-50%)', zIndex: 999999 }}
+                        style={{
+                            position: 'fixed',
+                            ...(menuRect.bottom + 150 > window.innerHeight
+                                ? { top: 'auto', bottom: window.innerHeight - menuRect.top + 6 }
+                                : { top: menuRect.bottom + 6 }),
+                            left: menuRect.left + menuRect.width / 2,
+                            transform: 'translateX(-50%)',
+                            zIndex: 999999
+                        }}
                         onMouseDown={e => e.stopPropagation()}
                     >
                         <button onClick={e => { e.stopPropagation(); handleMarkAsRead(n.id, n.is_read); }}>

@@ -23,7 +23,9 @@ import CreateCommunityIcon from '../../Assets/icons/create-group.png';
 import CreateCommunityForm from '../../components/createCommunity/CreateCommunity';
 import CommunityPermissions from '../../components/createCommunity/CommunityPermissions';
 import API from '../../config';
+import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import useTheme from '../../hooks/useTheme';
+
 export default function Community() {
     const { theme, toggleTheme } = useTheme();
     const [loading, setLoading] = useState(true)
@@ -78,7 +80,9 @@ export default function Community() {
             setPrevTab(activeTab);
         }
     }, [activeTab]);
+
     const token = localStorage.getItem("access");
+
     useEffect(() => {
         const fetchOwned = async () => {
             try {
@@ -99,6 +103,7 @@ export default function Community() {
         };
         fetchOwned();
     }, []);
+
     useEffect(() => {
         const fetchPromoCart = async () => {
             try {
@@ -157,6 +162,7 @@ export default function Community() {
         };
         fetchFriendsRelated();
     }, []);
+
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
     }, [theme]);
@@ -168,7 +174,7 @@ export default function Community() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
-            if (data.role === 'university' || localStorage.getItem('user_type') === 'uni') {
+            if (data.role === 'uni' || localStorage.getItem('user_type') === 'university') {
                 const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -176,8 +182,9 @@ export default function Community() {
                     const pageData = await pageRes.json();
                     data.avatar = pageData.profile_image;
                 }
+            } else {
+                data.avatar = data.profile?.avatar || null;
             }
-
             setUser(data);
         } catch (err) { console.error("Failed to load user"); }
     };
@@ -194,7 +201,6 @@ export default function Community() {
                         setRequestSent(true);
                         localStorage.setItem("community_request_sent", "true");
                     } else {
-                        // ← clear stale localStorage value
                         setRequestSent(false);
                         localStorage.removeItem("community_request_sent");
                     }
@@ -230,11 +236,9 @@ export default function Community() {
 
     useEffect(() => { loadUser(); }, []);
 
-
-
     const avatarSrc = user?.avatar
         ? user.avatar.startsWith("http") ? user.avatar : `${API}${user.avatar}`
-        : "/default-avatar.png";
+        : ProfilePicture;
 
     const mobileFilters = [
         { key: "recommended", label: "Recommended" },
@@ -254,6 +258,219 @@ export default function Community() {
     const displayedCommunities = (isMobile && filter === "friends_related")
         ? friendsCommunities
         : communities;
+
+    // ── Shared promo modal (used on both mobile & desktop) ──
+    const PromoModal = () => createPortal(
+        <div className={styles.promoModalOverlay} onClick={() => setIsPromoModalOpen(false)}>
+            <div className={styles.promoModalContent} onClick={e => e.stopPropagation()}>
+                <div className={styles.pmHeader}>
+                    <div className={styles.pmHeaderLeft}>
+                        <img src={ArrowLeftIcon} alt="Back" className={styles.pmBackIcon} onClick={() => setIsPromoModalOpen(false)} />
+                        <div className={styles.pmAdIconWrapper}>
+                            <img src={AdIcon} alt="Ad" className={styles.pmAdIcon} />
+                        </div>
+                        <h2 className={styles.pmTitle}>Community Promotion</h2>
+                    </div>
+                    <div className={styles.pmHeaderRight}>
+                        <span className={styles.pmCancelBtn} onClick={() => setIsPromoModalOpen(false)}>Cancel</span>
+                        <button
+                            className={styles.pmDoneBtn}
+                            onClick={async () => {
+                                if (!selectedPromoCommunityId) { setIsPromoModalOpen(false); return; }
+                                const communityObj = ownedCommunities.find(c => c.id === selectedPromoCommunityId);
+                                if (!communityObj) return;
+                                const cartItem = {
+                                    communityId: selectedPromoCommunityId,
+                                    community: communityObj,
+                                    durationIdx: promoDurationIdx,
+                                    label: durationOptions[promoDurationIdx].label,
+                                    cost: durationOptions[promoDurationIdx].cost,
+                                };
+                                try {
+                                    const existingItem = promoCart.find(item => item.communityId === selectedPromoCommunityId);
+                                    if (existingItem) {
+                                        await fetch(`${API}/api/promotions/${existingItem.id}/delete/`, {
+                                            method: "DELETE",
+                                            headers: { Authorization: `Bearer ${token}` }
+                                        });
+                                    }
+                                    const res = await fetch(`${API}/api/communities/promotions/`, {
+                                        method: "POST",
+                                        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                            community_id: selectedPromoCommunityId,
+                                            duration: durationOptions[promoDurationIdx].label,
+                                            duration_idx: promoDurationIdx,
+                                            cost: durationOptions[promoDurationIdx].cost,
+                                        })
+                                    });
+                                    if (res.ok) {
+                                        const saved = await res.json();
+                                        const newItem = { ...cartItem, id: saved.id };
+                                        setPromoCart(prev => {
+                                            const filtered = prev.filter(i => i.communityId !== selectedPromoCommunityId);
+                                            return [...filtered, newItem];
+                                        });
+                                    }
+                                } catch (err) { console.error("Failed to save promotion:", err); }
+                                setIsPromoModalOpen(false);
+                                setSelectedPromoCommunityId(null);
+                                setPromoDurationIdx(2);
+                            }}
+                        >
+                            Done
+                        </button>
+                    </div>
+                </div>
+                <div className={styles.pmBody}>
+                    <div className={styles.pmDividerSection}>
+                        <div className={styles.pmDivider}></div>
+                        <p className={styles.pmSubText}>
+                            Choose a promotion for your community ad, your community will start to appear more for users!
+                        </p>
+                    </div>
+                    <h3 className={styles.pmSectionTitle}>Select community</h3>
+                    {ownedCommunities.length === 0 ? (
+                        <p className={styles.pmNoItems}>No communities found. Create one first.</p>
+                    ) : (
+                        <div className={styles.pmDropdownWrapper}>
+                            <div onClick={() => setIsCommunityDropdownOpen(p => !p)} className={styles.pmDropdownTrigger}>
+                                <span className={`${styles.pmDropdownTriggerText} ${selectedPromoCommunityId ? styles.pmDropdownTriggerTextSelected : ''}`}>
+                                    {selectedPromoCommunityId
+                                        ? ownedCommunities.find(c => c.id === selectedPromoCommunityId)?.name
+                                        : '— Choose a community —'}
+                                </span>
+                                <img
+                                    src={ArrowLeftIcon}
+                                    alt=""
+                                    className={styles.pmDropdownArrow}
+                                    style={{ transform: isCommunityDropdownOpen ? 'rotate(90deg)' : 'rotate(270deg)' }}
+                                />
+                            </div>
+                            {isCommunityDropdownOpen && (
+                                <div className={styles.pmDropdownList}>
+                                    <div className={styles.pmDropdownScroll}>
+                                        {ownedCommunities.map((c, i) => (
+                                            <div key={c.id}>
+                                                <div
+                                                    onClick={() => {
+                                                        setSelectedPromoCommunityId(c.id);
+                                                        const existing = promoCart.find(item => item.communityId === c.id);
+                                                        if (existing) setPromoDurationIdx(existing.durationIdx);
+                                                        setIsCommunityDropdownOpen(false);
+                                                    }}
+                                                    className={`${styles.pmDropdownItem} ${selectedPromoCommunityId === c.id ? styles.pmDropdownItemSelected : ''}`}
+                                                >
+                                                    <span>{c.name}</span>
+                                                    {promoCart.find(item => item.communityId === c.id) && (
+                                                        <span className={styles.pmDropdownInCart}>✓ in cart</span>
+                                                    )}
+                                                </div>
+                                                {i !== ownedCommunities.length - 1 && (
+                                                    <div className={styles.pmDropdownDivider} />
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    <h3 className={styles.pmSectionTitle}>Select duration</h3>
+                    <div className={styles.pmSliderWrapper}>
+                        <input
+                            type="range"
+                            min="0"
+                            max={durationOptions.length - 1}
+                            step="1"
+                            value={promoDurationIdx}
+                            onChange={(e) => setPromoDurationIdx(Number(e.target.value))}
+                            className={styles.pmInvisibleSlider}
+                        />
+                        <div className={styles.pmSliderTrack}>
+                            <div className={styles.pmSliderFill} style={{ width: `${(promoDurationIdx / (durationOptions.length - 1)) * 100}%` }}></div>
+                        </div>
+                        <div className={styles.pmSliderDotsContainer}>
+                            {durationOptions.map((opt, i) => {
+                                const isActive = i === promoDurationIdx;
+                                const isFilled = i <= promoDurationIdx;
+                                const leftPos = (i / (durationOptions.length - 1)) * 100;
+                                return (
+                                    <div key={i} className={styles.pmDotWrapper} style={{ left: `${leftPos}%` }}>
+                                        <div className={`${styles.pmDot} ${isActive ? styles.pmDotActive : isFilled ? styles.pmDotFilled : ''}`}></div>
+                                        <span className={`${styles.pmDotLabel} ${isActive ? styles.pmLabelActive : ''}`}>{opt.label}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    <div className={styles.pmTotalCost}>
+                        Total cost: <span className={styles.pmCostValue}>${durationOptions[promoDurationIdx].cost.toFixed(2)}</span>
+                        <p className={styles.pmNote}>
+                            Note: The promotion will get proceeded once making sure the community has been created successfully!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+
+    // ── Shared checkout modal ──
+    const CheckoutModal = () => createPortal(
+        <div className={styles.checkoutModalOverlay} onClick={() => setIsCheckoutModalOpen(false)}>
+            <div className={styles.checkoutModalContent} onClick={e => e.stopPropagation()}>
+                <h2 style={{ color: 'white', marginTop: 0, marginBottom: '24px', fontSize: '1.5rem' }}>Checkout</h2>
+                <div className={styles.checkoutInputGroup}>
+                    <label className={styles.checkoutLabel}>Name on Card</label>
+                    <input type="text" className={styles.checkoutInput} placeholder="John Doe" />
+                </div>
+                <div className={styles.checkoutInputGroup}>
+                    <label className={styles.checkoutLabel}>Card Number</label>
+                    <input type="text" className={styles.checkoutInput} placeholder="0000 0000 0000 0000" />
+                </div>
+                <div style={{ display: 'flex', gap: '16px' }}>
+                    <div className={styles.checkoutInputGroup} style={{ flex: 1 }}>
+                        <label className={styles.checkoutLabel}>Expiry Date</label>
+                        <input type="text" className={styles.checkoutInput} placeholder="MM/YY" />
+                    </div>
+                    <div className={styles.checkoutInputGroup} style={{ flex: 1 }}>
+                        <label className={styles.checkoutLabel}>CVC</label>
+                        <input type="text" className={styles.checkoutInput} placeholder="123" />
+                    </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+                    <button className={styles.checkoutCancelBtn} onClick={() => setIsCheckoutModalOpen(false)}>
+                        Cancel
+                    </button>
+                    <button className={styles.checkoutSubmitBtn} onClick={async () => {
+                        try {
+                            const res = await fetch(`${API}/api/communities/promotions/checkout/`, {
+                                method: 'POST',
+                                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    items: promoCart.map(item => ({
+                                        community_id: item.communityId,
+                                        duration: item.label,
+                                        cost: item.cost,
+                                    }))
+                                })
+                            });
+                            if (res.ok) {
+                                setPromoCart([]);
+                                setIsCheckoutModalOpen(false);
+                            } else {
+                                console.error('Checkout failed:', res.status);
+                            }
+                        } catch (err) {
+                            console.error('Checkout error:', err);
+                        }
+                    }}>Pay Now</button>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
 
     return (
         <div className={styles.darkContainer}>
@@ -321,71 +538,362 @@ export default function Community() {
                 </div>
             )}
 
-            {/* ── MOBILE BODY ── */}
+            {/* ══════════════════════════════════════
+                ── MOBILE BODY ──
+            ══════════════════════════════════════ */}
             {isMobile && (
                 <div style={{ display: "flex", flexDirection: "column", width: "100%", boxSizing: "border-box", padding: "12px 10px 0" }}>
-                    <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "rgba(255,255,255,0.85)", margin: "0 0 12px" }}>
-                        Looking for <span style={{
-                            background: "linear-gradient(30deg, #c72cff, #8b2dff)",
-                            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
-                        }}>COMMUNITIES</span>?
-                    </h1>
 
-                    <div style={{
-                        display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8,
-                        scrollbarWidth: "none", msOverflowStyle: "none"
-                    }}>
-                        {mobileFilters.map(f => (
-                            <button
-                                key={f.key}
-                                onClick={() => setFilter(f.key)}
-                                style={{
-                                    flexShrink: 0, padding: "8px 16px", borderRadius: 999,
-                                    border: "none", fontSize: "0.82rem", cursor: "pointer",
-                                    fontWeight: filter === f.key ? 600 : 400,
-                                    background: filter === f.key ? "#4a4a4a" : "#2a2a2a",
-                                    color: filter === f.key ? "#fff" : "#aaa",
-                                    boxShadow: filter === f.key ? "0 0 0 1px rgba(255,255,255,0.1)" : "none",
-                                    transition: "all 0.2s ease",
-                                }}
-                            >
-                                {f.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div style={{
-                        background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))",
-                        paddingTop: 6, borderRadius: "20px 20px 0 0", marginTop: 12
-                    }}>
-                        <div style={{
-                            background: "#333333", borderRadius: "20px 20px 0 0",
-                            padding: "20px 10px 30px", display: "flex", flexDirection: "column", gap: 16
-                        }}>
-                            {loading ? (
-                                <p style={{ color: "rgba(255,255,255,0.5)", padding: "0 10px" }}>Loading...</p>
-                            ) : displayedCommunities.length === 0 ? (
-                                <p style={{ color: "rgba(255,255,255,0.4)", padding: "0 10px" }}>No communities found.</p>
-                            ) : displayedCommunities.map((community, index) => (
-                                <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
-                                    <CommunityCard
-                                        community={community}
-                                        setCommunities={filter === "friends_related" ? setFriendsCommunities : setCommunities}
-                                    />
-                                    {index !== displayedCommunities.length - 1 && (
-                                        <div style={{
-                                            height: 1, width: "50%", margin: "16px auto 0",
-                                            background: "linear-gradient(transparent, rgba(255,255,255,0.12), transparent)"
-                                        }} />
-                                    )}
+                    {/* ── PAGE/UNI POV: pending checkout + promo + your communities + looking for ── */}
+                    {isUserPage ? (
+                        <>
+                            {/* ── PENDING CHECKOUT ── */}
+                            <div style={{
+                                width: "100%", maxWidth: 480, margin: "0 auto 12px",
+                                background: "rgba(255,255,255,0.04)",
+                                border: "1px solid rgba(255,255,255,0.08)",
+                                borderRadius: 16, overflow: "hidden",
+                                boxSizing: "border-box",
+                            }}>
+                                {/* header row */}
+                                <div style={{
+                                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                                    padding: "14px 16px 10px",
+                                    borderBottom: "1px solid rgba(255,255,255,0.07)"
+                                }}>
+                                    <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: "0.9rem" }}>
+                                        Pending checkout
+                                    </span>
+                                    <span style={{
+                                        background: "rgba(199,44,255,0.18)", color: "#c72cff",
+                                        fontSize: "0.72rem", fontWeight: 700,
+                                        padding: "3px 10px", borderRadius: 999
+                                    }}>
+                                        {promoCart.length} items
+                                    </span>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
+
+                                {/* list */}
+                                <div style={{ padding: "8px 0" }}>
+                                    {promoCart.length === 0 ? (
+                                        <p style={{
+                                            color: 'rgba(255,255,255,0.3)', fontSize: '0.82rem',
+                                            textAlign: 'center', padding: '14px 16px', margin: 0
+                                        }}>
+                                            No promotions queued. Use "Manage" below to add one.
+                                        </p>
+                                    ) : promoCart.map(item => {
+                                        const rawSrc = item.community.banner || item.community.image;
+                                        const imgSrc = rawSrc
+                                            ? rawSrc.startsWith('http') ? rawSrc : `${API}${rawSrc}`
+                                            : null;
+                                        return (
+                                            <div key={item.communityId} style={{ padding: "8px 16px" }}>
+                                                <div style={{
+                                                    display: "flex", alignItems: "center", gap: 10,
+                                                    background: "rgba(255,255,255,0.04)",
+                                                    borderRadius: 12, overflow: "hidden",
+                                                    padding: "8px 10px"
+                                                }}>
+                                                    {imgSrc ? (
+                                                        <img src={imgSrc} alt={item.community.name}
+                                                            style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                                                    ) : (
+                                                        <div style={{
+                                                            width: 44, height: 44, borderRadius: 8, flexShrink: 0,
+                                                            background: "rgba(139,45,255,0.2)",
+                                                            display: "flex", alignItems: "center", justifyContent: "center"
+                                                        }}>
+                                                            <span style={{ fontSize: 18 }}>🏘</span>
+                                                        </div>
+                                                    )}
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                            {item.community.name}
+                                                        </div>
+                                                        <div style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", marginTop: 2 }}>
+                                                            {item.label} · ${item.cost.toFixed(2)}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={async () => {
+                                                            if (item.id) {
+                                                                await fetch(`${API}/api/promotions/${item.id}/delete/`, {
+                                                                    method: "DELETE",
+                                                                    headers: { Authorization: `Bearer ${token}` }
+                                                                });
+                                                            }
+                                                            setPromoCart(prev => prev.filter(c => c.communityId !== item.communityId));
+                                                        }}
+                                                        style={{
+                                                            flexShrink: 0, background: "rgba(255,77,77,0.15)",
+                                                            border: "none", color: "#ff6b6b",
+                                                            fontSize: "0.75rem", fontWeight: 600,
+                                                            padding: "5px 10px", borderRadius: 8, cursor: "pointer"
+                                                        }}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* footer */}
+                                <div style={{
+                                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                                    padding: "10px 16px 14px",
+                                    borderTop: "1px solid rgba(255,255,255,0.07)"
+                                }}>
+                                    <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.85rem", fontWeight: 600 }}>
+                                        Total: <span style={{ color: "#fff" }}>${promoCart.reduce((s, i) => s + i.cost, 0).toFixed(2)}</span>
+                                    </span>
+                                    <button
+                                        onClick={() => promoCart.length > 0 && setIsCheckoutModalOpen(true)}
+                                        disabled={promoCart.length === 0}
+                                        style={{
+                                            background: promoCart.length === 0
+                                                ? "rgba(255,255,255,0.1)"
+                                                : "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))",
+                                            border: "none", color: promoCart.length === 0 ? "rgba(255,255,255,0.3)" : "#fff",
+                                            fontWeight: 700, fontSize: "0.8rem",
+                                            padding: "8px 16px", borderRadius: 10, cursor: promoCart.length === 0 ? "not-allowed" : "pointer",
+                                            transition: "all 0.2s"
+                                        }}
+                                    >
+                                        Proceed to checkout
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* ── COMMUNITY PROMOTION ── */}
+                            <div style={{
+                                width: "100%", maxWidth: 480, margin: "0 auto 20px",
+                                background: "rgba(255,255,255,0.04)",
+                                border: "1px solid rgba(255,255,255,0.08)",
+                                borderRadius: 16, padding: "14px 16px",
+                                boxSizing: "border-box",
+                                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12
+                            }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                                    <div style={{
+                                        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                                        background: "linear-gradient(-90deg, rgba(166,39,156,0.8), rgba(49,32,169,0.8))",
+                                        display: "flex", alignItems: "center", justifyContent: "center"
+                                    }}>
+                                        <img src={AdIcon} alt="" style={{ width: 20, height: 20, filter: "invert(1)" }} />
+                                    </div>
+                                    <div style={{ minWidth: 0 }}>
+                                        <div style={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>Community Promotion</div>
+                                        <div style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                            Boost your community's visibility
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setIsPromoModalOpen(true)}
+                                    style={{
+                                        flexShrink: 0,
+                                        background: "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))",
+                                        border: "none", color: "#fff",
+                                        fontWeight: 700, fontSize: "0.8rem",
+                                        padding: "8px 16px", borderRadius: 10, cursor: "pointer"
+                                    }}
+                                >
+                                    Manage
+                                </button>
+                            </div>
+
+                            {/* ── YOUR COMMUNITIES ── */}
+                            {ownedCommunities.length > 0 && (
+                                <>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                                        <h1 style={{ fontSize: "1.3rem", fontWeight: 700, color: "rgba(255,255,255,0.85)", margin: 0 }}>
+                                            Your <span style={{
+                                                background: "linear-gradient(30deg, #c72cff, #8b2dff)",
+                                                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
+                                            }}>COMMUNITIES</span>
+                                        </h1>
+                                        <div
+                                            onClick={() => {
+                                                (user?.is_premium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
+                                            }}
+                                            style={{
+                                                width: 36, height: 36, borderRadius: "50%",
+                                                background: "rgba(139,45,255,0.2)",
+                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                                cursor: "pointer", flexShrink: 0
+                                            }}
+                                        >
+                                            <img src={CreateCommunityIcon} alt="Create" style={{ width: 20, height: 20 }} />
+                                        </div>
+                                    </div>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
+                                        {ownedCommunities.map((community, index) => (
+                                            <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+                                                <CommunityCard
+                                                    community={community}
+                                                    setCommunities={setOwnedCommunities}
+                                                    fullWidth
+                                                    isOwned
+                                                    onSettingsClick={(c) => { setActiveCommunity(c); setSettingsOpen(true); setActiveTab('Community info'); }}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div style={{ height: 1, width: "50%", margin: "0 auto 24px", background: "linear-gradient(transparent, rgba(255,255,255,0.12), transparent)" }} />
+                                </>
+                            )}
+
+                            {/* ── LOOKING FOR COMMUNITIES ── */}
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                                <h1 style={{ fontSize: "1.3rem", fontWeight: 700, color: "rgba(255,255,255,0.85)", margin: 0 }}>
+                                    Looking for <span style={{
+                                        background: "linear-gradient(30deg, #c72cff, #8b2dff)",
+                                        WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
+                                    }}>COMMUNITIES</span>?
+                                </h1>
+                                {ownedCommunities.length === 0 && (
+                                    <div
+                                        onClick={() => {
+                                            (user?.is_premium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
+                                        }}
+                                        style={{
+                                            width: 36, height: 36, borderRadius: "50%",
+                                            background: "rgba(139,45,255,0.2)",
+                                            display: "flex", alignItems: "center", justifyContent: "center",
+                                            cursor: "pointer", flexShrink: 0
+                                        }}
+                                    >
+                                        <img src={CreateCommunityIcon} alt="Create" style={{ width: 20, height: 20 }} />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* filter pills */}
+                            <div style={{
+                                display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 12,
+                                scrollbarWidth: "none", msOverflowStyle: "none"
+                            }}>
+                                {mobileFilters.map(f => (
+                                    <button
+                                        key={f.key}
+                                        onClick={() => setFilter(f.key)}
+                                        style={{
+                                            flexShrink: 0, padding: "8px 16px", borderRadius: 999,
+                                            border: "none", fontSize: "0.82rem", cursor: "pointer",
+                                            fontWeight: filter === f.key ? 600 : 400,
+                                            background: filter === f.key ? "#4a4a4a" : "#2a2a2a",
+                                            color: filter === f.key ? "#fff" : "#aaa",
+                                            boxShadow: filter === f.key ? "0 0 0 1px rgba(255,255,255,0.1)" : "none",
+                                            transition: "all 0.2s ease",
+                                        }}
+                                    >
+                                        {f.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* community cards */}
+                            <div style={{
+                                background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))",
+                                paddingTop: 6, borderRadius: "20px 20px 0 0"
+                            }}>
+                                <div style={{
+                                    background: "#333333", borderRadius: "20px 20px 0 0",
+                                    padding: "20px 10px 30px", display: "flex", flexDirection: "column", gap: 16
+                                }}>
+                                    {loading ? (
+                                        <p style={{ color: "rgba(255,255,255,0.5)", padding: "0 10px" }}>Loading...</p>
+                                    ) : displayedCommunities.length === 0 ? (
+                                        <p style={{ color: "rgba(255,255,255,0.4)", padding: "0 10px" }}>No communities found.</p>
+                                    ) : displayedCommunities.map((community, index) => (
+                                        <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+                                            <CommunityCard
+                                                community={community}
+                                                setCommunities={filter === "friends_related" ? setFriendsCommunities : setCommunities}
+                                            />
+                                            {index !== displayedCommunities.length - 1 && (
+                                                <div style={{
+                                                    height: 1, width: "50%", margin: "16px auto 0",
+                                                    background: "linear-gradient(transparent, rgba(255,255,255,0.12), transparent)"
+                                                }} />
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        /* ── REGULAR USER POV (unchanged) ── */
+                        <>
+                            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "rgba(255,255,255,0.85)", margin: "0 0 12px" }}>
+                                Looking for <span style={{
+                                    background: "linear-gradient(30deg, #c72cff, #8b2dff)",
+                                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
+                                }}>COMMUNITIES</span>?
+                            </h1>
+
+                            <div style={{
+                                display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8,
+                                scrollbarWidth: "none", msOverflowStyle: "none"
+                            }}>
+                                {mobileFilters.map(f => (
+                                    <button
+                                        key={f.key}
+                                        onClick={() => setFilter(f.key)}
+                                        style={{
+                                            flexShrink: 0, padding: "8px 16px", borderRadius: 999,
+                                            border: "none", fontSize: "0.82rem", cursor: "pointer",
+                                            fontWeight: filter === f.key ? 600 : 400,
+                                            background: filter === f.key ? "#4a4a4a" : "#2a2a2a",
+                                            color: filter === f.key ? "#fff" : "#aaa",
+                                            boxShadow: filter === f.key ? "0 0 0 1px rgba(255,255,255,0.1)" : "none",
+                                            transition: "all 0.2s ease",
+                                        }}
+                                    >
+                                        {f.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div style={{
+                                background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))",
+                                paddingTop: 6, borderRadius: "20px 20px 0 0", marginTop: 12
+                            }}>
+                                <div style={{
+                                    background: "#333333", borderRadius: "20px 20px 0 0",
+                                    padding: "20px 10px 30px", display: "flex", flexDirection: "column", gap: 16
+                                }}>
+                                    {loading ? (
+                                        <p style={{ color: "rgba(255,255,255,0.5)", padding: "0 10px" }}>Loading...</p>
+                                    ) : displayedCommunities.length === 0 ? (
+                                        <p style={{ color: "rgba(255,255,255,0.4)", padding: "0 10px" }}>No communities found.</p>
+                                    ) : displayedCommunities.map((community, index) => (
+                                        <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+                                            <CommunityCard
+                                                community={community}
+                                                setCommunities={filter === "friends_related" ? setFriendsCommunities : setCommunities}
+                                            />
+                                            {index !== displayedCommunities.length - 1 && (
+                                                <div style={{
+                                                    height: 1, width: "50%", margin: "16px auto 0",
+                                                    background: "linear-gradient(transparent, rgba(255,255,255,0.12), transparent)"
+                                                }} />
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             )}
 
-            {/* ── DESKTOP BODY ── */}
+            {/* ══════════════════════════════════════
+                ── DESKTOP BODY ──
+            ══════════════════════════════════════ */}
             {!isMobile && (
                 <div className={`${styles.content} ${styles.page}`}>
                     <SideBarNav theme={theme} toggleTheme={toggleTheme} user={user} />
@@ -442,11 +950,8 @@ export default function Community() {
                                         />
                                     </div>
                                 </div>
-
-
                             </>
                         ) : (
-
                             <>
                                 {ownedCommunities.length > 0 && (
                                     <>
@@ -495,7 +1000,6 @@ export default function Community() {
                                     {isUserPage && ownedCommunities.length === 0 && (
                                         <div className={styles.createCommunityBtn} onClick={() => {
                                             (user?.is_premium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
-
                                         }} style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "8px", cursor: "pointer" }}>
                                             <img src={CreateCommunityIcon} alt="" className={styles.createCommunityIcon} />
                                         </div>
@@ -526,7 +1030,6 @@ export default function Community() {
                         )}
                     </div>
 
-
                     <div className={styles.rightSection} style={{ marginTop: settingsOpen ? "2%" : "4%", flex: isUserPage ? " 0 0 420px;" : "0 0 380px" }}>
                         {settingsOpen ? (
                             <CommunitySettingsNav
@@ -535,7 +1038,6 @@ export default function Community() {
                             />
                         ) : showCreateCommunityModal && isUserPage ? (
                             <>
-
                                 <div style={{ animation: 'tabFadeIn 0.25s ease forwards' }}>
                                     <CommunityPermissions
                                         postApproval={postApproval}
@@ -556,7 +1058,6 @@ export default function Community() {
                                 </div>
                             </>
                         ) : isUserPage ? (
-
                             <>
                                 <div className={styles.pillContainer}>
                                     <div className={styles.pill} style={{ width: "25%", left: "7%", top: "-40px" }}>
@@ -657,7 +1158,6 @@ export default function Community() {
                                 </div>
                             </>
                         ) : (
-
                             <>
                                 <div className={styles.pill} style={{ left: "20px" }}>FRIENDS RELATED</div>
                                 <div className={styles.rightCard}>
@@ -694,9 +1194,7 @@ export default function Community() {
                                             Request one and we'll review it.
                                         </p>
                                         {requestSent ? (
-                                            <span className={styles.waitingText}>
-                                                Waiting...
-                                            </span>
+                                            <span className={styles.waitingText}>Waiting...</span>
                                         ) : (
                                             <button className={styles.applyButton} onClick={() => setIsModalOpen(true)}>
                                                 Apply
@@ -709,6 +1207,8 @@ export default function Community() {
                     </div>
                 </div>
             )}
+
+            {/* ── SHARED MODALS (work on both mobile & desktop) ── */}
             {activeTab === 'Delete' && (
                 <DeleteCommunityModal
                     isOpen={true}
@@ -730,233 +1230,8 @@ export default function Community() {
                     API={API}
                 />
             )}
-            {isPromoModalOpen && createPortal(
-                <div className={styles.promoModalOverlay} onClick={() => setIsPromoModalOpen(false)}>
-                    <div className={styles.promoModalContent} onClick={e => e.stopPropagation()}>
-                        <div className={styles.pmHeader}>
-                            <div className={styles.pmHeaderLeft}>
-                                <img src={ArrowLeftIcon} alt="Back" className={styles.pmBackIcon} onClick={() => setIsPromoModalOpen(false)} />
-                                <div className={styles.pmAdIconWrapper}>
-                                    <img src={AdIcon} alt="Ad" className={styles.pmAdIcon} />
-                                </div>
-                                <h2 className={styles.pmTitle}>Community Promotion</h2>
-                            </div>
-                            <div className={styles.pmHeaderRight}>
-                                <span className={styles.pmCancelBtn} onClick={() => setIsPromoModalOpen(false)}>Cancel</span>
-                                <button
-                                    className={styles.pmDoneBtn}
-                                    onClick={async () => {
-                                        if (!selectedPromoCommunityId) { setIsPromoModalOpen(false); return; }
-                                        const communityObj = ownedCommunities.find(c => c.id === selectedPromoCommunityId);
-                                        if (!communityObj) return;
-
-                                        const cartItem = {
-                                            communityId: selectedPromoCommunityId,
-                                            community: communityObj,
-                                            durationIdx: promoDurationIdx,
-                                            label: durationOptions[promoDurationIdx].label,
-                                            cost: durationOptions[promoDurationIdx].cost,
-                                        };
-
-                                        try {
-                                            const existingItem = promoCart.find(item => item.communityId === selectedPromoCommunityId);
-                                            if (existingItem) {
-                                                await fetch(`${API}/api/promotions/${existingItem.id}/delete/`, {
-                                                    method: "DELETE",
-                                                    headers: { Authorization: `Bearer ${token}` }
-                                                });
-                                            }
-
-                                            const res = await fetch(`${API}/api/communities/promotions/`, {
-                                                method: "POST",
-                                                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-                                                body: JSON.stringify({
-                                                    community_id: selectedPromoCommunityId,
-                                                    duration: durationOptions[promoDurationIdx].label,
-                                                    duration_idx: promoDurationIdx,
-                                                    cost: durationOptions[promoDurationIdx].cost,
-                                                })
-                                            });
-
-                                            if (res.ok) {
-                                                const saved = await res.json();
-                                                const newItem = { ...cartItem, id: saved.id };
-                                                setPromoCart(prev => {
-                                                    const filtered = prev.filter(i => i.communityId !== selectedPromoCommunityId);
-                                                    return [...filtered, newItem];
-                                                });
-                                            }
-                                        } catch (err) { console.error("Failed to save promotion:", err); }
-
-                                        setIsPromoModalOpen(false);
-                                        setSelectedPromoCommunityId(null);
-                                        setPromoDurationIdx(2);
-                                    }}
-                                >
-                                    Done
-                                </button>
-                            </div>
-                        </div>
-                        <div className={styles.pmBody}>
-                            <div className={styles.pmDividerSection}>
-                                <div className={styles.pmDivider}></div>
-                                <p className={styles.pmSubText}>
-                                    Choose a promotion for your community ad, your community will start to appear more for users!
-                                </p>
-                            </div>
-
-                            <h3 className={styles.pmSectionTitle}>Select community</h3>
-                            {ownedCommunities.length === 0 ? (
-                                <p className={styles.pmNoItems}>No communities found. Create one first.</p>
-                            ) : (
-                                <div className={styles.pmDropdownWrapper}>
-                                    <div
-                                        onClick={() => setIsCommunityDropdownOpen(p => !p)}
-                                        className={styles.pmDropdownTrigger}
-                                    >
-                                        <span className={`${styles.pmDropdownTriggerText} ${selectedPromoCommunityId ? styles.pmDropdownTriggerTextSelected : ''}`}>
-                                            {selectedPromoCommunityId
-                                                ? ownedCommunities.find(c => c.id === selectedPromoCommunityId)?.name
-                                                : '— Choose a community —'}
-                                        </span>
-                                        <img
-                                            src={ArrowLeftIcon}
-                                            alt=""
-                                            className={styles.pmDropdownArrow}
-                                            style={{ transform: isCommunityDropdownOpen ? 'rotate(90deg)' : 'rotate(270deg)' }}
-                                        />
-                                    </div>
-                                    {isCommunityDropdownOpen && (
-                                        <div className={styles.pmDropdownList}>
-                                            <div className={styles.pmDropdownScroll}>
-                                                {ownedCommunities.map((c, i) => (
-                                                    <div key={c.id}>
-                                                        <div
-                                                            onClick={() => {
-                                                                setSelectedPromoCommunityId(c.id);
-                                                                const existing = promoCart.find(item => item.communityId === c.id);
-                                                                if (existing) setPromoDurationIdx(existing.durationIdx);
-                                                                setIsCommunityDropdownOpen(false);
-                                                            }}
-                                                            className={`${styles.pmDropdownItem} ${selectedPromoCommunityId === c.id ? styles.pmDropdownItemSelected : ''}`}
-                                                        >
-                                                            <span>{c.name}</span>
-                                                            {promoCart.find(item => item.communityId === c.id) && (
-                                                                <span className={styles.pmDropdownInCart}>✓ in cart</span>
-                                                            )}
-                                                        </div>
-                                                        {i !== ownedCommunities.length - 1 && (
-                                                            <div className={styles.pmDropdownDivider} />
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            <h3 className={styles.pmSectionTitle}>Select duration</h3>
-                            <div className={styles.pmSliderWrapper}>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max={durationOptions.length - 1}
-                                    step="1"
-                                    value={promoDurationIdx}
-                                    onChange={(e) => setPromoDurationIdx(Number(e.target.value))}
-                                    className={styles.pmInvisibleSlider}
-                                />
-                                <div className={styles.pmSliderTrack}>
-                                    <div className={styles.pmSliderFill} style={{ width: `${(promoDurationIdx / (durationOptions.length - 1)) * 100}%` }}></div>
-                                </div>
-                                <div className={styles.pmSliderDotsContainer}>
-                                    {durationOptions.map((opt, i) => {
-                                        const isActive = i === promoDurationIdx;
-                                        const isFilled = i <= promoDurationIdx;
-                                        const leftPos = (i / (durationOptions.length - 1)) * 100;
-                                        return (
-                                            <div key={i} className={styles.pmDotWrapper} style={{ left: `${leftPos}%` }}>
-                                                <div className={`${styles.pmDot} ${isActive ? styles.pmDotActive : isFilled ? styles.pmDotFilled : ''}`}></div>
-                                                <span className={`${styles.pmDotLabel} ${isActive ? styles.pmLabelActive : ''}`}>{opt.label}</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                            <div className={styles.pmTotalCost}>
-                                Total cost: <span className={styles.pmCostValue}>${durationOptions[promoDurationIdx].cost.toFixed(2)}</span>
-                                <p className={styles.pmNote}>
-                                    Note: The promotion will get proceeded once making sure the community has been created successfully!
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
-            {isCheckoutModalOpen && createPortal(
-                <div className={styles.checkoutModalOverlay} onClick={() => setIsCheckoutModalOpen(false)}>
-                    <div className={styles.checkoutModalContent} onClick={e => e.stopPropagation()}>
-                        <h2 style={{ color: 'white', marginTop: 0, marginBottom: '24px', fontSize: '1.5rem' }}>Checkout</h2>
-
-                        <div className={styles.checkoutInputGroup}>
-                            <label className={styles.checkoutLabel}>Name on Card</label>
-                            <input type="text" className={styles.checkoutInput} placeholder="John Doe" />
-                        </div>
-
-                        <div className={styles.checkoutInputGroup}>
-                            <label className={styles.checkoutLabel}>Card Number</label>
-                            <input type="text" className={styles.checkoutInput} placeholder="0000 0000 0000 0000" />
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '16px' }}>
-                            <div className={styles.checkoutInputGroup} style={{ flex: 1 }}>
-                                <label className={styles.checkoutLabel}>Expiry Date</label>
-                                <input type="text" className={styles.checkoutInput} placeholder="MM/YY" />
-                            </div>
-                            <div className={styles.checkoutInputGroup} style={{ flex: 1 }}>
-                                <label className={styles.checkoutLabel}>CVC</label>
-                                <input type="text" className={styles.checkoutInput} placeholder="123" />
-                            </div>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
-                            <button className={styles.checkoutCancelBtn} onClick={() => setIsCheckoutModalOpen(false)}>
-                                Cancel
-                            </button>
-                            <button className={styles.checkoutSubmitBtn} onClick={async () => {
-                                const token = localStorage.getItem("access");
-                                try {
-                                    const res = await fetch(`${API}/api/communities/promotions/checkout/`, {
-                                        method: 'POST',
-                                        headers: {
-                                            Authorization: `Bearer ${token}`,
-                                            'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify({
-                                            items: promoCart.map(item => ({
-                                                community_id: item.communityId,
-                                                duration: item.label,
-                                                cost: item.cost,
-                                            }))
-                                        })
-                                    });
-                                    if (res.ok) {
-                                        setPromoCart([]);
-                                        setIsCheckoutModalOpen(false);
-                                    } else {
-                                        console.error('Checkout failed:', res.status);
-                                    }
-                                } catch (err) {
-                                    console.error('Checkout error:', err);
-                                }
-                            }}>Pay Now</button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
+            {isPromoModalOpen && <PromoModal />}
+            {isCheckoutModalOpen && <CheckoutModal />}
         </div>
     );
 }

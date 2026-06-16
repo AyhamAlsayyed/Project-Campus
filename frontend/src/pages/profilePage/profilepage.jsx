@@ -1141,7 +1141,7 @@ export default function ProfilePage({ type }) {
                                                 <div className={styles.nameRow}>
                                                     <div className={styles.userInfo}>
                                                         <h2 className={styles.username}>{username}</h2>
-                                                        <span className={styles.role}>/{user.role}</span>
+                                                        <span className={styles.role}>/{user?.role}</span>
                                                     </div>
                                                     <button className={styles.editProfileBtn} onClick={() => setIsEditing(true)}>
                                                         <span className={styles.editText}>Edit</span>

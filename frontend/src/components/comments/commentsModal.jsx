@@ -458,7 +458,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
 
                                     {isExpanded && replies.map((reply) => (
                                         <div key={reply.id} className={styles.replyRow} ref={el => commentRefs.current[reply.id] = el}>
-                                            <Link to={reply.author?.user_type === 'page' ? `/page/${reply.user_id}` : `/profile/${reply.user_id}`}>                                                <img src={reply.user_avatar || "/default-avatar.png"} className={styles.replyAvatar} alt="" />
+                                            <Link to={reply.author?.user_type === 'page' ? `/page/${reply.user_id}` : `/profile/${reply.user_id}`}>                                             <img src={reply.user_avatar || "/default-avatar.png"} className={styles.replyAvatar} alt="" />
                                             </Link>
                                             <div className={styles.replyContent}>
                                                 <div className={`${styles.replyBubble} ${highlightedId === reply.id ? styles.highlighted : ''}`}>

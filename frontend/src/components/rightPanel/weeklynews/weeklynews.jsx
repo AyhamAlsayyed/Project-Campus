@@ -3,7 +3,7 @@ import styles from "./weeklynews.module.css";
 import { createPortal } from "react-dom";
 import ArrowRight from '../../../Assets/icons/arrow-right.png'
 import NeutralReview from '../../../Assets/icons/neutral-review.png'
-export default function WeeklyNews({ communityId, useHighlights }) {
+export default function WeeklyNews({ communityId, useHighlights, isMobile }) {
     const [items, setItems] = useState([]);
     const [idx, setIdx] = useState(0);
     const [news, setNews] = useState([]);
@@ -47,8 +47,9 @@ export default function WeeklyNews({ communityId, useHighlights }) {
         <div className={styles.container}>
             <div className={styles.newsWrap}>
 
-
-                <div className={styles.pill}>{communityId ? "HIGHLIGHTS" : "WEEKLY NEWS"}</div>
+                {!isMobile && (
+                    <div className={styles.pill}>{communityId ? "HIGHLIGHTS" : "WEEKLY NEWS"}</div>
+                )}
                 <div className={styles.card}>
                     {items.length === 0 ? (
                         <div className={styles.emptyState}>
