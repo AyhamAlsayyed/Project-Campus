@@ -113,13 +113,13 @@ export default function Community() {
                 if (res.ok) {
                     const data = await res.json();
                     setPromoCart(data.map(item => ({
-                        id: item.id,
+                        id: item.promotion_id,
                         communityId: item.object_id,
                         community: {
-                            name: item.object_name || `Community #${item.object_id}`,
-                            banner: item.object_banner || null,
-                            image: item.object_banner || null,
-                            description: null,
+                            name: item.target_details?.name || `Community #${item.object_id}`,
+                            banner: item.target_details?.image || null,
+                            image: item.target_details?.image || null,
+                            description: item.target_details?.description || null,
                         },
                         durationIdx: item.duration_idx ?? 2,
                         label: item.duration || 'Unknown',
@@ -236,8 +236,10 @@ export default function Community() {
 
     useEffect(() => { loadUser(); }, []);
 
-    const avatarSrc = user?.avatar
-        ? user.avatar.startsWith("http") ? user.avatar : `${API}${user.avatar}`
+    const rawImage = user?.profile_image || user?.avatar;
+
+    const avatarSrc = rawImage
+        ? rawImage.startsWith("http") ? rawImage : `${API}${rawImage}`
         : ProfilePicture;
 
     const mobileFilters = [
@@ -544,13 +546,49 @@ export default function Community() {
             {isMobile && (
                 <div style={{ display: "flex", flexDirection: "column", width: "100%", boxSizing: "border-box", padding: "12px 10px 0" }}>
 
-                    {/* ── PAGE/UNI POV: pending checkout + promo + your communities + looking for ── */}
-                    {isUserPage ? (
+                    {/* Check if creation view is active on Mobile */}
+                    {showCreateCommunityModal && isUserPage ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "20px", paddingBottom: "30px" }}>
+                            <div style={{ animation: 'tabFadeIn 0.25s ease forwards' }}>
+                                <CreateCommunityForm
+                                    onBack={() => setShowCreateCommunityModal(false)}
+                                    onSuccess={(id, community) => {
+                                        setOwnedCommunities(prev => [...prev, {
+                                            ...community,
+                                            isJoined: true,
+                                            isVerified: false,
+                                            isPrivate: community.is_private,
+                                            requestSent: false,
+                                        }]);
+                                        setShowCreateCommunityModal(false);
+                                    }}
+                                />
+                            </div>
+                            <div style={{ animation: 'tabFadeIn 0.25s ease forwards' }}>
+                                <CommunityPermissions
+                                    postApproval={postApproval}
+                                    onPostApprovalChange={setPostApproval}
+                                    whoCanPost={whoCanPost}
+                                    onWhoCanPostChange={handleWhoCanPostChange}
+                                />
+                            </div>
+                            <div className={styles.promoContainer} style={{ marginTop: 0 }}>
+                                <div className={styles.promoHeaderContainer}>
+                                    <div className={styles.promoIconColored}></div>
+                                    <h3 className={styles.promoTitle}>Community Promotion</h3>
+                                </div>
+                                <div className={styles.promoBodyContainer}>
+                                    <p className={styles.promoText}>Manage your promotion plan and get more users to notice your community.</p>
+                                    <button className={styles.promoManageBtn} onClick={() => setIsPromoModalOpen(true)}>Manage</button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : isUserPage ? (
                         <>
                             {/* ── PENDING CHECKOUT ── */}
                             <div style={{
                                 width: "100%", maxWidth: 480, margin: "0 auto 12px",
-                                background: "rgba(255,255,255,0.04)",
+                                background: "#333333",
                                 border: "1px solid rgba(255,255,255,0.08)",
                                 borderRadius: 16, overflow: "hidden",
                                 boxSizing: "border-box",
@@ -670,7 +708,7 @@ export default function Community() {
                             {/* ── COMMUNITY PROMOTION ── */}
                             <div style={{
                                 width: "100%", maxWidth: 480, margin: "0 auto 20px",
-                                background: "rgba(255,255,255,0.04)",
+                                background: "#333333",
                                 border: "1px solid rgba(255,255,255,0.08)",
                                 borderRadius: 16, padding: "14px 16px",
                                 boxSizing: "border-box",
@@ -716,17 +754,16 @@ export default function Community() {
                                             }}>COMMUNITIES</span>
                                         </h1>
                                         <div
+                                            className={styles.createCommunityBtn}
                                             onClick={() => {
                                                 (user?.is_premium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
                                             }}
                                             style={{
-                                                width: 36, height: 36, borderRadius: "50%",
-                                                background: "rgba(139,45,255,0.2)",
                                                 display: "flex", alignItems: "center", justifyContent: "center",
-                                                cursor: "pointer", flexShrink: 0
+                                                padding: "8px", cursor: "pointer", transition: "background 0.2s", flexShrink: 0
                                             }}
                                         >
-                                            <img src={CreateCommunityIcon} alt="Create" style={{ width: 20, height: 20 }} />
+                                            <img src={CreateCommunityIcon} alt="Create" className={styles.createCommunityIcon} />
                                         </div>
                                     </div>
                                     <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
@@ -826,7 +863,6 @@ export default function Community() {
                             </div>
                         </>
                     ) : (
-                        /* ── REGULAR USER POV (unchanged) ── */
                         <>
                             <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "rgba(255,255,255,0.85)", margin: "0 0 12px" }}>
                                 Looking for <span style={{
