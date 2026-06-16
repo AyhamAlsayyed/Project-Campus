@@ -8,7 +8,6 @@ import CameraIcon from '../../Assets/icons/camera.png';
 
 const API = 'http://localhost:8000';
 
-
 export default function CommunityInfoPanel({ community, onBack }) {
     console.log('community in InfoPanel:', community);
     console.log('community.image:', community?.image);
@@ -94,7 +93,7 @@ export default function CommunityInfoPanel({ community, onBack }) {
         : '';
 
     return (
-        <div className={styles.infoPanelContainer}>
+        <div className={`${styles.infoPanelContainer} max-sm:p-4 w-full box-border`}>
 
             {/* Toast */}
             {toast && (
@@ -104,7 +103,7 @@ export default function CommunityInfoPanel({ community, onBack }) {
             )}
 
             {/* ── HEADER ── */}
-            <div className={styles.infoHeader}>
+            <div className={`${styles.infoHeader} max-sm:flex-col max-sm:items-start max-sm:gap-4`}>
                 <div className={styles.infoHeaderLeft}>
                     <button
                         onClick={onBack}
@@ -115,7 +114,7 @@ export default function CommunityInfoPanel({ community, onBack }) {
                     <h2 className={styles.infoTitle}>Community Info</h2>
                 </div>
 
-                <div className={styles.infoHeaderRight}>
+                <div className={`${styles.infoHeaderRight} max-sm:w-full max-sm:justify-between`}>
                     <button
                         className={`${styles.saveBtn} ${hasChanges ? styles.saveBtnActive : ''}`}
                         onClick={handleSave}
@@ -131,7 +130,7 @@ export default function CommunityInfoPanel({ community, onBack }) {
 
             {/* ── BANNER ── */}
             <div className={styles.sectionWrapper}>
-                <div className={styles.sectionHeaderBanner}>
+                <div className={`${styles.sectionHeaderBanner} max-sm:flex-col max-sm:items-start max-sm:gap-1`}>
                     <h3 className={styles.sectionTitle}>
                         Banner <span className={styles.requiredAsterisk}>*</span>
                     </h3>
@@ -141,7 +140,7 @@ export default function CommunityInfoPanel({ community, onBack }) {
                 </div>
 
                 <div
-                    className={styles.bannerContainer}
+                    className={`${styles.bannerContainer} max-sm:h-44`}
                     style={{
                         backgroundImage: bannerUrl ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('${bannerUrl}')` : 'none',
                         backgroundSize: 'cover',
@@ -165,7 +164,7 @@ export default function CommunityInfoPanel({ community, onBack }) {
 
             {/* ── NAME (read-only) ── */}
             <div className={styles.sectionWrapper}>
-                <div className={styles.nameRow}>
+                <div className={`${styles.nameRow} max-sm:flex-wrap max-sm:gap-2`}>
                     <div className={styles.nameWrapper}>
                         <h1 className={styles.communityName}>{communityName}</h1>
                         <img src={VerifiedBadge} className={styles.iconVerified} alt="Verified" />
@@ -179,7 +178,7 @@ export default function CommunityInfoPanel({ community, onBack }) {
 
             {/* ── DESCRIPTION ── */}
             <div className={styles.sectionWrapper}>
-                <div className={styles.sectionHeaderDescription}>
+                <div className={`${styles.sectionHeaderDescription} max-sm:flex-col max-sm:items-start max-sm:gap-1`}>
                     <h3 className={styles.sectionTitle}>Description</h3>
                     <span className={styles.sectionHelperText}>
                         Give your community a relatable description that is related to its topic
@@ -204,17 +203,19 @@ export default function CommunityInfoPanel({ community, onBack }) {
 
             {/* ── PRIVACY ── */}
             <div>
-                <div className={styles.privacyContainer}>
-                    <div className={styles.privacyInfo}>
+                <div className={`${styles.privacyContainer} max-md:flex-col max-md:items-start max-md:gap-4`}>
+                    
+                    {/* FIXED: Added max-md:flex-col to drop the text row down into a nice stacked left-aligned block on mobile viewports */}
+                    <div className={`${styles.privacyInfo} max-md:flex-col max-md:items-start max-md:gap-1 max-md:text-left`}>
                         <h3 className={styles.privacyTitle}>Privacy</h3>
                         <span className={styles.sectionHelperText}>
                             Public communities are open to everyone. Private communities require admin approval to join.
                         </span>
                     </div>
 
-                    <div className={styles.privacySelectorWrapper}>
+                    <div className={`${styles.privacySelectorWrapper} max-md:w-fit`}>
                         <div
-                            className={styles.privacySelector}
+                            className={`${styles.privacySelector} max-md:w-fit max-md:justify-start max-md:gap-4`}
                             onClick={() => setIsPrivacyDropdownOpen(p => !p)}
                         >
                             <div className={styles.privacyBtn}>{privacyType}</div>
@@ -230,7 +231,7 @@ export default function CommunityInfoPanel({ community, onBack }) {
                         </div>
 
                         {isPrivacyDropdownOpen && (
-                            <div className={styles.privacyDropdown}>
+                            <div className={`${styles.privacyDropdown} max-md:w-full`}>
                                 {['Public', 'Private'].map((option) => (
                                     <div
                                         key={option}

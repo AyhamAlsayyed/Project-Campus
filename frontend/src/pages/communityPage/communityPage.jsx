@@ -25,6 +25,7 @@ import RequestsTab from '../../components/communitySettings/requestsTab';
 import CommunityPosts from '../../components/communitySettings/CommunityPosts';
 import DeleteCommunityModal from '../../components/communitySettings/deleteCommunityModal';
 import API from '../../config';
+
 export default function CommunityPage() {
     const [user, setUser] = useState(null)
     const { theme, toggleTheme } = useTheme();
@@ -61,6 +62,7 @@ export default function CommunityPage() {
         }
     }, [activeSettingsTab]);
     const displayedTab = activeSettingsTab === 'Delete' ? prevSettingsTab : activeSettingsTab;
+    
     const handleToggleNotification = async () => {
         const prev = isNotified;
         setIsNotified(!prev);
@@ -100,7 +102,6 @@ export default function CommunityPage() {
     }, [mobileMenuOpen]);
 
     const openComments = (postId) => { setSelectedPostId(postId); setIsCommentModalOpen(true); };
-    
 
     const resetPostState = () => {
         setContent(""); setImages([]); setFiles([]); setPollOptions(["", ""]); setIsPollOpen(false);
@@ -125,6 +126,7 @@ export default function CommunityPage() {
         const data = await res.json();
         setCommunity(data);
     };
+    
     const loadUser = async () => {
         if (!token) return;
         try {
@@ -133,7 +135,6 @@ export default function CommunityPage() {
             });
             const data = await res.json();
 
-            // 👇 Add this
             if (data.role === 'university' || localStorage.getItem('user_type') === 'university') {
                 const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -147,6 +148,7 @@ export default function CommunityPage() {
             setUser(data);
         } catch (err) { console.error("Failed to load user"); }
     };
+    
     useEffect(() => {
         const fetchJoinedCommunities = async () => {
             if (!token) return;
@@ -204,6 +206,7 @@ export default function CommunityPage() {
 
     const handleMediaUpload = (e) => { setImages(prev => [...prev, ...Array.from(e.target.files)]); };
     const handleFileUpload = (e) => { setFiles(prev => [...prev, ...Array.from(e.target.files)]); };
+    
     const handleDeleteCommunity = async () => {
         try {
             const res = await fetch(`${API}/api/communities/${id}/`, {
@@ -211,7 +214,7 @@ export default function CommunityPage() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
-                navigate('/communities'); // Redirect to directory after deletion
+                navigate('/communities');
             } else {
                 console.error("Failed to delete community");
             }
@@ -233,15 +236,15 @@ export default function CommunityPage() {
         { key: "popular", label: "Popular" },
         { key: "trending", label: "Trending" },
     ];
+    
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
     }, [theme]);
 
-
     return (
         <div className={styles.darkContainer}>
-        
-          {/* ── MOBILE HEADER ── */}
+
+            {/* ── MOBILE HEADER ── */}
             {isMobile && (
                 <MobileHeader avatarSrc={avatarSrc} user={user} setMobileMenuOpen={setMobileMenuOpen} token={token} API={API} />
             )}
@@ -275,40 +278,207 @@ export default function CommunityPage() {
             {/* ── MOBILE BODY ── */}
             {isMobile && (
                 <div style={{ display: "flex", flexDirection: "column", width: "100%", boxSizing: "border-box" }}>
-                    <div style={{ padding: "12px 14px 0" }}><WeeklyNews communityId={id} /></div>
-                    <div style={{ padding: "10px 14px 0" }}>
-                        <MobileCreatePost avatarSrc={avatarSrc} setIsModalOpen={setIsModalOpen} handleMediaUpload={handleMediaUpload} handleFileUpload={handleFileUpload} setIsPollOpen={setIsPollOpen} isPollOpen={isPollOpen} />
-                    </div>
-                    <div style={{ padding: "14px 14px 0" }}>
-                        <h1 style={{ margin: 0, lineHeight: 1.2, display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                            <span style={{ fontSize: "2rem", fontWeight: 800, background: "linear-gradient(30deg, #c72cff, #8b2dff)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{community?.name}</span>
-                            <span style={{ fontSize: "1.1rem", fontWeight: 500, color: "rgba(255,255,255,0.5)" }}>community</span>
-                        </h1>
-                    </div>
-                    <div style={{ padding: "10px 14px 0" }}>
-                        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none", msOverflowStyle: "none" }}>
-                            {mobileFilters.map(f => (
-                                <button key={f.key} onClick={() => setFilter(f.key)} style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: "none", fontSize: "0.82rem", cursor: "pointer", fontWeight: filter === f.key ? 600 : 400, background: filter === f.key ? "#4a4a4a" : "#2a2a2a", color: filter === f.key ? "#fff" : "#aaa", boxShadow: filter === f.key ? "0 0 0 1px rgba(255,255,255,0.1)" : "none", transition: "all 0.2s ease" }}>
-                                    {f.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                    {isSettingsOpen ? (
+                        <CommunitySettingsNav
+                            activeTab={activeSettingsTab}
+                            setActiveTab={setActiveSettingsTab}
+                        />
+                    ) : (
+                        <>
+                            <div style={{ padding: "12px 14px 0", minWidth: 200, margin: "0 auto 0 auto" }}>
+                                <WeeklyNews communityId={id} isMobile={isMobile} />
+                            </div>
+
+                            <div style={{ padding: "10px 14px 0" }}>
+                                <MobileCreatePost
+                                    avatarSrc={avatarSrc}
+                                    setIsModalOpen={setIsModalOpen}
+                                    handleMediaUpload={handleMediaUpload}
+                                    handleFileUpload={handleFileUpload}
+                                    setIsPollOpen={setIsPollOpen}
+                                    isPollOpen={isPollOpen}
+                                />
+                            </div>
+                        </>
+                    )}
+
+                    {/* Hides Title row and Filters panel if Settings are open */}
+                    {!isSettingsOpen && (
+                        <>
+                            <div
+                                style={{
+                                    padding: "14px 14px 0",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    gap: 12
+                                }}
+                            >
+                                <h1
+                                    style={{
+                                        margin: 0,
+                                        lineHeight: 1.2,
+                                        display: "flex",
+                                        alignItems: "baseline",
+                                        gap: 8,
+                                        flexWrap: "wrap"
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            fontSize: "2rem",
+                                            fontWeight: 800,
+                                            background: "linear-gradient(30deg, #c72cff, #8b2dff)",
+                                            WebkitBackgroundClip: "text",
+                                            WebkitTextFillColor: "transparent"
+                                        }}
+                                    >
+                                        {community?.name}
+                                    </span>
+
+                                    <span
+                                        style={{
+                                            fontSize: "1.1rem",
+                                            fontWeight: 500,
+                                            color: "rgba(255,255,255,0.5)"
+                                        }}
+                                    >
+                                        community
+                                    </span>
+                                </h1>
+
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 20
+                                    }}
+                                >
+                                    <button
+                                        onClick={handleToggleNotification}
+                                        style={{
+                                            background: "none",
+                                            border: "none",
+                                            cursor: "pointer",
+                                            padding: 0
+                                        }}
+                                    >
+                                        <img
+                                            src={isNotified ? NotificationActive : NotificationInactive}
+                                            alt="notifications"
+                                            className={styles.headerIcon}
+                                            style={{
+                                                height: isNotified ? "30px" : "25px"
+                                            }}
+                                        />
+                                    </button>
+
+                                    {canManage ? (
+                                        <button
+                                            onClick={() => {
+                                                setIsSettingsOpen(true);
+                                                setActiveSettingsTab('Community info');
+                                            }}
+                                            style={{
+                                                background: "none",
+                                                border: "none",
+                                                cursor: "pointer",
+                                                padding: 0
+                                            }}
+                                        >
+                                            <img
+                                                src={Setting}
+                                                alt="settings"
+                                                className={styles.headerIcon}
+                                            />
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => setShowLeaveConfirm(true)}
+                                            style={{
+                                                background: "none",
+                                                border: "none",
+                                                cursor: "pointer",
+                                                padding: 0
+                                            }}
+                                        >
+                                            <img
+                                                src={Leave}
+                                                alt="leave"
+                                                className={styles.headerIcon}
+                                            />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                            
+                            <div style={{ padding: "10px 14px 0" }}>
+                                <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none", msOverflowStyle: "none" }}>
+                                    {mobileFilters.map(f => (
+                                        <button key={f.key} onClick={() => setFilter(f.key)} style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: "none", fontSize: "0.82rem", cursor: "pointer", fontWeight: filter === f.key ? 600 : 400, background: filter === f.key ? "#4a4a4a" : "#2a2a2a", color: filter === f.key ? "#fff" : "#aaa", boxShadow: filter === f.key ? "0 0 0 1px rgba(255,255,255,0.1)" : "none", transition: "all 0.2s ease" }}>
+                                            {f.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    )}
+
                     <div style={{ width: "100%", boxSizing: "border-box", margin: "12px 0 0 0", borderRadius: "20px 20px 0 0", background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))", paddingTop: 6 }}>
                         <div style={{ background: "#333333", borderRadius: "20px 20px 0 0", padding: "20px 10px 40px", display: "flex", flexDirection: "column", gap: 16 }}>
-                            {posts.length === 0
-                                ? <p style={{ color: "rgba(255,255,255,0.4)", padding: "0 10px" }}>No posts yet.</p>
-                                : posts.map(post => (
-                                    <PostCard
-                                        key={post.id}
-                                        post={post}
-                                        openComments={openComments}
-                                        isAdmin={canManage}
-                                        communityContext={true}
-                                        communityId={id}
-                                    />
-                                ))
-                            }
+                            {isSettingsOpen ? (
+                                <>
+                                    {(displayedTab === 'Settings' || displayedTab === 'Community info') && (
+                                        <CommunityInfoPanel
+                                            community={community}
+                                            onBack={() => setIsSettingsOpen(false)}
+                                        />
+                                    )}
+
+                                    {displayedTab === 'Members' && (
+                                        <MembersTab
+                                            communityId={id}
+                                            onBack={() => setActiveSettingsTab('Community info')}
+                                        />
+                                    )}
+
+                                    {displayedTab === 'Requests' && (
+                                        <RequestsTab
+                                            communityId={id}
+                                            token={token}
+                                            onBack={() => setActiveSettingsTab('Community info')}
+                                            isPublic={community?.is_public}
+                                        />
+                                    )}
+
+                                    {displayedTab === 'Posts' && (
+                                        <CommunityPosts
+                                            communityId={id}
+                                            token={token}
+                                            onBack={() => setActiveSettingsTab('Community info')}
+                                        />
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    {posts.length === 0 ? (
+                                        <p style={{ color: "rgba(255,255,255,0.4)", padding: "0 10px" }}>
+                                            No posts yet.
+                                        </p>
+                                    ) : (
+                                        posts.map(post => (
+                                            <PostCard
+                                                key={post.id}
+                                                post={post}
+                                                openComments={openComments}
+                                                isAdmin={canManage}
+                                                communityContext={true}
+                                                communityId={id}
+                                            />
+                                        ))
+                                    )}
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -317,15 +487,12 @@ export default function CommunityPage() {
             {/* ── DESKTOP BODY ── */}
             {!isMobile && (
                 <div className={`${styles.content} ${styles.page}`}>
-
-
                     <SideBarNav theme={theme} toggleTheme={toggleTheme} user={user} />
 
                     {isSettingsOpen ? (
                         <>
                             <div className={`${styles.communityPostsContainer} ${styles.settingsWrapper}`}>
                                 <div className={`${styles.mainContent} ${styles.settingsMiddleContainer}`}>
-                                  
                                     {(displayedTab === 'Settings' || displayedTab === 'Community info') && (
                                         <CommunityInfoPanel community={community} onBack={() => setIsSettingsOpen(false)} />
                                     )}
@@ -336,14 +503,12 @@ export default function CommunityPage() {
                                         />
                                     )}
                                     {displayedTab === 'Requests' && (
-                                        <>
-                                            {console.log('id being passed to RequestsTab:', id)}
-                                            <RequestsTab
-                                                communityId={id}
-                                                token={token}
-                                                onBack={() => setActiveSettingsTab('Community info')}
-                                                isPublic={community?.is_public}
-                                            /></>
+                                        <RequestsTab
+                                            communityId={id}
+                                            token={token}
+                                            onBack={() => setActiveSettingsTab('Community info')}
+                                            isPublic={community?.is_public}
+                                        />
                                     )}
                                     {displayedTab === 'Posts' && (
                                         <CommunityPosts
@@ -352,8 +517,6 @@ export default function CommunityPage() {
                                             token={token}
                                         />
                                     )}
-
-
                                 </div>
                             </div>
 
@@ -379,19 +542,17 @@ export default function CommunityPage() {
                                     </div>
                                     <div style={{ display: "flex", alignItems: "center", gap: 50 }}>
                                         <button onClick={handleToggleNotification} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                                            <img src={isNotified ? NotificationActive : NotificationInactive} alt="notifications" className={styles.headerIcon} style={{height : NotificationActive ? "30px" : "25px"}} />
+                                            <img src={isNotified ? NotificationActive : NotificationInactive} alt="notifications" className={styles.headerIcon} style={{ height: NotificationActive ? "30px" : "25px" }} />
                                         </button>
                                         {canManage ? (
                                             <button onClick={() => setIsSettingsOpen(!isSettingsOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                                                 <img src={Setting} alt="settings" className={styles.headerIcon} />
                                             </button>
-
                                         ) : (
                                             <button onClick={() => setShowLeaveConfirm(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                                                 <img src={Leave} alt="leave" className={styles.headerIcon} />
                                             </button>
                                         )}
-
                                     </div>
                                 </div>
                                 {posts.length > 0 ? (
@@ -484,19 +645,20 @@ export default function CommunityPage() {
             {isCommentModalOpen && <CommentModal post={selectedPost} onClose={() => setIsCommentModalOpen(false)} currentUser={user} />}
 
             {showLeaveConfirm && (
-                <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(5px)", WebkitBackdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center", animation: "fadeIn 0.2s ease-out" }} onClick={() => setShowLeaveConfirm(false)}>
-                    <div style={{ background: "#1c1c1e", width: 290, borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 48px rgba(0,0,0,0.6)", display: "flex", flexDirection: "column", overflow: "hidden", animation: "popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)" }} onClick={e => e.stopPropagation()}>
+                <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(5px)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowLeaveConfirm(false)}>
+                    <div style={{ background: "#1c1c1e", width: 290, borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 48px rgba(0,0,0,0.6)", display: "flex", flexDirection: "column", overflow: "hidden" }} onClick={e => e.stopPropagation()}>
                         <div style={{ padding: "24px 20px 20px", textAlign: "center" }}>
                             <h3 style={{ color: "#ffffff", fontSize: "1.05rem", fontWeight: 600, margin: "0 0 6px", letterSpacing: "-0.01em" }}>Leave this community?</h3>
                             <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.85rem", lineHeight: 1.4, margin: 0 }}>You'll need to rejoin to see <strong style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>{community?.name}</strong>'s content again.</p>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                            <button onClick={() => setShowLeaveConfirm(false)} style={{ background: "transparent", border: "none", borderBottom: "1px solid rgba(255,255,255,0.08)", padding: 16, fontSize: "1rem", cursor: "pointer", fontFamily: "inherit", color: "#ffffff", fontWeight: 400, transition: "background 0.15s ease" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>Cancel</button>
-                            <button onClick={handleLeave} style={{ background: "transparent", border: "none", padding: 16, fontSize: "1rem", cursor: "pointer", fontFamily: "inherit", color: "#ff453a", fontWeight: 600, transition: "background 0.15s ease" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,69,58,0.1)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>Leave</button>
+                            <button onClick={() => setShowLeaveConfirm(false)} style={{ background: "transparent", border: "none", borderBottom: "1px solid rgba(255,255,255,0.08)", padding: 16, fontSize: "1rem", cursor: "pointer", fontFamily: "inherit", color: "#ffffff", fontWeight: 400 }}>Cancel</button>
+                            <button onClick={handleLeave} style={{ background: "transparent", border: "none", padding: 16, fontSize: "1rem", cursor: "pointer", fontFamily: "inherit", color: "#ff453a", fontWeight: 600 }}>Leave</button>
                         </div>
                     </div>
                 </div>
             )}
+            
             {activeSettingsTab === 'Delete' && (
                 <DeleteCommunityModal
                     isOpen={true}

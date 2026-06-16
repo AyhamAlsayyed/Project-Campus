@@ -3,13 +3,14 @@ import styles from './communities.module.css';
 
 const WHO_CAN_POST_OPTIONS = ['Everyone', 'Members only', 'Admins only'];
 
-export default function CommunityPermissions({ postApproval, onPostApprovalChange, whoCanPost, onWhoCanPostChange }) {
+export default function CommunityPermissions({ postApproval, onPostApprovalChange, whoCanPost, onWhoCanPostChange, isMobile }) {
     return (
         <div style={{ width: '100%' }}>
-            <div className={styles.pillContainer}>
-                <div className={styles.pill}>PERMISSIONS</div>
-            </div>
-
+            {!isMobile && (  
+                <div className={styles.pillContainer}>
+                    <div className={styles.pill}>PERMISSIONS</div>
+                </div>
+            )}
             <div className={styles.permissionsCard}>
                 <div className={styles.permissionRow}>
                     <div className={styles.permissionInfo}>

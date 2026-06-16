@@ -546,8 +546,47 @@ export default function Community() {
             {isMobile && (
                 <div style={{ display: "flex", flexDirection: "column", width: "100%", boxSizing: "border-box", padding: "12px 10px 0" }}>
 
-                    {/* Check if creation view is active on Mobile */}
-                    {showCreateCommunityModal && isUserPage ? (
+                    {settingsOpen ? (
+                        <>
+                            <div style={{marginBottom: 20}}>
+                                <CommunitySettingsNav
+                                    activeTab={activeTab}
+                                    setActiveTab={setActiveTab}
+                                />
+                            </div>
+
+
+
+
+                            {(activeTab === 'Settings' || activeTab === 'Community info') && (
+                                <CommunityInfoPanel
+                                    community={activeCommunity}
+                                    onBack={() => setSettingsOpen(false)}
+                                />
+                            )}
+                            {activeTab === 'Members' && (
+                                <MembersTab
+                                    communityId={activeCommunity?.id}
+                                    onBack={() => setActiveTab('Community info')}
+                                />
+                            )}
+                            {activeTab === 'Requests' && (
+                                <RequestsTab
+                                    communityId={activeCommunity?.id}
+                                    token={token}
+                                    onBack={() => setActiveTab('Community info')}
+                                    isPublic={activeCommunity?.is_public}
+                                />
+                            )}
+                            {activeTab === 'Posts' && (
+                                <CommunityPosts
+                                    onBack={() => setActiveTab('Community info')}
+                                    communityId={activeCommunity?.id}
+                                    token={token}
+                                />
+                            )}
+                        </>
+                    ) : showCreateCommunityModal && isUserPage ? (
                         <div style={{ display: "flex", flexDirection: "column", gap: "20px", paddingBottom: "30px" }}>
                             <div style={{ animation: 'tabFadeIn 0.25s ease forwards' }}>
                                 <CreateCommunityForm
@@ -564,15 +603,16 @@ export default function Community() {
                                     }}
                                 />
                             </div>
-                            <div style={{ animation: 'tabFadeIn 0.25s ease forwards' }}>
+                            <div style={{ animation: 'tabFadeIn 0.25s ease forwards', maxWidth: "400px", margin: "0 auto 0 auto" }}>
                                 <CommunityPermissions
                                     postApproval={postApproval}
                                     onPostApprovalChange={setPostApproval}
                                     whoCanPost={whoCanPost}
                                     onWhoCanPostChange={handleWhoCanPostChange}
+                                    isMobile={isMobile}
                                 />
                             </div>
-                            <div className={styles.promoContainer} style={{ marginTop: 0 }}>
+                            <div className={styles.promoContainer} style={{ margin: "0 auto 0 auto", maxWidth: "400px" }}>
                                 <div className={styles.promoHeaderContainer}>
                                     <div className={styles.promoIconColored}></div>
                                     <h3 className={styles.promoTitle}>Community Promotion</h3>
@@ -585,7 +625,6 @@ export default function Community() {
                         </div>
                     ) : isUserPage ? (
                         <>
-                            {/* ── PENDING CHECKOUT ── */}
                             <div style={{
                                 width: "100%", maxWidth: 480, margin: "0 auto 12px",
                                 background: "#333333",
@@ -763,7 +802,9 @@ export default function Community() {
                                                 padding: "8px", cursor: "pointer", transition: "background 0.2s", flexShrink: 0
                                             }}
                                         >
-                                            <img src={CreateCommunityIcon} alt="Create" className={styles.createCommunityIcon} />
+                                            <img src={CreateCommunityIcon} alt="Create" className={styles.createCommunityIcon} onClick={() => {
+                                                (user?.is_premium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
+                                            }} />
                                         </div>
                                     </div>
                                     <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
@@ -1080,6 +1121,7 @@ export default function Community() {
                                         onPostApprovalChange={setPostApproval}
                                         whoCanPost={whoCanPost}
                                         onWhoCanPostChange={handleWhoCanPostChange}
+                                        isMobile={isMobile}
                                     />
                                 </div>
                                 <div className={styles.promoContainer}>

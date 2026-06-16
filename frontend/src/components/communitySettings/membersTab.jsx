@@ -14,7 +14,6 @@ import InfoIcon from '../../Assets/icons/info.png';
 import { useNavigate } from 'react-router-dom';
 const API = 'http://localhost:8000';
 
-
 // ── Role helpers ──
 const getRoleTier = (member) => {
     const r = (member.role || '').toLowerCase();
@@ -33,8 +32,6 @@ const isOwner = (member) => getRoleTier(member) === 0;
 const isAdmin = (member) => getRoleTier(member) === 1;
 const isMember = (member) => getRoleTier(member) === 2;
 
-// What actions can currentUserRole perform on a target member?
-const canAct = () => true;
 export default function MembersTab({ communityId, onBack, currentUserRole = 'member' }) {
 
     const [allMembers, setAllMembers] = useState([]);
@@ -71,7 +68,6 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                 const data = await res.json();
                 setAllMembers(data);
 
-                // 👇 Add this — derive role from the fetched list directly
                 const loginUser = JSON.parse(localStorage.getItem('login_user'));
                 const me = data.find(m => m.username === loginUser?.username);
 
@@ -85,21 +81,13 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
         };
         fetchMembers();
     }, [communityId, token]);
-    useEffect(() => {
-        const handler = (e) => {
-            if (filterRef.current && !filterRef.current.contains(e.target)) setIsFilterOpen(false);
-            if (sortRef.current && !sortRef.current.contains(e.target)) setIsSortOpen(false);
-            if (actionMenuRef.current && !actionMenuRef.current.contains(e.target)) setActiveActionMenu(null);
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, []);
 
     // ── Close dropdowns on outside click ──
     useEffect(() => {
         const handler = (e) => {
             if (filterRef.current && !filterRef.current.contains(e.target)) setIsFilterOpen(false);
             if (sortRef.current && !sortRef.current.contains(e.target)) setIsSortOpen(false);
+            if (actionMenuRef.current && !actionMenuRef.current.contains(e.target)) setActiveActionMenu(null);
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
@@ -139,11 +127,9 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
             });
         })
         .sort((a, b) => {
-            // Always sort by role tier first
             const tierDiff = getRoleTier(a) - getRoleTier(b);
             if (tierDiff !== 0) return tierDiff;
 
-            // Then apply user's chosen sort within same tier
             if (sortMode === 'alpha') {
                 const nameA = (a.name || a.full_name || a.username || '').toLowerCase();
                 const nameB = (b.name || b.full_name || b.username || '').toLowerCase();
@@ -239,10 +225,11 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
 
             <div className={styles.centeredDivider} />
 
-            {/* Search & Controls */}
-            <div className={styles.controlsRow}>
-                <div className={styles.searchWrapper}>
-
+            {/* FIXED: Added max-sm:flex-wrap and max-sm:gap-3 to cleanly stack inputs on smaller viewports */}
+            <div className={`${styles.controlsRow} max-sm:flex-wrap max-sm:gap-3`}>
+                
+                {/* FIXED: Made the search wrapper stretch 100% width on mobile */}
+                <div className={`${styles.searchWrapper} max-sm:w-full`}>
                     <div className={styles.searchIcon}>
                         <img src={SearchIcon} className={styles.iconSearch} alt="" />
                     </div>
@@ -270,7 +257,6 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                         <img src={FilterIcon} className={`${styles.iconFilter} ${activeFilters.length > 0 ? styles.iconFilterActive : ''}`} alt="" />
                         Filter {activeFilters.length > 0 ? `(${activeFilters.length})` : ''}
                     </button>
-
 
                     {isFilterOpen && (
                         <div className={styles.dropdownMenu}>
@@ -350,13 +336,10 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
 
                 {!loading && visibleMembers.map((member, index) => {
                     const myTier = getRoleTier({ role: currentRole });
-
                     const theirTier = getRoleTier(member);
                     const canKick = myTier < theirTier;
                     const canMakeAdmin = canKick && isMember(member);
                     const canRemoveAdmin = myTier === 0 && isAdmin(member);
-
-
 
                     const displayRole = getDisplayRole(member);
                     const memberIsOwner = isOwner(member);
