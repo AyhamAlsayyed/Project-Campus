@@ -1396,6 +1396,7 @@ class NotificationSetting(models.Model):
     community_new_post = models.BooleanField(default=True)
     community_join_request_status = models.BooleanField(default=True)
 
+    new_event = models.BooleanField(default=True)
     event_updated_cancelled = models.BooleanField(default=True)
 
     page_announcement = models.BooleanField(default=True)

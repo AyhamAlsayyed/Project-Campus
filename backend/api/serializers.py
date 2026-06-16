@@ -1328,16 +1328,6 @@ class NotificationSettingSerializer(serializers.ModelSerializer):
     def get_disabled_by_master(self, obj):
         return not obj.enable_all
 
-    """
-    def validate(self, data):
-        days = data.get("event_reminder_days")
-        if days is not None and (days < 1 or days > 7):
-            raise serializers.ValidationError(
-                {"event_reminder_days": "Reminder buffer range must be between 1 and 7 days."}
-            )
-        return data
-    """
-
 
 class MessageMediaSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source="media_id", read_only=True)
