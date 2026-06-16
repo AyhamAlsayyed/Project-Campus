@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Search, Check } from "lucide-react";
 import styles from './DrawerStyles.module.css';
-
+import StatusDot from '../presence/StatusDot';
 export default function ChatsBottomSheet({
     setShowDrawerChats,
     dropdownPosition,
@@ -84,12 +84,8 @@ export default function ChatsBottomSheet({
                     >
                         <div className={styles.chatAvatarWrap}>
                             <img src={chat.avatar} alt="" className={styles.chatAvatar} />
-                            {!chat.isGroup && (
-                                <span className={`${styles.statusDot} ${chat.dotStyle === 'online' ? styles.dotOnline :
-                                    chat.dotStyle === 'dnd' ? styles.dotDnd :
-                                        styles.dotOffline
-                                    }`} />
-                            )}
+                           {!chat.isGroup && <StatusDot userId={chat.userId} size="sm" />}
+
                         </div>
                         <div className={styles.chatGrid}>
                             {!chat.isGroup && <span className={styles.chatStatus}>{chat.status}</span>}

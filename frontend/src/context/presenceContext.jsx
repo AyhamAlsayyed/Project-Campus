@@ -20,7 +20,7 @@ import React, {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const WS_URL            = 'ws://localhost:8000/ws/status/';
-const TOKEN_KEY         = 'access_token';   // localStorage key — adjust if yours differs
+const TOKEN_KEY         = 'access';   
 const INITIAL_BACKOFF   = 1_000;            // 1 s
 const MAX_BACKOFF       = 30_000;           // 30 s
 const MAX_RETRY_COUNT   = 10;

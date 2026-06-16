@@ -7,6 +7,7 @@ import BellIcon from '../../Assets/icons/notifications.png';
 import BellActiveIcon from '../../Assets/icons/notifications-active.png';
 import NotifsBottomSheet from '../dropDownMenus/NotificationsBottomSheet';
 import ChatsBottomSheet from '../dropDownMenus/ChatsBottomSheet';
+import headerStyles from './mobileHeader.module.css';
 import { createPortal } from 'react-dom';
 import { Users, User, BookOpen, X } from 'lucide-react';
 export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token, API, homeMode = false }) {
@@ -222,43 +223,21 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
 
     return (
         <>
-            <div style={{
-                position: "sticky", top: 0, zIndex: 500,
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "10px 14px",
-                background: "#1a1a1a",
-                borderBottom: "1px solid rgba(255,255,255,0.07)",
-                boxSizing: "border-box", width: "100%"
-            }}>
+            <div className={headerStyles.headerBar}>
                 {/* Hamburger */}
-                <button
-                    onClick={() => setMobileMenuOpen(true)}
-                    style={{
-                        flexShrink: 0, width: 38, height: 38,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        background: "transparent", border: "none", cursor: "pointer",
-                        borderRadius: "50%"
-                    }}
-                >
+                <button className={headerStyles.hamburgerBtn} onClick={() => setMobileMenuOpen(true)}>
                     <Menu size={22} color="white" />
                 </button>
 
                 {/* Logo */}
-                <img src={darkModeIcon} alt="Logo" style={{ height: 32, flexShrink: 0 }} />
+                <img src={darkModeIcon} alt="Logo" className={headerStyles.logo} />
 
                 {/* Search bar */}
-                <div style={{
-                    flex: 1, display: "flex", alignItems: "center", gap: 8,
-                    background: "#535353", borderRadius: 999, padding: "7px 14px",
-                    minWidth: 0, position: "relative"
-                }}>
-                    <Search size={15} color="rgba(255,255,255,0.6)" style={{ flexShrink: 0 }} />
+                <div className={headerStyles.searchBar}>
+                    <Search size={15}  style={{ flexShrink: 0 }} />
                     <input
                         ref={searchInputRef}
-                        style={{
-                            flex: 1, background: "transparent", border: "none",
-                            outline: "none", color: "#fff", fontSize: "0.85rem", minWidth: 0
-                        }}
+                        className={headerStyles.searchInput}
                         placeholder="Search..."
                         value={searchQuery}
                         onChange={handleSearchChange}
@@ -270,205 +249,132 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                         }}
                     />
                     {searchQuery && (
-                        <button onClick={() => { setSearchQuery(''); setSearchResults(null); setShowSearchDropdown(false); }}
-                            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", padding: 0, display: "flex" }}>
+                        <button className={headerStyles.clearBtn}
+                            onClick={() => { setSearchQuery(''); setSearchResults(null); setShowSearchDropdown(false); }}>
                             <X size={14} />
                         </button>
                     )}
                 </div>
 
-                {/* Avatar — opens 3-option dropdown */}
-                <div ref={avatarDropdownRef} style={{ position: "relative", flexShrink: 0 }}>
+                {/* Avatar */}
+                <div className={headerStyles.avatarWrap} ref={avatarDropdownRef}>
                     <button
                         onClick={() => setShowAvatarDropdown(p => !p)}
-                        style={{
-                            width: 36, height: 36, borderRadius: "50%",
-                            border: homeMode ? "1px solid rgba(255,255,255,0.12)" : "2px solid rgba(255,255,255,0.2)",
-                            padding: 0, background: homeMode ? "rgba(255,255,255,0.07)" : "transparent",
-                            cursor: "pointer",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            overflow: "hidden"
-                        }}
+                        className={`${headerStyles.avatarBtn} ${homeMode ? headerStyles.avatarBtnHome : headerStyles.avatarBtnDefault}`}
                     >
                         {homeMode
-                            ? <Home size={20} color="white" />
-                            : <img src={avatarSrc} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            ? <Home size={20} />
+                            : <img src={avatarSrc} alt="Profile" className={headerStyles.avatarImg} />
                         }
                     </button>
 
                     {showAvatarDropdown && (
-                        <div style={{
-                            position: "absolute", top: "calc(100% + 8px)", right: 0,
-                            background: "#2a2a2a", border: "1px solid rgba(255,255,255,0.1)",
-                            borderRadius: 16, padding: 8, zIndex: 600,
-                            boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
-                            display: "flex", flexDirection: "column", gap: 4, minWidth: 160
-                        }}>
-                            {/* Profile / Home — depends on page */}
+                        <div className={headerStyles.avatarDropdown}>
                             {homeMode ? (
-                                <button
-                                    onClick={() => { navigate('/home'); setShowAvatarDropdown(false); }}
-                                    style={{
-                                        display: "flex", alignItems: "center", gap: 10,
-                                        background: "transparent", border: "none", color: "#fff",
-                                        padding: "10px 12px", borderRadius: 10, cursor: "pointer",
-                                        fontSize: "0.9rem", fontWeight: 500, textAlign: "left"
-                                    }}
-                                >
-                                    <Home size={20} color="white" />
+                                <button className={headerStyles.dropdownItem}
+                                    onClick={() => { navigate('/home'); setShowAvatarDropdown(false); }}>
+                                    <Home size={20} />
                                     Home
                                 </button>
                             ) : (
-                                <button
-                                    onClick={() => { navigate(`/profile/${user?.id}`); setShowAvatarDropdown(false); }}
-                                    style={{
-                                        display: "flex", alignItems: "center", gap: 10,
-                                        background: "transparent", border: "none", color: "#fff",
-                                        padding: "10px 12px", borderRadius: 10, cursor: "pointer",
-                                        fontSize: "0.9rem", fontWeight: 500, textAlign: "left"
-                                    }}
-                                >
-                                    <img src={avatarSrc} alt=""
-                                        style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" }} />
+                                <button className={headerStyles.dropdownItem}
+                                    onClick={() => { navigate(`/profile/${user?.id}`); setShowAvatarDropdown(false); }}>
+                                    <img src={avatarSrc} alt="" className={headerStyles.dropdownAvatarImg} />
                                     Profile
                                 </button>
                             )}
 
-                            <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "2px 0" }} />
+                            <div className={headerStyles.dropdownDivider} />
 
-                            {/* Messages */}
-                            <button
+                            <button className={headerStyles.dropdownItem}
                                 onClick={(e) => {
                                     const rect = e.currentTarget.getBoundingClientRect();
                                     setDropdownPosition({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
                                     setShowDrawerChats(prev => !prev);
                                     setShowDrawerNotifs(false);
-                                }}
-                                style={{
-                                    display: "flex", alignItems: "center", gap: 10,
-                                    background: "transparent", border: "none", color: "#fff",
-                                    padding: "10px 12px", borderRadius: 10, cursor: "pointer",
-                                    fontSize: "0.9rem", fontWeight: 500, textAlign: "left",
-                                    position: "relative"
-                                }}
-                            >
-                                <img src={MessageSquareIcon} width={22} height={22} alt="" style={{ filter: "invert(1)" }} />
+                                }}>
+                                <img src={MessageSquareIcon} width={22} height={22} alt="" className={headerStyles.dropdownIcon} />
                                 Messages
                                 {drawerUnreadChats > 0 && (
-                                    <span style={{
-                                        marginLeft: "auto", background: "#ff4d4d", color: "#fff",
-                                        fontSize: 10, fontWeight: 700, width: 18, height: 18,
-                                        borderRadius: "50%", display: "grid", placeItems: "center"
-                                    }}>{drawerUnreadChats}</span>
+                                    <span className={`${headerStyles.unreadBadge} ${headerStyles.unreadBadgeMessages}`}>
+                                        {drawerUnreadChats}
+                                    </span>
                                 )}
                             </button>
 
-                            <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "2px 0" }} />
+                            <div className={headerStyles.dropdownDivider} />
 
-                            {/* Notifications */}
-                            <button
+                            <button className={headerStyles.dropdownItem}
                                 onClick={(e) => {
                                     const rect = e.currentTarget.getBoundingClientRect();
                                     setDropdownPosition({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
                                     setShowDrawerNotifs(prev => !prev);
                                     setShowDrawerChats(false);
-                                }}
-                                style={{
-                                    display: "flex", alignItems: "center", gap: 10,
-                                    background: "transparent", border: "none", color: "#fff",
-                                    padding: "10px 12px", borderRadius: 10, cursor: "pointer",
-                                    fontSize: "0.9rem", fontWeight: 500, textAlign: "left"
-                                }}
-                            >
-                                <img
-                                    src={drawerUnreadCount > 0 ? BellActiveIcon : BellIcon}
-                                    width={22} height={22} alt="" style={{ filter: "invert(1)" }}
-                                />
+                                }}>
+                                <img src={drawerUnreadCount > 0 ? BellActiveIcon : BellIcon}
+                                    width={22} height={22} alt="" className={headerStyles.dropdownIcon} />
                                 Notifications
                                 {drawerUnreadCount > 0 && (
-                                    <span style={{
-                                        marginLeft: "auto", background: "#ff4d94", color: "#fff",
-                                        fontSize: 10, fontWeight: 700, width: 18, height: 18,
-                                        borderRadius: "50%", display: "grid", placeItems: "center"
-                                    }}>{drawerUnreadCount}</span>
+                                    <span className={`${headerStyles.unreadBadge} ${headerStyles.unreadBadgeNotifs}`}>
+                                        {drawerUnreadCount}
+                                    </span>
                                 )}
                             </button>
                         </div>
                     )}
                 </div>
-                {showSearchDropdown && searchQuery.trim() && searchBoxRect && createPortal(
-                    <div id="mobile-search-portal" style={{
-                        position: "fixed",
-                        top: searchBoxRect.bottom + 6,
-                        left: searchBoxRect.left + 8,     
-                        width: `calc(${searchBoxRect.width}px - 16px)`,
-                        maxWidth: "500px",
-                       
-                        minWidth: "280px",
-                        /* ------------------------ */
 
-                        background: "#333333",
-                        borderRadius: 16,
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        boxShadow: "0 20px 50px rgba(0,0,0,0.6)",
-                        zIndex: 99999,
-                        overflow: "hidden",
-                        maxHeight: "60vh",
-                        overflowY: "auto"
+                {/* Search portal */}
+                {showSearchDropdown && searchQuery.trim() && searchBoxRect && createPortal(
+                    <div className={headerStyles.searchPortal} style={{
+                        top: searchBoxRect.bottom + 6,
+                        left: searchBoxRect.left + 8,
+                        width: `calc(${searchBoxRect.width}px - 16px)`,
+                        maxWidth: '500px',
                     }}>
-                        {/* See all */}
-                        <div onMouseDown={() => handleResultClick("all")}
-                            style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", cursor: "pointer", background: "rgba(139,45,255,0.08)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}
-                            onMouseEnter={e => e.currentTarget.style.background = "rgba(139,45,255,0.18)"}
-                            onMouseLeave={e => e.currentTarget.style.background = "rgba(139,45,255,0.08)"}
-                        >
-                            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(-90deg, rgba(166,39,156,0.8), rgba(49,32,169,0.8))", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                <Search size={14} color="white" />
-                            </div>
-                            <span style={{ color: "#fff", fontWeight: 600, fontSize: "0.85rem" }}>
-                                See all results for "<span style={{ color: "#c084fc" }}>{searchQuery}</span>"
+                        <div className={headerStyles.seeAllRow} onMouseDown={() => handleResultClick('all')}>
+                            <div className={headerStyles.seeAllIconWrap}><Search size={14} color="white" /></div>
+                            <span className={headerStyles.seeAllText}>
+                                See all results for "<span className={headerStyles.seeAllHighlight}>{searchQuery}</span>"
                             </span>
                         </div>
 
                         {searchLoading ? (
-                            <div style={{ padding: 16, textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "0.85rem" }}>Searching…</div>
+                            <div className={headerStyles.searchStatus}>Searching…</div>
                         ) : searchResults ? (
                             <>
                                 {searchResults.people?.length > 0 && (
                                     <div>
-                                        <div style={{ padding: "8px 16px 4px", color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>People</div>
-                                        {searchResults.people.slice(0, 3).map(person => (
-                                            <div key={person.id} onMouseDown={() => handleResultClick("person", person)}
-                                                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", cursor: "pointer" }}
-                                                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                                            >
-                                                <img src={(() => { const av = person.profile?.profile_image || person.avatar_url || person.avatar; if (!av) return "/default-avatar.png"; return av.startsWith("http") ? av : `${API}${av}`; })()}
-                                                    alt="" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
-                                                <div style={{ minWidth: 0 }}>
-                                                    <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{person.profile?.full_name || person.full_name || person.username}</div>
-                                                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>@{person.username}</div>
+                                        <div className={headerStyles.sectionLabel}>People</div>
+                                        {searchResults.people.slice(0, 3).map(person => {
+                                            const av = person.profile?.profile_image || person.avatar_url || person.avatar;
+                                            const src = !av ? '/default-avatar.png' : av.startsWith('http') ? av : `${API}${av}`;
+                                            return (
+                                                <div key={person.id} className={headerStyles.resultRow}
+                                                    onMouseDown={() => handleResultClick('person', person)}>
+                                                    <img src={src} alt="" className={headerStyles.resultAvatar} />
+                                                    <div className={headerStyles.resultInfo}>
+                                                        <div className={headerStyles.resultName}>{person.profile?.full_name || person.full_name || person.username}</div>
+                                                        <div className={headerStyles.resultSub}>@{person.username}</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                                 {searchResults.communities?.length > 0 && (
                                     <div>
-                                        <div style={{ padding: "8px 16px 4px", color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>Communities</div>
+                                        <div className={headerStyles.sectionLabel}>Communities</div>
                                         {searchResults.communities.slice(0, 3).map(community => (
-                                            <div key={community.id} onMouseDown={() => handleResultClick("community", community)}
-                                                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", cursor: "pointer" }}
-                                                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                                            >
+                                            <div key={community.id} className={headerStyles.resultRow}
+                                                onMouseDown={() => handleResultClick('community', community)}>
                                                 {community.avatar
-                                                    ? <img src={community.avatar.startsWith("http") ? community.avatar : `${API}${community.avatar}`} alt="" style={{ width: 34, height: 34, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
-                                                    : <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(139,45,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Users size={16} color="#c084fc" /></div>
+                                                    ? <img src={community.avatar.startsWith('http') ? community.avatar : `${API}${community.avatar}`} alt="" className={headerStyles.resultAvatarSquare} />
+                                                    : <div className={headerStyles.resultAvatarPlaceholderPurple}><Users size={16} color="#c084fc" /></div>
                                                 }
-                                                <div style={{ minWidth: 0 }}>
-                                                    <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{community.name}</div>
-                                                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>{community.is_joined ? "✓ Joined" : community.is_private ? "🔒 Private" : "Not joined"}</div>
+                                                <div className={headerStyles.resultInfo}>
+                                                    <div className={headerStyles.resultName}>{community.name}</div>
+                                                    <div className={headerStyles.resultSub}>{community.is_joined ? '✓ Joined' : community.is_private ? '🔒 Private' : 'Not joined'}</div>
                                                 </div>
                                             </div>
                                         ))}
@@ -476,27 +382,24 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                                 )}
                                 {searchResults.pages?.length > 0 && (
                                     <div>
-                                        <div style={{ padding: "8px 16px 4px", color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>Pages</div>
+                                        <div className={headerStyles.sectionLabel}>Pages</div>
                                         {searchResults.pages.slice(0, 3).map(page => (
-                                            <div key={page.id} onMouseDown={() => handleResultClick("page", page)}
-                                                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", cursor: "pointer" }}
-                                                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                                            >
+                                            <div key={page.id} className={headerStyles.resultRow}
+                                                onMouseDown={() => handleResultClick('page', page)}>
                                                 {page.profile_image
-                                                    ? <img src={page.profile_image.startsWith("http") ? page.profile_image : `${API}${page.profile_image}`} alt="" style={{ width: 34, height: 34, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
-                                                    : <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BookOpen size={16} color="rgba(255,255,255,0.5)" /></div>
+                                                    ? <img src={page.profile_image.startsWith('http') ? page.profile_image : `${API}${page.profile_image}`} alt="" className={headerStyles.resultAvatarSquare} />
+                                                    : <div className={headerStyles.resultAvatarPlaceholderGray}><BookOpen size={16} color="rgba(255,255,255,0.5)" /></div>
                                                 }
-                                                <div style={{ minWidth: 0 }}>
-                                                    <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{page.page_full_name || page.page_name || page.name}</div>
-                                                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>{page.page_type || "Page"}</div>
+                                                <div className={headerStyles.resultInfo}>
+                                                    <div className={headerStyles.resultName}>{page.page_full_name || page.page_name || page.name}</div>
+                                                    <div className={headerStyles.resultSub}>{page.page_type || 'Page'}</div>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 )}
-                                {!searchLoading && searchResults && (searchResults.people?.length || 0) + (searchResults.communities?.length || 0) + (searchResults.pages?.length || 0) === 0 && (
-                                    <div style={{ padding: 16, textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "0.85rem" }}>No results found</div>
+                                {!searchResults.people?.length && !searchResults.communities?.length && !searchResults.pages?.length && (
+                                    <div className={headerStyles.searchStatus}>No results found</div>
                                 )}
                             </>
                         ) : null}

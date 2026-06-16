@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { usePresence } from './PresenceContext';
+import { usePresence } from '../../context/presenceContext';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 

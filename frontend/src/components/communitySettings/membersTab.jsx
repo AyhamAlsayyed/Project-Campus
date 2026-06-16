@@ -12,6 +12,7 @@ import LeaveIcon from '../../Assets/icons/leave.png';
 import BlockIcon from '../../Assets/icons/block.png';
 import InfoIcon from '../../Assets/icons/info.png';
 import { useNavigate } from 'react-router-dom';
+import StatusDot from '../presence/StatusDot';
 const API = 'http://localhost:8000';
 
 // ── Role helpers ──
@@ -227,7 +228,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
 
             {/* FIXED: Added max-sm:flex-wrap and max-sm:gap-3 to cleanly stack inputs on smaller viewports */}
             <div className={`${styles.controlsRow} max-sm:flex-wrap max-sm:gap-3`}>
-                
+
                 {/* FIXED: Made the search wrapper stretch 100% width on mobile */}
                 <div className={`${styles.searchWrapper} max-sm:w-full`}>
                     <div className={styles.searchIcon}>
@@ -352,12 +353,17 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                     return (
                         <div key={member.id} className={`${styles.memberItem} ${isActing ? styles.memberActing : ''}`}>
                             <div className={styles.memberInfoLeft}>
-                                <img
-                                    src={getAvatar(member)}
-                                    alt="avatar"
-                                    className={styles.avatar}
-                                    onError={e => { e.target.src = DefaultPfp; }}
-                                />
+                                <div style={{ position: 'relative', flexShrink: 0 }}>
+                                    <img
+                                        src={getAvatar(member)}
+                                        alt="avatar"
+                                        className={styles.avatar}
+                                        onError={e => { e.target.src = DefaultPfp; }}
+                                    />
+                                    <span style={{ position: 'absolute', bottom: 0, right: 0, border: '2px solid #2a2a2a', borderRadius: '50%' }}>
+                                        <StatusDot userId={member.id} size="sm" />
+                                    </span>
+                                </div>
                                 <div className={styles.memberDetails}>
                                     <span className={`${styles.roleBadge} ${(memberIsOwner || memberIsAdmin) ? styles.roleAdmin : styles.roleMember}`}>
                                         {displayRole}

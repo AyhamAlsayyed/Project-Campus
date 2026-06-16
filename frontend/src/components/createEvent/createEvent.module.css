@@ -5,7 +5,7 @@
     align-items: stretch;
     min-height: 100%;
     width: 100%;
-    gap: 24px; /* Added gap to properly space the middle and right sections side-by-side */
+    gap: 24px; 
 }
 
 /* =========================================================

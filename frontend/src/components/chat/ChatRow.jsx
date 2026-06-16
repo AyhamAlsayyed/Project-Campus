@@ -12,7 +12,7 @@ import Block from '../../Assets/icons/block.png';
 import Report from '../../Assets/icons/info.png';
 import { API } from '../../pages/chatsPage/chatUtils';
 import ReportModal from '../posts/ReportModal';
-
+import StatusDot from '../presence/StatusDot';
 const Divider = () => (
     <div style={{ width: '65%', height: 1, background: '#4D4D4D', margin: '0 auto' }} />
 );
@@ -38,7 +38,6 @@ function chatRowPropsAreEqual(prev, next) {
         pc.is_pinned === nc.is_pinned &&
         pc.is_muted === nc.is_muted &&
         pc.is_blocked === nc.is_blocked &&
-        pc.status === nc.status &&
         pc.last_message_type === nc.last_message_type &&
         pc.has_attachment === nc.has_attachment &&
         prev.isLast === next.isLast
@@ -120,7 +119,12 @@ const ChatRow = React.memo(({
                 <div className={styles.chatItemLeft}>
                     <div className={styles.avatarWrapper}>
                         <img src={avatarSrc} alt={chat.name} className={styles.chatAvatar} loading="lazy" />
-                        <span className={`${styles.statusDot} ${statusClass}`} />
+                        {chat.is_group
+                            ? <span className={`${styles.statusDot} ${styles.groupDot}`} />
+                            : <span style={{ position: 'absolute', bottom: 0, right: 0, border: '2px solid #2a2a2a', borderRadius: '50%' }}>
+                                <StatusDot userId={chat.userId} size="sm" />
+                            </span>
+                        }
                     </div>
                     <div className={styles.chatIdentity}>
                         <span className={styles.chatStatusText}>{statusLabel}</span>

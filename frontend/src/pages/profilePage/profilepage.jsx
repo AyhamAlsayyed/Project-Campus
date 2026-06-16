@@ -26,6 +26,7 @@ import ArrowRight from '../../Assets/icons/arrow-right.png';
 import ArrowLeft from '../../Assets/icons/arrow-left.png';
 import Info from '../../Assets/icons/info.png';
 import ProfilePicture from '../../Assets/icons/default-pfp.png';
+import MessagesIcon from '../../Assets/icons/messages.png';
 import BellOn from '../../Assets/icons/notifications.png';
 import BellOff from '../../Assets/icons/mute.png';
 import Edit from '../../Assets/icons/edit.png';
@@ -37,7 +38,7 @@ import API from '../../config';
 import { AlertCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
-    User, UserPlus, Bell, MessageSquare,
+    User, UserPlus, Bell,
     X, Check, MoreHorizontal, Ban,
 } from 'lucide-react';
 
@@ -261,7 +262,7 @@ function MonthPicker({ date, setDate, onClose, events = [], activeTab }) {
 export default function ProfilePage({ type }) {
     const { theme, toggleTheme } = useTheme();
 
-   const isLight = theme === 'light';
+    const isLight = theme === 'light';
     const [user, setUser] = useState(null);
     const [friendStatus, setFriendStatus] = useState('none');
     const [currentUser, setCurrentUser] = useState(null);
@@ -1118,65 +1119,65 @@ export default function ProfilePage({ type }) {
                                                 </div>
                                                 {user?.bio && <p className={styles.bio}>{user.bio}</p>}
                                             </>
-                                        ) :  user?.role === 'instructor' && !isOwnProfile ? (
-                                        <>
-                                            <div className={styles.nameRow}>
-                                                <div className={styles.userInfo}>
-                                                    <h2 className={styles.username} style={{ color: "#E043B5" }}>{username}</h2>
-                                                    <span className={styles.role}>/{role}</span>
-                                                </div>
-                                            </div>
-                                            <div className={styles.subRow} style={{ gap: 10 , marginTop: 5}}>
-                                                {user?.department && <span className={styles.department}>{user.department}</span>}
-                                                {user?.department && user?.instructor_type && <span className={styles.dot} />}
-                                                {user?.instructor_type && <span className={styles.employmentType}>{user.instructor_type}</span>}
-                                                <span className={styles.dot} />
-                                                <span className={styles.friendsCount}>{user?.friends_count || 0} friends</span>
-                                            </div>
-                                            {bio && <p className={styles.bio}>{bio}</p>}
-                                        </>
-                                        ) : isOwnProfile ? (
-                                        <>
-                                            <div className={styles.info}>
+                                        ) : user?.role === 'instructor' && !isOwnProfile ? (
+                                            <>
                                                 <div className={styles.nameRow}>
                                                     <div className={styles.userInfo}>
-                                                        <h2 className={styles.username}>{username}</h2>
-                                                        <span className={styles.role}>/{user?.role}</span>
-                                                    </div>
-                                                    <button className={styles.editProfileBtn} onClick={() => setIsEditing(true)}>
-                                                        <span className={styles.editText}>Edit</span>
-                                                        <div style={maskStyle(Edit, 20, isLight ? '#662D91' : '#999999')} />
-                                                    </button>
-                                                </div>
-                                                <div className={styles.subRow}>
-                                                    <span className={styles.fullName}>{fullName}</span>
-                                                    <div className={styles.uniInfo}>
-                                                        <span className={styles.uni}>{university} - {major}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {user?.bio && <p className={styles.bio}>{user.bio}</p>}
-                                        </>
-                                        ) : (
-                                        <>
-                                            <div className={styles.info}>
-                                                <div className={styles.nameRow}>
-                                                    <div className={styles.userInfo}>
-                                                        <h2 className={styles.username}>{username}</h2>
+                                                        <h2 className={styles.username} style={{ color: "#E043B5" }}>{username}</h2>
                                                         <span className={styles.role}>/{role}</span>
                                                     </div>
                                                 </div>
-                                                <div className={styles.subRow} style={{ gap: '8px' }}>
-                                                    <span className={styles.fullName}>{fullName}</span>
+                                                <div className={styles.subRow} style={{ gap: 10, marginTop: 5 }}>
+                                                    {user?.department && <span className={styles.department}>{user.department}</span>}
+                                                    {user?.department && user?.instructor_type && <span className={styles.dot} />}
+                                                    {user?.instructor_type && <span className={styles.employmentType}>{user.instructor_type}</span>}
                                                     <span className={styles.dot} />
                                                     <span className={styles.friendsCount}>{user?.friends_count || 0} friends</span>
                                                 </div>
-                                                <div className={styles.uniRow}>
-                                                    <span className={styles.uni}>{university} - {major}</span>
+                                                {bio && <p className={styles.bio}>{bio}</p>}
+                                            </>
+                                        ) : isOwnProfile ? (
+                                            <>
+                                                <div className={styles.info}>
+                                                    <div className={styles.nameRow}>
+                                                        <div className={styles.userInfo}>
+                                                            <h2 className={styles.username}>{username}</h2>
+                                                            <span className={styles.role}>/{user?.role}</span>
+                                                        </div>
+                                                        <button className={styles.editProfileBtn} onClick={() => setIsEditing(true)}>
+                                                            <span className={styles.editText}>Edit</span>
+                                                            <div style={maskStyle(Edit, 20, isLight ? '#662D91' : '#999999')} />
+                                                        </button>
+                                                    </div>
+                                                    <div className={styles.subRow}>
+                                                        <span className={styles.fullName}>{fullName}</span>
+                                                        <div className={styles.uniInfo}>
+                                                            <span className={styles.uni}>{university} - {major}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            {user?.bio && <p className={styles.bio}>{user.bio}</p>}
-                                        </>
+                                                {user?.bio && <p className={styles.bio}>{user.bio}</p>}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className={styles.info}>
+                                                    <div className={styles.nameRow}>
+                                                        <div className={styles.userInfo}>
+                                                            <h2 className={styles.username}>{username}</h2>
+                                                            <span className={styles.role}>/{role}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className={styles.subRow} style={{ gap: '8px' }}>
+                                                        <span className={styles.fullName}>{fullName}</span>
+                                                        <span className={styles.dot} />
+                                                        <span className={styles.friendsCount}>{user?.friends_count || 0} friends</span>
+                                                    </div>
+                                                    <div className={styles.uniRow}>
+                                                        <span className={styles.uni}>{university} - {major}</span>
+                                                    </div>
+                                                </div>
+                                                {user?.bio && <p className={styles.bio}>{user.bio}</p>}
+                                            </>
                                         )}
                                     </div>
 
@@ -1184,15 +1185,21 @@ export default function ProfilePage({ type }) {
                                         <div className={styles.profileActions}>
                                             {user?.type === 'page' ? (
                                                 <>
-                                                    <button className={styles.messageBtn} onClick={handleMessage}><MessageSquare size={18} /></button>
-                                                    <button className={styles.messageBtn}><Bell size={18} /></button>
+                                                    <button className={styles.messageBtn} onClick={handleMessage}>
+                                                        <img src={MessagesIcon} width={18} height={18} className={styles.iconMsg} />
+
+                                                    </button>
+                                                    <button className={styles.messageBtn} onClick={handleEventsTabNotify}>
+                                                        <img src={eventsTabNotify ? BellOn : BellOff} width={18} height={18} className={styles.iconBell} />
+
+                                                    </button>
                                                     <button className={isFollowing ? styles.friendsBtn : styles.addFriendBtn} onClick={handleFollow}>
                                                         {isFollowing ? 'Followed' : 'Follow'}
                                                     </button>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <button className={styles.messageBtn} onClick={handleMessage}><MessageSquare size={18} /></button>
+                                                    <button className={styles.messageBtn} onClick={handleMessage}><img src={MessagesIcon} alt="message" width={18} height={18} style={{ filter: 'brightness(0) invert(1)' }} /></button>
                                                     {friendStatus === 'none' && (
                                                         <button className={styles.addFriendBtn} onClick={handleAddFriend}>
                                                             <UserPlus size={18} /><span>Add friend</span>
@@ -1227,7 +1234,7 @@ export default function ProfilePage({ type }) {
                                 {/* Tabs */}
                                 <div className={styles.tabs}>
                                     {(user?.type === 'page'
-                                        ? (isOwnProfile ? ['Posts', 'Photos', 'About'] : ['Posts', 'Photos', 'Events'])
+                                        ? (isOwnProfile ? ['Posts', 'Activities', 'About'] : ['Posts', 'Photos', 'Events'])
                                         : isOwnProfile ? ['Posts', 'Activities', 'About']
                                             : ['Posts', 'Photos', 'Friends']
                                     ).map(tab => (
@@ -1247,7 +1254,7 @@ export default function ProfilePage({ type }) {
                                                             { key: 'likes', icon: Like, label: 'Likes' },
                                                         ].map(({ key, icon, label }) => (
                                                             <button key={key}
-                                                                onClick={() => { setActivitiesFilter(key); setActivitiesDropdownOpen(false); }}
+                                                                onClick={() => { setActivitiesFilter(key); setActivitiesDropdownOpen(false); if (key === 'saves') loadSavedPosts(); }}
                                                                 className={styles.activitiesDropdownItem}
                                                                 className={`${styles.activitiesDropdownItem} ${activitiesFilter === key ? styles.activitiesItemActive : ''}`}
                                                             >
@@ -1302,7 +1309,7 @@ export default function ProfilePage({ type }) {
                                     </div>
                                 )}
                                 {activeTab === 'About' && (
-                                    <div className={styles.postsSection}><UserDetails user={user} hidePill darker /></div>
+                                    <div className={styles.postsSection}><UserDetails user={user} hidePill darker noBorder /></div>
                                 )}
                                 {activeTab === 'Events' && (
                                     <div className={styles.postsSection}>
@@ -1700,6 +1707,26 @@ export default function ProfilePage({ type }) {
                                 openComments={setSelectedPost} handleMessage={handleMessage}
                                 handleAddFriend={handleAddFriend} handleAccept={handleAccept} handleDecline={handleDecline}
                                 onEditClick={() => edit.setIsEditing(true)} edit={edit}
+                                activitiesFilter={activitiesFilter}
+                                setActivitiesFilter={setActivitiesFilter}
+                                filteredActivityPosts={filteredActivityPosts}
+                                loadActivities={loadActivities}
+                                loadSavedPosts={loadSavedPosts}
+                                reminders={reminders}
+                                remindersMonth={remindersMonth}
+                                setRemindersMonth={setRemindersMonth}
+                                setRemindersPopup={setRemindersPopup}
+                                isFollowing={isFollowing}
+                                handleFollow={handleFollow}
+                                followersCount={followersCount}
+                                eventsTabNotify={eventsTabNotify}
+                                handleEventsTabNotify={handleEventsTabNotify}
+                                pageEvents={pageEvents}
+                                loadPageEvents={loadPageEvents}
+                                eventsTabReminders={eventsTabReminders}
+                                handleEventsTabReminder={handleEventsTabReminder}
+                                handleReview={handleReview}
+                                reviewRating={reviewRating}
                             />
                         )}
                     </div>

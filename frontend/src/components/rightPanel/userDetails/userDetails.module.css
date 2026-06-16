@@ -1,15 +1,21 @@
-.container {
+/* ── Outer wrapper ── */
+.userDetailsRoot {
     width: 100%;
     height: auto;
 }
 
-.recentlyContactedWrap {
+.detailsWrap {
     position: relative;
     width: 100%;
     margin-top: 45px;
 }
 
-.pill {
+.detailsWrap.noBorder {
+    margin-top: 0;
+}
+
+/* ── Pill label ── */
+.detailsPill {
     position: absolute;
     top: -45px;
     left: 10px;
@@ -29,68 +35,78 @@
     border: 1px solid #424243;
 }
 
-.pill p {
+.detailsPill p {
     margin: 0;
 }
 
-/* Card with scrollbar on the right */
-.recentlyContactedWrapper {
+/* ── Card shell ── */
+.detailsCard {
     position: relative;
     border-radius: 26px;
-    padding: 18px;
-    padding-right: 10px;
+    padding: 18px 10px 18px 18px;
     background: #333333;
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(10px);
     z-index: 2;
-    max-height: 420px;     
-    overflow: hidden;       
+    max-height: 420px;
+    overflow: hidden;
     display: flex;
 }
 
+.detailsCard.transparent {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+}
 
-.contactList {
+.detailsCard.darker {
+    background: #2a2a2a;
+}
+
+/* ── Scrollable list ── */
+.sectionList {
     display: flex;
     flex-direction: column;
     flex: 1;
     overflow-y: auto;
-    padding-right: 8px;   
+    padding-right: 8px;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }
 
-.contactList::-webkit-scrollbar {
-    width: 4px;
-}
-
-.contactList::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.contactList::-webkit-scrollbar-thumb {
+.sectionList::-webkit-scrollbar { width: 4px; }
+.sectionList::-webkit-scrollbar-track { background: transparent; }
+.sectionList::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.25);
     border-radius: 10px;
 }
 
-.contactCard {
+/* ── Section block ── */
+.section {
     display: flex;
     flex-direction: column;
     padding: 16px 6px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.10);
 }
 
-.contactCard:last-child {
+.section:last-child {
     border-bottom: none;
 }
 
-.detailsSection {
+.section.noDivider {
+    border-bottom: none;
+}
+
+/* ── Section content ── */
+.sectionContent {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.detailsSection h4 {
+.sectionTitle {
     font-size: 1rem;
     font-weight: 700;
     color: #ffffff;
@@ -98,7 +114,7 @@
     letter-spacing: 0.2px;
 }
 
-.detailsSection p {
+.sectionRow {
     margin: 0;
     font-size: 0.95rem;
     font-weight: 500;
@@ -109,55 +125,49 @@
     line-height: 1.4;
 }
 
-.detailIcon {
-    opacity: 0.55;
-    flex-shrink: 0;
-    color: #fff;
-}
-
-.degreeItem {
+/* ── Degree row ── */
+.degreeRow {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-.degreeText {
+.degreeLabel {
     font-size: 0.95rem;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.75);
     line-height: 1.4;
 }
-[data-theme="light"] .recentlyContactedWrapper {
-  background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.06);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.1);
+
+/* ── Light mode ── */
+[data-theme="light"] .detailsCard {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.1);
 }
 
-[data-theme="light"] .pill {
-  background-color: #662D91;
-  border-color: #662D91;
-  color: #ffffff;
+[data-theme="light"] .detailsCard.darker {
+    background: #ffffff;
 }
 
-[data-theme="light"] .contactCard {
-  border-bottom-color: rgba(0, 0, 0, 0.08);
+[data-theme="light"] .detailsPill {
+    background-color: #662D91;
+    border-color: #662D91;
+    color: #ffffff;
 }
 
-[data-theme="light"] .detailsSection h4 {
-  color: #662D91;
+[data-theme="light"] .section {
+    border-bottom-color: rgba(0, 0, 0, 0.08);
 }
 
-[data-theme="light"] .detailsSection p {
-  color: rgba(0, 0, 0, 0.65);
+[data-theme="light"] .sectionTitle {
+    color: #662D91;
 }
 
-[data-theme="light"] .degreeText {
-  color: rgba(0, 0, 0, 0.65);
-}
-.darkerBg {
-  background: #2a2a2a;
+[data-theme="light"] .sectionRow {
+    color: rgba(0, 0, 0, 0.65);
 }
 
-[data-theme="light"] .darkerBg {
-  background: #ffffff;
+[data-theme="light"] .degreeLabel {
+    color: rgba(0, 0, 0, 0.65);
 }

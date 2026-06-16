@@ -16,6 +16,7 @@ import Home from '../../../Assets/icons/home.png';
 import Read from '../../../Assets/icons/read.png';
 import ProfilePicture from '../../../Assets/icons/default-pfp.png';
 import { createPortal } from 'react-dom';
+import StatusDot from "../../presence/StatusDot";
 
 import API from '../../../config';
 
@@ -726,7 +727,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                       className={styles.chatItem}
                       onClick={() => { setShowChats(false); navigate(`/chats/${chat.id}`); }}
                     >
-                      <div className={styles.chatAvatarWrap}>
+                      <div className={styles.chatAvatarWrap} style={{ position: 'relative', flexShrink: 0 }}>
                         <img
                           src={chat.avatar}
                           alt=""
@@ -736,14 +737,9 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                           onError={(e) => { e.currentTarget.src = ProfilePicture; }}
                         />
                         {!chat.isGroup && (
-                          <span
-                            className={`${styles.statusDot} ${styles[
-                              chat.dotStyle === "online" ? "dotOnline"
-                                : chat.dotStyle === "dnd" ? "dotDnd"
-                                  : "dotOffline"
-                            ]
-                              }`}
-                          />
+                          <span style={{ position: 'absolute', bottom: 0, right: 0 , borderRadius: '50%' }}>
+                            <StatusDot userId={chat.userId} size="sm" />
+                          </span>
                         )}
                       </div>
                       <div className={styles.chatGrid}>
