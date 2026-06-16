@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Case, F, IntegerField, Q, When
+from django.db.models import Case, F, IntegerField, Max, Q, When
 from rest_framework import serializers
 
 from .models import (
@@ -844,10 +844,18 @@ class PostSerializer(serializers.ModelSerializer):
     def get_top_3comments_avatar(self, obj):
         request = self.context.get("request")
 
+        latest_user_comment_timestamps = (
+            Comment.objects.filter(post=obj, parent_comment__isnull=True, author__isnull=False)
+            .values("author")
+            .annotate(latest_comment_time=Max("created_at"))
+            .order_by("-latest_comment_time")[:3]
+            .values_list("latest_comment_time", flat=True)
+        )
+
         comments = (
-            Comment.objects.filter(post=obj, parent_comment__isnull=True)
+            Comment.objects.filter(post=obj, parent_comment__isnull=True, created_at__in=latest_user_comment_timestamps)
             .select_related("author__profile", "author__page")
-            .order_by("-created_at")[:3]
+            .order_by("-created_at")
         )
 
         result = []

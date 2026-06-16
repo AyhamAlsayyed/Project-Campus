@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.core.mail import send_mail
 from django.db import transaction
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -45,6 +47,10 @@ def verify_code(request):
     action_type = "signup"
     user = request.user
 
+    should_send_notice = False
+    notification_recipient = None
+    changed_email_type = ""
+
     try:
         with transaction.atomic():
             v.is_verified = True
@@ -58,6 +64,10 @@ def verify_code(request):
                     if profile:
                         profile.academic_email = academic_email
                         profile.save(update_fields=["academic_email"])
+
+                    notification_recipient = user.email or academic_email
+                    changed_email_type = "Academic Email"
+                    should_send_notice = True
 
                     domain_str = academic_email.split("@", 1)[1]
                     domain_obj = UniversityDomain.objects.filter(domain=domain_str, is_active=True).first()
@@ -81,12 +91,21 @@ def verify_code(request):
 
                 elif personal_email:
                     action_type = "verify_personal"
+
+                    notification_recipient = user.email or personal_email
+                    changed_email_type = "Personal Email"
+                    should_send_notice = True
+
                     user.email = personal_email
                     user.save(update_fields=["email"])
 
                 elif recovery_email:
                     action_type = "verify_recovery"
                     if profile:
+                        notification_recipient = user.email or profile.academic_email or recovery_email
+                        changed_email_type = "Recovery Email"
+                        should_send_notice = True
+
                         profile.recovery_email = recovery_email
                         profile.save(update_fields=["recovery_email"])
 
@@ -95,6 +114,28 @@ def verify_code(request):
             {"message": f"Verification successful, but database save routine failed: {str(db_error)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+    if should_send_notice and notification_recipient:
+        try:
+            display_name = getattr(v, "username", "") or "User"
+            message_body = (
+                f"Hello {display_name},\n\n"
+                f"This is an automated security notification to let you know that your {changed_email_type} "
+                f"associated with Project Campus has been successfully changed/verified to: {target_email}.\n\n"
+                f"If you did not make this change, please contact support immediately.\n\n"
+                f"Best regards,\nProject Campus Team"
+            )
+
+            send_mail(
+                subject=f"Security Notification: Your {changed_email_type} has been updated",
+                message=message_body,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[str(notification_recipient or "")],
+                fail_silently=False,
+            )
+        except Exception as email_err:
+            print(f"Email delivery failed log trace: {email_err}")
+            pass
 
     return Response(
         {
