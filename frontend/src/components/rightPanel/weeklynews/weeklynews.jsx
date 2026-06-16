@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import styles from "./weeklynews.module.css";
 import { createPortal } from "react-dom";
 import ArrowRight from '../../../Assets/icons/arrow-right.png'
+import NeutralReview from '../../../Assets/icons/neutral-review.png'
 export default function WeeklyNews({ communityId, useHighlights }) {
     const [items, setItems] = useState([]);
     const [idx, setIdx] = useState(0);
@@ -49,44 +50,56 @@ export default function WeeklyNews({ communityId, useHighlights }) {
 
                 <div className={styles.pill}>{communityId ? "HIGHLIGHTS" : "WEEKLY NEWS"}</div>
                 <div className={styles.card}>
-
-
-                    <div className={styles.banner}>
-                        <img src={imageUrl} alt={title} className={styles.image} />
-                        <div className={styles.bannerTint} />
-                        <div className={styles.bannerText}>
-                            <div className={styles.bannerTitle}>{title}</div>
-                            <div className={styles.bannerDate}>Starting {start} - Ending {end}</div>
+                    {items.length === 0 ? (
+                        <div className={styles.emptyState}>
+                            <img src={NeutralReview} alt="No content" className={styles.emptyIcon} />
+                            <p className={styles.emptyText}>
+                                {communityId
+                                    ? "No highlights have been added yet."
+                                    : "No weekly news available right now."}
+                            </p>
                         </div>
-                        <button className={styles.bannerArrow} onClick={next} aria-label="Next">
-                            <img
-                                src={ArrowRight}
-                                alt="next"
-                                style={{
-                                    width: 20,
-                                    height: 20,
-                                    filter: "brightness(0) invert(1)",
-                                    display: "block"
-                                }}
-                            />
-                        </button>
+                    ) : (
+                        <>
+                            <div className={styles.banner}>
+                                <img src={imageUrl} alt={title} className={styles.image} />
+                                <div className={styles.bannerTint} />
+                                <div className={styles.bannerText}>
+                                    <div className={styles.bannerTitle}>{title}</div>
+                                    <div className={styles.bannerDate}>Starting {start} - Ending {end}</div>
+                                </div>
+                                <button className={styles.bannerArrow} onClick={next} aria-label="Next">
+                                    <img
+                                        src={ArrowRight}
+                                        alt="next"
+                                        style={{
+                                            width: 20,
+                                            height: 20,
+                                            filter: "brightness(0) invert(1)",
+                                            display: "block"
+                                        }}
+                                    />
+                                </button>
+                            </div>
 
-                    </div>
-                    <div className={styles.descCard}>
-                        <div className={styles.descLabel}>Description</div>
-                        <div className={styles.descText}>{description}</div>
-                        <button className={styles.readMore} onClick={() => setShowPopup(true)}>read more</button>
-                    </div>
-                    <div className={styles.dots}>
-                        {items.map((_, i) => (
-                            <button
-                                key={i}
-                                className={`${styles.dot} ${i === idx ? styles.dotActive : ""}`}
-                                onClick={() => setIdx(i)}
-                                aria-label={`News ${i + 1}`}
-                            />
-                        ))}
-                    </div>
+                            <div className={styles.descCard}>
+                                <div className={styles.descLabel}>Description</div>
+                                <div className={styles.descText}>{description}</div>
+                                <button className={styles.readMore} onClick={() => setShowPopup(true)}>read more</button>
+                            </div>
+
+                            <div className={styles.dots}>
+                                {items.map((_, i) => (
+                                    <button
+                                        key={i}
+                                        className={`${styles.dot} ${i === idx ? styles.dotActive : ""}`}
+                                        onClick={() => setIdx(i)}
+                                        aria-label={`News ${i + 1}`}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
             {showPopup && createPortal(

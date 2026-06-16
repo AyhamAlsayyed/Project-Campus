@@ -446,19 +446,21 @@ export default function ActiveChat({
 
                                                                 {msg.type === 'media' && msg.media?.length > 0 ? (
                                                                     <div className={styles.mediaAttachment}>
-                                                                        {msg.media.map((m, i) => (
-                                                                            m.type === 'image' ? (
-                                                                                <img key={m.id ?? i} src={resolveUrl(m.url)} alt="attachment" className={styles.mediaImage} onClick={() => setLightboxUrl(resolveUrl(m.url))} />
-                                                                            ) : m.type === 'video' ? (
-                                                                                <video key={m.id ?? i} src={resolveUrl(m.url)} controls className={styles.mediaVideo} />
+                                                                        {msg.media.map((m, i) => {
+                                                                            const src = m.media_file || m.url;
+                                                                            const type = m.media_type || m.type;
+                                                                            return type === 'image' ? (
+                                                                                <img key={m.id ?? i} src={resolveUrl(src)} alt="attachment" className={styles.mediaImage} onClick={() => setLightboxUrl(resolveUrl(src))} />
+                                                                            ) : type === 'video' ? (
+                                                                                <video key={m.id ?? i} src={resolveUrl(src)} controls className={styles.mediaVideo} />
                                                                             ) : (
-                                                                                <a key={m.id ?? i} href={resolveUrl(m.url)} target="_blank" rel="noreferrer" className={styles.fileAttachment}>
-                                                                                    <div className={styles.fileIconWrapper}><span className={styles.pdfLabel}>{m.url?.split('.').pop()?.toUpperCase() ?? 'FILE'}</span></div>
-                                                                                    <div className={styles.fileDetails}><strong className={styles.fileName}>{m.url?.split('/').pop()}</strong><span className={styles.fileMeta}>{m.file_type ?? 'file'}</span></div>
+                                                                                <a key={m.id ?? i} href={resolveUrl(src)} target="_blank" rel="noreferrer" className={styles.fileAttachment}>
+                                                                                    <div className={styles.fileIconWrapper}><span className={styles.pdfLabel}>{src?.split('.').pop()?.toUpperCase() ?? 'FILE'}</span></div>
+                                                                                    <div className={styles.fileDetails}><strong className={styles.fileName}>{src?.split('/').pop()}</strong><span className={styles.fileMeta}>{type ?? 'file'}</span></div>
                                                                                     <div className={styles.downloadWrapper}><Download size={20} strokeWidth={2.5} /></div>
                                                                                 </a>
-                                                                            )
-                                                                        ))}
+                                                                            );
+                                                                        })}
                                                                         {msg.text && <span style={{ whiteSpace: 'pre-wrap', display: 'block', marginTop: 6 }}>{msg.text}</span>}
                                                                     </div>
                                                                 ) : msg.post ? (

@@ -261,7 +261,7 @@ function MonthPicker({ date, setDate, onClose, events = [], activeTab }) {
 export default function ProfilePage({ type }) {
     const { theme, toggleTheme } = useTheme();
 
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+   const isLight = theme === 'light';
     const [user, setUser] = useState(null);
     const [friendStatus, setFriendStatus] = useState('none');
     const [currentUser, setCurrentUser] = useState(null);
@@ -1100,68 +1100,83 @@ export default function ProfilePage({ type }) {
                                                 </div>
                                                 {bio && <p className={styles.bio}>{bio}</p>}
                                             </>
-                                        ) : user?.type === 'instructor' ? (
+                                        ) : user?.role === 'instructor' && isOwnProfile ? (
                                             <>
                                                 <div className={styles.nameRow}>
-                                                    <h2 className={styles.username}>{username}</h2>
-                                                    {user?.is_verified && (
-                                                        <span className={styles.verifiedBadge}>
-                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b2dff" strokeWidth="2.5">
-                                                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                            </svg>
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className={styles.subRow}>
-                                                    {user?.department && <span className={styles.department}>{user.department}</span>}
-                                                    {user?.department && user?.employment_type && <span className={styles.dot} />}
-                                                    {user?.employment_type && <span className={styles.employmentType}>{user.employment_type}</span>}
-                                                    {!isOwnProfile && <><span className={styles.dot} /><span className={styles.friendsCount}>{user?.friends_count || 0} friends</span></>}
-                                                </div>
-                                                {bio && <p className={styles.bio}>{bio}</p>}
-                                            </>
-                                        ) : isOwnProfile ? (
-                                            <>
-                                                <div className={styles.info}>
-                                                    <div className={styles.nameRow}>
-                                                        <div className={styles.userInfo}>
-                                                            <h2 className={styles.username}>{username}</h2>
-                                                            <span className={styles.role}>/{role}</span>
-                                                        </div>
-                                                        <button className={styles.editProfileBtn} onClick={() => setIsEditing(true)}>
-                                                            <span className={styles.editText}>Edit</span>
-                                                            <div style={maskStyle(Edit, 20, isLight ? '#662D91' : '#999999')} />
-                                                        </button>
+                                                    <div className={styles.userInfo}>
+                                                        <h2 className={styles.username} style={{ color: "#E043B5" }}>{username}</h2>
                                                     </div>
-                                                    <div className={styles.subRow}>
-                                                        <span className={styles.fullName}>{fullName}</span>
-                                                        <div className={styles.uniInfo}>
-                                                            <span className={styles.uni}>{university} - {major}</span>
-                                                        </div>
-                                                    </div>
+                                                    <button className={styles.editProfileBtn} onClick={() => setIsEditing(true)}>
+                                                        <span className={styles.editText}>Edit</span>
+                                                        <div style={maskStyle(Edit, 20, isLight ? '#662D91' : '#999999')} />
+                                                    </button>
+                                                </div>
+                                                <div className={styles.subRow} style={{ gap: 10 }}>
+                                                    <span className={styles.fullName}>{fullName}</span>
+                                                    <span className={styles.dot} />
+                                                    <span className={styles.uni}>{user?.university}</span>
                                                 </div>
                                                 {user?.bio && <p className={styles.bio}>{user.bio}</p>}
                                             </>
-                                        ) : (
-                                            <>
-                                                <div className={styles.info}>
-                                                    <div className={styles.nameRow}>
-                                                        <div className={styles.userInfo}>
-                                                            <h2 className={styles.username}>{username}</h2>
-                                                            <span className={styles.role}>/{role}</span>
-                                                        </div>
+                                        ) :  user?.role === 'instructor' && !isOwnProfile ? (
+                                        <>
+                                            <div className={styles.nameRow}>
+                                                <div className={styles.userInfo}>
+                                                    <h2 className={styles.username} style={{ color: "#E043B5" }}>{username}</h2>
+                                                    <span className={styles.role}>/{role}</span>
+                                                </div>
+                                            </div>
+                                            <div className={styles.subRow} style={{ gap: 10 , marginTop: 5}}>
+                                                {user?.department && <span className={styles.department}>{user.department}</span>}
+                                                {user?.department && user?.instructor_type && <span className={styles.dot} />}
+                                                {user?.instructor_type && <span className={styles.employmentType}>{user.instructor_type}</span>}
+                                                <span className={styles.dot} />
+                                                <span className={styles.friendsCount}>{user?.friends_count || 0} friends</span>
+                                            </div>
+                                            {bio && <p className={styles.bio}>{bio}</p>}
+                                        </>
+                                        ) : isOwnProfile ? (
+                                        <>
+                                            <div className={styles.info}>
+                                                <div className={styles.nameRow}>
+                                                    <div className={styles.userInfo}>
+                                                        <h2 className={styles.username}>{username}</h2>
+                                                        <span className={styles.role}>/{user.role}</span>
                                                     </div>
-                                                    <div className={styles.subRow} style={{ gap: '8px' }}>
-                                                        <span className={styles.fullName}>{fullName}</span>
-                                                        <span className={styles.dot} />
-                                                        <span className={styles.friendsCount}>{user?.friends_count || 0} friends</span>
-                                                    </div>
-                                                    <div className={styles.uniRow}>
+                                                    <button className={styles.editProfileBtn} onClick={() => setIsEditing(true)}>
+                                                        <span className={styles.editText}>Edit</span>
+                                                        <div style={maskStyle(Edit, 20, isLight ? '#662D91' : '#999999')} />
+                                                    </button>
+                                                </div>
+                                                <div className={styles.subRow}>
+                                                    <span className={styles.fullName}>{fullName}</span>
+                                                    <div className={styles.uniInfo}>
                                                         <span className={styles.uni}>{university} - {major}</span>
                                                     </div>
                                                 </div>
-                                                {user?.bio && <p className={styles.bio}>{user.bio}</p>}
-                                            </>
+                                            </div>
+                                            {user?.bio && <p className={styles.bio}>{user.bio}</p>}
+                                        </>
+                                        ) : (
+                                        <>
+                                            <div className={styles.info}>
+                                                <div className={styles.nameRow}>
+                                                    <div className={styles.userInfo}>
+                                                        <h2 className={styles.username}>{username}</h2>
+                                                        <span className={styles.role}>/{role}</span>
+                                                    </div>
+                                                </div>
+                                                <div className={styles.subRow} style={{ gap: '8px' }}>
+                                                    <span className={styles.fullName}>{fullName}</span>
+                                                    <span className={styles.dot} />
+                                                    <span className={styles.friendsCount}>{user?.friends_count || 0} friends</span>
+                                                </div>
+                                                <div className={styles.uniRow}>
+                                                    <span className={styles.uni}>{university} - {major}</span>
+                                                </div>
+                                            </div>
+                                            {user?.bio && <p className={styles.bio}>{user.bio}</p>}
+                                        </>
                                         )}
                                     </div>
 

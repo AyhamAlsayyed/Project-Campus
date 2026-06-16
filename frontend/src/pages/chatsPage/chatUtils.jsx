@@ -14,7 +14,13 @@ export const normalizeMessages = (data) =>
             : msg.time,
         date: msg.sent_at || msg.date,
         reply_to_details: msg.parent_message || msg.reply_to_details,
-        post: msg.shared_post || msg.post || null, 
+        post: msg.shared_post || msg.post || null,
+        type: (msg.media?.length > 0) ? 'media' : (msg.type || 'text'),
+        media: (msg.media || []).map(m => ({
+            ...m,
+            url: m.media_file || m.url,
+            type: m.media_type || m.type,
+        })),
     }));
 
 export const getSenderName = (sender) => {

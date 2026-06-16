@@ -20,6 +20,7 @@ export default function FollowedPages() {
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
     const [currentUser, setCurrentUser] = useState(null);
+    const ownPageId = currentUser?.page_id || currentUser?.id;
     const [selectedPostId, setSelectedPostId] = useState(null)
     const [showAllPopup, setShowAllPopup] = useState(false);
     const [popupSearchTerm, setPopupSearchTerm] = useState("");
@@ -48,6 +49,23 @@ export default function FollowedPages() {
         setSelectedPost(postObject);
         setIsCommentsOpen(true);
     };
+    const handleUnfollow = async (pageId) => {
+        try {
+            const token = localStorage.getItem("access");
+            const res = await fetch(`${API}/api/pages/${pageId}/follow/`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            });
+            if (res.ok) {
+                setPages(prev => prev.filter(p => p.id !== pageId));
+                setPosts(prev => prev.filter(p => p.author?.id !== pageId));
+            }
+        } catch (err) {
+            console.error("Failed to unfollow page:", err);
+        } finally {
+            setActiveMenuId(null);
+        }
+    };
 
 
     const handleToggleMenu = (e, menuId) => {
@@ -60,8 +78,8 @@ export default function FollowedPages() {
             const rect = e.currentTarget.getBoundingClientRect();
 
             setMenuCoords({
-                top: rect.bottom + window.scrollY + 4, // Handles modal/page scrolling offsets
-                left: rect.right + window.scrollX - 140 // Aligns cleanly with a 140px dropdown width
+                top: rect.bottom + window.scrollY + 4,
+                left: rect.right + window.scrollX - 140
             });
             setActiveMenuId(menuId);
         }
@@ -254,30 +272,32 @@ export default function FollowedPages() {
 
                     {recommendedPages.length > 0 && (
                         <div className={styles.recCardsContainer}>
-                            {(showAllRec ? recommendedPages : recommendedPages.slice(0, 3)).map(page => (
-                                <div
-                                    key={page.id}
-                                    className={styles.recCard}
-                                    onClick={() => navigate(`/page/${page.id}`)}
-                                >
-                                    <img
-                                        src={page.avatar}
-                                        alt={page.name}
-                                        className={styles.recCardImg}
-                                    />
-                                    <div className={styles.recCardInfo}>
-                                        <span className={styles.recCardName}>
-                                            {page.name || page.page_name}
-                                        </span>
+                            {(showAllRec ? recommendedPages : recommendedPages.slice(0, 3))
+                                .filter(page => page.id !== ownPageId)
+                                .map(page => (
+                                    <div
+                                        key={page.id}
+                                        className={styles.recCard}
+                                        onClick={() => navigate(`/page/${page.id}`)}
+                                    >
                                         <img
-                                            src={VerifiedBadge}
-                                            alt="Verified"
-                                            className={styles.verifiedIcon}
-                                          
+                                            src={page.avatar}
+                                            alt={page.name}
+                                            className={styles.recCardImg}
                                         />
+                                        <div className={styles.recCardInfo}>
+                                            <span className={styles.recCardName}>
+                                                {page.name || page.page_name}
+                                            </span>
+                                            <img
+                                                src={VerifiedBadge}
+                                                alt="Verified"
+                                                className={styles.verifiedIcon}
+
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
                         </div>
                     )}
 
@@ -345,6 +365,7 @@ export default function FollowedPages() {
 
                             <div className={styles.rightList}>
                                 {pages
+                                    .filter(page => page.id !== ownPageId)
                                     .filter(page =>
                                         (page.name || "")
                                             .toLowerCase()
@@ -493,7 +514,10 @@ export default function FollowedPages() {
                     style={{ top: `${menuCoords.top}px`, left: `${menuCoords.left}px` }}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <button onClick={() => setActiveMenuId(null)}>
+                    <button onClick={() => {
+                        const id = Number(String(activeMenuId).replace('popup-', ''));
+                        handleUnfollow(id);
+                    }}>
                         <img src={X} alt="Unfollow" style={{
                             filter: "invert(87%) sepia(5%) saturate(297%) hue-rotate(185deg) brightness(96%) contrast(85%)"
                         }} className={styles.dropdownIcon} />
