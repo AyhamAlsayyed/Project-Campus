@@ -1,8 +1,9 @@
-from django.urls import path
+from django.urls import re_path
 
-from .consumers import StatusConsumer
+from . import consumers
 
 websocket_urlpatterns = [
-    # Path for the front end: ws://localhost:8000/ws/status/
-    path("ws/status/", StatusConsumer.as_asgi()),
+    re_path(r"^ws/status/$", consumers.StatusConsumer.as_asgi()),
+    re_path(r"^ws/chat/(?P<conversation_id>\d+)/$", consumers.ChatConsumer.as_asgi()),
+    re_path(r"^ws/notifications/$", consumers.NotificationConsumer.as_asgi()),
 ]

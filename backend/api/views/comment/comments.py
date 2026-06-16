@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -71,3 +72,27 @@ def create_comment(request, post_id):
 
     serializer = CommentSerializer(comment, context={"request": request})
     return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_comment(request, comment_id):
+    """
+    Deletes a comment.
+    Allows deletion if the requesting user is the comment author OR the post owner.
+    """
+    comment = get_object_or_404(Comment, comment_id=comment_id)
+
+    is_comment_author = comment.author == request.user
+    is_post_owner = comment.post.author == request.user
+
+    if not (is_comment_author or is_post_owner):
+        return Response(
+            {"detail": "You do not have permission to delete this comment."}, status=status.HTTP_403_FORBIDDEN
+        )
+
+    comment.delete()
+
+    return Response(
+        {"message": "Comment and all its nested replies were successfully deleted."}, status=status.HTTP_200_OK
+    )
