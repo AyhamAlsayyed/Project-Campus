@@ -13,6 +13,7 @@ from .models import (
     Friendship,
     Message,
     MessageMedia,
+    NewsItem,
     Notification,
     NotificationSetting,
     Page,
@@ -1402,3 +1403,28 @@ class PromotionSerializer(serializers.ModelSerializer):
             return {"id": target_instance.pk, "display_name": str(target_instance)}
 
         return None
+
+
+class NewsItemSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+    start_date = serializers.DateTimeField(format="%Y-%m-%d")
+    end_date = serializers.DateTimeField(format="%Y-%m-%d")
+
+    class Meta:
+        model = NewsItem
+        fields = [
+            "news_id",
+            "title",
+            "description",
+            "image_url",
+            "start_date",
+            "end_date",
+        ]
+
+    def get_image_url(self, obj):
+        request = self.context.get("request")
+        if not obj.image:
+            return None
+        if request:
+            return request.build_absolute_uri(obj.image.url)
+        return obj.image.url

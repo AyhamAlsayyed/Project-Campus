@@ -73,6 +73,7 @@ from .views.conversation.edit_conversation import (
 )
 from .views.event.event_action import toggle_event_reminder
 from .views.event.events import create_event, delete_event, events, update_event
+from .views.news.news import news_list
 from .views.notification.notification import get_notifications, notification_delete_mark
 
 # from .views.pages.page_update import update_page_profile
@@ -301,4 +302,6 @@ urlpatterns += [
     # notification
     path("notifications/", get_notifications),
     path("notifications/<int:notification_id>/", notification_delete_mark),
+    # news
+    path("news/", news_list),
 ]

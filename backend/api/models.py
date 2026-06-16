@@ -1458,3 +1458,22 @@ class Promotion(models.Model):
     def __str__(self):
         content_type = self.content_type_obj.name if self.content_type_obj else "Unknown"
         return f"{self.promoted_by.username} promoted {content_type}"
+
+
+class NewsItem(models.Model):
+    news_id = models.BigAutoField(primary_key=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    image = models.ImageField(upload_to="news_banners/")
+
+    start_date = models.DateTimeField(default=timezone.now)
+    end_date = models.DateTimeField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "news_item"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"[News] {self.title}"

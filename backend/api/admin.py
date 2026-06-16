@@ -17,6 +17,7 @@ from .models import (
     Message,
     MessageMedia,
     MessageReaction,
+    NewsItem,
     Notification,
     NotificationSetting,
     Page,
@@ -67,3 +68,4 @@ admin.site.register(UniversityDomain)
 admin.site.register(UserDegree)
 admin.site.register(NotificationSetting)
 admin.site.register(Promotion)
+admin.site.register(NewsItem)
