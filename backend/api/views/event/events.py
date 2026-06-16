@@ -154,10 +154,7 @@ def create_event(request):
             for follower in follower_users:
                 profile = settings_lookup.get(follower.id)
 
-                if profile:
-                    if not profile.enable_all or not profile.new_event:
-                        continue
-
+              
                 eligible_notifications.append(
                     Notification(
                         receiver=follower,

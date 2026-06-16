@@ -1,8 +1,9 @@
 import styles from './universities.module.css'
 import Header from '../../components/pagelayout/header/header'
 import SidebarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
+import MobileHeader from '../../components/mobileHeader/mobileHeader'
 
-import { Search, ChevronRight, ChevronLeft, Calendar, MoreHorizontal, Clock } from 'lucide-react'
+import { Search, ChevronRight, ChevronLeft, Calendar, MoreHorizontal, Clock, X, Menu } from 'lucide-react'
 import PtukLogo from '../../Assets/icons/Ptuk.jpg'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
@@ -15,8 +16,11 @@ import BinIcon from '../../Assets/icons/bin.png'
 import AddFriendIcon from '../../Assets/icons/add-friend.png';
 import RemovePersonIcon from '../../Assets/icons/remove-person.png';
 import MessagesIcon from '../../Assets/icons/messages.png';
+import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
+import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import API from '../../config';
 import useTheme from '../../hooks/useTheme'
+
 export default function Universities() {
     const { theme, toggleTheme } = useTheme();
     const [user, setUser] = useState(null);
@@ -40,12 +44,14 @@ export default function Universities() {
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteStatus, setInviteStatus] = useState(null);
     const [removingDoctorId, setRemovingDoctorId] = useState(null);
-  
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const mobileMenuRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const dropdownRef = useRef(null);
 
     const isUniversity = localStorage.getItem("user_type") === "university";
-
+    const token = localStorage.getItem("access");
 
     const durationSteps = [
         { label: "1 week", addedText: "0 months & 12 days", dateStr: "Friday - 24/6/2026" },
@@ -55,9 +61,20 @@ export default function Universities() {
         { label: "1 year", addedText: "12 months & 5 days", dateStr: "Thursday - 17/6/2027" }
     ];
 
+    // ── Responsive check ──
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener("resize", check);
+        return () => window.removeEventListener("resize", check);
+    }, []);
+
+    useEffect(() => {
+        document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
+    }, [mobileMenuOpen]);
+
     useEffect(() => {
         const fetchData = async () => {
-            const token = localStorage.getItem("access");
             const headers = {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json"
@@ -75,16 +92,24 @@ export default function Universities() {
                 const newsJson = newsRes.ok ? await newsRes.json() : null;
                 const doctorsJson = doctorsRes.ok ? await doctorsRes.json() : null;
 
-                console.log("univRes status:", univRes.status, univJson);
-                console.log("newsRes status:", newsRes.status, newsJson);
-                console.log("doctorsRes status:", doctorsRes.status, doctorsJson);
-
                 if (univJson) setUnivData(univJson);
                 if (newsJson) setNews(newsJson);
                 if (eventsRes.ok) setEvents(await eventsRes.json());
                 if (doctorsJson) setDoctors(doctorsJson);
-                if (userRes.ok) setUser(await userRes.json());
-
+                if (userRes.ok) {
+                    const userData = await userRes.json();
+                    // resolve avatar same as communities.jsx
+                    if (userData.role === 'uni' || localStorage.getItem('user_type') === 'university') {
+                        const pageRes = await fetch(`${API}/api/pages/${userData.id}/`, { headers });
+                        if (pageRes.ok) {
+                            const pageData = await pageRes.json();
+                            userData.avatar = pageData.profile_image;
+                        }
+                    } else {
+                        userData.avatar = userData.profile?.avatar || null;
+                    }
+                    setUser(userData);
+                }
             } catch (err) {
                 console.error("Network or parsing error on Universities page:", err);
             } finally {
@@ -94,6 +119,10 @@ export default function Universities() {
 
         fetchData();
     }, []);
+
+    useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme);
+    }, [theme]);
 
     // ── Close dropdown when clicking anywhere outside ──
     useEffect(() => {
@@ -109,7 +138,6 @@ export default function Universities() {
 
     // ── Delete a news post ──
     const handleDeleteNews = useCallback(async (item) => {
-        const token = localStorage.getItem("access");
         try {
             const res = await fetch(`${API}/api/university/news/${item.id}/`, {
                 method: 'DELETE',
@@ -126,27 +154,19 @@ export default function Universities() {
             setDeleteConfirmItem(null);
             setOpenNewsDropdown(null);
         }
-    }, [API]);
+    }, [token]);
 
     // ── Save extended duration ──
     const handleSaveExtend = useCallback(async () => {
         if (!extendItem) return;
-        const token = localStorage.getItem("access");
         const chosenStep = durationSteps[sliderStep];
         try {
             const res = await fetch(`${API}/api/university/news/${extendItem.id}/extend/`, {
                 method: 'PATCH',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    extend_by: chosenStep.label,
-                    new_end_date: chosenStep.dateStr
-                })
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ extend_by: chosenStep.label, new_end_date: chosenStep.dateStr })
             });
             if (res.ok) {
-                // Optimistically update the displayed end date in local state
                 setNews(prev => prev.map(n =>
                     n.id === extendItem.id ? { ...n, end_date: chosenStep.dateStr } : n
                 ));
@@ -158,11 +178,10 @@ export default function Universities() {
         } finally {
             setExtendItem(null);
         }
-    }, [extendItem, sliderStep, durationSteps, API]);
+    }, [extendItem, sliderStep, token]);
 
     // ── Remove a doctor ──
     const handleRemoveDoctor = useCallback(async (doc) => {
-        const token = localStorage.getItem("access");
         setRemovingDoctorId(doc.id);
         try {
             const res = await fetch(`${API}/api/university/doctors/${doc.id}/`, {
@@ -179,20 +198,16 @@ export default function Universities() {
         } finally {
             setRemovingDoctorId(null);
         }
-    }, [API]);
+    }, [token]);
 
     // ── Send invite ──
     const handleSendInvite = useCallback(async () => {
         if (!inviteEmail.trim()) return;
-        const token = localStorage.getItem("access");
         setInviteStatus(null);
         try {
             const res = await fetch(`${API}/api/university/doctors/invite/`, {
                 method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                },
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ email: inviteEmail.trim() })
             });
             setInviteStatus(res.ok ? 'success' : 'error');
@@ -201,7 +216,7 @@ export default function Universities() {
             console.error("Invite error:", err);
             setInviteStatus('error');
         }
-    }, [inviteEmail, API]);
+    }, [inviteEmail, token]);
 
     const currentNews = news[newsIndex];
     const currentEvent = events[eventIndex];
@@ -209,26 +224,134 @@ export default function Universities() {
     const filteredDoctors = doctors.filter(d =>
         d.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    useEffect(() => {
-        document.documentElement.setAttribute("data-theme", theme);
-    }, [theme]);
-   
 
-   
+    const rawImage = user?.profile_image || user?.avatar;
+
+    const avatarSrc = rawImage
+        ? rawImage.startsWith("http") ? rawImage : `${API}${rawImage}`
+        : ProfilePicture;
+    // ── Shared doctors list (reused in both mobile and desktop) ──
+    const DoctorsList = () => (
+        <div className={styles.scrollableList}>
+            {filteredDoctors.map((doc, index) => (
+                <div key={doc.id} className={styles.doctorItemWrapper}>
+                    <div className={styles.doctorItem} onClick={() => navigate(`/profile/${doc.id}`)}>
+                        <div className={styles.docAvatar}>
+                            {doc.avatar || doc.profile_picture ? (
+                                <img
+                                    src={(doc.avatar || doc.profile_picture).startsWith("http")
+                                        ? (doc.avatar || doc.profile_picture)
+                                        : `${API}${doc.avatar || doc.profile_picture}`}
+                                    alt={doc.name}
+                                    style={{ width: 50, height: 50, borderRadius: "50%", objectFit: "cover" }}
+                                />
+                            ) : (
+                                <img src={DefaultPicture} alt="" width={50} height={50} />
+                            )}
+                        </div>
+                        <div className={styles.docInfo}>
+                            <div className={styles.docNameRow}><h4>{doc.name}</h4></div>
+                            <div className={styles.docDescRow}>
+                                <span>{doc.desc}</span>
+                                {isUniversity && (
+                                    <>
+                                        <span className={styles.docDot}>•</span>
+                                        <span className={styles.docType}>{doc.type || 'Full-time'}</span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                        <img
+                            src={ArrowRight} alt=""
+                            height={12} width={12} className={styles.arrowBtn}
+                            style={{ filter: 'brightness(0) invert(95%)' }}
+                        />
+                    </div>
+                    {(isUniversity && index < filteredDoctors.length - 1) && (
+                        <div className={styles.docDivider} />
+                    )}
+                </div>
+            ))}
+        </div>
+    );
 
     return (
         <div className={styles.darkContainer}>
-            <div className={`${styles.header} ${styles.page}`}>
-                <Header theme={theme} toggleTheme={toggleTheme} user={user} />
-            </div>
 
-            <div className={`${styles.content} ${styles.page}`}>
-                <SidebarNav />
+            {/* ── MOBILE HEADER ── */}
+            {isMobile && (
+                <MobileHeader
+                    avatarSrc={avatarSrc}
+                    user={user}
+                    setMobileMenuOpen={setMobileMenuOpen}
+                    token={token}
+                    API={API}
+                />
+            )}
 
-                <div className={styles.universityInfo}>
+            {/* ── MOBILE DRAWER ── */}
+            {isMobile && mobileMenuOpen && (
+                <div style={{ position: "fixed", inset: 0, zIndex: 9998 }}>
+                    <div
+                        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+                        onClick={() => setMobileMenuOpen(false)}
+                    />
+                    <div
+                        ref={mobileMenuRef}
+                        style={{
+                            position: "absolute", left: 0, top: 0,
+                            height: "100%", width: "100vw", maxWidth: 350,
+                            background: "linear-gradient(135deg, var(--bg-main), var(--bg-secondary))",
+                            borderRight: "1px solid rgba(255,255,255,0.1)",
+                            display: "flex", flexDirection: "column", overflow: "hidden",
+                            boxShadow: "4px 0 30px rgba(0,0,0,0.6)"
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button
+                            style={{
+                                position: "absolute", top: 14, right: 14, zIndex: 10,
+                                width: 32, height: 32, borderRadius: "50%",
+                                background: "rgba(255,255,255,0.1)", border: "none",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                cursor: "pointer"
+                            }}
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            <X size={16} color="white" />
+                        </button>
+                        <div style={{
+                            display: "flex", alignItems: "center", gap: 10,
+                            padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)"
+                        }}>
+                            <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
+                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1 }}>CAMPUS</span>
+                        </div>
+                        <div style={{ flex: 1, overflowY: "auto" }}>
+                            <SidebarNav onClose={() => setMobileMenuOpen(false)} />
+                        </div>
+                    </div>
+                </div>
+            )}
 
+            {/* ── DESKTOP HEADER ── */}
+            {!isMobile && (
+                <div className={`${styles.header} ${styles.page}`}>
+                    <Header theme={theme} toggleTheme={toggleTheme} user={user} />
+                </div>
+            )}
+
+            {/* ══════════════════════════════════════
+                ── MOBILE BODY ──
+            ══════════════════════════════════════ */}
+            {isMobile && (
+                <div style={{
+                    display: "flex", flexDirection: "column",
+                    width: "100%", boxSizing: "border-box",
+                    padding: "12px 10px 0"
+                }}>
                     {/* ── University Header ── */}
-                    <div className={styles.universityHeader}>
+                    <div className={styles.universityHeader} style={{ marginBottom: 16 }}>
                         <img
                             src={univData?.logo || PtukLogo}
                             alt="University Logo"
@@ -237,8 +360,8 @@ export default function Universities() {
                             style={{ cursor: 'pointer' }}
                         />
                         <div className={styles.univTextContainer}>
-                            <h2 className={styles.univEnglish}>{univData?.name || "Loading..."}</h2>
-                            <h1 className={styles.univArabic}>{univData?.name_arabic || ""}</h1>
+                            <h2 className={styles.univEnglish} style={{ fontSize: 18 }}>{univData?.name || "Loading..."}</h2>
+                            <h1 className={styles.univArabic} style={{ fontSize: 20 }}>{univData?.name_arabic || ""}</h1>
                             <div className={styles.branch}>
                                 <span className={styles.univBranch}>{univData?.branch || "Main Branch"}</span>
                                 <div className={styles.line} />
@@ -246,35 +369,105 @@ export default function Universities() {
                         </div>
                     </div>
 
+                    {/* ── Doctors & Teachers (mobile only, above uni name but rendered after header) ── */}
+                    <div style={{
+                        width: "100%", maxWidth: 480, margin: "0 auto 16px",
+                        background: "#333333",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: 20, overflow: "hidden",
+                        boxSizing: "border-box",
+                    }}>
+                        {/* card header */}
+                        <div style={{
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            padding: "14px 16px 10px",
+                            borderBottom: "1px solid rgba(255,255,255,0.07)"
+                        }}>
+                            <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: "0.9rem" }}>
+                                Doctors &amp; Teachers
+                            </span>
+                            {isUniversity && (
+                                <button
+                                    style={{
+                                        background: "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))",
+                                        border: "none", color: "#fff",
+                                        fontWeight: 700, fontSize: "0.78rem",
+                                        padding: "6px 14px", borderRadius: 8, cursor: "pointer"
+                                    }}
+                                    onClick={() => { setManageDoctorsSearch(''); setIsManageDoctorsOpen(true); }}
+                                >
+                                    Manage
+                                </button>
+                            )}
+                        </div>
+
+                        {/* search */}
+                        <div style={{
+                            display: "flex", alignItems: "center", gap: 8,
+                            margin: "10px 16px",
+                            background: "rgba(255,255,255,0.06)",
+                            borderRadius: 25, padding: "8px 12px"
+                        }}>
+                            <Search size={15} color="rgba(255,255,255,0.4)" style={{ flexShrink: 0 }} />
+                            <input
+                                type="text"
+                                placeholder="Searching for someone?"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{
+                                    flex: 1, background: "transparent", border: "none",
+                                    outline: "none", color: "#fff", fontSize: "0.83rem"
+                                }}
+                            />
+                        </div>
+
+                        {/* list */}
+                        <div style={{ maxHeight: 280, overflowY: "auto", paddingBottom: 8 }}>
+                            <DoctorsList />
+                        </div>
+                    </div>
+
                     {/* ── Latest News ── */}
-                    <div className={styles.latestNews}>
-                        <div className={styles.innerContainer} style={{ minHeight: isUniversity ? "530px" : "300px", borderRadius: isUniversity ? "30px 30px 0 0" : "30px" }}>
-                            <h2 className={styles.sectionTitle}>LATEST NEWS</h2>
+                    {/* ── Latest News ── */}
+                    <div style={{
+                        background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))",
+                        paddingTop: 6, borderRadius: "20px 20px 0 0"
+                    }}>
+                        <div style={{
+                            background: "#333333", borderRadius: "20px 20px 0 0",
+                            padding: "20px 12px 30px"
+                        }}>
+                            <h2 className={styles.sectionTitle} style={{ marginBottom: 16 }}>LATEST NEWS</h2>
 
                             {isUniversity ? (
-                                <div className={styles.announcementsContainer} style={{ minHeight: "460px" }}>
+                                /* University POV: full announcement list stacked vertically for mobile */
+                                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                                     {news.map((item, index) => (
                                         <div key={index} className={styles.announcementWrapper}>
-                                            <div className={styles.announcementItem}>
+                                            <div
+                                                className={styles.announcementItem}
+                                                style={{ display: "flex", flexDirection: "column", gap: 12 }}
+                                            >
                                                 <img
                                                     src={item.img?.startsWith("http") ? item.img : `${API}${item.img}`}
                                                     alt="News"
                                                     className={styles.announcementImg}
+                                                    style={{ width: "100%", maxHeight: "200px", objectFit: "cover", borderRadius: "12px" }}
                                                 />
-                                                <div className={styles.announcementContent}>
+                                                <div
+                                                    className={styles.announcementContent}
+                                                    style={{ width: "100%", display: "flex", flexDirection: "column", gap: 6 }}
+                                                >
                                                     <div className={styles.announcementTopRow}>
                                                         <span className={styles.announcementDate}>
                                                             {item.date || "Saturday - 10/6/2026"}
                                                         </span>
-
-                                                        {/* ── More Menu ── */}
                                                         <div
                                                             className={styles.moreMenuWrapper}
                                                             ref={openNewsDropdown === index ? dropdownRef : null}
                                                         >
                                                             <MoreHorizontal
-                                                                size={32}
-                                                                strokeWidth={3}
+                                                                size={32} strokeWidth={3}
                                                                 className={styles.moreIcon}
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
@@ -286,7 +479,7 @@ export default function Universities() {
                                                                     <div
                                                                         className={styles.dropdownItem}
                                                                         onClick={() => {
-                                                                            setSliderStep(2); // reset slider each time
+                                                                            setSliderStep(2);
                                                                             setExtendItem(item);
                                                                             setOpenNewsDropdown(null);
                                                                         }}
@@ -311,7 +504,7 @@ export default function Universities() {
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <h3 className={styles.announcementTitle}>{item.title}</h3>
+                                                        <h3 className={styles.announcementTitle} style={{ margin: "4px 0" }}>{item.title}</h3>
                                                         <p className={styles.announcementDesc}>
                                                             {item.desc?.length > 80 ? `${item.desc.substring(0, 80)}... ` : `${item.desc} `}
                                                             <span
@@ -320,191 +513,302 @@ export default function Universities() {
                                                             >read more</span>
                                                         </p>
                                                     </div>
-                                                    <div className={styles.timeRemainingRow}>
+                                                    <div className={styles.timeRemainingRow} style={{ marginTop: 4 }}>
                                                         <Clock size={16} />
                                                         <span>
-                                                            {item.end_date
-                                                                ? `ends at ${item.end_date}`
-                                                                : "ends in 5 days at 17/6/2026"}
+                                                            {item.end_date ? `ends at ${item.end_date}` : "ends in 5 days at 17/6/2026"}
                                                         </span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            {index < news.length - 1 && <div className={styles.newsDivider} />}
+                                            {index < news.length - 1 && <div className={styles.newsDivider} style={{ margin: "16px 0 8px" }} />}
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <div className={styles.newsImageWrapper}>
-                                    <img
-                                        src={currentNews?.img?.startsWith("http") ? currentNews.img : `${API}${currentNews?.img}`}
-                                        alt="University News"
-                                        className={styles.newsBgImage}
-                                    />
-                                    {currentNews && (
-                                        <div className={styles.newsOverlay}>
-                                            <div className={styles.newsTextContent}>
-                                                <p className={styles.newsDate}>{currentNews.date}</p>
-                                                <h3 className={styles.newsMainTitle}>{currentNews.title}</h3>
-                                                <p className={styles.newsDesc}>{currentNews.desc}</p>
+                                /* Student POV: image carousel */
+                                <>
+                                    <div className={styles.newsImageWrapper}>
+                                        <img
+                                            src={currentNews?.img?.startsWith("http") ? currentNews.img : `${API}${currentNews?.img}`}
+                                            alt="University News"
+                                            className={styles.newsBgImage}
+                                        />
+                                        {currentNews && (
+                                            <div className={styles.newsOverlay}>
+                                                <div className={styles.newsTextContent}>
+                                                    <p className={styles.newsDate}>{currentNews.date}</p>
+                                                    <h3 className={styles.newsMainTitle}>{currentNews.title}</h3>
+                                                    <p className={styles.newsDesc}>{currentNews.desc}</p>
+                                                </div>
+                                                <a
+                                                    className={styles.readMore}
+                                                    onClick={(e) => { e.preventDefault(); setPopupItem({ title: currentNews.title, description: currentNews.desc }); }}
+                                                    style={{ cursor: "pointer" }}
+                                                >read more</a>
                                             </div>
-                                            <a className={styles.readMore}
-                                                onClick={(e) => { e.preventDefault(); setPopupItem({ title: currentNews.title, description: currentNews.desc }); }}
-                                                style={{ cursor: "pointer" }}>read more</a>
+                                        )}
+                                    </div>
+                                    {news.length > 1 && (
+                                        <div className={styles.sliderControls} style={{ marginTop: 12 }}>
+                                            <button className={styles.arrowBtn} onClick={() => setNewsIndex(p => p === 0 ? news.length - 1 : p - 1)}>
+                                                <img src={ArrowLeft} alt="prev" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} />
+                                            </button>
+                                            <div className={styles.dots}>
+                                                {news.map((_, idx) => (
+                                                    <span key={idx} className={`${styles.dot} ${idx === newsIndex ? styles.activeDot : ''}`} onClick={() => setNewsIndex(idx)} />
+                                                ))}
+                                            </div>
+                                            <button className={styles.arrowBtn} onClick={() => setNewsIndex(p => (p + 1) % news.length)}>
+                                                <img src={ArrowRight} alt="next" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} />
+                                            </button>
                                         </div>
                                     )}
-                                </div>
+                                </>
                             )}
                         </div>
                     </div>
-
-                    {(!isUniversity && news.length > 1) && (
-                        <div className={styles.sliderControls} style={{ marginTop: "-50px" }}>
-                            <button className={styles.arrowBtn} onClick={() => setNewsIndex(p => p === 0 ? news.length - 1 : p - 1)}>
-                                <img src={ArrowLeft} alt="prev" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} />
-                            </button>
-                            <div className={styles.dots}>
-                                {news.map((_, idx) => (
-                                    <span key={idx} className={`${styles.dot} ${idx === newsIndex ? styles.activeDot : ''}`} onClick={() => setNewsIndex(idx)} />
-                                ))}
-                            </div>
-                            <button className={styles.arrowBtn} onClick={() => setNewsIndex(p => (p + 1) % news.length)}>
-                                <img src={ArrowRight} alt="next" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} />
-                            </button>
-                        </div>
-                    )}
-
+                    {/* Related events: hidden on mobile intentionally */}
                 </div>
+            )}
 
-                {/* ── RIGHT COLUMN ── */}
-                <div className={styles.rightSection}>
-                    <div className={styles.rightCardWrapper}>
-                        <div className={styles.pill}>Doctors and Teachers</div>
-                        <div className={styles.rightCard} style={{ minHeight: isUniversity ? "570px" : "200px" }}>
-                            <div className={styles.rightCardHeader}>
-                                <div className={styles.searchContainer} style={{ width: isUniversity ? "60%" : "100%" }}>
-                                    <Search size={16} className={styles.searchIcon} />
-                                    <input
-                                        type="text"
-                                        placeholder="Searching for someone?"
-                                        className={styles.searchBar}
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
+            {/* ══════════════════════════════════════
+                ── DESKTOP BODY ──
+            ══════════════════════════════════════ */}
+            {!isMobile && (
+                <div className={`${styles.content} ${styles.page} flex flex-col md:flex-row gap-4`}>
+                    <SidebarNav />
+
+                    <div className={`${styles.universityInfo} w-full md:flex-1`}>
+
+                        {/* ── University Header ── */}
+                        <div className={styles.universityHeader}>
+                            <img
+                                src={univData?.logo || PtukLogo}
+                                alt="University Logo"
+                                className={styles.univLogo}
+                                onClick={() => navigate(`/page/${univData?.page_id}`)}
+                                style={{ cursor: 'pointer' }}
+                            />
+                            <div className={styles.univTextContainer}>
+                                <h2 className={styles.univEnglish}>{univData?.name || "Loading..."}</h2>
+                                <h1 className={styles.univArabic}>{univData?.name_arabic || ""}</h1>
+                                <div className={styles.branch}>
+                                    <span className={styles.univBranch}>{univData?.branch || "Main Branch"}</span>
+                                    <div className={styles.line} />
                                 </div>
-                                {isUniversity && (
-                                    <button className={styles.manageBtn} onClick={() => {
-                                        setManageDoctorsSearch('');
-                                        setIsManageDoctorsOpen(true);
-                                    }}>
-                                        Manage
-                                    </button>
+                            </div>
+                        </div>
+
+                        {/* ── Latest News ── */}
+                        <div className={styles.latestNews}>
+                            <div className={styles.innerContainer} style={{ minHeight: isUniversity ? "530px" : "300px", borderRadius: isUniversity ? "30px 30px 0 0" : "30px" }}>
+                                <h2 className={styles.sectionTitle}>LATEST NEWS</h2>
+
+                                {isUniversity ? (
+                                    <div className={styles.announcementsContainer} style={{ minHeight: "460px" }}>
+                                        {news.map((item, index) => (
+                                            <div key={index} className={styles.announcementWrapper}>
+                                                <div className={styles.announcementItem}>
+                                                    <img
+                                                        src={item.img?.startsWith("http") ? item.img : `${API}${item.img}`}
+                                                        alt="News"
+                                                        className={styles.announcementImg}
+                                                    />
+                                                    <div className={styles.announcementContent}>
+                                                        <div className={styles.announcementTopRow}>
+                                                            <span className={styles.announcementDate}>
+                                                                {item.date || "Saturday - 10/6/2026"}
+                                                            </span>
+                                                            <div
+                                                                className={styles.moreMenuWrapper}
+                                                                ref={openNewsDropdown === index ? dropdownRef : null}
+                                                            >
+                                                                <MoreHorizontal
+                                                                    size={32} strokeWidth={3}
+                                                                    className={styles.moreIcon}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setOpenNewsDropdown(prev => prev === index ? null : index);
+                                                                    }}
+                                                                />
+                                                                {openNewsDropdown === index && (
+                                                                    <div className={styles.dropdownMenu}>
+                                                                        <div
+                                                                            className={styles.dropdownItem}
+                                                                            onClick={() => {
+                                                                                setSliderStep(2);
+                                                                                setExtendItem(item);
+                                                                                setOpenNewsDropdown(null);
+                                                                            }}
+                                                                        >
+                                                                            <Clock size={16} />
+                                                                            <span>Extend duration</span>
+                                                                        </div>
+                                                                        <div className={styles.dropdownDivider} />
+                                                                        <div
+                                                                            className={`${styles.dropdownItem} ${styles.deleteItem}`}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setDeleteConfirmItem(item);
+                                                                                setOpenNewsDropdown(null);
+                                                                            }}
+                                                                        >
+                                                                            <img src={BinIcon} alt="delete" className={styles.binIcon} />
+                                                                            <span>Delete post</span>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <h3 className={styles.announcementTitle}>{item.title}</h3>
+                                                            <p className={styles.announcementDesc}>
+                                                                {item.desc?.length > 80 ? `${item.desc.substring(0, 80)}... ` : `${item.desc} `}
+                                                                <span
+                                                                    className={styles.readMoreText}
+                                                                    onClick={(e) => { e.preventDefault(); setPopupItem({ title: item.title, description: item.desc }); }}
+                                                                >read more</span>
+                                                            </p>
+                                                        </div>
+                                                        <div className={styles.timeRemainingRow}>
+                                                            <Clock size={16} />
+                                                            <span>
+                                                                {item.end_date ? `ends at ${item.end_date}` : "ends in 5 days at 17/6/2026"}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {index < news.length - 1 && <div className={styles.newsDivider} />}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className={styles.newsImageWrapper}>
+                                        <img
+                                            src={currentNews?.img?.startsWith("http") ? currentNews.img : `${API}${currentNews?.img}`}
+                                            alt="University News"
+                                            className={styles.newsBgImage}
+                                        />
+                                        {currentNews && (
+                                            <div className={styles.newsOverlay}>
+                                                <div className={styles.newsTextContent}>
+                                                    <p className={styles.newsDate}>{currentNews.date}</p>
+                                                    <h3 className={styles.newsMainTitle}>{currentNews.title}</h3>
+                                                    <p className={styles.newsDesc}>{currentNews.desc}</p>
+                                                </div>
+                                                <a
+                                                    className={styles.readMore}
+                                                    onClick={(e) => { e.preventDefault(); setPopupItem({ title: currentNews.title, description: currentNews.desc }); }}
+                                                    style={{ cursor: "pointer" }}
+                                                >read more</a>
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
                             </div>
-
-                            <div className={styles.scrollableList}>
-                                {filteredDoctors.map((doc, index) => (
-                                    <div key={doc.id} className={styles.doctorItemWrapper}>
-                                        <div
-                                            className={styles.doctorItem}
-                                            onClick={() => navigate(`/profile/${doc.id}`)}
-                                        >
-                                            <div className={styles.docAvatar}>
-                                                {doc.avatar || doc.profile_picture ? (
-                                                    <img
-                                                        src={(doc.avatar || doc.profile_picture).startsWith("http")
-                                                            ? (doc.avatar || doc.profile_picture)
-                                                            : `${API}${doc.avatar || doc.profile_picture}`}
-                                                        alt={doc.name}
-                                                        style={{ width: 50, height: 50, borderRadius: "50%", objectFit: "cover" }}
-                                                    />
-                                                ) : (
-                                                    <img src={DefaultPicture} alt="" width={50} height={50} />
-                                                )}
-                                            </div>
-                                            <div className={styles.docInfo}>
-                                                <div className={styles.docNameRow}>
-                                                    <h4>{doc.name}</h4>
-                                                </div>
-                                                <div className={styles.docDescRow}>
-                                                    <span>{doc.desc}</span>
-                                                    {isUniversity && (
-                                                        <>
-                                                            <span className={styles.docDot}>•</span>
-                                                            <span className={styles.docType}>{doc.type || 'Full-time'}</span>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <img
-                                                src={ArrowRight}
-                                                alt=""
-                                                height={12}
-                                                width={12}
-                                                className={styles.arrowBtn}
-                                                style={{ filter: 'brightness(0) invert(95%)' }}
-                                            />
-                                        </div>
-                                        {(isUniversity && index < filteredDoctors.length - 1) && (
-                                            <div className={styles.docDivider} />
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
                         </div>
+
+                        {(!isUniversity && news.length > 1) && (
+                            <div className={styles.sliderControls} style={{ marginTop: "-50px" }}>
+                                <button className={styles.arrowBtn} onClick={() => setNewsIndex(p => p === 0 ? news.length - 1 : p - 1)}>
+                                    <img src={ArrowLeft} alt="prev" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} />
+                                </button>
+                                <div className={styles.dots}>
+                                    {news.map((_, idx) => (
+                                        <span key={idx} className={`${styles.dot} ${idx === newsIndex ? styles.activeDot : ''}`} onClick={() => setNewsIndex(idx)} />
+                                    ))}
+                                </div>
+                                <button className={styles.arrowBtn} onClick={() => setNewsIndex(p => (p + 1) % news.length)}>
+                                    <img src={ArrowRight} alt="next" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} />
+                                </button>
+                            </div>
+                        )}
                     </div>
 
-                    {!isUniversity && (
+                    {/* ── Desktop RIGHT COLUMN ── */}
+                    <div className={`${styles.rightSection} hidden md:block`}>
                         <div className={styles.rightCardWrapper}>
-                            <div className={styles.rightCard} style={{marginTop:0}}>
-                                <div className={styles.relatedEventsHeader}>
-                                    <img src={Events} alt="events" style={{ width: 30, height: 30 }} />
-                                    <span className={styles.relatedEventsTitle}>Related events</span>
-                                </div>
-                                <div className={styles.eventCard}>
-                                    {currentEvent?.img && (
-                                        <img
-                                            src={currentEvent.img.startsWith("http") ? currentEvent.img : `${API}${currentEvent.img}`}
-                                            alt="Event"
-                                            className={styles.eventBg}
+                            <div className={styles.pill}>Doctors and Teachers</div>
+                            <div className={styles.rightCard} style={{ minHeight: isUniversity ? "570px" : "200px" }}>
+                                <div className={styles.rightCardHeader}>
+                                    <div className={styles.searchContainer} style={{ width: isUniversity ? "60%" : "100%" }}>
+                                        <Search size={16} className={styles.searchIcon} />
+                                        <input
+                                            type="text"
+                                            placeholder="Searching for someone?"
+                                            className={styles.searchBar}
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
                                         />
+                                    </div>
+                                    {isUniversity && (
+                                        <button className={styles.manageBtn} onClick={() => {
+                                            setManageDoctorsSearch('');
+                                            setIsManageDoctorsOpen(true);
+                                        }}>
+                                            Manage
+                                        </button>
                                     )}
-                                    <div className={styles.eventOverlay}>
-                                        <div className={styles.eventInfo}>
-                                            <h4>{currentEvent?.title || "No events yet"}</h4>
-                                            {currentEvent?.date && <p style={{ fontSize: "0.75rem", opacity: 0.7 }}>{currentEvent.date}</p>}
-                                            {currentEvent?.desc && (
-                                                <p>
-                                                    {currentEvent.desc.length > 30
-                                                        ? <>{currentEvent.desc.substring(0, 30)}... <span
-                                                            className={styles.readMore}
-                                                            onClick={() => setPopupItem({ title: currentEvent.title, description: currentEvent.desc })}
-                                                        >read more</span></>
-                                                        : currentEvent.desc
-                                                    }
-                                                </p>
-                                            )}
-                                            {currentEvent?.location && <p>📍 {currentEvent.location}</p>}
-                                        </div>
-                                        {currentEvent && (
-                                            <button
-                                                className={styles.viewBtn}
-                                                onClick={() => navigate('/events', { state: { highlightId: currentEvent.id } })}
-                                            >
-                                                View
-                                            </button>
+                                </div>
+                                <DoctorsList />
+                            </div>
+                        </div>
+
+                        {!isUniversity && (
+                            <div className={styles.rightCardWrapper}>
+                                <div className={styles.rightCard} style={{ marginTop: 0 }}>
+                                    <div className={styles.relatedEventsHeader}>
+                                        <img src={Events} alt="events" style={{ width: 30, height: 30 }} />
+                                        <span className={styles.relatedEventsTitle}>Related events</span>
+                                    </div>
+                                    <div className={styles.eventCard}>
+                                        {currentEvent?.img && (
+                                            <img
+                                                src={currentEvent.img.startsWith("http") ? currentEvent.img : `${API}${currentEvent.img}`}
+                                                alt="Event"
+                                                className={styles.eventBg}
+                                            />
                                         )}
+                                        <div className={styles.eventOverlay}>
+                                            <div className={styles.eventInfo}>
+                                                <h4>{currentEvent?.title || "No events yet"}</h4>
+                                                {currentEvent?.date && <p style={{ fontSize: "0.75rem", opacity: 0.7 }}>{currentEvent.date}</p>}
+                                                {currentEvent?.desc && (
+                                                    <p>
+                                                        {currentEvent.desc.length > 30
+                                                            ? <>{currentEvent.desc.substring(0, 30)}... <span
+                                                                className={styles.readMore}
+                                                                onClick={() => setPopupItem({ title: currentEvent.title, description: currentEvent.desc })}
+                                                            >read more</span></>
+                                                            : currentEvent.desc
+                                                        }
+                                                    </p>
+                                                )}
+                                                {currentEvent?.location && <p>📍 {currentEvent.location}</p>}
+                                            </div>
+                                            {currentEvent && (
+                                                <button
+                                                    className={styles.viewBtn}
+                                                    onClick={() => navigate('/events', { state: { highlightId: currentEvent.id } })}
+                                                >
+                                                    View
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* ══════════════════════════════════════════
-                PORTAL: DELETE CONFIRMATION
+                SHARED PORTALS (work on mobile & desktop)
             ══════════════════════════════════════════ */}
+
+            {/* DELETE CONFIRMATION */}
             {deleteConfirmItem && createPortal(
                 <div
                     style={{
@@ -547,18 +851,14 @@ export default function Universities() {
                 document.body
             )}
 
-            {/* ══════════════════════════════════════════
-                PORTAL: EXTEND DURATION
-            ══════════════════════════════════════════ */}
+            {/* EXTEND DURATION */}
             {extendItem && createPortal(
                 <div className={styles.extendModalOverlay} onClick={() => setExtendItem(null)}>
                     <div className={styles.extendModalContent} onClick={(e) => e.stopPropagation()}>
-
                         <div className={styles.extendHeader}>
                             <div className={styles.extendHeaderLeft}>
                                 <img
-                                    src={ArrowLeft}
-                                    alt="Back"
+                                    src={ArrowLeft} alt="Back"
                                     className={styles.extendBackBtn}
                                     onClick={() => setExtendItem(null)}
                                 />
@@ -567,13 +867,10 @@ export default function Universities() {
                             </div>
                             <div className={styles.extendHeaderActions}>
                                 <button className={styles.extendCancelBtn} onClick={() => setExtendItem(null)}>Cancel</button>
-                                {/* Save now calls handleSaveExtend which fires the PATCH and closes */}
                                 <button className={styles.extendSaveBtn} onClick={handleSaveExtend}>Save</button>
                             </div>
                         </div>
-
                         <div className={styles.extendMainDivider} />
-
                         <div className={styles.extendDetailsSection}>
                             <img
                                 src={extendItem.img?.startsWith("http") ? extendItem.img : `${API}${extendItem.img}`}
@@ -585,9 +882,7 @@ export default function Universities() {
                                 <p className={styles.extendPostDesc}>{extendItem.desc || "Announcement description goes here."}</p>
                             </div>
                         </div>
-
                         <div className={styles.extendMidDivider} />
-
                         <div className={styles.extendDatesLogs}>
                             <div className={styles.dateLogLine}>
                                 <span className={styles.dateLogLabel}>Posted at</span>
@@ -602,27 +897,20 @@ export default function Universities() {
                                 </span>
                             </div>
                         </div>
-
                         <div className={styles.extendSliderContainer}>
                             <div className={styles.sliderLabelRow}>
                                 <Clock size={16} />
                                 <span>Extend by</span>
                             </div>
-
                             <div className={styles.sliderTrackWrapper}>
                                 <input
-                                    type="range"
-                                    min="0"
-                                    max="4"
+                                    type="range" min="0" max="4"
                                     value={sliderStep}
                                     onChange={(e) => setSliderStep(parseInt(e.target.value))}
                                     className={styles.customRangeInput}
                                 />
                                 <div className={styles.visualTrackBase} />
-                                <div
-                                    className={styles.visualTrackProgress}
-                                    style={{ width: `${(sliderStep / 4) * 100}%` }}
-                                />
+                                <div className={styles.visualTrackProgress} style={{ width: `${(sliderStep / 4) * 100}%` }} />
                                 <div className={styles.sliderNodesContainer}>
                                     {durationSteps.map((step, idx) => {
                                         const isActive = idx === sliderStep;
@@ -641,22 +929,18 @@ export default function Universities() {
                                 </div>
                             </div>
                         </div>
-
                         <div className={styles.extendFutureOutputs}>
                             <span className={styles.dateLogLabel}>New end date</span>
                             <span className={styles.dateLogVal}> {durationSteps[sliderStep].dateStr}</span>
                             <span className={styles.dateLogLabel}> in</span>
                             <span className={styles.dateLogVal}> {durationSteps[sliderStep].addedText}</span>
                         </div>
-
                     </div>
                 </div>,
                 document.body
             )}
 
-            {/* ══════════════════════════════════════════
-                PORTAL: READ MORE
-            ══════════════════════════════════════════ */}
+            {/* READ MORE */}
             {popupItem && createPortal(
                 <div
                     style={{
@@ -691,13 +975,10 @@ export default function Universities() {
                 document.body
             )}
 
-            {/* ══════════════════════════════════════════
-                PORTAL: MANAGE DOCTORS
-            ══════════════════════════════════════════ */}
+            {/* MANAGE DOCTORS */}
             {isManageDoctorsOpen && createPortal(
                 <div className={styles.manageModalOverlay} onClick={() => setIsManageDoctorsOpen(false)}>
                     <div className={styles.manageModalContent} onClick={e => e.stopPropagation()}>
-
                         <div className={styles.manageModalHeader}>
                             <img
                                 src={ArrowLeft} alt="Back"
@@ -708,9 +989,7 @@ export default function Universities() {
                             <h2>Manage Doctors and Teachers</h2>
                             <span className={styles.manageCounter}>{doctors.length} Members</span>
                         </div>
-
                         <div className={styles.manageDivider} />
-
                         <div className={styles.manageControls}>
                             <div className={styles.manageSearchInputWrapper}>
                                 <Search size={18} color="#808080" />
@@ -721,13 +1000,11 @@ export default function Universities() {
                                     onChange={(e) => setManageDoctorsSearch(e.target.value)}
                                 />
                             </div>
-                            {/* Invite button now opens the invite sub-modal */}
                             <button className={styles.manageInviteBtn} onClick={() => { setInviteStatus(null); setIsInviteOpen(true); }}>
                                 <img src={AddFriendIcon} alt="Invite" className={styles.inviteIcon} />
                                 Invite
                             </button>
                         </div>
-
                         <div className={styles.notifList}>
                             {doctors
                                 .filter(doc => doc.name.toLowerCase().includes(manageDoctorsSearch.toLowerCase()))
@@ -735,11 +1012,9 @@ export default function Universities() {
                                     <div key={doc.id} className={styles.doctorRowWrapper}>
                                         <div className={styles.manageListItem}>
                                             <img
-                                                src={
-                                                    doc.avatar
-                                                        ? (doc.avatar.startsWith("http") ? doc.avatar : `${API}${doc.avatar}`)
-                                                        : DefaultPicture
-                                                }
+                                                src={doc.avatar
+                                                    ? (doc.avatar.startsWith("http") ? doc.avatar : `${API}${doc.avatar}`)
+                                                    : DefaultPicture}
                                                 alt={doc.name}
                                                 className={styles.manageListAvatar}
                                             />
@@ -748,33 +1023,23 @@ export default function Universities() {
                                                 <span className={styles.manageListDesc}>{doc.desc} • {doc.type || "Full Time"}</span>
                                             </div>
                                             <div className={styles.manageListActions}>
-                                                {/* Remove: confirms via a small inline confirm, then calls API */}
                                                 <img
-                                                    src={RemovePersonIcon}
-                                                    alt="Remove"
+                                                    src={RemovePersonIcon} alt="Remove"
                                                     className={styles.actionRemove}
                                                     title="Remove from university"
-                                                    style={{
-                                                        cursor: "pointer",
-                                                        opacity: removingDoctorId === doc.id ? 0.4 : 1
-                                                    }}
+                                                    style={{ cursor: "pointer", opacity: removingDoctorId === doc.id ? 0.4 : 1 }}
                                                     onClick={() => {
                                                         if (window.confirm(`Remove ${doc.name} from the university?`)) {
                                                             handleRemoveDoctor(doc);
                                                         }
                                                     }}
                                                 />
-                                                {/* Message: navigates to messages with this doctor */}
                                                 <img
-                                                    src={MessagesIcon}
-                                                    alt="Message"
+                                                    src={MessagesIcon} alt="Message"
                                                     className={styles.actionMessage}
                                                     title="Send message"
                                                     style={{ cursor: "pointer" }}
-                                                    onClick={() => {
-                                                        setIsManageDoctorsOpen(false);
-                                                        navigate(`/messages/${doc.id}`);
-                                                    }}
+                                                    onClick={() => { setIsManageDoctorsOpen(false); navigate(`/messages/${doc.id}`); }}
                                                 />
                                             </div>
                                         </div>
@@ -782,15 +1047,12 @@ export default function Universities() {
                                     </div>
                                 ))}
                         </div>
-
                     </div>
                 </div>,
                 document.body
             )}
 
-            {/* ══════════════════════════════════════════
-                PORTAL: INVITE DOCTOR
-            ══════════════════════════════════════════ */}
+            {/* INVITE DOCTOR */}
             {isInviteOpen && createPortal(
                 <div
                     style={{

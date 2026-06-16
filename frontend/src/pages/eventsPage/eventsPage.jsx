@@ -6,6 +6,7 @@ import Bin from '../../Assets/icons/bin.png';
 import EditIcon from '../../Assets/icons/edit.png';
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
+import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import VerifiedBadge from '../../Assets/icons/verified-mark.png';
@@ -17,6 +18,9 @@ import { createPortal } from 'react-dom';
 import API from '../../config';
 import useTheme from '../../hooks/useTheme';
 import DefaultBanner from '../../Assets/Pictures/default-community-banner.png'
+import { X } from 'lucide-react';
+import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
+
 export default function EventsPage() {
     const [user, setUser] = useState(null);
     const { theme, toggleTheme } = useTheme();
@@ -29,7 +33,8 @@ export default function EventsPage() {
     const [ownPageEvents, setOwnPageEvents] = useState([]);
     const [popupEvent, setPopupEvent] = useState(null);
     const [showCreateEvent, setShowCreateEvent] = useState(false);
-
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const [showManageEvents, setShowManageEvents] = useState(false);
     const [activeEventTab, setActiveEventTab] = useState('upcoming');
@@ -58,8 +63,8 @@ export default function EventsPage() {
 
     const [highlightId, setHighlightId] = useState(location.state?.highlightId || null);
 
-
     const pageIdRef = useRef(null);
+    const mobileMenuRef = useRef(null);
 
     const durationOptions = [
         { label: '1 week', cost: 4.99 },
@@ -70,6 +75,14 @@ export default function EventsPage() {
     ];
 
     const isUserPage = ["page", "university"].includes(localStorage.getItem("user_type"));
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 1024);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const loadOwnPageEvents = async () => {
         const token = localStorage.getItem("access");
@@ -180,6 +193,7 @@ export default function EventsPage() {
 
         fetchData();
     }, []);
+
     useEffect(() => {
         const fetchPromoCart = async () => {
             const token = localStorage.getItem("access");
@@ -287,10 +301,78 @@ export default function EventsPage() {
 
     return (
         <div className={styles.darkContainer}>
-            <div className={`${styles.header} ${styles.page}`}>
-                <Header theme={theme} toggleTheme={toggleTheme} user={user} />
-            </div>
-            <div className={`${styles.content} ${styles.page}`}>
+            {/* Mobile Header */}
+            {isMobile && (
+                <MobileHeader
+                    avatarSrc={user?.profile?.avatar || user?.avatar || user?.profile_image || '/default-avatar.png'}
+                    user={user}
+                    setMobileMenuOpen={setMobileMenuOpen}
+                    token={localStorage.getItem("access")}
+                    API={API}
+                />
+            )}
+
+            {/* Mobile Drawer (Navigation) */}
+            {isMobile && mobileMenuOpen && (
+                <div style={{ position: "fixed", inset: 0, zIndex: 9998 }}>
+                    <div
+                        style={{
+                            position: "absolute", inset: 0,
+                            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)"
+                        }}
+                        onClick={() => setMobileMenuOpen(false)}
+                    />
+                    <div
+                        ref={mobileMenuRef}
+                        style={{
+                            position: "absolute", left: 0, top: 0,
+                            height: "100%", width: "75vw", maxWidth: 350,
+                            background: " linear-gradient(135deg, var(--bg-main), var(--bg-secondary))",
+                            borderRight: "1px solid rgba(255,255,255,0.1)",
+                            display: "flex", flexDirection: "column", overflow: "hidden",
+                            boxShadow: "4px 0 30px rgba(0,0,0,0.6)"
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button
+                            style={{
+                                position: "absolute", top: 14, right: 14, zIndex: 10,
+                                width: 32, height: 32, borderRadius: "50%",
+                                background: "rgba(255,255,255,0.1)", border: "none",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                cursor: "pointer"
+                            }}
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            <X size={16} color="white" />
+                        </button>
+
+                        <div style={{
+                            display: "flex", alignItems: "center", gap: 10,
+                            padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)"
+                        }}>
+                            <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
+                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1 }}>
+                                CAMPUS
+                            </span>
+                        </div>
+                        <div style={{ flex: 1, overflowY: "auto" }}>
+                            <SideBarNav onClose={() => setMobileMenuOpen(false)} />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Desktop Header */}
+            {!isMobile && (
+                <div className={`${styles.header} ${styles.page}`}>
+                    <Header theme={theme} toggleTheme={toggleTheme} user={user} />
+                </div>
+            )}
+
+            {/* Desktop Content */}
+            {!isMobile && (
+                <div className={`${styles.content} ${styles.page}`}>
                 <SideBarNav />
                 {showCreateEvent ? (
                     <div className={styles.createEventContent}>
@@ -541,7 +623,7 @@ export default function EventsPage() {
                                                                         </button>
                                                                     )}
                                                                     <button
-                                                                        className={rec.isFollowed ? styles.followedBtnSmall : styles.followBtnSmall}
+                                                                        className={rec.isFollowed ? styles.followBtnSmall : styles.followBtnSmall}
                                                                         onClick={() => handleFollow(rec.id, rec.pageId)}
                                                                     >
                                                                         {rec.isFollowed ? 'Followed' : 'Follow'}
@@ -580,6 +662,374 @@ export default function EventsPage() {
                     </>
                 )}
             </div>
+            )}
+
+            {/* Mobile Content */}
+            {isMobile && (
+                <div style={{ display: "flex", flexDirection: "column", width: "100%", boxSizing: "border-box" }}>
+                    {showCreateEvent ? (
+                        <div className={styles.createEventContent} style={{ display: "flex", flexDirection: "column", padding: "16px", gap: "24px" }}>
+                            {/* Time section on top without the pill */}
+                            <div className={styles.rightSection} style={{ width: "100%", margin: "0 0 20px 0" }}>
+                                <CreateEventRightSidebar {...createEvent.sidebarProps} />
+                            </div>
+                            <div className={styles.createEventProfileContent} style={{ width: "100%", margin: 0 }}>
+                                <div className={styles.createEventProfileCard}>
+                                    <CreateEventForm {...createEvent.formProps} onBack={() => setShowCreateEvent(false)} />
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {isUserPage && (
+                                <>
+                                    {/* ON-HOLD Section */}
+                                    <div style={{ padding: "12px 16px" }}>
+                                        <div style={{
+                                            background: "#333333",
+                                            borderRadius: 24,
+                                            padding: 16,
+                                            border: "1px solid rgba(255,255,255,0.08)"
+                                        }}>
+                                            <div style={{ marginBottom: 12 }}>
+                                                <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.85rem", margin: 0, marginBottom: 8 }}>
+                                                    {promoCart.length} Pending checkout
+                                                </p>
+                                                <div style={{ height: 1, background: "rgba(255,255,255,0.1)", marginBottom: 12 }}></div>
+                                            </div>
+                                            <div style={{ maxHeight: "300px", overflowY: "auto", marginBottom: 12 }}>
+                                                {promoCart.length === 0 ? (
+                                                    <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.82rem", textAlign: "center", padding: "16px 0", margin: 0 }}>
+                                                        No promotions queued.
+                                                    </p>
+                                                ) : (
+                                                    promoCart.map((item, idx) => {
+                                                        const eventData = item.event || {};
+                                                        return (
+                                                            <div key={item.eventId} style={{ marginBottom: idx < promoCart.length - 1 ? 12 : 0 }}>
+                                                                <h4 style={{ margin: "0 0 4px", fontSize: "0.9rem", color: "white" }}>{item.event.title}</h4>
+                                                                <p style={{ margin: "0 0 8px", fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>
+                                                                    {item.label} - ${item.cost.toFixed(2)}
+                                                                </p>
+                                                                {idx < promoCart.length - 1 && <div style={{ height: 1, background: "rgba(255,255,255,0.1)" }}></div>}
+                                                            </div>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
+                                            {promoCart.length > 0 && (
+                                                <>
+                                                    <div style={{ height: 1, background: "rgba(255,255,255,0.1)", marginBottom: 12 }}></div>
+                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                                                        <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.7)" }}>
+                                                            Total: ${promoCart.reduce((sum, item) => sum + item.cost, 0).toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => promoCart.length > 0 && setIsCheckoutModalOpen(true)}
+                                                        style={{
+                                                            width: "100%",
+                                                            padding: "12px 20px",
+                                                            background: "linear-gradient(to right, #622598, #942892)",
+                                                            border: "none",
+                                                            borderRadius: 24,
+                                                            color: "white",
+                                                            fontSize: "0.9rem",
+                                                            cursor: "pointer",
+                                                            fontWeight: 500
+                                                        }}
+                                                    >
+                                                        Proceed to check-out
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Event Promotion Section */}
+                                    <div style={{ padding: "12px 16px" }}>
+                                        <div style={{
+                                            background: "#333333",
+                                            borderRadius: 24,
+                                            padding: 16,
+                                            border: "1px solid rgba(255,255,255,0.08)"
+                                        }}>
+                                            <h3 style={{ margin: "0 0 8px", fontSize: "0.95rem", color: "white", fontWeight: 600 }}>
+                                                Event Promotion
+                                            </h3>
+                                            <p style={{ margin: "0 0 12px", fontSize: "0.8rem", color: "#CCCCCC", lineHeight: 1.5 }}>
+                                                Manage your promotion plan and get more users to notice your event.
+                                            </p>
+                                            <button
+                                                onClick={() => setIsPromoModalOpen(true)}
+                                                style={{
+                                                    width: "100%",
+                                                    padding: "10px 24px",
+                                                    background: "linear-gradient(to right, #5D2296, #8C2590)",
+                                                    border: "none",
+                                                    borderRadius: 24,
+                                                    color: "white",
+                                                    fontSize: "0.9rem",
+                                                    cursor: "pointer",
+                                                    fontWeight: 500
+                                                }}
+                                            >
+                                                Manage
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Your Events Section */}
+                                    <div style={{ padding: "12px 16px" }}>
+                                        <h2 style={{ margin: "0 0 12px", fontSize: "1.1rem", color: "white", fontWeight: 700 }}>
+                                            Your <span className={styles.highlight}>EVENTS</span>
+                                        </h2>
+                                        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                                            <button
+                                                onClick={() => setShowManageEvents(true)}
+                                                style={{
+                                                    flex: 1,
+                                                    padding: "12px 24px",
+                                                    background: "#5F5F5F",
+                                                    border: "none",
+                                                    borderRadius: 25,
+                                                    color: "white",
+                                                    fontSize: "1rem",
+                                                    fontWeight: 500,
+                                                    cursor: "pointer"
+                                                }}
+                                            >
+                                                Manage
+                                            </button>
+                                            <button
+                                                onClick={() => setShowCreateEvent(true)}
+                                                style={{
+                                                    flex: 1,
+                                                    padding: "12px 32px",
+                                                    background: "linear-gradient(to right, #5D2296, #8C2590)",
+                                                    border: "none",
+                                                    borderRadius: 25,
+                                                    color: "white",
+                                                    fontSize: "1rem",
+                                                    cursor: "pointer",
+                                                    fontWeight: 500
+                                                }}
+                                            >
+                                                Create
+                                            </button>
+                                        </div>
+                                        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                                            {ownPageEvents.slice(0, 2).map((event) => (
+                                                <div key={event.id} style={{
+                                                    background: `url(${event.image
+                                                        ? (event.image.startsWith('http') ? event.image : `${API}${event.image}`)
+                                                        : DefaultBanner}) center/cover`,
+                                                    borderRadius: 8,
+                                                    height: 120,
+                                                    position: "relative",
+                                                    overflow: "hidden"
+                                                }}>
+                                                    <div style={{
+                                                        position: "absolute",
+                                                        inset: 0,
+                                                        background: "rgba(0,0,0,0.6)",
+                                                        padding: 12,
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                        justifyContent: "flex-end"
+                                                    }}>
+                                                        <h4 style={{ margin: 0, color: "white", fontSize: "0.95rem", fontWeight: 600 }}>
+                                                            {event.title}
+                                                        </h4>
+                                                        <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.7)", fontSize: "0.75rem" }}>
+                                                            {event.start_date}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* All Events Feed */}
+                            <div style={{ padding: "12px 16px 0" }}>
+                                <h2 style={{ margin: "0 0 16px", fontSize: "1.1rem", color: "white", fontWeight: 700 }}>
+                                    Looking for events to <span className={styles.highlight}>participate in</span>
+                                </h2>
+                                {events.length === 0 ? (
+                                    <p style={{ color: "rgba(255,255,255,0.5)", textAlign: "center", padding: "20px 0" }}>No events yet</p>
+                                ) : (
+                                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                                        {events.map((event) => (
+                                            <div key={event.id} style={{
+                                                background: "#333333",
+                                                borderRadius: 40,
+                                                overflow: "hidden",
+                                                border: "1px solid rgba(255,255,255,0.05)"
+                                            }}>
+                                                {/* Header with org info */}
+                                                <div style={{ padding: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                                    <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                                                        <img
+                                                            src={event.avatar || '/default-avatar.png'}
+                                                            alt={event.orgName}
+                                                            style={{
+                                                                width: 44,
+                                                                height: 44,
+                                                                borderRadius: "50%",
+                                                                objectFit: "cover",
+                                                                flexShrink: 0
+                                                            }}
+                                                        />
+                                                        <div style={{ minWidth: 0 }}>
+                                                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                                                                <h4 style={{ margin: 0, fontSize: "0.95rem", color: "white", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                                    {event.orgName}
+                                                                </h4>
+                                                                <img src={VerifiedBadge} alt="verified" style={{ width: 16, height: 16, flexShrink: 0, filter: 'brightness(0) invert(1)' }} />
+                                                            </div>
+                                                            <p style={{ margin: 0, fontSize: "0.8rem", color: "rgba(255,255,255,0.6)" }}>
+                                                                {event.pageType}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
+                                                        {event.isFollowed && (
+                                                            <button
+                                                                onClick={() => handlePageNotification(event.pageId)}
+                                                                style={{
+                                                                    width: 44,
+                                                                    height: 44,
+                                                                    borderRadius: "50%",
+                                                                    background: "rgba(255,255,255,0.1)",
+                                                                    border: "none",
+                                                                    cursor: "pointer",
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    justifyContent: "center",
+                                                                    color: "white"
+                                                                }}
+                                                            >
+                                                                <img
+                                                                    src={pageNotifyStatus[event.pageId] ? BellOn : BellOff}
+                                                                    alt="notifications"
+                                                                    width={18}
+                                                                    style={{ filter: 'brightness(0) saturate(100%) invert(85%)' }}
+                                                                />
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleFollow(event.id, event.pageId)}
+                                                            style={{
+                                                                padding: "8px 20px",
+                                                                background: event.isFollowed ? "rgba(255,255,255,0.15)" : "linear-gradient(135deg, #5B2598, #962892)",
+                                                                border: "none",
+                                                                borderRadius: 20,
+                                                                color: "white",
+                                                                fontSize: "0.85rem",
+                                                                fontWeight: 500,
+                                                                cursor: "pointer",
+                                                                whiteSpace: "nowrap",
+                                                                transition: "opacity 0.2s"
+                                                            }}
+                                                            onMouseEnter={(e) => e.target.style.opacity = "0.85"}
+                                                            onMouseLeave={(e) => e.target.style.opacity = "1"}
+                                                        >
+                                                            {event.isFollowed ? 'Followed' : 'Follow'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Banner Image */}
+                                                {event.banner && (
+                                                    <div style={{ position: "relative" }}>
+                                                        <img
+                                                            src={event.banner}
+                                                            alt={event.title}
+                                                            style={{
+                                                                width: "100%",
+                                                                height: 180,
+                                                                objectFit: "cover",
+                                                                display: "block"
+                                                            }}
+                                                        />
+                                                        {/* Overlay with content */}
+                                                        <div style={{
+                                                            position: "absolute",
+                                                            inset: 0,
+                                                            background: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.75))",
+                                                            padding: 16,
+                                                            display: "flex",
+                                                            flexDirection: "column",
+                                                            justifyContent: "space-between",
+                                                            pointerEvents: "none"
+                                                        }}>
+                                                            {/* Title and Description */}
+                                                            <div style={{ pointerEvents: "auto" }}>
+                                                                {event.title?.length > 20 ? (
+                                                                    <div style={{ overflow: "hidden", width: "100%" }}>
+                                                                        <span style={{
+                                                                            display: "inline-block",
+                                                                            whiteSpace: "nowrap",
+                                                                            animation: "marquee 8s linear infinite",
+                                                                            color: "white",
+                                                                            fontSize: "1.1rem",
+                                                                            fontWeight: 800
+                                                                        }}>
+                                                                            {event.title}
+                                                                        </span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <h3 style={{ margin: 0, color: "white", fontSize: "1.1rem", fontWeight: 800 }}>
+                                                                        {event.title}
+                                                                    </h3>
+                                                                )}
+                                                                <p style={{ margin: "8px 0 0", color: "rgba(255,255,255,0.9)", fontSize: "0.9rem", lineHeight: 1.4 }}>
+                                                                    {event.description?.length > 50
+                                                                        ? <>{event.description.substring(0, 70)}... <span onClick={() => setPopupEvent(event)} style={{ cursor: "pointer", color: "rgba(255,255,255,0.6)", textDecoration: "underline" }}>read more</span></>
+                                                                        : event.description
+                                                                    }
+                                                                </p>
+                                                            </div>
+
+                                                            {/* Date and Reminder */}
+                                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12, pointerEvents: "auto" }}>
+                                                                <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.9)", lineHeight: 1.3 }}>
+                                                                    <p style={{ margin: 0 }}>Starts {event.startDate ? new Date(event.startDate).toLocaleDateString() : "TBA"}</p>
+                                                                    <p style={{ margin: "4px 0 0" }}>Ends {event.endDate ? new Date(event.endDate).toLocaleDateString() : "TBA"}</p>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => handleReminder(event.id)}
+                                                                    style={{
+                                                                        padding: "8px 18px",
+                                                                        background: reminders[event.id] ? "rgba(255,255,255,0.2)" : "linear-gradient(135deg, #5B2598, #962892)",
+                                                                        border: "none",
+                                                                        borderRadius: 12,
+                                                                        color: "white",
+                                                                        fontSize: "0.75rem",
+                                                                        fontWeight: 800,
+                                                                        cursor: "pointer",
+                                                                        whiteSpace: "nowrap",
+                                                                        flexShrink: 0,
+                                                                        boxShadow: "0 4px 10px rgba(0,0,0,0.3)"
+                                                                    }}
+                                                                >
+                                                                    {reminders[event.id] ? "✓ Reminder set" : "Set reminder"}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
 
             {/* Event description popup */}
             {popupEvent && createPortal(
@@ -964,7 +1414,7 @@ export default function EventsPage() {
                             </div>
                             <div className={styles.checkoutInputGroup} style={{ flex: 1 }}>
                                 <label className={styles.checkoutLabel}>CVC</label>
-                                <input type="text" className={styles.checkoutInput} placeholder="123" />
+                                *   <input type="text" className={styles.checkoutInput} placeholder="123" />
                             </div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>

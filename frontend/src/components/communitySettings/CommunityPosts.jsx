@@ -180,10 +180,10 @@ const CommunityPosts = ({ onBack, communityId }) => {
     };
 
     return (
-        <div className={styles.postsContainer}>
+        <div className={`${styles.postsContainer} w-full max-w-full px-4 sm:px-6`}>
             {/* ── HEADER ── */}
-            <div className={styles.headerRow}>
-                <div className={styles.headerLeft}>
+            <div className={`${styles.headerRow} flex items-center justify-between`}>
+                <div className={`${styles.headerLeft} flex items-center gap-2`}>
                     <button className={styles.backBtn} onClick={onBack}>
                         <img src={arrowLeft} alt="Back" className={styles.backArrow} />
                     </button>
@@ -194,17 +194,17 @@ const CommunityPosts = ({ onBack, communityId }) => {
 
             <div className={styles.centeredDivider} />
 
-            <div className={styles.contentWrapper}>
+            <div className={`${styles.contentWrapper} flex flex-col gap-8`}>
 
                 {/* POST APPROVAL */}
-                <div className={styles.sectionRow}>
-                    <div className={styles.inlineInfo}>
-                        <h3 className={styles.sectionTitle}>Post Approval</h3>
-                        <p className={styles.sectionSubtext}>
+                <div className={`${styles.sectionRow} flex flex-row items-center justify-between gap-4 w-full`}>
+                    <div className={`${styles.inlineInfo} flex flex-col gap-1 flex-1`}>
+                        <h3 className={`${styles.sectionTitle} m-0`}>Post Approval</h3>
+                        <p className={`${styles.sectionSubtext} m-0`}>
                             Admins should accept a post before it's published in the community, posts will be pending until an admin approves it.
                         </p>
                     </div>
-                    <label className={styles.toggleWrapper}>
+                    <label className={`${styles.toggleWrapper} shrink-0`}>
                         <input
                             type="checkbox"
                             className={styles.toggleInput}
@@ -218,12 +218,12 @@ const CommunityPosts = ({ onBack, communityId }) => {
                 <div className={styles.centeredDivider} />
 
                 {/* WHO CAN POST */}
-                <div className={styles.sectionRow} style={{ alignItems: 'flex-start', flexDirection: 'column', gap: '20px' }}>
-                    <div className={styles.inlineInfo}>
-                        <h3 className={styles.sectionTitle}>Who can post</h3>
-                        <p className={styles.sectionSubtext}>Decide who can post in your community</p>
+                <div className={`${styles.sectionRow} flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 w-full`}>
+                    <div className={`${styles.inlineInfo} flex flex-col gap-1 flex-1`}>
+                        <h3 className={`${styles.sectionTitle} m-0`}>Who can post</h3>
+                        <p className={`${styles.sectionSubtext} m-0`}>Decide who can post in your community</p>
                     </div>
-                    <div className={styles.checkboxColumn}>
+                    <div className={`${styles.checkboxColumn} flex flex-col gap-3 shrink-0 sm:min-w-[150px]`}>
                         {['admins', 'instructors', 'students'].map(role => (
                             <label key={role} className={styles.checkboxLabel}>
                                 <input
@@ -241,12 +241,12 @@ const CommunityPosts = ({ onBack, communityId }) => {
                 <div className={styles.centeredDivider} />
 
                 {/* HIGHLIGHTS */}
-                <div className={styles.sectionRow}>
-                    <div className={styles.inlineInfo}>
-                        <h3 className={styles.sectionTitle}>Highlights</h3>
-                        <p className={styles.sectionSubtext}>Manage highlighted content in the community</p>
+                <div className={`${styles.sectionRow} flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full`}>
+                    <div className={`${styles.inlineInfo} flex flex-col gap-1 flex-1`}>
+                        <h3 className={`${styles.sectionTitle} m-0`}>Highlights</h3>
+                        <p className={`${styles.sectionSubtext} m-0`}>Manage highlighted content in the community</p>
                     </div>
-                    <div className={styles.actionGroup}>
+                    <div className={`${styles.actionGroup} flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto shrink-0`}>
                         <span className={styles.countText}>{highlights.length}/{highlightLimit}</span>
                         <button className={styles.actionBtn} onClick={() => setShowManageModal(true)}>
                             Manage
@@ -257,14 +257,14 @@ const CommunityPosts = ({ onBack, communityId }) => {
                 <div className={styles.centeredDivider} />
 
                 {/* REPORTED */}
-                <div className={styles.sectionRow}>
-                    <div className={styles.inlineInfo}>
-                        <h3 className={styles.sectionTitle}>Reported</h3>
-                        <p className={styles.sectionSubtext}>
+                <div className={`${styles.sectionRow} flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full`}>
+                    <div className={`${styles.inlineInfo} flex flex-col gap-1 flex-1`}>
+                        <h3 className={`${styles.sectionTitle} m-0`}>Reported</h3>
+                        <p className={`${styles.sectionSubtext} m-0`}>
                             View all reported posts and take actions with them. (dismiss, delete, Kick, Block)
                         </p>
                     </div>
-                    <div className={styles.actionGroup}>
+                    <div className={`${styles.actionGroup} flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto shrink-0`}>
                         <span className={styles.countText}>{reportedPosts.length} reported</span>
                         <button className={styles.actionBtn} onClick={() => setShowReportedModal(true)}>
                             View all
@@ -278,19 +278,20 @@ const CommunityPosts = ({ onBack, communityId }) => {
 
             {/* ── MANAGE HIGHLIGHTS MODAL ── */}
             {showManageModal && (
-                <div className={styles.modalOverlay} onClick={() => setShowManageModal(false)}>
-                    <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
-                        <div className={styles.modalHeader}>
-                            <h2 className={styles.headerTitle}>Manage Highlights</h2>
+                <div className={`${styles.modalOverlay} fixed inset-0 flex items-center justify-center p-4 sm:p-6 z-50`} onClick={() => setShowManageModal(false)}>
+                    {/* Width adjusted to max-w-xl for a cleaner desktop standard size */}
+                    <div className={`${styles.modalContent} w-full max-w-xl max-h-[85vh] flex flex-col relative overflow-hidden`} onClick={e => e.stopPropagation()}>
+                        <div className={`${styles.modalHeader} shrink-0 flex items-center justify-between p-4`}>
+                            <h2 className={`${styles.headerTitle} m-0`}>Manage Highlights</h2>
                             <button className={styles.closeBtn} onClick={() => setShowManageModal(false)}>✕</button>
                         </div>
-                        <div className={styles.modalBody}>
+                        <div className={`${styles.modalBody} overflow-y-auto overflow-x-hidden break-words flex-1 p-4`}>
                             {isLoadingHighlights ? (
                                 <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '32px 0' }}>Loading...</p>
                             ) : highlights.length === 0 ? (
                                 <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '32px 0' }}>No highlighted posts.</p>
                             ) : highlights.map((post, index) => (
-                                <div key={post.id || post.post_id}>
+                                <div key={post.id || post.post_id} className="w-full">
                                     <PostCard
                                         post={post}
                                         openComments={() => { }}
@@ -324,19 +325,20 @@ const CommunityPosts = ({ onBack, communityId }) => {
 
             {/* ── REPORTED POSTS MODAL ── */}
             {showReportedModal && (
-                <div className={styles.modalOverlay} onClick={() => setShowReportedModal(false)}>
-                    <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
-                        <div className={styles.modalHeader}>
-                            <h2 className={styles.headerTitle}>Reported Posts</h2>
+                <div className={`${styles.modalOverlay} fixed inset-0 flex items-center justify-center p-4 sm:p-6 z-50`} onClick={() => setShowReportedModal(false)}>
+            
+                    <div className={`${styles.modalContent} w-full max-w-xl max-h-[85vh] flex flex-col relative overflow-hidden`} onClick={e => e.stopPropagation()}>
+                        <div className={`${styles.modalHeader} shrink-0 flex items-center justify-between p-4`}>
+                            <h2 className={`${styles.headerTitle} m-0`}>Reported Posts</h2>
                             <button className={styles.closeBtn} onClick={() => setShowReportedModal(false)}>✕</button>
                         </div>
-                        <div className={styles.modalBody}>
+                        <div className={`${styles.modalBody} overflow-y-auto overflow-x-hidden break-words flex-1 p-4`}>
                             {isLoadingReported ? (
                                 <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '32px 0' }}>Loading...</p>
                             ) : reportedPosts.length === 0 ? (
                                 <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '32px 0' }}>No reported posts.</p>
                             ) : reportedPosts.map((post, index) => (
-                                <div key={post.id || post.post_id}>
+                                <div key={post.id || post.post_id} style={{width: "100%"}} className="w-full">
                                     <PostCard
                                         post={post}
                                         openComments={() => { }}
