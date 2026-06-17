@@ -254,6 +254,7 @@
 .messagesScrollArea {
     flex: 1;
     overflow-y: auto;
+     overflow-x: hidden;
 
     min-height: 0;
     max-height: 500px;
@@ -837,6 +838,7 @@
 
 .messageMineWrapper {
     justify-content: flex-end;
+     padding-right: 16px;
 
 
 }
@@ -1797,4 +1799,506 @@
     0%   { box-shadow: 0 0 0 3px rgba(196, 59, 184, 0.7); }
     60%  { box-shadow: 0 0 0 6px rgba(196, 59, 184, 0.3); }
     100% { box-shadow: 0 0 0 0px rgba(196, 59, 184, 0); }
+}
+/* ══════════════════════════════════════
+   CHATS PAGE — LIGHT MODE
+══════════════════════════════════════ */
+
+[data-theme="light"] .darkContainer {
+    background: linear-gradient(135deg, #f5f5f5, #ffffff);
+}
+
+[data-theme="light"] .title {
+    color: rgba(0, 0, 0, 0.75);
+}
+
+/* ── Filter buttons ── */
+[data-theme="light"] .filterBtn {
+    background-color: #f0e8ff;
+    color: #666666;
+}
+
+[data-theme="light"] .filterBtn:hover {
+    background-color: #e0d0ff;
+    color: #333333;
+}
+
+[data-theme="light"] .active {
+    background-color: #662D91;
+    color: #ffffff;
+    box-shadow: 0 0 0 1px rgba(102, 45, 145, 0.3);
+}
+
+[data-theme="light"] .requestsLink {
+    color: #333333;
+}
+
+[data-theme="light"] .requestsLink span {
+    color: #662D91;
+}
+
+/* ── Search ── */
+[data-theme="light"] .searchInput {
+    background-color: #f3e8ff;
+    border-color: rgba(102, 45, 145, 0.1);
+    color: #333333;
+}
+
+[data-theme="light"] .searchInput::placeholder {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .searchInput:focus {
+    background-color: #ede0ff;
+    border-color: rgba(102, 45, 145, 0.3);
+}
+
+[data-theme="light"] .searchIcon {
+    color: #888888;
+}
+
+/* ── Chat list wrapper ── */
+[data-theme="light"] .chatList {
+    background: linear-gradient(-90deg, #A0279C, #6923A2);
+}
+
+[data-theme="light"] .innerContainer {
+    background-color: #ffffff;
+}
+
+/* ── Chat items ── */
+[data-theme="light"] .chatItem:hover {
+    background-color: rgba(102, 45, 145, 0.05);
+}
+
+[data-theme="light"] .chatName {
+    color: #333333;
+}
+
+[data-theme="light"] .chatStatusText {
+    color: #888888;
+}
+
+[data-theme="light"] .chatPreview {
+    color: #555555;
+}
+
+[data-theme="light"] .chatTime {
+    color: #888888;
+}
+
+[data-theme="light"] .chatDivider {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .chatAvatar {
+    background-color: #f3e8ff;
+}
+
+[data-theme="light"] .statusDot {
+    border-color: #ffffff;
+}
+
+[data-theme="light"] .unreadBadge {
+    background: linear-gradient(135deg, #8b2dff, #662D91);
+}
+
+/* ── Dropdown menu ── */
+[data-theme="light"] .dropdownMenu {
+    background-color: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .menuItem {
+    color: #333333;
+}
+
+[data-theme="light"] .menuItem:hover {
+    background-color: rgba(102, 45, 145, 0.06);
+}
+
+[data-theme="light"] .menuItem.destructive {
+    color: #e84d70;
+}
+
+[data-theme="light"] .menuDivider {
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .moreButton {
+    color: #888888;
+}
+
+[data-theme="light"] .moreButton:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+    color: #333333;
+}
+
+/* ── Active chat ── */
+[data-theme="light"] .innerChatContainer {
+    background-color: #ffffff;
+}
+
+[data-theme="light"] .activeChatInnerContainer {
+    background: linear-gradient(135deg, #f5f5f5, #ffffff);
+}
+
+[data-theme="light"] .activeChatHeader {
+    background: #ffffff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .groupName {
+    color: #333333;
+}
+
+[data-theme="light"] .professorName {
+    color: #888888;
+}
+
+[data-theme="light"] .memberSubtitle {
+    color: #888888;
+}
+
+/* ── Messages ── */
+[data-theme="light"] .messagesScrollArea {
+    background-color: #f9f9f9;
+}
+
+[data-theme="light"] .dateSeparator span {
+    color: #888888;
+}
+
+[data-theme="light"] .msgSenderName {
+    color: #662D91;
+}
+
+[data-theme="light"] .msgTime {
+    color: #888888;
+}
+
+[data-theme="light"] .messageMineWrapper .msgSenderName,
+[data-theme="light"] .messageMineWrapper .msgTime {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+[data-theme="light"] .bubbleOther {
+    background: #ffffff;
+    color: #333333;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .bubbleOther.bubbleLastInGroup {
+    --c: #ffffff;
+}
+
+[data-theme="light"] .messageAvatar {
+    background-color: #f3e8ff;
+}
+
+/* ── Reply quote ── */
+[data-theme="light"] .replyQuoteBox {
+    background-color: rgba(102, 45, 145, 0.06);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] .bubbleOther .replyQuoteBox {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .bubbleOther .replySender {
+    color: #662D91;
+}
+
+[data-theme="light"] .bubbleOther .replyTextPreview {
+    color: #555555;
+}
+
+[data-theme="light"] .replyTextPreview {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* ── Reply preview bar ── */
+[data-theme="light"] .replyPreviewBar {
+    background: #f3e8ff;
+    border-top-color: rgba(102, 45, 145, 0.15);
+}
+
+[data-theme="light"] .replyPreviewContent span {
+    color: #662D91;
+}
+
+[data-theme="light"] .replyPreviewContent p {
+    color: #666666;
+}
+
+/* ── Input area ── */
+[data-theme="light"] .messageInputArea {
+    background: rgba(243, 232, 255, 0.6);
+    border-color: rgba(102, 45, 145, 0.15);
+}
+
+[data-theme="light"] .messageInput {
+    color: #333333;
+}
+
+[data-theme="light"] .messageInput::placeholder {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+/* ── Icon buttons ── */
+[data-theme="light"] .iconBtn {
+    color: #666666;
+}
+
+[data-theme="light"] .iconBtn:hover {
+    color: #662D91;
+    background: rgba(102, 45, 145, 0.1);
+    box-shadow: 0 0 12px rgba(102, 45, 145, 0.2);
+}
+
+[data-theme="light"] .iconBtnActive {
+    color: #662D91;
+}
+
+/* ── Attachment menu ── */
+[data-theme="light"] .attachmentMenu {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .attachmentMenuItem {
+    color: #333333;
+}
+
+[data-theme="light"] .attachmentMenuItem:hover {
+    background: rgba(102, 45, 145, 0.06);
+}
+
+/* ── Poll creator ── */
+[data-theme="light"] .pollCreator {
+    background: #f9f0ff;
+    border-color: rgba(102, 45, 145, 0.12);
+}
+
+[data-theme="light"] .pollHeader {
+    color: #662D91;
+}
+
+[data-theme="light"] .pollQuestionInput,
+[data-theme="light"] .pollOptionInput {
+    background: #ffffff;
+    border-color: rgba(102, 45, 145, 0.15);
+    color: #333333;
+}
+
+[data-theme="light"] .pollQuestionInput::placeholder,
+[data-theme="light"] .pollOptionInput::placeholder {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .addPollOption {
+    border-color: rgba(102, 45, 145, 0.2);
+    color: #666666;
+}
+
+[data-theme="light"] .addPollOption:hover {
+    border-color: #662D91;
+    color: #662D91;
+}
+
+/* ── Pending files ── */
+[data-theme="light"] .pendingFilesBar {
+    background: rgba(243, 232, 255, 0.8);
+    border-color: rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .pendingFileItem {
+    background: #ffffff;
+    border-color: rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .pendingFileName {
+    color: #333333;
+}
+
+[data-theme="light"] .pendingFileSize {
+    color: #888888;
+}
+
+[data-theme="light"] .pendingFileThumb {
+    background: rgba(102, 45, 145, 0.1);
+    color: #662D91;
+}
+
+/* ── Header search ── */
+[data-theme="light"] .headerSearchInner {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .headerSearchInner:focus-within {
+    border-color: rgba(102, 45, 145, 0.5);
+}
+
+[data-theme="light"] .headerSearchIcon {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .headerSearchInput {
+    color: #333333;
+}
+
+[data-theme="light"] .headerSearchInput::placeholder {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .searchResultCount {
+    color: #662D91;
+}
+
+[data-theme="light"] .searchNavBtn {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .searchNavBtn:hover {
+    color: #662D91;
+    background: rgba(102, 45, 145, 0.08);
+}
+
+/* ── Admins only bar ── */
+[data-theme="light"] .adminsOnlyBar {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.06);
+    color: rgba(0, 0, 0, 0.35);
+}
+
+/* ── Right section (academic groups) ── */
+[data-theme="light"] .rightCard {
+    background: #ffffff;
+    border-color: rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .pill {
+    background-color: #662D91;
+    border-color: #662D91;
+    color: #ffffff;
+}
+
+[data-theme="light"] .academicGroupName {
+    color: #333333;
+}
+
+[data-theme="light"] .academicTeacherName {
+    color: #888888;
+}
+
+[data-theme="light"] .academicMessagePreview {
+    color: #666666;
+}
+
+[data-theme="light"] .academicTimestamp {
+    color: #888888;
+}
+
+[data-theme="light"] .academicChatItem:hover {
+    background-color: rgba(102, 45, 145, 0.04);
+}
+
+[data-theme="light"] .academicDivider {
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .academicAvatar {
+    background-color: #f3e8ff;
+}
+
+/* ── Chat items container scrollbar ── */
+[data-theme="light"] .chatItemsContainer {
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+[data-theme="light"] .chatItemsContainer::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .messagesScrollArea {
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+[data-theme="light"] .messagesScrollArea::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .rightList {
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+/* ── Create group button ── */
+[data-theme="light"] .createGroup:hover {
+    background-color: rgba(102, 45, 145, 0.15);
+}
+
+/* ── File attachment ── */
+[data-theme="light"] .fileAttachment {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .fileAttachment:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .fileName {
+    color: #333333;
+}
+
+[data-theme="light"] .fileMeta {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .downloadWrapper {
+    color: #662D91;
+}
+
+/* ── Reply icon button ── */
+[data-theme="light"] .replyIconButton {
+    color: #888888;
+}
+
+[data-theme="light"] .replyIconButton:hover {
+    background-color: rgba(102, 45, 145, 0.08);
+    color: #662D91;
+}
+
+/* ── Cancel reply ── */
+[data-theme="light"] .cancelReply {
+    color: #e84d70;
+}
+.createGroupIcon {
+    width: 25px;
+    height: 25px;
+    filter: brightness(0) invert(0.9);
+}
+
+[data-theme="light"] .createGroupIcon {
+    filter: brightness(0) saturate(100%) invert(28%) sepia(50%) saturate(800%) hue-rotate(255deg) brightness(90%) contrast(90%);
+}
+
+[data-theme="light"] .searchIcon {
+    color: #662D91;
+    stroke: #662D91;
+}
+
+.activeChatBackIcon {
+    width: 22px;
+    height: 22px;
+    filter: brightness(0) invert(1) opacity(0.9);
+}
+
+[data-theme="light"] .activeChatBackIcon {
+    filter: brightness(0) saturate(100%) invert(28%) sepia(50%) saturate(800%) hue-rotate(255deg) brightness(90%) contrast(90%);
 }

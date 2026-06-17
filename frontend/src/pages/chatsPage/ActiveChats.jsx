@@ -12,6 +12,17 @@ import CommentModal from '../../components/comments/commentsModal';
 import GroupInfoPanel from '../../components/chat/groupInfoPanel';
 import { API, normalizeMessages, getSenderName } from './chatUtils';
 import ReportModal from '../../components/posts/ReportModal';
+import { useChatSocket } from '../../hooks/useChatSocket';
+
+function dotStyle(i) {
+    return {
+        display: 'inline-block',
+        width: 7, height: 7,
+        borderRadius: '50%',
+        background: 'rgba(255,255,255,0.5)',
+        animation: `typingBounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+    };
+}
 
 export default function ActiveChat({
     selectedChat, user, token,
@@ -36,6 +47,7 @@ export default function ActiveChat({
     const [searchResultIndex, setSearchResultIndex] = useState(0);
     const [visibleCount, setVisibleCount] = useState(50);
     const [reportTargetId, setReportTargetId] = useState(null);
+    const [typingUsers, setTypingUsers] = useState({});
 
     const messagesScrollRef = useRef(null);
     const messagesEndRef = useRef(null);
@@ -45,6 +57,78 @@ export default function ActiveChat({
     const attachmentRef = useRef(null);
     const imageInputRef = useRef(null);
     const fileInputRef = useRef(null);
+    const typingTimer = useRef(null);
+    const typingClearTimer = useRef({});
+
+
+    const scrollToBottom = useCallback(() => {
+        if (chatSearchOpen) return;
+        setTimeout(() => {
+            if (messagesScrollRef.current)
+                messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
+        }, 50);
+    }, [chatSearchOpen]);
+
+    const handleWsMessage = useCallback((data) => {
+        if (data.type !== 'chat_message') return;
+        clearTimeout(typingClearTimer.current);
+        setTypingUsers(prev => {
+            const next = { ...prev };
+            delete next[data.sender_id];
+            return next;
+        });
+        const existingAvatar = messages.find(m => m.senderId === data.sender_id)?.avatar;
+        const newMsg = {
+            id: data.message_id,
+            text: data.content,
+            content: data.content,
+            senderId: data.sender_id,
+            sender: data.username,
+            avatar: data.avatar || null,
+            time: new Date(data.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: data.sent_at,
+            reply_to_details: null,
+            post: null,
+            type: 'text',
+            media: [],
+        };
+        setMessages(prev => {
+            const exists = prev.some(m => m.id === newMsg.id);
+            return exists ? prev : [...prev, newMsg];
+        });
+        scrollToBottom();
+    }, [scrollToBottom]);
+
+    const handleWsTyping = useCallback((data) => {
+        if (data.is_typing) {
+            setTypingUsers(prev => ({
+                ...prev,
+                [data.user_id]: { username: data.username, avatar: data.avatar }
+            }));
+            // Auto-clear this specific user after 3s
+            clearTimeout(typingClearTimer.current[data.user_id]);
+            typingClearTimer.current[data.user_id] = setTimeout(() => {
+                setTypingUsers(prev => {
+                    const next = { ...prev };
+                    delete next[data.user_id];
+                    return next;
+                });
+            }, 3000);
+        } else {
+            setTypingUsers(prev => {
+                const next = { ...prev };
+                delete next[data.user_id];
+                return next;
+            });
+        }
+    }, []);
+
+    const { sendMessage, sendTyping } = useChatSocket({
+        conversationId: selectedChat?.id,
+        token,
+        onMessage: handleWsMessage,
+        onTyping: handleWsTyping,
+    });
 
     // ── Load messages on mount / chat change ──
     useEffect(() => {
@@ -83,23 +167,6 @@ export default function ActiveChat({
             }
         };
         fetchGroupDetails();
-    }, [selectedChat.id]);
-
-    // ── Poll for new messages every 5s ──
-    useEffect(() => {
-        const interval = setInterval(async () => {
-            try {
-                const res = await fetch(`${API}/api/chats/${selectedChat.id}/messages/`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                const data = await res.json();
-                const normalized = normalizeMessages(data);
-                setMessages(prev => normalized.length !== prev.length ? normalized : prev);
-            } catch (err) {
-                console.error('Polling error:', err);
-            }
-        }, 5000);
-        return () => clearInterval(interval);
     }, [selectedChat.id]);
 
     // ── Active chat menu position tracking ──
@@ -150,14 +217,6 @@ export default function ActiveChat({
             scrollToMessage(searchedMessages[searchResultIndex]?.id);
     }, [chatSearchQuery]);
 
-    const scrollToBottom = useCallback(() => {
-        if (chatSearchOpen) return;
-        setTimeout(() => {
-            if (messagesScrollRef.current)
-                messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
-        }, 50);
-    }, [chatSearchOpen]);
-
     const scrollToMessage = (id) => {
         const el = messageRefs.current[id];
         if (el && messagesScrollRef.current) {
@@ -174,6 +233,10 @@ export default function ActiveChat({
 
     // ── Send message ──
     const handleSendMessage = async () => {
+        sendTyping(false);
+        clearTimeout(typingTimer.current);
+        setTypingUsers({});
+
         if (pendingFiles.length > 0) {
             const formData = new FormData();
             pendingFiles.forEach(pf => formData.append('images', pf.file));
@@ -193,19 +256,28 @@ export default function ActiveChat({
                 }
             } catch (err) { console.error('Error sending attachments:', err); }
         } else if (inputText.trim()) {
-            try {
-                const res = await fetch(`${API}/api/chats/${selectedChat.id}/send/`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                    body: JSON.stringify({ text: inputText, reply_to: replyingTo ? replyingTo.id : null }),
-                });
-                if (res.ok) {
-                    const newMessage = await res.json();
-                    setMessages(prev => [...prev, ...normalizeMessages([newMessage])]);
-                    setInputText(''); setReplyingTo(null);
-                    onMarkRead(selectedChat.id);
-                }
-            } catch (err) { console.error('Error sending text:', err); }
+            const sent = sendMessage(inputText.trim(), replyingTo?.id ?? null);
+            if (sent) {
+                setInputText('');
+                setReplyingTo(null);
+                onMarkRead(selectedChat.id);
+            } else {
+                // fallback to REST if WS not open
+                try {
+                    const res = await fetch(`${API}/api/chats/${selectedChat.id}/send/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ text: inputText, reply_to: replyingTo?.id ?? null }),
+                    });
+                    if (res.ok) {
+                        const newMessage = await res.json();
+                        setMessages(prev => [...prev, ...normalizeMessages([newMessage])]);
+                        setInputText('');
+                        setReplyingTo(null);
+                        onMarkRead(selectedChat.id);
+                    }
+                } catch (err) { console.error('Error sending text:', err); }
+            }
         }
         scrollToBottom();
     };
@@ -242,6 +314,12 @@ export default function ActiveChat({
 
     return (
         <div className={`${styles.chatList} ${styles.activeChatOuter}`}>
+            <style>{`
+                @keyframes typingBounce {
+                    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+                    30% { transform: translateY(-6px); opacity: 1; }
+                }
+            `}</style>
             {showGroupInfo ? (
                 <GroupInfoPanel
                     group={fullGroupData || selectedChat}
@@ -503,6 +581,53 @@ export default function ActiveChat({
                                 <div ref={messagesEndRef} />
                             </div>
 
+                            {/* ── Typing indicator ── */}
+                            {/* ── Typing indicator ── */}
+                            {Object.keys(typingUsers).length > 0 && (
+                                <div style={{
+                                    display: 'flex', alignItems: 'flex-end', gap: 8,
+                                    padding: '4px 16px 8px',
+                                }}>
+                                    {/* Stack avatars */}
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                        {Object.values(typingUsers).map((t, i) => (
+                                            <img
+                                                key={i}
+                                                src={t.avatar
+                                                    ? (t.avatar.startsWith('http') ? t.avatar : `${API}${t.avatar}`)
+                                                    : `${API}/media/default-pfp.png`
+                                                }
+                                                alt={t.username}
+                                                style={{
+                                                    width: 32, height: 32,
+                                                    borderRadius: '50%',
+                                                    objectFit: 'cover',
+                                                    display: 'block',
+                                                    border: '2px solid #1a1a1a',
+                                                    marginLeft: i === 0 ? 0 : -10,
+                                                    zIndex: Object.keys(typingUsers).length - i,
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    {/* Dots bubble */}
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: 5,
+                                        background: 'rgba(255,255,255,0.08)',
+                                        borderRadius: '18px 18px 18px 4px',
+                                        padding: '12px 16px',
+                                    }}>
+                                        <span style={dotStyle(0)} />
+                                        <span style={dotStyle(1)} />
+                                        <span style={dotStyle(2)} />
+                                    </div>
+
+                                    {/* Names */}
+                                  
+                                </div>
+                            )}
+
                             {/* ── Pending files ── */}
                             {pendingFiles.length > 0 && (
                                 <div className={styles.pendingFilesBar}>
@@ -582,7 +707,12 @@ export default function ActiveChat({
                                             )}
                                         </div>
                                         <input type="text" placeholder="Type a message..." className={styles.messageInput}
-                                            value={inputText} onChange={e => setInputText(e.target.value)}
+                                            value={inputText} onChange={e => {
+                                                setInputText(e.target.value);
+                                                sendTyping(true);
+                                                clearTimeout(typingTimer.current);
+                                                typingTimer.current = setTimeout(() => sendTyping(false), 1500);
+                                            }}
                                             onKeyDown={e => { if (e.key === 'Enter') handleSendMessage(); }} />
                                         <button className={styles.sendBtn} onClick={handleSendMessage}><Send size={18} /></button>
                                     </div>

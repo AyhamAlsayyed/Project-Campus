@@ -13,18 +13,26 @@ import Report from '../../Assets/icons/info.png';
 import { API } from '../../pages/chatsPage/chatUtils';
 import ReportModal from '../posts/ReportModal';
 import StatusDot from '../presence/StatusDot';
+import { usePresence } from '../../context/presenceContext';
+
+function ChatStatusLabel({ userId, isGroup, isBlocked, isPage }) {
+    const { onlineUsers } = usePresence();
+    if (isBlocked) return <span className={styles.chatStatusText}>Blocked</span>;
+    if (isGroup) return <span className={styles.chatStatusText}>Group Chat</span>;
+    if (isPage) return null;
+    const status = onlineUsers[String(userId)] ?? 'offline';
+   
+    return (
+        <span className={styles.chatStatusText}>
+            {status === 'online' ? 'Online' : status === 'away' ? 'Away' : status === 'offline' ? 'offline' : 'Do Not Disturb'}
+        </span>
+    );
+}
 const Divider = () => (
     <div style={{ width: '65%', height: 1, background: '#4D4D4D', margin: '0 auto' }} />
 );
 
-/**
- * ChatRow — memoised so it only re-renders when its own `chat` prop changes.
- *
- * Key optimisation: menu open/close state lives HERE, not in the parent list.
- * This means clicking a ··· button on one row never causes other rows to re-render.
- */
-// Only the fields that actually affect what's painted. Callbacks are stable
-// useCallback refs so they never trigger a re-render.
+
 function chatRowPropsAreEqual(prev, next) {
     const pc = prev.chat;
     const nc = next.chat;
@@ -89,6 +97,8 @@ const ChatRow = React.memo(({
 
     const avatarSrc = chat.avatar?.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`;
 
+
+
     const statusClass =
         chat.is_group ? styles.groupDot :
             chat.is_blocked ? styles.blockedDot :
@@ -108,6 +118,7 @@ const ChatRow = React.memo(({
             ? '📎 sent an attachment'
             : chat.preview;
 
+
     return (
         <div className={styles.chatRow}>
             <div
@@ -119,15 +130,14 @@ const ChatRow = React.memo(({
                 <div className={styles.chatItemLeft}>
                     <div className={styles.avatarWrapper}>
                         <img src={avatarSrc} alt={chat.name} className={styles.chatAvatar} loading="lazy" />
-                        {chat.is_group
-                            ? <span className={`${styles.statusDot} ${styles.groupDot}`} />
-                            : <span style={{ position: 'absolute', bottom: 0, right: 0, border: '2px solid #2a2a2a', borderRadius: '50%' }}>
+                        {!chat.is_group && !chat.is_page && (
+                            <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
                                 <StatusDot userId={chat.userId} size="sm" />
                             </span>
-                        }
+                        )}
                     </div>
                     <div className={styles.chatIdentity}>
-                        <span className={styles.chatStatusText}>{statusLabel}</span>
+                        <ChatStatusLabel userId={chat.userId} isGroup={chat.is_group} isBlocked={chat.is_blocked} isPage={chat.is_page} />
                         <div className={styles.chatNameWrapper}>
                             <span className={styles.chatName}>{chat.name}</span>
                         </div>
@@ -162,7 +172,7 @@ const ChatRow = React.memo(({
                                         position: 'fixed',
                                         top: menuPos.top,
                                         right: menuPos.right,
-                                        background: '#333333',
+                                     
                                         zIndex: 999999,
                                     }}
                                     onMouseDown={e => e.stopPropagation()}

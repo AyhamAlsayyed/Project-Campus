@@ -3,8 +3,19 @@ import styles from './recentlyContacted.module.css';
 import { Search, MessageSquare } from "lucide-react"
 import { useNavigate } from 'react-router-dom';
 import Messages from '../../../Assets/icons/messages.png'
+import StatusDot from '../../presence/StatusDot';
+import { usePresence } from '../../../context/presenceContext';
 
-
+function ChatStatusLabel({ userId }) {
+    const { onlineUsers } = usePresence();
+    const status = onlineUsers[String(userId)] ?? 'offline';
+    if (status === 'offline') return null;
+    return (
+        <span className={styles.contactStatus}>
+            {status === 'online' ? 'Online' : 'Away'}
+        </span>
+    );
+}
 export default function FriendsSuggestion() {
     const [contacts, setContacts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -104,28 +115,22 @@ export default function FriendsSuggestion() {
                                     }}
                                 >
                                     <div className={styles.contactLeft}>
-                                        <div className={styles.contactAvatarWrap}>
+                                        <div className={styles.contactAvatarWrap} style={{ position: 'relative' }}>
                                             <img
                                                 src={contact.avatar}
                                                 alt={contact.name}
                                                 className={styles.contactAvatar}
                                             />
                                             {!contact.is_group && (
-                                                <span
-                                                    className={`${styles.statusDot} ${contact.user_status === "online"
-                                                        ? styles.online
-                                                        : contact.user_status === "do_not_disturb"
-                                                            ? styles.dnd
-                                                            : styles.offline
-                                                        }`}
-                                                />
+                                                <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
+                                                    <StatusDot userId={contact.other_member_id} size="sm" />
+                                                </span>
                                             )}
-
                                         </div>
 
                                         <div className={styles.contactInfo}>
                                             <div className={styles.contactTopLine}>
-                                                <span className={styles.contactStatus}>{contact.user_status}</span>
+                                                <ChatStatusLabel userId={contact.other_member_id} />
                                             </div>
                                             <p className={styles.contactName}>{contact.name}</p>
                                         </div>

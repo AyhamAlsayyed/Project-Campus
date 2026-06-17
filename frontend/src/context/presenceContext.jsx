@@ -19,11 +19,11 @@ import React, {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const WS_URL            = 'ws://localhost:8000/ws/status/';
-const TOKEN_KEY         = 'access';   
-const INITIAL_BACKOFF   = 1_000;            // 1 s
-const MAX_BACKOFF       = 30_000;           // 30 s
-const MAX_RETRY_COUNT   = 10;
+const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws/status/';
+const TOKEN_KEY = 'access';
+const INITIAL_BACKOFF = 1_000;            // 1 s
+const MAX_BACKOFF = 30_000;           // 30 s
+const MAX_RETRY_COUNT = 10;
 
 // WS close codes we should NOT retry after
 const FATAL_CLOSE_CODES = new Set([
@@ -52,11 +52,11 @@ export function PresenceProvider({ children }) {
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
   // ── Refs (don't trigger re-renders) ──────────────────────────────────────
-  const wsRef              = useRef(null);   // live WebSocket instance
-  const retryCountRef      = useRef(0);
-  const retryTimerRef      = useRef(null);
-  const intentionalClose   = useRef(false);  // true when WE closed the socket
-  const myStatusRef        = useRef('online'); // tracks last status sent by this user
+  const wsRef = useRef(null);   // live WebSocket instance
+  const retryCountRef = useRef(0);
+  const retryTimerRef = useRef(null);
+  const intentionalClose = useRef(false);  // true when WE closed the socket
+  const myStatusRef = useRef('online'); // tracks last status sent by this user
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -120,15 +120,14 @@ export function PresenceProvider({ children }) {
       }
 
       setOnlineUsers((prev) => {
-        // Remove user from map when they go fully offline
+        const key = String(user_id); 
         if (status === 'offline') {
           const next = { ...prev };
-          delete next[user_id];
+          delete next[key];
           return next;
         }
-        // Update or insert status
-        if (prev[user_id] === status) return prev; // no-op — avoid unnecessary re-render
-        return { ...prev, [user_id]: status };
+        if (prev[key] === status) return prev;
+        return { ...prev, [key]: status };
       });
     };
 

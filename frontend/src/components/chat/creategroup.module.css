@@ -443,3 +443,127 @@
 .toggleActive .toggleThumb {
     transform: translateX(22px);
 }
+/* ══════════════════════════════════════
+   CREATE GROUP — LIGHT MODE
+══════════════════════════════════════ */
+
+[data-theme="light"] .createGroupCard {
+    background-color: #ffffff;
+}
+
+[data-theme="light"] .headerTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .backIconAsset {
+    filter: brightness(0) invert(0.3);
+}
+
+[data-theme="light"] .helpIconAsset {
+    filter: brightness(0) invert(0.4);
+}
+
+[data-theme="light"] .sectionDivider {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .photoCircle {
+    background-color: #f3e8ff;
+}
+
+[data-theme="light"] .photoTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .photoSubtext {
+    color: #888888;
+}
+
+[data-theme="light"] .nameInput {
+    background-color: #f3e8ff;
+    color: #333333;
+    border: 1px solid rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .placeholderOverlay {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .inputHint {
+    color: #888888;
+}
+
+[data-theme="light"] .descriptionInput {
+    background-color: #f3e8ff;
+    color: #333333;
+    border: 1px solid rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .descriptionInput::placeholder {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .charCount {
+    color: #888888;
+}
+
+[data-theme="light"] .academicMiddle {
+    color: #555555;
+}
+
+[data-theme="light"] .instructorOnly {
+    color: #888888;
+}
+
+[data-theme="light"] .permissionsTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .permissionsSubtext {
+    color: #888888;
+}
+
+[data-theme="light"] .settingsIconAsset {
+    filter: brightness(0) invert(0.3);
+}
+
+[data-theme="light"] .permissionsContainer {
+    background-color: #f9f0ff;
+}
+
+[data-theme="light"] .membersTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .membersLine {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .membersSubtext {
+    color: #888888;
+}
+
+[data-theme="light"] .permissionLabel {
+    color: #333333;
+}
+
+[data-theme="light"] .permissionLabel svg {
+    color: #662D91 !important;
+}
+
+[data-theme="light"] .adminsCanLabel {
+    color: #888888;
+}
+
+[data-theme="light"] .approvalDescriptionText {
+    color: #888888;
+}
+
+[data-theme="light"] .toggle {
+    background-color: #cccccc;
+}
+
+[data-theme="light"] .createBtn {
+    background-color: #e0e0e0;
+    color: #888888;
+}

@@ -77,6 +77,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://cn1lr481-3000.uks1.devtunnels.ms",
     "https://mv8f3wcb-3000.euw.devtunnels.ms",
+    "https://mv8f3wcb-8000.euw.devtunnels.ms",
 ]
 
 SIMPLE_JWT = {

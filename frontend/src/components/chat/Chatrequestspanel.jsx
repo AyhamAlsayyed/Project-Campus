@@ -138,8 +138,8 @@ const SelectedRequestView = React.memo(({
 
                     <div style={{
                         display: 'flex', gap: 12, padding: '16px 20px',
-                        borderTop: '1px solid rgba(255,255,255,0.07)',
-                        background: 'rgba(255,255,255,0.02)',
+                        borderTop: '1px solid rgba(0,0,0,0.08)',
+                        background: 'transparent',
                     }}>
                         <p style={{
                             flex: 1, margin: 0,

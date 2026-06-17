@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import CreateGroup from './creategroup';
 import AddMembers from './addmembers';
 
-const API = 'http://localhost:8000';
+import API from '../../config';
 
 export default function GroupCreationFlow({ closeFlow, currentUser }) {
     const [currentStep, setCurrentStep] = useState('create');

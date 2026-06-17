@@ -2,6 +2,18 @@ import React, { useEffect, useRef } from 'react';
 import { Search, Check } from "lucide-react";
 import styles from './DrawerStyles.module.css';
 import StatusDot from '../presence/StatusDot';
+import { usePresence } from '../../context/presenceContext';
+
+function ChatStatusLabel({ userId }) {
+    const { onlineUsers } = usePresence();
+    const status = onlineUsers[String(userId)] ?? 'offline';
+
+    return (
+        <span className={styles.chatStatusText}>
+            {status === 'online' ? 'Online' : status === 'away' ? 'Away' : status === 'offline' ? 'offline' : 'Do Not Disturb'}
+        </span>
+    );
+}
 export default function ChatsBottomSheet({
     setShowDrawerChats,
     dropdownPosition,
@@ -47,7 +59,7 @@ export default function ChatsBottomSheet({
                     <span
                         className={styles.viewAll}
                         onClick={(e) => {
-                            e.stopPropagation(); // Stops click from bubbling up
+                            e.stopPropagation();
                             navigate("/chats");
                             setShowDrawerChats(false);
                         }}
@@ -82,13 +94,16 @@ export default function ChatsBottomSheet({
                             setShowDrawerChats(false);
                         }}
                     >
-                        <div className={styles.chatAvatarWrap}>
+                        <div className={styles.chatAvatarWrap} style={{ position: 'relative', flexShrink: 0 }}>
                             <img src={chat.avatar} alt="" className={styles.chatAvatar} />
-                           {!chat.isGroup && <StatusDot userId={chat.userId} size="sm" />}
-
+                            {!chat.isGroup && chat.userId && (
+                                <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
+                                    <StatusDot userId={chat.userId} size="sm" />
+                                </span>
+                            )}
                         </div>
                         <div className={styles.chatGrid}>
-                            {!chat.isGroup && <span className={styles.chatStatus}>{chat.status}</span>}
+                            {!chat.isGroup && <ChatStatusLabel userId={chat.userId} />}
                             <span className={styles.chatPreview}>{chat.message}</span>
                             <span className={styles.chatName}>{chat.name}</span>
                             <div className={styles.chatTimeContainer}>

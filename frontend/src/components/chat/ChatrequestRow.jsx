@@ -105,7 +105,6 @@ const ChatRequestRow = React.memo(({
                                         position: 'fixed',
                                         top: menuPos.top,
                                         right: menuPos.right,
-                                        background: '#333333',
                                         zIndex: 999999,
                                     }}
                                     onMouseDown={e => e.stopPropagation()}

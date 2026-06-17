@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense, useEffect } from 'react';
 import styles from './chatspage.module.css';
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
@@ -8,31 +8,35 @@ import ChatListPanel from '../../components/chat/ChatlistPanel';
 import ChatRequestsPanel from '../../components/chat/Chatrequestspanel';
 import AcademicGroupsPanel from '../../components/chat/Academicgroupspanel';
 import useTheme from '../../hooks/useTheme';
-// Downloaded only when the user first opens a chat
+
 const ActiveChat = lazy(() => import('./ActiveChats'));
- 
+
 export default function ChatsPage() {
     const { theme, toggleTheme } = useTheme();
     const ctx = useChats();
- 
+    document.documentElement.setAttribute('data-theme', theme);
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+    }, [theme]);
+
     const showActiveChat = !ctx.showCreateGroup && !!ctx.selectedChat;
- 
+
     return (
-        <div className={styles.darkContainer}>
+        <div className={styles.darkContainer} data-theme={theme}>
             <div className={`${styles.header} ${styles.page}`}>
-               <Header theme={theme} toggleTheme={toggleTheme} user={ctx.user} />
+                <Header theme={theme} toggleTheme={toggleTheme} user={ctx.user} />
             </div>
- 
+
             <div className={`${styles.content} ${styles.page}`}>
                 <SideBarNav />
- 
+
                 <div className={styles.mainContent}>
                     {ctx.showCreateGroup ? (
                         <GroupCreationFlow
                             closeFlow={() => ctx.setShowCreateGroup(false)}
                             currentUser={ctx.user}
                         />
- 
+
                     ) : showActiveChat ? (
                         <Suspense fallback={<div style={{ color: '#888', padding: 40 }}>Loading chat…</div>}>
                             <ActiveChat
@@ -45,7 +49,7 @@ export default function ChatsPage() {
                                 onMarkRead={ctx.markRead}
                             />
                         </Suspense>
- 
+
                     ) : ctx.showRequests ? (
                         <ChatRequestsPanel
                             chatRequests={ctx.chatRequests}
@@ -59,7 +63,7 @@ export default function ChatsPage() {
                             blockRequest={ctx.blockRequest}
                             deleteRequest={ctx.deleteRequest}
                         />
- 
+
                     ) : (
                         <ChatListPanel
                             sortedChats={ctx.sortedChats}
@@ -81,7 +85,7 @@ export default function ChatsPage() {
                         />
                     )}
                 </div>
- 
+
                 <AcademicGroupsPanel
                     academicGroups={ctx.academicGroups}
                     user={ctx.user}

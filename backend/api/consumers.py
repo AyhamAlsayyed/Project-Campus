@@ -137,6 +137,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
                             self.room_group_name, {"type": "chat_reaction", **reaction_data}
                         )
 
+            elif action_type == "typing": 
+                is_typing = data.get("is_typing", False)
+                await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "chat_typing",
+                    "user_id": self.user.id,
+                    "username": self.user.username,
+                    "avatar": await self.get_user_avatar(self.user),
+                    "is_typing": is_typing,
+                }
+            )
+
         except Exception:
             await self.send(text_data=json.dumps({"error": "Failed to parse message string format."}))
 
@@ -145,7 +158,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def chat_reaction(self, event):
         await self.send(text_data=json.dumps(event))
+    async def chat_typing(self, event):
+    # Don't send typing back to the person who is typing
+        if event["user_id"] == self.user.id:
+         return
+        await self.send(text_data=json.dumps({
+        "type": "typing",
+        "username": event["username"],
+        "avatar": event["avatar"],
+        "is_typing": event["is_typing"],
+        }))
 
+    @database_sync_to_async
+    def get_user_avatar(self, user):
+            try:
+           
+             avatar = user.profile.profile_image
+             return avatar.url if avatar else None
+            except Exception as e:
+                print(f'[Avatar] error: {e}')
+                return None
     @database_sync_to_async
     def check_membership(self, conversation_id, user):
         ConversationMember = apps.get_model("api", "ConversationMember")
@@ -167,15 +199,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
             parent_message_id=parent_id,
             shared_post_id=post_id,
         )
+        avatar_url = None
+        try:
+         avatar = sender.profile.profile_image
+         avatar_url = avatar.url if avatar else None
+        except Exception:
+            pass
 
         ConversationMember = apps.get_model("api", "ConversationMember")
         ConversationMember.objects.filter(conversation_id=conversation_id, user=sender).update(last_read_at=msg.sent_at)
+        print(f"[Avatar] relations: {[a for a in dir(sender) if 'profile' in a.lower()]}")
 
         return {
             "message_id": msg.message_id,
             "conversation_id": int(conversation_id),
             "sender_id": sender.id,
             "username": sender.username,
+            "avatar": avatar_url,   
             "content": msg.content,
             "parent_message_id": msg.parent_message_id,
             "shared_post_id": msg.shared_post_id,

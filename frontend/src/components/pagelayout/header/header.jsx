@@ -17,7 +17,7 @@ import Read from '../../../Assets/icons/read.png';
 import ProfilePicture from '../../../Assets/icons/default-pfp.png';
 import { createPortal } from 'react-dom';
 import StatusDot from "../../presence/StatusDot";
-
+import { usePresence } from "../../../context/presenceContext";
 import API from '../../../config';
 
 // ── Pure helpers ──
@@ -41,6 +41,16 @@ function timeAgo(dateString) {
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays === 1) return "Yesterday";
   return `${diffInDays} d. ago`;
+}
+function ChatStatusLabel({ userId }) {
+  const { onlineUsers } = usePresence();
+  const status = onlineUsers[String(userId)] ?? 'offline';
+  if (status === 'offline') return null;
+  return (
+    <span className={styles.chatStatus}>
+      {status === 'online' ? 'Online' : 'Away'}
+    </span>
+  );
 }
 
 function getNotificationIcon(type) {
@@ -83,7 +93,7 @@ function formatNotif(item) {
 
 function formatChat(chat) {
   return {
-    id: chat.id,
+    userId: chat.other_member_id || chat.user_id || null,
     name: chat.name || chat.user_name || "Unknown User",
     avatar: resolveAvatar(chat.avatar, ProfilePicture),
     message:
@@ -737,13 +747,13 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                           onError={(e) => { e.currentTarget.src = ProfilePicture; }}
                         />
                         {!chat.isGroup && (
-                          <span style={{ position: 'absolute', bottom: 0, right: 0 , borderRadius: '50%' }}>
+                          <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
                             <StatusDot userId={chat.userId} size="sm" />
                           </span>
                         )}
                       </div>
                       <div className={styles.chatGrid}>
-                        {!chat.isGroup && <span className={styles.chatStatus}>{chat.status}</span>}
+                        {!chat.isGroup && <ChatStatusLabel userId={chat.userId} />}
                         <span className={styles.chatPreview}>{chat.message}</span>
                         <span className={styles.chatName}>{chat.name}</span>
                         <div className={styles.chatTimeContainer}>

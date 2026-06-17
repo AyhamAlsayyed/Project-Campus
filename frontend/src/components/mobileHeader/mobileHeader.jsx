@@ -138,6 +138,7 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                 setDrawerChats(data.map(chat => ({
                     id: chat.id,
                     name: chat.name || chat.user_name || 'Unknown User',
+                     userId: chat.other_member_id || chat.user_id || null,
                     avatar: chat.avatar?.startsWith('http') ? chat.avatar : `${API}${chat.avatar}` || '/default-avatar.png',
                     message: chat.preview || chat.last_message || 'No messages yet',
                     status: chat.is_online ? 'online' : 'offline',

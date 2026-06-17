@@ -35,7 +35,7 @@ const SIZE_MAP = {
 export default function StatusDot({ userId, size = 'md', showLabel = false }) {
   const { onlineUsers } = usePresence();
 
-  const status = onlineUsers[userId] ?? 'offline';
+  const status = onlineUsers[String(userId)] ?? 'offline';
   const { color, label } = STATUS_CONFIG[status] ?? STATUS_CONFIG.offline;
   const px = SIZE_MAP[size] ?? SIZE_MAP.md;
 

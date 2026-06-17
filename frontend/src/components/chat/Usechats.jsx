@@ -6,7 +6,7 @@ export function useChats() {
     const token = localStorage.getItem('access');
     const navigate = useNavigate();
     const { chatId } = useParams();
- 
+
     const [user, setUser] = useState(null);
     const [userLoading, setUserLoading] = useState(true);
     const [chats, setChats] = useState([]);
@@ -20,11 +20,11 @@ export function useChats() {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [requestMessages, setRequestMessages] = useState([]);
     const [showCreateGroup, setShowCreateGroup] = useState(false);
- 
+
     const didAutoSelectRef = useRef(false);
- 
+
     // ── Loaders ──────────────────────────────────────────────────────────────
- 
+
     const loadUser = useCallback(async () => {
         if (!token) { setUserLoading(false); return; }
         try {
@@ -33,17 +33,17 @@ export function useChats() {
             });
             const data = await res.json().catch(() => ({}));
             if (res.ok) setUser(data);
-        } catch {}
+        } catch { }
         finally { setUserLoading(false); }
     }, [token]);
- 
+
     const fetchChats = useCallback(async () => {
         try {
             const res = await fetch(`${API}/api/chats/`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
-            // Deduplicate by name+avatar, prefer the entry matching the current URL
+             console.log('RAW API chats:', data);
             const unique = data.reduce((acc, chat) => {
                 const key = chat.name + chat.avatar;
                 const existing = acc.find(c => c.name + c.avatar === key);
@@ -59,20 +59,25 @@ export function useChats() {
                 }
                 return acc;
             }, []);
-            setChats(unique);
+           
+
+            setChats(unique.map(chat => ({
+                ...chat,
+                userId: chat.other_member_id || chat.user_id || null,
+            })));
         } catch (err) {
             console.error('fetchChats error:', err);
         } finally {
             setLoadingChats(false);
         }
     }, [token, chatId]);
- 
+
     // ── Bootstrap ─────────────────────────────────────────────────────────────
- 
+
     useEffect(() => {
         Promise.all([fetchChats(), loadUser()]);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
- 
+
     useEffect(() => {
         fetch(`${API}/api/chat-requests/`, { headers: { Authorization: `Bearer ${token}` } })
             .then(r => r.json())
@@ -80,9 +85,9 @@ export function useChats() {
                 setRequestsCount(data.length);
                 setChatRequests(data);
             })
-            .catch(() => {});
+            .catch(() => { });
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
- 
+
     // Auto-select chat from URL — runs once after chats load
     useEffect(() => {
         if (chatId && chats.length > 0 && !didAutoSelectRef.current) {
@@ -91,14 +96,14 @@ export function useChats() {
             if (target) setSelectedChat(target);
         }
     }, [chatId, chats]);
- 
+
     // ── Derived state ─────────────────────────────────────────────────────────
- 
+
     const academicGroups = useMemo(
         () => chats.filter(c => c.is_group && c.is_academic),
         [chats]
     );
- 
+
     // Only sort here — text search and tab filter are deferred inside ChatListPanel
     // so typing never blocks the list render.
     const sortedChats = useMemo(() =>
@@ -109,16 +114,16 @@ export function useChats() {
         }),
         [chats]
     );
- 
+
     // ── Chat actions ──────────────────────────────────────────────────────────
     // All callbacks are stable (no `chats` array dependency) so React.memo'd
     // children won't re-render when unrelated chats update.
- 
+
     const selectChat = useCallback((chat) => {
         setSelectedChat(chat);
         navigate(`/chats/${chat.id}`);
     }, [navigate]);
- 
+
     const togglePin = useCallback(async (id) => {
         const res = await fetch(`${API}/api/chats/${id}/pin/`, {
             method: 'POST',
@@ -127,7 +132,7 @@ export function useChats() {
         if (res.ok)
             setChats(prev => prev.map(c => c.id === id ? { ...c, is_pinned: !c.is_pinned } : c));
     }, [token]);
- 
+
     // Receives the full chat object so we avoid a stale `chats` closure dep
     const markUnread = useCallback(async (chat) => {
         const isCurrentlyUnread = chat.unread_count > 0;
@@ -145,7 +150,7 @@ export function useChats() {
                 )
             );
     }, [token]);
- 
+
     const clearChat = useCallback(async (id) => {
         const res = await fetch(`${API}/api/chats/${id}/clear/`, {
             method: 'DELETE',
@@ -158,7 +163,7 @@ export function useChats() {
                 )
             );
     }, [token]);
- 
+
     const deleteChat = useCallback(async (id) => {
         const res = await fetch(`${API}/api/chats/${id}/`, {
             method: 'DELETE',
@@ -170,7 +175,7 @@ export function useChats() {
             setSelectedChat(prev => (prev?.id === id ? null : prev));
         }
     }, [token]);
- 
+
     const toggleMute = useCallback(async (id) => {
         const res = await fetch(`${API}/api/chats/${id}/mute/`, {
             method: 'POST',
@@ -179,7 +184,7 @@ export function useChats() {
         if (res.ok)
             setChats(prev => prev.map(c => c.id === id ? { ...c, is_muted: !c.is_muted } : c));
     }, [token]);
- 
+
     const blockUser = useCallback(async (id) => {
         const res = await fetch(`${API}/api/chats/${id}/block/`, {
             method: 'POST',
@@ -188,16 +193,16 @@ export function useChats() {
         if (res.ok)
             setChats(prev => prev.map(c => c.id === id ? { ...c, is_blocked: !c.is_blocked } : c));
     }, [token]);
- 
+
     const reportUser = useCallback(async (id) => {
         await fetch(`${API}/api/chats/${id}/report/`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
         });
     }, [token]);
- 
+
     // ── Request actions ───────────────────────────────────────────────────────
- 
+
     const openRequest = useCallback(async (req) => {
         setSelectedRequest(req);
         try {
@@ -206,9 +211,9 @@ export function useChats() {
             });
             const data = await res.json();
             setRequestMessages(normalizeMessages(data));
-        } catch {}
+        } catch { }
     }, [token]);
- 
+
     const acceptRequest = useCallback(async (conversationId) => {
         const res = await fetch(`${API}/api/chats/${conversationId}/accept/`, {
             method: 'POST',
@@ -221,7 +226,7 @@ export function useChats() {
             setShowRequests(false);
         }
     }, [token]);
- 
+
     const blockRequest = useCallback(async (conversationId) => {
         const res = await fetch(`${API}/api/chats/${conversationId}/block/`, {
             method: 'POST',
@@ -233,7 +238,7 @@ export function useChats() {
             setSelectedRequest(null);
         }
     }, [token]);
- 
+
     const deleteRequest = useCallback(async (conversationId) => {
         const res = await fetch(`${API}/api/chats/${conversationId}/`, {
             method: 'DELETE',
@@ -244,11 +249,11 @@ export function useChats() {
             setRequestsCount(prev => prev - 1);
         }
     }, [token]);
- 
+
     const markRead = useCallback((id) => {
         setChats(prev => prev.map(c => c.id === id ? { ...c, unread_count: 0 } : c));
     }, []);
- 
+
     return {
         // ─ state ─
         user, userLoading, chats, loadingChats,

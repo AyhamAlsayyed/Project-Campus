@@ -386,3 +386,123 @@
     font-weight: 600;
     color: #fff;
 }
+/* ══════════════════════════════════════
+   ADD MEMBERS — LIGHT MODE
+══════════════════════════════════════ */
+
+[data-theme="light"] .createGroupCard {
+    background-color: #ffffff;
+}
+
+[data-theme="light"] .headerTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .headerSubtitle {
+    color: #888888;
+}
+
+[data-theme="light"] .sectionDivider {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .searchContactWrap {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .searchIconAsset {
+    filter: brightness(0) invert(0.4);
+}
+
+[data-theme="light"] .searchInput {
+    color: #333333;
+}
+
+[data-theme="light"] .searchInput::placeholder {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .shareBtn {
+    background-color: #f3e8ff;
+}
+
+[data-theme="light"] .shareBtn:hover {
+    background-color: #e9d5ff;
+}
+
+[data-theme="light"] .shareBtnText {
+    color: #662D91;
+}
+
+[data-theme="light"] .shareIconAsset {
+    filter: brightness(0) saturate(100%) invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .contactRow:hover {
+    background-color: rgba(102, 45, 145, 0.05);
+}
+
+[data-theme="light"] .roleLabel {
+    color: #888888;
+}
+
+[data-theme="light"] .contactName {
+    color: #333333;
+}
+
+[data-theme="light"] .contactEmail {
+    color: #888888;
+}
+
+[data-theme="light"] .contactDivider {
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .checkCircle {
+    border-color: #aaaaaa;
+}
+
+[data-theme="light"] .checkCircleSelected {
+    background-color: #662D91;
+    border-color: #662D91;
+}
+
+[data-theme="light"] .instructorCircle {
+    background-color: #e0e0e0;
+}
+
+[data-theme="light"] .doneBtn {
+    background-color: #e0e0e0;
+    color: #888888;
+}
+
+[data-theme="light"] .selectionCount {
+    color: #333333;
+}
+
+[data-theme="light"] .helpIconAsset {
+    filter: brightness(0) invert(0.4);
+}
+
+[data-theme="light"] .backIconAsset {
+    filter: brightness(0) invert(0.3);
+}
+
+[data-theme="light"] .loadingState,
+[data-theme="light"] .emptyState {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .errorBanner {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+[data-theme="light"] .avatarWrapper {
+    background: #f3e8ff;
+}
+
+[data-theme="light"] .avatarInitials {
+    color: #662D91;
+}
