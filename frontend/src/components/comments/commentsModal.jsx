@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 import postStyles from '../posts/posts.module.css';
 import Share from '../../Assets/icons/share.png';
 import API from '../../config';
+
 export default function CommentModal({ post, onClose, currentUser }) {
     const highlightCommentId = post.highlightCommentId || {};
     const [highlightedId, setHighlightedId] = useState(highlightCommentId);
@@ -22,6 +23,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
     const [expandedReplies, setExpandedReplies] = useState({});
     const [loading, setLoading] = useState(true);
     const [parentComment, setParentComment] = useState(null);
+    const [editingComment, setEditingComment] = useState(null); // Added edit state
     const visualMedia = post.media?.filter(item => item.type === "image" || item.type === "video") || [];
     const files = post.media?.filter(item => item.type === "file") || [];
     const parentComments = comments.filter(c => !c.parent_comment);
@@ -181,6 +183,29 @@ export default function CommentModal({ post, onClose, currentUser }) {
         } catch (err) { console.error("Delete failed:", err); }
     };
 
+    const editComment = async () => {
+        if (!newComment.trim() || !editingComment) return;
+        const token = localStorage.getItem("access");
+        try {
+            const res = await fetch(`${API}/api/comments/${editingComment.id}/edit/`, {
+                method: "PATCH", 
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ text: newComment }),
+            });
+            if (res.ok) {
+                setComments(prev => prev.map(c => 
+                    c.id === editingComment.id 
+                        ? { ...c, text: newComment, content: newComment, is_edited: true } 
+                        : c
+                ));
+                setNewComment("");
+                setEditingComment(null);
+            } else {
+                console.error("Failed to edit comment");
+            }
+        } catch (err) { console.error("Error editing comment:", err); }
+    };
+
     const addComment = async () => {
         if (!newComment.trim()) return;
         const token = localStorage.getItem("access");
@@ -213,6 +238,14 @@ export default function CommentModal({ post, onClose, currentUser }) {
                 console.error("Server error:", err);
             }
         } catch (err) { console.error("Error saving comment:", err); }
+    };
+
+    const handleCommentSubmit = () => {
+        if (editingComment) {
+            editComment();
+        } else {
+            addComment();
+        }
     };
 
     const handleLikePost = async () => {
@@ -437,13 +470,23 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                         <div className={styles.commentContent}>
                                             <div className={`${styles.commentBubble} ${highlightedId === c.id ? styles.highlighted : ''}`}>
                                                 <div className={styles.commentAuthor}>{c.user}</div>
-                                                <p>{c.text}</p>
+                                                <p>
+                                                    {c.text}
+                                                    {c.is_edited && (
+                                                        <span style={{ fontSize: '0.7rem', opacity: 0.7, marginLeft: '6px', fontStyle: 'italic' }}>
+                                                            (edited)
+                                                        </span>
+                                                    )}
+                                                </p>
                                             </div>
                                             <div className={styles.commentActions}>
                                                 <span onClick={() => toggleLike(c.id)}>Like</span>
-                                                <span onClick={() => setParentComment(c)}>Reply</span>
+                                                <span onClick={() => { setParentComment(c); setEditingComment(null); setNewComment(""); }}>Reply</span>
                                                 {c.user === currentUser?.username && (
-                                                    <span className={styles.deleteBtn} onClick={() => deleteComment(c.id)}>Delete</span>
+                                                    <>
+                                                        <span className={styles.editBtn} onClick={() => { setEditingComment(c); setNewComment(c.text); setParentComment(null); }}>Edit</span>
+                                                        <span className={styles.deleteBtn} onClick={() => deleteComment(c.id)}>Delete</span>
+                                                    </>
                                                 )}
                                             </div>
                                         </div>
@@ -466,13 +509,21 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                                     <p>
                                                         <span className={styles.replyingTo}>@{reply.replying_to || c.user}</span>{" "}
                                                         {reply.text}
+                                                        {reply.is_edited && (
+                                                            <span style={{ fontSize: '0.7rem', opacity: 0.7, marginLeft: '6px', fontStyle: 'italic' }}>
+                                                                (edited)
+                                                            </span>
+                                                        )}
                                                     </p>
                                                 </div>
                                                 <div className={styles.commentActions}>
                                                     <span onClick={() => toggleLike(reply.id)}>Like</span>
-                                                    <span onClick={() => setParentComment(reply || c)}>Reply</span>
+                                                    <span onClick={() => { setParentComment(reply || c); setEditingComment(null); setNewComment(""); }}>Reply</span>
                                                     {reply.user === currentUser?.username && (
-                                                        <span className={styles.deleteBtn} onClick={() => deleteComment(reply.id)}>Delete</span>
+                                                        <>
+                                                            <span className={styles.editBtn} onClick={() => { setEditingComment(reply); setNewComment(reply.text); setParentComment(null); }}>Edit</span>
+                                                            <span className={styles.deleteBtn} onClick={() => deleteComment(reply.id)}>Delete</span>
+                                                        </>
                                                     )}
                                                 </div>
                                             </div>
@@ -484,12 +535,17 @@ export default function CommentModal({ post, onClose, currentUser }) {
                     </div>
                 </div>
 
-                {parentComment && (
+                {editingComment ? (
+                    <div className={styles.replyBar}>
+                        <span>Editing comment</span>
+                        <button className={styles.closeReplyBtn} onClick={() => { setEditingComment(null); setNewComment(""); }}>✕</button>
+                    </div>
+                ) : parentComment ? (
                     <div className={styles.replyBar}>
                         <span>Replying to <b>{parentComment.user}</b></span>
                         <button className={styles.closeReplyBtn} onClick={() => setParentComment(null)}>✕</button>
                     </div>
-                )}
+                ) : null}
 
                 <div className={styles.inputContainer}>
                     <div className={styles.inputRow}>
@@ -497,12 +553,12 @@ export default function CommentModal({ post, onClose, currentUser }) {
                             <input
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && addComment()}
-                                placeholder="Write a comment..."
+                                onKeyDown={(e) => e.key === "Enter" && handleCommentSubmit()}
+                                placeholder={editingComment ? "Edit your comment..." : "Write a comment..."}
                             />
                             <button
                                 className={`${styles.sendBtn} ${newComment.trim() ? styles.active : ""}`}
-                                onClick={addComment}
+                                onClick={handleCommentSubmit}
                             > ➢ </button>
                         </div>
                     </div>

@@ -251,6 +251,28 @@ export default function Settings() {
         setLoading(false);
     };
 
+    const handleLogout = async () => {
+        setLoading(true);
+        try {
+            // Call the backend logout API path
+            await fetch(`${API}/api/auth/logout/`, {
+                method: 'POST',
+                headers: authHeaders()
+            });
+        } catch (err) {
+            console.error('Logout error:', err);
+        }
+        // Clear all local storage values
+        localStorage.clear();
+        showToast('Logged out successfully.');
+
+        // Redirect to landing/login page
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1000);
+        setLoading(false);
+    };
+
     // ── Account modals ───────────────────────────────────────────────────────
     const handleSendEmailCode = async () => {
         if (!newEmail) return;
@@ -436,6 +458,7 @@ export default function Settings() {
                         <h1 className={styles.sectionHeading}>{activeTab}</h1>
 
                         {/* SECTION 1: ACCOUNT */}
+               
                         {activeTab === 'Account' && (
                             <div className={styles.settingsFormGroup}>
                                 <div className={styles.settingRow}>
@@ -463,6 +486,18 @@ export default function Settings() {
                                     </div>
                                     <button className={styles.settingActionBtn} onClick={() => { setDeactivatePassword(''); setActiveModal('deactivate'); }}>Deactivate</button>
                                 </div>
+
+                                {/* Logout Row - Styled exactly like Delete Account */}
+                                <div className={`${styles.settingRow} ${styles.destructiveRow}`}>
+                                    <div>
+                                        <label className={styles.settingLabelDestructive}>Logout</label>
+                                        <p className={styles.settingDescription}>Log out of your account on this device and clear local session data.</p>
+                                    </div>
+                                    <button className={styles.deleteBtn} onClick={handleLogout} disabled={loading}>
+                                        {loading ? 'Logging out...' : 'Logout'}
+                                    </button>
+                                </div>
+
                                 <div className={`${styles.settingRow} ${styles.destructiveRow}`}>
                                     <div>
                                         <label className={styles.settingLabelDestructive}>Delete Account</label>

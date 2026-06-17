@@ -4,7 +4,7 @@ import styles from './chatspage.module.css';
 import {
     Search, MoreHorizontal, BellOff, MinusCircle,
     Ban, Reply, AlertCircle, Info, CheckSquare,
-    Paperclip, Send, FileText,
+    Paperclip, Send, FileText, Pencil
 } from 'lucide-react';
 import { Download } from 'lucide-react';
 import BackButton from '../../Assets/icons/arrow-left.png';
@@ -31,6 +31,7 @@ export default function ActiveChat({
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState('');
     const [replyingTo, setReplyingTo] = useState(null);
+    const [editingMessage, setEditingMessage] = useState(null);
     const [attachmentMenuOpen, setAttachmentMenuOpen] = useState(false);
     const [pendingFiles, setPendingFiles] = useState([]);
     const [pollOpen, setPollOpen] = useState(false);
@@ -71,11 +72,12 @@ export default function ActiveChat({
                 messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
         }, 50);
     }, [chatSearchOpen]);
-
+    
     const handleWsMessage = useCallback((data) => {
         if (data.type !== 'chat_message') return;
         clearTimeout(typingClearTimer.current);
         setTypingInfo(null);
+
         const newMsg = {
             id: data.message_id,
             text: data.content,
@@ -90,12 +92,34 @@ export default function ActiveChat({
             type: 'text',
             media: [],
         };
+
         setMessages(prev => {
             const exists = prev.some(m => m.id === newMsg.id);
             return exists ? prev : [...prev, newMsg];
         });
         scrollToBottom();
-    }, [scrollToBottom]);
+
+        // If shared post — fetch it and update the message
+        if (data.shared_post_id) {
+            fetch(`${API}/api/posts/${data.shared_post_id}/`, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+                .then(res => res.ok ? res.json() : null)
+                .then(post => {
+                    if (!post) return;
+                    // API may return array or single object
+                    const postData = Array.isArray(post)
+                        ? post.find(p => (p.id || p.post_id) === data.shared_post_id)
+                        : post;
+                    if (postData) {
+                        setMessages(prev => prev.map(m =>
+                            m.id === newMsg.id ? { ...m, post: postData } : m
+                        ));
+                    }
+                })
+                .catch(() => { });
+        }
+    }, [scrollToBottom, token]);
 
     const handleWsTyping = useCallback((data) => {
         if (data.is_typing) {
@@ -120,6 +144,7 @@ export default function ActiveChat({
         setMessages([]);
         setVisibleCount(50);
         setReplyingTo(null);
+        setEditingMessage(null);
         setInputText('');
         setPendingFiles([]);
         setShowGroupInfo(false);
@@ -267,6 +292,30 @@ export default function ActiveChat({
         scrollToBottom();
     };
 
+    // ── Edit Message ──
+    const handleEditMessage = async () => {
+        if (!inputText.trim() || !editingMessage) return;
+        try {
+            const res = await fetch(`${API}/api/messages/${editingMessage.id}/edit/`, {
+                method: 'PATCH', // Assumes a standard REST PATCH/PUT method; change to POST if backend strictly requires it.
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ text: inputText.trim() })
+            });
+            
+            if (res.ok) {
+                setMessages(prev => prev.map(m => 
+                    m.id === editingMessage.id 
+                        ? { ...m, text: inputText.trim(), content: inputText.trim(), is_edited: true } 
+                        : m
+                ));
+                setEditingMessage(null);
+                setInputText('');
+            }
+        } catch (err) {
+            console.error('Error editing message:', err);
+        }
+    };
+
     const handleFileSelect = (e, type) => {
         const files = Array.from(e.target.files);
         const previews = files.map(file => ({
@@ -398,12 +447,12 @@ export default function ActiveChat({
                                     <>
                                         <button className={styles.iconBtn} onClick={copySelectedMessages} title="Copy">
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                                <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                                             </svg>
                                         </button>
                                         <button className={`${styles.iconBtn}`} onClick={deleteSelectedMessages} title="Delete" style={{ color: '#ff4d4d' }}>
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                                                <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
                                             </svg>
                                         </button>
                                     </>
@@ -411,116 +460,116 @@ export default function ActiveChat({
                             </div>
                         </div>
                     ) : (
-                    <div className={styles.activeChatHeader}>
-                        <div className={styles.headerLeftWrapper}>
-                            <button className={styles.iconBtn} onClick={onBack}>
-                                <img src={BackButton} alt="" style={{ width: 22, height: 22, filter: 'brightness(0) invert(1) opacity(0.9)' }} />
-                            </button>
-                            <img
-                                src={resolveUrl(selectedChat.avatar)}
-                                alt={selectedChat.name}
-                                className={styles.activeChatAvatar}
-                                onClick={() => {
-                                    if (!selectedChat.is_group && selectedChat.other_member_id)
-                                        window.location.href = `/profile/${selectedChat.other_member_id}`;
-                                }}
-                                style={!selectedChat.is_group ? { cursor: 'pointer' } : {}}
-                            />
-                            {!chatSearchOpen && (
-                                <div className={styles.headerTitleInfo}>
-                                    {selectedChat.is_group && (
-                                        <span className={styles.professorName}>{selectedChat.conversations_owner}</span>
-                                    )}
-                                    <h2 className={styles.groupName}>{selectedChat.name}</h2>
-                                    <p className={styles.memberSubtitle}>{selectedChat.members}</p>
-                                </div>
-                            )}
-                        </div>
-
-                        {chatSearchOpen && (
-                            <div className={styles.headerSearchExpanded}>
-                                <div className={styles.headerSearchInner}>
-                                    <Search size={16} className={styles.headerSearchIcon} />
-                                    <input
-                                        autoFocus
-                                        type="text"
-                                        placeholder="Search messages..."
-                                        className={styles.headerSearchInput}
-                                        value={chatSearchQuery}
-                                        onChange={e => { setChatSearchQuery(e.target.value); setSearchResultIndex(0); }}
-                                        onKeyDown={e => {
-                                            if (e.key === 'Escape') { setChatSearchOpen(false); setChatSearchQuery(''); setSearchResultIndex(0); }
-                                            if (e.key === 'Enter' && searchedMessages.length > 0) {
-                                                const next = (searchResultIndex + 1) % searchedMessages.length;
-                                                setSearchResultIndex(next);
-                                                scrollToMessage(searchedMessages[next].id);
-                                            }
-                                        }}
-                                    />
-                                    {chatSearchQuery.trim() && (
-                                        <span className={styles.searchResultCount}>
-                                            {searchedMessages.length === 0 ? 'No results' : `${searchResultIndex + 1} / ${searchedMessages.length}`}
-                                        </span>
-                                    )}
-                                    {searchedMessages.length > 1 && (
-                                        <>
-                                            <button className={styles.searchNavBtn} onClick={() => {
-                                                const prev = (searchResultIndex - 1 + searchedMessages.length) % searchedMessages.length;
-                                                setSearchResultIndex(prev); scrollToMessage(searchedMessages[prev].id);
-                                            }}>▲</button>
-                                            <button className={styles.searchNavBtn} onClick={() => {
-                                                const next = (searchResultIndex + 1) % searchedMessages.length;
-                                                setSearchResultIndex(next); scrollToMessage(searchedMessages[next].id);
-                                            }}>▼</button>
-                                        </>
-                                    )}
-                                    {searchedMessages.length === 1 && chatSearchQuery.trim() && (
-                                        <button className={styles.searchNavBtn} onClick={() => scrollToMessage(searchedMessages[0].id)}>↵</button>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        <div className={styles.headerRightWrapper}>
-                            <button className={`${styles.iconBtn} ${chatSearchOpen ? styles.iconBtnActive : ''}`}
-                                onClick={() => { setChatSearchOpen(prev => !prev); setChatSearchQuery(''); setSearchResultIndex(0); }}>
-                                <Search size={30} />
-                            </button>
-                            <div className={styles.menuWrapper} ref={activeChatMenuRef}>
-                                <button ref={activeChatMenuBtnRef} className={styles.iconBtn}
-                                    onClick={(e) => {
-                                        if (activeChatMenuOpen) { setActiveChatMenuOpen(false); setActiveChatMenuRect(null); }
-                                        else { setActiveChatMenuOpen(true); setActiveChatMenuRect(e.currentTarget.getBoundingClientRect()); }
-                                    }}>
-                                    <MoreHorizontal size={30} />
+                        <div className={styles.activeChatHeader}>
+                            <div className={styles.headerLeftWrapper}>
+                                <button className={styles.iconBtn} onClick={onBack}>
+                                    <img src={BackButton} alt="" style={{ width: 22, height: 22, filter: 'brightness(0) invert(1) opacity(0.9)' }} />
                                 </button>
-                                {activeChatMenuOpen && activeChatMenuRect && createPortal(
-                                    <div className={styles.dropdownMenu}
-                                        style={{ position: 'fixed', top: activeChatMenuRect.bottom + 8, right: window.innerWidth - activeChatMenuRect.right, zIndex: 999999 }}
-                                        onMouseDown={e => e.stopPropagation()}>
-                                        <button className={styles.menuItem} onClick={() => { setActiveChatMenuOpen(false); setActiveChatMenuRect(null); setShowGroupInfo(true); }}>
-                                            <Info size={14} /> {selectedChat.is_group ? 'Group Info' : 'Chat Info'}
-                                        </button>
-                                        <button className={styles.menuItem} onClick={() => { handleToggleMute(); setActiveChatMenuOpen(false); setActiveChatMenuRect(null); }}>
-                                            <BellOff size={14} /> {isMuted ? 'Unmute notifications' : 'Mute notifications'}
-                                        </button>
-                                        <button className={styles.menuItem} onClick={() => { setSelectionMode(true); setActiveChatMenuOpen(false); setActiveChatMenuRect(null); }}>
-                                            <CheckSquare size={14} /> Select messages
-                                        </button>
-                                        <div className={styles.menuDivider} />
-                                        <button className={`${styles.menuItem} ${styles.destructive}`} onClick={() => {
-                                            setReportTargetId(selectedChat.is_group ? selectedChat.id : selectedChat.other_member_id);
-                                            setActiveChatMenuOpen(false);
-                                            setActiveChatMenuRect(null);
-                                        }}>
-                                            <AlertCircle size={14} /> {selectedChat.is_group ? 'Report group' : 'Report user'}
-                                        </button>
-                                    </div>,
-                                    document.body
+                                <img
+                                    src={resolveUrl(selectedChat.avatar)}
+                                    alt={selectedChat.name}
+                                    className={styles.activeChatAvatar}
+                                    onClick={() => {
+                                        if (!selectedChat.is_group && selectedChat.other_member_id)
+                                            window.location.href = `/profile/${selectedChat.other_member_id}`;
+                                    }}
+                                    style={!selectedChat.is_group ? { cursor: 'pointer' } : {}}
+                                />
+                                {!chatSearchOpen && (
+                                    <div className={styles.headerTitleInfo}>
+                                        {selectedChat.is_group && (
+                                            <span className={styles.professorName}>{selectedChat.conversations_owner}</span>
+                                        )}
+                                        <h2 className={styles.groupName}>{selectedChat.name}</h2>
+                                        <p className={styles.memberSubtitle}>{selectedChat.members}</p>
+                                    </div>
                                 )}
                             </div>
+
+                            {chatSearchOpen && (
+                                <div className={styles.headerSearchExpanded}>
+                                    <div className={styles.headerSearchInner}>
+                                        <Search size={16} className={styles.headerSearchIcon} />
+                                        <input
+                                            autoFocus
+                                            type="text"
+                                            placeholder="Search messages..."
+                                            className={styles.headerSearchInput}
+                                            value={chatSearchQuery}
+                                            onChange={e => { setChatSearchQuery(e.target.value); setSearchResultIndex(0); }}
+                                            onKeyDown={e => {
+                                                if (e.key === 'Escape') { setChatSearchOpen(false); setChatSearchQuery(''); setSearchResultIndex(0); }
+                                                if (e.key === 'Enter' && searchedMessages.length > 0) {
+                                                    const next = (searchResultIndex + 1) % searchedMessages.length;
+                                                    setSearchResultIndex(next);
+                                                    scrollToMessage(searchedMessages[next].id);
+                                                }
+                                            }}
+                                        />
+                                        {chatSearchQuery.trim() && (
+                                            <span className={styles.searchResultCount}>
+                                                {searchedMessages.length === 0 ? 'No results' : `${searchResultIndex + 1} / ${searchedMessages.length}`}
+                                            </span>
+                                        )}
+                                        {searchedMessages.length > 1 && (
+                                            <>
+                                                <button className={styles.searchNavBtn} onClick={() => {
+                                                    const prev = (searchResultIndex - 1 + searchedMessages.length) % searchedMessages.length;
+                                                    setSearchResultIndex(prev); scrollToMessage(searchedMessages[prev].id);
+                                                }}>▲</button>
+                                                <button className={styles.searchNavBtn} onClick={() => {
+                                                    const next = (searchResultIndex + 1) % searchedMessages.length;
+                                                    setSearchResultIndex(next); scrollToMessage(searchedMessages[next].id);
+                                                }}>▼</button>
+                                            </>
+                                        )}
+                                        {searchedMessages.length === 1 && chatSearchQuery.trim() && (
+                                            <button className={styles.searchNavBtn} onClick={() => scrollToMessage(searchedMessages[0].id)}>↵</button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className={styles.headerRightWrapper}>
+                                <button className={`${styles.iconBtn} ${chatSearchOpen ? styles.iconBtnActive : ''}`}
+                                    onClick={() => { setChatSearchOpen(prev => !prev); setChatSearchQuery(''); setSearchResultIndex(0); }}>
+                                    <Search size={30} />
+                                </button>
+                                <div className={styles.menuWrapper} ref={activeChatMenuRef}>
+                                    <button ref={activeChatMenuBtnRef} className={styles.iconBtn}
+                                        onClick={(e) => {
+                                            if (activeChatMenuOpen) { setActiveChatMenuOpen(false); setActiveChatMenuRect(null); }
+                                            else { setActiveChatMenuOpen(true); setActiveChatMenuRect(e.currentTarget.getBoundingClientRect()); }
+                                        }}>
+                                        <MoreHorizontal size={30} />
+                                    </button>
+                                    {activeChatMenuOpen && activeChatMenuRect && createPortal(
+                                        <div className={styles.dropdownMenu}
+                                            style={{ position: 'fixed', top: activeChatMenuRect.bottom + 8, right: window.innerWidth - activeChatMenuRect.right, zIndex: 999999 }}
+                                            onMouseDown={e => e.stopPropagation()}>
+                                            <button className={styles.menuItem} onClick={() => { setActiveChatMenuOpen(false); setActiveChatMenuRect(null); setShowGroupInfo(true); }}>
+                                                <Info size={14} /> {selectedChat.is_group ? 'Group Info' : 'Chat Info'}
+                                            </button>
+                                            <button className={styles.menuItem} onClick={() => { handleToggleMute(); setActiveChatMenuOpen(false); setActiveChatMenuRect(null); }}>
+                                                <BellOff size={14} /> {isMuted ? 'Unmute notifications' : 'Mute notifications'}
+                                            </button>
+                                            <button className={styles.menuItem} onClick={() => { setSelectionMode(true); setActiveChatMenuOpen(false); setActiveChatMenuRect(null); }}>
+                                                <CheckSquare size={14} /> Select messages
+                                            </button>
+                                            <div className={styles.menuDivider} />
+                                            <button className={`${styles.menuItem} ${styles.destructive}`} onClick={() => {
+                                                setReportTargetId(selectedChat.is_group ? selectedChat.id : selectedChat.other_member_id);
+                                                setActiveChatMenuOpen(false);
+                                                setActiveChatMenuRect(null);
+                                            }}>
+                                                <AlertCircle size={14} /> {selectedChat.is_group ? 'Report group' : 'Report user'}
+                                            </button>
+                                        </div>,
+                                        document.body
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                    </div>
                     )} {/* end selectionMode conditional header */}
 
                     {/* ── Messages ── */}
@@ -582,7 +631,7 @@ export default function ActiveChat({
                                                             }}>
                                                                 {selectedMessages.has(msg.id) && (
                                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                                                                        <polyline points="20 6 9 17 4 12"/>
+                                                                        <polyline points="20 6 9 17 4 12" />
                                                                     </svg>
                                                                 )}
                                                             </div>
@@ -638,7 +687,7 @@ export default function ActiveChat({
                                                                     </div>
                                                                 ) : msg.post ? (
                                                                     <div onClick={() => setOpenPost(msg.post)}
-                                                                        style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, overflow: 'hidden', maxWidth: 280, transition: 'background 0.2s' }}
+                                                                        style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, overflow: 'hidden', maxWidth: 320, transition: 'background 0.2s' }}
                                                                         onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                                                                         onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}>
                                                                         {(msg.post.media?.[0]?.url || msg.post.image) && (
@@ -658,14 +707,36 @@ export default function ActiveChat({
                                                                         </div>
                                                                     </div>
                                                                 ) : (
-                                                                    <span style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</span>
+                                                                    <span style={{ whiteSpace: 'pre-wrap' }}>
+                                                                        {msg.text}
+                                                                        {msg.is_edited && (
+                                                                            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', marginLeft: '8px', fontStyle: 'italic' }}>
+                                                                                (edited)
+                                                                            </span>
+                                                                        )}
+                                                                    </span>
                                                                 )}
                                                             </div>
-                                                            {isLastInGroup && (
-                                                                <button className={styles.replyIconButton} onClick={() => setReplyingTo(msg)}>
-                                                                    <Reply size={16} />
-                                                                </button>
-                                                            )}
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'center' }}>
+                                                                {isLastInGroup && (
+                                                                    <button className={styles.replyIconButton} onClick={() => setReplyingTo(msg)}>
+                                                                        <Reply size={16} />
+                                                                    </button>
+                                                                )}
+                                                                {isMine && msg.type !== 'media' && !msg.post && (
+                                                                    <button 
+                                                                        className={styles.replyIconButton} 
+                                                                        onClick={() => { 
+                                                                            setEditingMessage(msg); 
+                                                                            setInputText(msg.text || msg.content); 
+                                                                            setReplyingTo(null); 
+                                                                        }} 
+                                                                        title="Edit message"
+                                                                    >
+                                                                        <Pencil size={15} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -756,8 +827,16 @@ export default function ActiveChat({
                                 </div>
                             )}
 
-                            {/* ── Reply preview ── */}
-                            {replyingTo && (
+                            {/* ── Edit or Reply preview ── */}
+                            {editingMessage ? (
+                                <div className={styles.replyPreviewBar}>
+                                    <div className={styles.replyPreviewContent}>
+                                        <span>Editing message</span>
+                                        <p>{editingMessage.text || editingMessage.content}</p>
+                                    </div>
+                                    <button onClick={() => { setEditingMessage(null); setInputText(''); }} className={styles.cancelReply}><MinusCircle size={18} /></button>
+                                </div>
+                            ) : replyingTo ? (
                                 <div className={styles.replyPreviewBar}>
                                     <div className={styles.replyPreviewContent}>
                                         <span>Replying to <strong>{getSenderName(replyingTo.sender)}</strong></span>
@@ -765,7 +844,7 @@ export default function ActiveChat({
                                     </div>
                                     <button onClick={() => setReplyingTo(null)} className={styles.cancelReply}><MinusCircle size={18} /></button>
                                 </div>
-                            )}
+                            ) : null}
 
                             {/* ── Input area / Selection action bar ── */}
                             {selectionMode ? (
@@ -833,8 +912,8 @@ export default function ActiveChat({
                                                 clearTimeout(typingTimer.current);
                                                 typingTimer.current = setTimeout(() => sendTyping(false), 1500);
                                             }}
-                                            onKeyDown={e => { if (e.key === 'Enter') handleSendMessage(); }} />
-                                        <button className={styles.sendBtn} onClick={handleSendMessage}><Send size={18} /></button>
+                                            onKeyDown={e => { if (e.key === 'Enter') editingMessage ? handleEditMessage() : handleSendMessage(); }} />
+                                        <button className={styles.sendBtn} onClick={() => editingMessage ? handleEditMessage() : handleSendMessage()}><Send size={18} /></button>
                                     </div>
                                 ) : (
                                     <div className={styles.adminsOnlyBar}>

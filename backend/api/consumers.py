@@ -16,6 +16,8 @@ class StatusConsumer(AsyncWebsocketConsumer):
 
         self.status_group = "user_status_updates"
         await self.channel_layer.group_add(self.status_group, self.channel_name)
+        self.notification_group_name = f"user_notifications_{self.user.id}"
+        print(f"[NotifWS] User {self.user.id} joined group: {self.notification_group_name}")
 
         await self.accept()
 
@@ -311,12 +313,18 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         """Handles general app notifications (likes, comments, follows, etc.)"""
         await self.send(
             text_data=json.dumps({
+                "type": event.get("notification_type"), 
                 "id": event.get("id"),
                 "notification_type": event.get("notification_type"),
+                "message": event.get("description"),
                 "title": event.get("title"),
                 "description": event.get("description"),
                 "created_at": event.get("created_at"),
                 "extra_data": event.get("extra_data", {}),
+                "actor_avatar": event.get("actor_avatar"),   
+                "actor_id": event.get("actor_id"),           
+                "is_read": event.get("is_read", False),      
+                "link": event.get("link", {}),          
             })
         )
 

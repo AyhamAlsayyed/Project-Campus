@@ -2,7 +2,7 @@ import styles from './notificationsPage.module.css';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { MoreHorizontal, Volume2, Calendar, UserPlus, Heart, Users, X } from 'lucide-react';
+import { MoreHorizontal, Volume2, Calendar, UserPlus, Heart, Users, X, Trash2 } from 'lucide-react';
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
@@ -98,7 +98,7 @@ function formatNotif(item) {
 export default function NotificationsPage() {
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
-    const { liveNotifCount, clearLiveNotifCount } = useNotificationContext();
+    const { liveNotifications, liveNotifCount, clearLiveNotifCount } = useNotificationContext();
 
     const [currentUser, setCurrentUser] = useState(null);
     const [notifications, setNotifications] = useState([]);
@@ -106,6 +106,7 @@ export default function NotificationsPage() {
     const [activeFilter, setActiveFilter] = useState('All');
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [isDeletingAll, setIsDeletingAll] = useState(false);
     const mobileMenuRef = useRef(null);
 
     const [openMenuId, setOpenMenuId] = useState(null);
@@ -163,19 +164,29 @@ export default function NotificationsPage() {
 
     useEffect(() => { fetchNotifications(true); }, [fetchNotifications]);
 
-    // ── Poll every 5 seconds ──
+
+ 
+
+
+    // ── Sync WebSocket live notifications (mirrors header logic) ──
     useEffect(() => {
-        const interval = setInterval(() => fetchNotifications(false), 5000);
-        return () => clearInterval(interval);
-    }, [fetchNotifications]);
+        if (!liveNotifications || liveNotifications.length === 0) return;
+
+        setNotifications(prev => {
+            const newNotifs = liveNotifications.map(formatNotif);
+            const existingIds = new Set(prev.map(n => n.id));
+            const uniqueNew = newNotifs.filter(n => !existingIds.has(n.id));
+            if (uniqueNew.length === 0) return prev;
+            return [...uniqueNew, ...prev];
+        });
+    }, [liveNotifications]);
 
     // ── Clear live notif count when on this page ──
     useEffect(() => {
         if (liveNotifCount > 0) {
             clearLiveNotifCount();
-            fetchNotifications(false);
         }
-    }, [liveNotifCount]);
+    }, [liveNotifCount, clearLiveNotifCount]);
 
     // ── Menu rect tracking on scroll ──
     useEffect(() => {
@@ -254,6 +265,35 @@ export default function NotificationsPage() {
             fetchNotifications(false);
         }
     }, [notifications, fetchNotifications]);
+
+    // ── Delete all ──
+    const handleDeleteAll = useCallback(async () => {
+        const token = localStorage.getItem('access');
+        const allIds = notifications.map(n => n.id);
+        if (!allIds.length) return;
+
+        // Optimistic update
+        const snapshot = notifications;
+        setNotifications([]);
+        setIsDeletingAll(true);
+
+        try {
+            await Promise.all(
+                allIds.map(id =>
+                    fetch(`${API}/api/notifications/${id}/`, {
+                        method: 'DELETE',
+                        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    })
+                )
+            );
+        } catch (e) {
+            console.error(e);
+            // Rollback on failure
+            setNotifications(snapshot);
+        } finally {
+            setIsDeletingAll(false);
+        }
+    }, [notifications]);
 
     const handleNotifClick = useCallback((n) => {
         setOpenMenuId(null);
@@ -379,15 +419,25 @@ export default function NotificationsPage() {
                 <h1 className={styles.pageTitle}>
                     <span className={styles.highlight}>Notifications</span>
                 </h1>
-                {unreadCount > 0 && (
-                    <button className={styles.markAllBtn} onClick={handleMarkAllAsRead}>
-                        <img src={Read} alt="" style={{ width: 15, height: 15, filter: 'brightness(0) invert(1)' }} />
-                        Mark all as read
-                    </button>
-                )}
+                <div className={styles.titleActions}>
+                    {unreadCount > 0 && (
+                        <button className={styles.markAllBtn} onClick={handleMarkAllAsRead}>
+                            <img src={Read} alt="" style={{ width: 15, height: 15, filter: 'brightness(0) invert(1)' }} />
+                            Mark all as read
+                        </button>
+                    )}
+                    {notifications.length > 0 && (
+                        <button
+                            className={styles.deleteAllBtn}
+                            onClick={handleDeleteAll}
+                            disabled={isDeletingAll}
+                        >
+                            <Trash2 size={15} />
+                            {isDeletingAll ? 'Deleting…' : 'Delete all'}
+                        </button>
+                    )}
+                </div>
             </div>
-
-        
 
             <div className={styles.postContainer}>
                 <div className={styles.innerContainer}>

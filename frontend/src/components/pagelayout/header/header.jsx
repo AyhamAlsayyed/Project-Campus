@@ -20,9 +20,10 @@ import StatusDot from "../../presence/StatusDot";
 import { usePresence } from "../../../context/presenceContext";
 import API from '../../../config';
 import { useNotificationContext } from "../../../context/NotificationContext";
+
 // ── Pure helpers ──
 function timeAgo(dateString) {
-  if (!dateString) return "";
+  if (!dateString) return "Just now";
   let date;
   if (typeof dateString === "string" && dateString.length === 5 && dateString.includes(":")) {
     const [hours, minutes] = dateString.split(":");
@@ -39,7 +40,7 @@ function timeAgo(dateString) {
         : dateString;
     date = new Date(normalized);
   }
-  if (isNaN(date.getTime())) return dateString;
+  if (isNaN(date.getTime())) return "Just now";
   const diffInSeconds = Math.floor((Date.now() - date) / 1000);
   if (diffInSeconds < 60) return "Just now";
   const diffInMinutes = Math.floor(diffInSeconds / 60);
@@ -50,6 +51,7 @@ function timeAgo(dateString) {
   if (diffInDays === 1) return "Yesterday";
   return `${diffInDays} d. ago`;
 }
+
 function ChatStatusLabel({ userId }) {
   const { onlineUsers } = usePresence();
   const status = onlineUsers[String(userId)] ?? 'offline';
@@ -85,7 +87,7 @@ function formatNotif(item) {
 
   return {
     id: item.notification_id || item.id,
-    is_read: item.is_read,
+    is_read: item.is_read || false,
     avatar: resolveAvatar(item.actor_avatar || item.avatar),
     type: item.type || item.iconType || "Notification",
     text: item.message || item.content,
@@ -95,7 +97,7 @@ function formatNotif(item) {
     comment_id: typeof item.link === "object" ? notifLink.comment_id || item.comment_id || null : null,
     actor_id: item.actor_id || null,
     event_id: item.event_id || null,
-    time: timeAgo(item.time) || item.time,
+    time: timeAgo(item.time || item.created_at || new Date().toISOString()),
   };
 }
 
@@ -131,7 +133,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchBoxRect, setSearchBoxRect] = useState(null);
 
-
   const [openMenuId, setOpenMenuId] = useState(null);
   const [menuRect, setMenuRect] = useState(null);
   const [joinGate, setJoinGate] = useState(null);
@@ -148,25 +149,24 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { liveNotifications, liveNotifCount, clearLiveNotifCount, registerChatListener } = useNotificationContext();
-
-
-
+  const { liveNotifications, clearLiveNotifCount, registerChatListener } = useNotificationContext();
 
   // ── Derived values ──
   const unreadCount = useMemo(
     () => notifications.filter((n) => !n.is_read).length,
     [notifications]
   );
-  const totalUnreadCount = unreadCount + liveNotifCount;
+
   const unreadChatsCount = useMemo(
     () => chats.reduce((sum, c) => sum + c.unread, 0),
     [chats]
   );
+
   const filteredChats = useMemo(
     () => chats.filter((c) => c.name.toLowerCase().includes(chatSearchQuery.toLowerCase())),
     [chats, chatSearchQuery]
   );
+
   const totalResults = useMemo(
     () =>
       searchResults
@@ -229,7 +229,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
           const mapped = [...map.values()].map(formatChat);
           setChats(mapped);
 
-
           mapped.forEach((c) => {
             if (c.avatar && c.avatar !== ProfilePicture) {
               const img = new Image();
@@ -244,19 +243,21 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
 
     fetchHeaderData();
   }, [user]);
+
+  // ── Sync Socket Notifications to Local State ──
   useEffect(() => {
-    if (!user) return;
-    const interval = setInterval(async () => {
-      try {
-        const token = localStorage.getItem('access');
-        const res = await fetch(`${API}/api/notifications`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) setNotifications((await res.json()).map(formatNotif));
-      } catch { }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [user]);
+    if (!liveNotifications || liveNotifications.length === 0) return;
+
+    setNotifications(prev => {
+      const newNotifs = liveNotifications.map(formatNotif);
+      // Filter out any we already have based on ID to prevent duplicates
+      const existingIds = new Set(prev.map(n => n.id));
+      const uniqueNew = newNotifs.filter(n => !existingIds.has(n.id));
+
+      if (uniqueNew.length === 0) return prev;
+      return [...uniqueNew, ...prev]; // Prepend new WS notifications
+    });
+  }, [liveNotifications]);
 
   // ── Notif menu scroll/resize tracking ──
   useEffect(() => {
@@ -305,7 +306,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-
   useEffect(() => {
     const unregister = registerChatListener((data) => {
       const { conversation_id, preview, sender_username } = data;
@@ -319,8 +319,6 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
     });
     return unregister;
   }, [registerChatListener]);
-
-
 
   // ── Search ──
   const fetchSearch = useCallback(async (query) => {
@@ -823,26 +821,19 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
           <button
             className={styles.bellButton}
             type="button"
-            onClick={async () => {
+            onClick={() => {
               setShowNotifications(p => !p);
               if (!showNotifications) {
-                clearLiveNotifCount(); // ← resets liveNotifCount to 0
-                try {
-                  const token = localStorage.getItem('access');
-                  const res = await fetch(`${API}/api/notifications`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                  });
-                  if (res.ok) setNotifications((await res.json()).map(formatNotif));
-                } catch { }
+                clearLiveNotifCount();
               }
             }}
           >
             <div className={styles.bellIconContainer}>
-              <img src={totalUnreadCount > 0 ? BellActive : Bell} width={24} height={29} alt="Notifications" style={{ filter: 'invert(1)' }} />
-              {totalUnreadCount > 0 && <span className={styles.redDotIndicator} />}
+              <img src={unreadCount > 0 ? BellActive : Bell} width={24} height={29} alt="Notifications" style={{ filter: 'invert(1)' }} />
+              {unreadCount > 0 && <span className={styles.redDotIndicator} />}
             </div>
-            {totalUnreadCount > 0 && (
-              <span className={styles.rightBadge}>{totalUnreadCount}</span>
+            {unreadCount > 0 && (
+              <span className={styles.rightBadge}>{unreadCount}</span>
             )}
           </button>
 

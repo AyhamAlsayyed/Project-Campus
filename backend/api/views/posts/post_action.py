@@ -5,7 +5,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from ...models import Community, Message, Notification, Post, PostReaction, SavedPost
 from ...utils.community import ensure_community_admin
 from ...utils.notifications import send_global_notification
@@ -114,6 +115,20 @@ def send_post(request):
         sender=user,
         shared_post=shared_post,
         parent_message=None,
+    )
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"chat_{conversation_id}",
+        {
+            "type": "chat_message",
+            "message_id": msg.message_id,
+            "conversation_id": conversation_id,
+            "sender_id": request.user.id,
+            "username": request.user.username,
+            "content": msg.content or "",
+            "shared_post_id": msg.shared_post_id,
+            "sent_at": msg.sent_at.isoformat(),
+        }
     )
 
     return Response(
