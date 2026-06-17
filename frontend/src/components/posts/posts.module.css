@@ -36,14 +36,29 @@
     gap: 2px;
     min-width: 0;
 }
+.nameHeaderWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .nameLine {
     display: flex;
     align-items: center;
     gap: 6px;
     width: 100%;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
 }
-
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+.pageType {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
 .name {
   color: rgba(255, 255, 255, 0.92);
   font-weight: 700;

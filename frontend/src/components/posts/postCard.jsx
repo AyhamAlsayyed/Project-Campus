@@ -459,14 +459,21 @@ export default function PostCard({
           </Link>
 
           <div className={styles.userMeta}>
-            {/* Name row */}
             <div className={styles.nameLine}>
-              <span className={styles.name} style={{
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                maxWidth: post.author?.type === 'page' ? '160px' : undefined
-              }}>
-                {post.author?.username || "User"}
-              </span>
+              <div className={styles.nameHeaderWrapper}>
+                <div className={styles.nameRow}>
+                  <span className={styles.name}>{post.author?.username || "User"}</span>
+                  <span className={styles.time}>·</span>
+                  <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>
+                  {post.post_type === "academic" && <><span className={styles.time}>·</span><span className={styles.time}>Educational</span></>}
+                  {post.post_type === "announcement" && <><span className={styles.time}>·</span><span className={styles.time}>Announcement</span></>}
+                </div>
+
+                {post.author?.type === 'page' && (
+                  <span className={styles.pageType}>{post.author?.page_type || 'Page'}</span>
+                )}
+              </div>
+
               {post.tag && <span className={styles.tag}>{post.tag}</span>}
               {isPinned && isOwnProfile && (
                 <>
@@ -474,17 +481,6 @@ export default function PostCard({
                   <span className={styles.pinnedText}>Pinned</span>
                 </>
               )}
-            </div>
-
-            {/* Subtitle row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {post.author?.type === 'page' && (
-                <span className={styles.time}>{post.author?.page_type || 'Page'}</span>
-              )}
-              {post.author?.type === 'page' && <span className={styles.time}>·</span>}
-              <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>
-              {post.post_type === "academic" && <span className={styles.time}>· Educational</span>}
-              {post.post_type === "announcement" && <span className={styles.time}>· Announcement</span>}
             </div>
           </div>
         </div>
@@ -569,7 +565,7 @@ export default function PostCard({
 
                 {isOwnPost && (
                   <>
-                
+
                     <button className={`${styles.postMenuItem} ${styles.postMenuItemDestructive}`}
                       onClick={() => handleMenuAction('delete')}>
                       <img src={DeletePost} alt="" width={16} height={16} />

@@ -11,21 +11,114 @@ import imageTwo from '../../Assets/Pictures/login-2.png';
 import imageThree from '../../Assets/Pictures/login-3.png';
 import imageFour from '../../Assets/Pictures/login-4.png';
 import Stars from '../../Assets/icons/stars.png';
-import API from  '../../config'
+import API from '../../config'
 import useTheme from '../../hooks/useTheme';
 export default function Login() {
     const navigate = useNavigate();
     const [language, setLanguage] = useState('en');
     const { theme, toggleTheme } = useTheme();
-    
+
     const t = (TEXT[language] || TEXT.en).auth.Login;
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [showExpiredPopup, setShowExpiredPopup] = useState(false);
     const [subscribing, setSubscribing] = useState(false);
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
+    const [forgotPasswordStep, setForgotPasswordStep] = useState(1);
+    const [resetEmail, setResetEmail] = useState('');
+    const [resetOtp, setResetOtp] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [popupError, setPopupError] = useState('');
+    const [resetToken, setResetToken] = useState('');
+    const [resetLoading, setResetLoading] = useState(false);
 
-  
+
+    const closeForgotPasswordPopup = () => {
+        setShowForgotPassword(false);
+        setForgotPasswordStep(1);
+        setResetEmail('');
+        setResetOtp('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setPopupError('');
+    };
+    const handleForgotPasswordFlow = async (e) => {
+        e.preventDefault();
+        setPopupError('');
+
+        if (forgotPasswordStep === 1) {
+            try {
+                const res = await fetch(`${API}/api/auth/send_code/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: resetEmail }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    setPopupError(data.message || data.error || 'Failed to send code.');
+                    return;
+                }
+                setForgotPasswordStep(2);
+            } catch {
+                setPopupError('Something went wrong. Please try again.');
+            }
+        }
+
+        else if (forgotPasswordStep === 2) {
+            if (resetOtp.length < 6) {
+                setPopupError('Please enter the full 6-digit code.');
+                return;
+            }
+            try {
+                const res = await fetch(`${API}/api/auth/verify_code/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: resetEmail, code: resetOtp }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    setPopupError(data.message || data.error || 'Invalid or expired code.');
+                    return;
+                }
+
+                if (data.token) setResetToken(data.token);
+                setForgotPasswordStep(3);
+            } catch {
+                setPopupError('Something went wrong. Please try again.');
+            }
+        }
+
+        else if (forgotPasswordStep === 3) {
+            if (newPassword !== confirmPassword) {
+                setPopupError('Passwords do not match.');
+                return;
+            }
+            try {
+                const res = await fetch(`${API}/api/auth/change-password/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: resetEmail,
+                        code: resetOtp,
+                        new_password: newPassword,
+                        ...(resetToken ? { token: resetToken } : {}),
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    setPopupError(data.message || data.error || 'Failed to reset password.');
+                    return;
+                }
+                closeForgotPasswordPopup();
+            } catch {
+                setPopupError('Something went wrong. Please try again.');
+            }
+        }
+    };
+
+
 
     const handleSubscribe = async (plan) => {
         try {
@@ -46,7 +139,7 @@ export default function Login() {
         } catch (e) { console.error(e); }
         finally { setSubscribing(false); }
     };
-    
+
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const slides = [
@@ -56,7 +149,7 @@ export default function Login() {
         { image: imageFour, }
     ];
     const currentSlide = slides[currentIndex];
-    
+
     const handlesubmit = async (e) => {
         e.preventDefault();
         try {
@@ -77,7 +170,7 @@ export default function Login() {
                 localStorage.setItem("access", data.access);
                 localStorage.setItem("refresh", data.refresh);
                 localStorage.setItem("user_type", data.user.user_type ?? '');
-                localStorage.setItem("user_id", data.user.id);  
+                localStorage.setItem("user_id", data.user.id);
                 localStorage.setItem("login_user", JSON.stringify(data.user));
             } else {
                 setError("No tokens returned from server");
@@ -89,7 +182,7 @@ export default function Login() {
 
             if (subRes.ok) {
                 const subData = await subRes.json();
-                const isExpired = !subData?.is_active; 
+                const isExpired = !subData?.is_active;
                 if (isExpired) {
                     setShowExpiredPopup(true);
                     return;
@@ -103,7 +196,7 @@ export default function Login() {
             setError('An error occurred. Please try again later.');
         }
     }
-    
+
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length);
@@ -180,7 +273,16 @@ export default function Login() {
                                 <label htmlFor="rememberMe" className={styles.rememberMeLabel}>{t.rememberMe}</label>
                             </div>
                             <p className={styles.helpTextOne}>
-                                {t.needHelp.text} <a href='/LandingPage'>{t.needHelp.link}</a>{t.needHelp.afterLink}
+                                {t.needHelp.text}{' '}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowForgotPassword(true)}
+                                    className="bg-transparent border-none p-0 cursor-pointer hover:underline"
+                                    style={{ color: 'inherit', font: 'inherit', display: 'inline' }}
+                                >
+                                    {t.needHelp.link}
+                                </button>
+                                {t.needHelp.afterLink}
                             </p>
                         </div>
                         <button type="submit" className={styles.submitButton}>{t.submitLogin}</button>
@@ -210,7 +312,16 @@ export default function Login() {
                                 <label htmlFor="rememberMeDesktop" className={styles.rememberMeLabel}>{t.rememberMe}</label>
                             </div>
                             <p className={styles.helpTextOne}>
-                                {t.needHelp.text} <a href='/LandingPage'>{t.needHelp.link}</a>{t.needHelp.afterLink}
+                                {t.needHelp.text}{' '}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowForgotPassword(true)}
+                                    className="bg-transparent border-none p-0 cursor-pointer hover:underline"
+                                    style={{ color: 'inherit', font: 'inherit', display: 'inline' }}
+                                >
+                                    {t.needHelp.link}
+                                </button>
+                                {t.needHelp.afterLink}
                             </p>
                         </div>
                         <button type="submit" className={styles.submitButton}>{t.submitLogin}</button>
@@ -292,6 +403,128 @@ export default function Login() {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+            {showForgotPassword && (
+                <div className={styles.expiredOverlay}>
+                    <div className={styles.forgotPasswordCard}>
+
+                        <div className={styles.popupHeader}>
+                            <span className={styles.stepTitle}>
+                                {forgotPasswordStep === 1 && "Forgot Password?"}
+                                {forgotPasswordStep === 2 && "Enter Verification Code"}
+                                {forgotPasswordStep === 3 && "Create New Password"}
+                            </span>
+
+                            {forgotPasswordStep === 1 && (
+                                <span className={styles.subText}>
+                                    Enter your email address and we'll send you a recovery link.
+                                </span>
+                            )}
+                            {forgotPasswordStep === 2 && (
+                                <p className={styles.instructionText}>
+                                    A verification code was sent to your email. Do not share that code with anyone!
+                                </p>
+                            )}
+                            {forgotPasswordStep === 3 && (
+                                <span className={styles.subText}>
+                                    Please enter your new password below.
+                                </span>
+                            )}
+                        </div>
+
+                        <form onSubmit={handleForgotPasswordFlow} className={styles.popupForm}>
+
+                            {/* POPUP SPECIFIC ERROR RENDERING */}
+                            {popupError && <p className={styles.popupError}>{popupError}</p>}
+
+                            {/* STEP 1: EMAIL INPUT */}
+                            {forgotPasswordStep === 1 && (
+                                <input
+                                    type="email"
+                                    placeholder="Email Address"
+                                    className={styles.resetInput}
+                                    value={resetEmail}
+                                    onChange={(e) => setResetEmail(e.target.value)}
+                                    required
+                                />
+                            )}
+
+                            {/* STEP 2: 6-DIGIT OTP INPUTS */}
+                            {forgotPasswordStep === 2 && (
+                                <div className={styles.otpContainer}>
+                                    {resetOtp.padEnd(6, ' ').split('').map((d, i) => (
+                                        <input
+                                            key={i}
+                                            type="text"
+                                            maxLength={1}
+                                            inputMode="numeric"
+                                            value={resetOtp[i] || ''}
+                                            onChange={e => {
+                                                const val = e.target.value.replace(/\D/g, '');
+                                                const arr = resetOtp.split('');
+                                                arr[i] = val;
+                                                const next = arr.join('').slice(0, 6);
+                                                setResetOtp(next);
+
+                                                if (val && i < 5) {
+                                                    const inputs = e.target.closest('div').querySelectorAll('input');
+                                                    inputs[i + 1]?.focus();
+                                                }
+                                            }}
+                                            onKeyDown={e => {
+                                                if (e.key === 'Backspace' && !resetOtp[i] && i > 0) {
+                                                    const inputs = e.target.closest('div').querySelectorAll('input');
+                                                    inputs[i - 1]?.focus();
+                                                }
+                                            }}
+                                            className={`${styles.otpInput} ${resetOtp[i] ? styles.otpInputFilled : styles.otpInputEmpty}`}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* STEP 3: NEW PASSWORD INPUTS */}
+                            {forgotPasswordStep === 3 && (
+                                <>
+                                    <input
+                                        type="password"
+                                        placeholder="New Password"
+                                        className={styles.darkInput}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        required
+                                    />
+                                    <input
+                                        type="password"
+                                        placeholder="Confirm Password"
+                                        className={styles.darkInput}
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        required
+                                    />
+                                </>
+                            )}
+
+                            {/* DYNAMIC FLOW NAVIGATION BUTTONS */}
+                            <div className={styles.actionButtons}>
+                                <button
+                                    type="button"
+                                    onClick={closeForgotPasswordPopup}
+                                    className={styles.cancelBtn}
+                                >
+                                    Cancel
+                                </button>
+                                <button type="submit" className={styles.confirmBtn} disabled={resetLoading}>
+                                    {resetLoading ? 'Loading...' :
+                                        forgotPasswordStep === 1 ? 'Send Code' :
+                                            forgotPasswordStep === 2 ? 'Verify Code' :
+                                                'Confirm'
+                                    }
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
