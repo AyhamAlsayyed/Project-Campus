@@ -4,7 +4,7 @@ from .views.auth.login import login
 from .views.auth.logout import logout
 from .views.auth.signup.send_code import send_code
 from .views.auth.signup.signup import signup
-from .views.auth.signup.verify_code import verify_code
+from .views.auth.signup.verify_code import change_password, verify_code
 from .views.auth.TFA import send_2fa_code, verify_2fa_code
 from .views.comment.comments import (
     comment_list,
@@ -95,11 +95,14 @@ from .views.pages.pages import (
     toggle_page_notifications,
 )
 from .views.pages.promotions import (
+    communities_promotion_checkout,
     delete_page_promotion,
+    events_promotion_checkout,
     get_page_community_promotions,
     get_page_event_promotions,
     get_page_post_promotions,
     get_page_promotions,
+    posts_promotion_checkout,
 )
 from .views.pages.subscription import (
     cancel_subscription,
@@ -153,6 +156,7 @@ urlpatterns = [
     path("auth/signup/", signup),
     path("auth/login/", login),
     path("auth/logout/", logout),
+    path("auth/change-password/", change_password),
     path("auth/me/", me),
 ]
 # profile
@@ -290,6 +294,9 @@ urlpatterns += [
     path("posts/promotions/", get_page_post_promotions),
     path("communities/promotions/", get_page_community_promotions),
     path("events/promotions/", get_page_event_promotions),
+    path("posts/promotions/checkout/", posts_promotion_checkout),
+    path("events/promotions/checkout/", events_promotion_checkout),
+    path("communities/promotions/checkout/", communities_promotion_checkout),
     path("promotions/<int:promotion_id>/delete/", delete_page_promotion),
     # university
     path("university/news/", university_news),

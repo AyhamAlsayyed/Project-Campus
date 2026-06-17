@@ -282,7 +282,6 @@ def update_password(request):
     """
     Safely handles updating the authenticated user's account password.
     """
-    print(request.data)
     user = request.user
     current_password = request.data.get("current_password")
     new_password = request.data.get("new_password")

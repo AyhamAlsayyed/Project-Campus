@@ -108,7 +108,10 @@ def create_post(request):
 
     has_page = Page.objects.filter(user=user).first()
 
-    if is_announcement:
+    if is_ad:
+        pass
+
+    elif is_announcement:
         db_enum_type = Notification.Type.ANNOUNCEMENTS
         page_name = has_page.page_full_name if has_page else user.username
 

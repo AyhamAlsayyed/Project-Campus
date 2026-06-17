@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
@@ -66,7 +67,7 @@ def create_generic_promotion(request, model_class):
 
     computed_end_date = calculate_end_date(duration_input)
 
-    cost_input = request.data.get("cost", 0)
+    cost_input = request.data.get("cost")
     duration_idx_input = request.data.get("duration_idx", 2)
 
     serializer = PromotionSerializer(
@@ -86,6 +87,57 @@ def create_generic_promotion(request, model_class):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+def process_checkout_for_model(user, cart_items, model_class, id_key, item_type_name):
+    """
+    Reusable processor core to isolate type execution while keeping behavior identical.
+    """
+    if not cart_items:
+        return Response(
+            {"error": f"{item_type_name.capitalize()} promotion cart is empty."}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    content_type = ContentType.objects.get_for_model(model_class)
+    updated_promotions = []
+
+    with transaction.atomic():
+        for item in cart_items:
+            target_object_id = item.get(id_key) or item.get("object_id") or item.get("event_id")
+
+            if not target_object_id:
+                return Response(
+                    {"error": f"Each checkout item requires an identifier key: '{id_key}' or 'object_id'."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            promotion = (
+                Promotion.objects.filter(promoted_by=user, content_type_obj=content_type, object_id=target_object_id)
+                .filter(status__in=[Promotion.Status.ONHOLD, Promotion.Status.ACTIVE])
+                .first()
+            )
+
+            if not promotion:
+                return Response(
+                    {
+                        "error": f"No pending promotion found for this {item_type_name}.",
+                        "details": f"Could not find an 'ONHOLD' or 'active' promotion record for "
+                        f"{item_type_name} ID {target_object_id}.",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            duration_input = item.get("duration", promotion.duration)
+            promotion.status = Promotion.Status.ACTIVE
+            promotion.end_date = calculate_end_date(duration_input)
+
+            if "cost" in item:
+                promotion.cost = item["cost"]
+
+            promotion.save(update_fields=["status", "end_date", "cost"])
+            updated_promotions.append(promotion)
+
+    return updated_promotions
 
 
 @api_view(["GET"])
@@ -142,7 +194,6 @@ def get_page_post_promotions(request):
 @permission_classes([IsAuthenticated])
 def get_page_community_promotions(request):
     """Handles Fetching and Creating promotions for Communities."""
-
     if request.method == "POST":
         return create_generic_promotion(request, Community)
 
@@ -164,6 +215,66 @@ def get_page_event_promotions(request):
     page_user, event_type = get_page_user_and_content_type(request.user, Event)
     promotions = Promotion.objects.filter(promoted_by=page_user, content_type_obj=event_type)
     return Response(PromotionSerializer(promotions, many=True).data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def posts_promotion_checkout(request):
+    """Activates pending ONHOLD promotions specifically for Posts."""
+    cart_items = request.data.get("items", [])
+    result = process_checkout_for_model(
+        user=request.user, cart_items=cart_items, model_class=Post, id_key="post_id", item_type_name="post"
+    )
+
+    if isinstance(result, Response):
+        return result
+
+    serializer = PromotionSerializer(result, many=True, context={"request": request})
+    return Response(
+        {"message": "Post promotions activated successfully!", "promotions": serializer.data}, status=status.HTTP_200_OK
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def events_promotion_checkout(request):
+    """Activates pending ONHOLD promotions specifically for Events."""
+    cart_items = request.data.get("items", [])
+    result = process_checkout_for_model(
+        user=request.user, cart_items=cart_items, model_class=Event, id_key="event_id", item_type_name="event"
+    )
+
+    if isinstance(result, Response):
+        return result
+
+    serializer = PromotionSerializer(result, many=True, context={"request": request})
+    return Response(
+        {"message": "Event promotions activated successfully!", "promotions": serializer.data},
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def communities_promotion_checkout(request):
+    """Activates pending ONHOLD promotions specifically for Communities."""
+    cart_items = request.data.get("items", [])
+    result = process_checkout_for_model(
+        user=request.user,
+        cart_items=cart_items,
+        model_class=Community,
+        id_key="community_id",
+        item_type_name="community",
+    )
+
+    if isinstance(result, Response):
+        return result
+
+    serializer = PromotionSerializer(result, many=True, context={"request": request})
+    return Response(
+        {"message": "Community promotions activated successfully!", "promotions": serializer.data},
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["DELETE"])

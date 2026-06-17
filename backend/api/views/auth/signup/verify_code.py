@@ -1,4 +1,7 @@
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.db import transaction
 from rest_framework import status
@@ -146,3 +149,75 @@ def verify_code(request):
         },
         status=status.HTTP_200_OK,
     )
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def change_password(request):
+    """
+    Finalizes forgot-password flow. Validates that the email code was verified
+    successfully, updates the password record, and consumes the token.
+    """
+    email = (request.data.get("email") or "").strip().lower()
+    new_password = request.data.get("password") or ""
+
+    if not email or not new_password:
+        return Response(
+            {"message": "Both email and new password are required fields."}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    v_token = EmailVerification.objects.filter(academic_email=email, is_verified=True).order_by("-created_at").first()
+
+    if not v_token:
+        return Response(
+            {"message": "Security error: Email must be verified via code before changing password."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    if v_token.is_expired():
+        v_token.delete()
+        return Response(
+            {"message": "The verification session has timed out. Please request a new code."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        user = User.objects.get(email__iexact=email)
+    except User.DoesNotExist:
+        return Response({"message": "User account recovery lookup failed."}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        validate_password(new_password, user=user)
+    except ValidationError as e:
+        return Response({"message": e.messages}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        with transaction.atomic():
+            user.set_password(new_password)
+            user.save(update_fields=["password"])
+            EmailVerification.objects.filter(academic_email=email).delete()
+
+    except Exception as db_err:
+        return Response(
+            {"message": f"Failed to save your new password configuration: {str(db_err)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    try:
+        message_body = (
+            f"Hello {user.username},\n\n"
+            "This automated alert confirms your Project Campus account password was changed successfully.\n\n"
+            "If you did not execute this action, please contact our system security response team immediately.\n\n"
+            "Best regards,\nProject Campus Security Team"
+        )
+        send_mail(
+            subject="Security Alert: Project Campus Password Changed",
+            message=message_body,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
+    except Exception:
+        pass
+
+    return Response({"message": "Password changed successfully! You can now log in."}, status=status.HTTP_200_OK)
