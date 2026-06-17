@@ -1007,7 +1007,10 @@ export default function ProfilePage({ type }) {
 
                     <div className={styles.profileContent}>
                         {showCreateEvent ? (
-                            <CreateEventForm {...createEvent.formProps} onBack={() => setShowCreateEvent(false)} />
+                            <div className={styles.profileCard}>
+                                <CreateEventForm {...createEvent.formProps} onBack={() => setShowCreateEvent(false)} />
+                            </div>
+
                         ) : isEditing ? (
                             <ProfileEditCard styles={styles} edit={edit} setIsEditing={setIsEditing} user={user} API={API} token={token} theme={theme} />
                         ) : isBlocked ? (

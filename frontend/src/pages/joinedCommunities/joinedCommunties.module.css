@@ -160,12 +160,28 @@ body {
 .rightCard {
     display: flex;
     flex-direction: column;
-
     background: #333333;
     border-radius: 24px;
     padding: 16px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(10px);
+    max-height: 65vh;       
+    overflow-y: auto;      
+    scrollbar-width: thin;  
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;  
+     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+.rightCard::-webkit-scrollbar {
+    width: 4px;
+}
+
+.rightCard::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+.rightCard::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .rightList {

@@ -384,7 +384,7 @@ export default function EventsPage() {
                                     <CreateEventForm {...createEvent.formProps} onBack={() => setShowCreateEvent(false)} />
                                 </div>
                             </div>
-                            <div className={styles.rightSection}>
+                            <div className={styles.rightSection} style={{flex :" 0 0 300px"}}>
                                 <CreateEventRightSidebar {...createEvent.sidebarProps} />
                             </div>
                         </div>

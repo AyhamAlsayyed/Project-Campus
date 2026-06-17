@@ -226,7 +226,7 @@
 .bannerImg {
   width: 100%;
   height: 100%;
-  min-height: 200px;
+  max-height: 500px;
   object-fit: cover;
 }
 
@@ -393,10 +393,9 @@
 
 .recBanner {
   width: 100%;
-  height: auto;
+  max-height: 220px;
   object-fit: cover;
 }
-
 .recOverlay {
   position: absolute;
   inset: 0;
@@ -1794,7 +1793,7 @@
 .createEventContent {
   display: flex;
   align-items: flex-start;
-  gap: 24px;
+  gap: 90px;
   flex: 1;
   min-width: 0;
   
@@ -1809,7 +1808,7 @@
   border-radius: 30px;
   min-height: 60vh;
   z-index: 1;
-  min-width: 900px;
+  max-width: 850px;
   position: relative;
   margin: 2.5% 0 0 0;
   padding-top: 5px;
@@ -1821,6 +1820,7 @@
   width: 100%;
   flex: 1;
   min-height: 77.8vh;
+  max-width: 850px;
   height: auto;
   overflow: hidden;
 }

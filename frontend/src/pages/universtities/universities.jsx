@@ -60,6 +60,17 @@ export default function Universities() {
         { label: "6 months", addedText: "6 months & 5 days", dateStr: "Thursday - 17/12/2026" },
         { label: "1 year", addedText: "12 months & 5 days", dateStr: "Thursday - 17/6/2027" }
     ];
+    const getDaysRemaining = (endDate) => {
+        if (!endDate) return null;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(0, 0, 0, 0);
+        const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+        if (diff < 0) return { label: `Expired ${Math.abs(diff)} day${Math.abs(diff) !== 1 ? 's' : ''} ago`, expired: true };
+        if (diff === 0) return { label: `Expires today at ${endDate}`, expired: false };
+        return { label: `ends in ${diff} day${diff !== 1 ? 's' : ''} at ${endDate}`, expired: false };
+    };
 
     // ── Responsive check ──
     useEffect(() => {
@@ -139,7 +150,7 @@ export default function Universities() {
     // ── Delete a news post ──
     const handleDeleteNews = useCallback(async (item) => {
         try {
-            const res = await fetch(`${API}/api/university/news/${item.id}/`, {
+            const res = await fetch(`${API}/api/posts/${item.id}/`, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -427,8 +438,7 @@ export default function Universities() {
                         </div>
                     </div>
 
-                    {/* ── Latest News ── */}
-                    {/* ── Latest News ── */}
+                    
                     <div style={{
                         background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))",
                         paddingTop: 6, borderRadius: "20px 20px 0 0"
@@ -513,11 +523,16 @@ export default function Universities() {
                                                             >read more</span>
                                                         </p>
                                                     </div>
-                                                    <div className={styles.timeRemainingRow} style={{ marginTop: 4 }}>
+                                                    <div className={styles.timeRemainingRow}>
                                                         <Clock size={16} />
-                                                        <span>
-                                                            {item.end_date ? `ends at ${item.end_date}` : "ends in 5 days at 17/6/2026"}
-                                                        </span>
+                                                        {(() => {
+                                                            const remaining = getDaysRemaining(item.end_date);
+                                                            return (
+                                                                <span style={{ color: remaining?.expired ? '#e05252' : 'inherit' }}>
+                                                                    {remaining?.label ?? 'No end date set'}
+                                                                </span>
+                                                            );
+                                                        })()}
                                                     </div>
                                                 </div>
                                             </div>
@@ -673,9 +688,14 @@ export default function Universities() {
                                                         </div>
                                                         <div className={styles.timeRemainingRow}>
                                                             <Clock size={16} />
-                                                            <span>
-                                                                {item.end_date ? `ends at ${item.end_date}` : "ends in 5 days at 17/6/2026"}
-                                                            </span>
+                                                            {(() => {
+                                                                const remaining = getDaysRemaining(item.end_date);
+                                                                return (
+                                                                    <span style={{ color: remaining?.expired ? '#e05252' : 'inherit' }}>
+                                                                        {remaining?.label ?? 'No end date set'}
+                                                                    </span>
+                                                                );
+                                                            })()}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -732,7 +752,7 @@ export default function Universities() {
                             <div className={styles.pill}>Doctors and Teachers</div>
                             <div className={styles.rightCard} style={{ minHeight: isUniversity ? "570px" : "200px" }}>
                                 <div className={styles.rightCardHeader}>
-                                    <div className={styles.searchContainer} style={{width:"100%"}}>
+                                    <div className={styles.searchContainer} style={{ width: "100%" }}>
                                         <Search size={16} className={styles.searchIcon} />
                                         <input
                                             type="text"
@@ -742,7 +762,7 @@ export default function Universities() {
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                         />
                                     </div>
-                                    
+
                                 </div>
                                 <DoctorsList />
                             </div>
@@ -968,7 +988,7 @@ export default function Universities() {
                 document.body
             )}
 
-          
+
         </div>
     );
 }

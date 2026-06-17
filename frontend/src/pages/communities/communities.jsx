@@ -52,6 +52,7 @@ export default function Community() {
     const [promoCart, setPromoCart] = useState([]);
     const [selectedPromoCommunityId, setSelectedPromoCommunityId] = useState(null);
     const [isCommunityDropdownOpen, setIsCommunityDropdownOpen] = useState(false);
+    const isPagePremium = localStorage.getItem('is_premium') === 'true';
 
     const [whoCanPost, setWhoCanPost] = useState({
         'Everyone': true,
@@ -795,7 +796,7 @@ export default function Community() {
                                         <div
                                             className={styles.createCommunityBtn}
                                             onClick={() => {
-                                                (user?.is_premium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
+                                                (isPagePremium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
                                             }}
                                             style={{
                                                 display: "flex", alignItems: "center", justifyContent: "center",
@@ -803,7 +804,7 @@ export default function Community() {
                                             }}
                                         >
                                             <img src={CreateCommunityIcon} alt="Create" className={styles.createCommunityIcon} onClick={() => {
-                                                (user?.is_premium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
+                                               (isPagePremium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
                                             }} />
                                         </div>
                                     </div>
@@ -835,7 +836,7 @@ export default function Community() {
                                 {ownedCommunities.length === 0 && (
                                     <div
                                         onClick={() => {
-                                            (user?.is_premium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
+                                           (isPagePremium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
                                         }}
                                         style={{
                                             width: 36, height: 36, borderRadius: "50%",
@@ -1040,7 +1041,7 @@ export default function Community() {
                                                 <div
                                                     className={styles.createCommunityBtn}
                                                     onClick={() => {
-                                                        (user?.is_premium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
+                                                        (isPagePremium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
                                                     }}
                                                     style={{
                                                         display: "flex", alignItems: "center", justifyContent: "center",
@@ -1076,7 +1077,7 @@ export default function Community() {
                                     </h1>
                                     {isUserPage && ownedCommunities.length === 0 && (
                                         <div className={styles.createCommunityBtn} onClick={() => {
-                                            (user?.is_premium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
+                                           (isPagePremium || isUni) ? setShowCreateCommunityModal(true) : setIsModalOpen(true);
                                         }} style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "8px", cursor: "pointer" }}>
                                             <img src={CreateCommunityIcon} alt="" className={styles.createCommunityIcon} />
                                         </div>
