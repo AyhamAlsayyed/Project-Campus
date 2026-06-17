@@ -47,7 +47,10 @@ export default function ActiveChat({
     const [searchResultIndex, setSearchResultIndex] = useState(0);
     const [visibleCount, setVisibleCount] = useState(50);
     const [reportTargetId, setReportTargetId] = useState(null);
-    const [typingUsers, setTypingUsers] = useState({});
+    const [typingInfo, setTypingInfo] = useState(null);
+    const [isMuted, setIsMuted] = useState(selectedChat?.is_muted || false);
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedMessages, setSelectedMessages] = useState(new Set());
 
     const messagesScrollRef = useRef(null);
     const messagesEndRef = useRef(null);
@@ -58,9 +61,9 @@ export default function ActiveChat({
     const imageInputRef = useRef(null);
     const fileInputRef = useRef(null);
     const typingTimer = useRef(null);
-    const typingClearTimer = useRef({});
+    const typingClearTimer = useRef(null);
 
-
+    // ── scrollToBottom must be defined before handleWsMessage ──
     const scrollToBottom = useCallback(() => {
         if (chatSearchOpen) return;
         setTimeout(() => {
@@ -72,12 +75,7 @@ export default function ActiveChat({
     const handleWsMessage = useCallback((data) => {
         if (data.type !== 'chat_message') return;
         clearTimeout(typingClearTimer.current);
-        setTypingUsers(prev => {
-            const next = { ...prev };
-            delete next[data.sender_id];
-            return next;
-        });
-        const existingAvatar = messages.find(m => m.senderId === data.sender_id)?.avatar;
+        setTypingInfo(null);
         const newMsg = {
             id: data.message_id,
             text: data.content,
@@ -101,25 +99,12 @@ export default function ActiveChat({
 
     const handleWsTyping = useCallback((data) => {
         if (data.is_typing) {
-            setTypingUsers(prev => ({
-                ...prev,
-                [data.user_id]: { username: data.username, avatar: data.avatar }
-            }));
-            // Auto-clear this specific user after 3s
-            clearTimeout(typingClearTimer.current[data.user_id]);
-            typingClearTimer.current[data.user_id] = setTimeout(() => {
-                setTypingUsers(prev => {
-                    const next = { ...prev };
-                    delete next[data.user_id];
-                    return next;
-                });
-            }, 3000);
+            setTypingInfo({ username: data.username, avatar: data.avatar });
+            clearTimeout(typingClearTimer.current);
+            typingClearTimer.current = setTimeout(() => setTypingInfo(null), 3000);
         } else {
-            setTypingUsers(prev => {
-                const next = { ...prev };
-                delete next[data.user_id];
-                return next;
-            });
+            clearTimeout(typingClearTimer.current);
+            setTypingInfo(null);
         }
     }, []);
 
@@ -235,7 +220,7 @@ export default function ActiveChat({
     const handleSendMessage = async () => {
         sendTyping(false);
         clearTimeout(typingTimer.current);
-        setTypingUsers({});
+        setTypingInfo(null);
 
         if (pendingFiles.length > 0) {
             const formData = new FormData();
@@ -309,6 +294,53 @@ export default function ActiveChat({
         if (pollOptions.length > 2) setPollOptions(prev => prev.filter((_, i) => i !== index));
     };
 
+    const handleToggleMute = async () => {
+        try {
+            const res = await fetch(`${API}/api/chats/${selectedChat.id}/mute/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) setIsMuted(prev => !prev);
+        } catch (err) { console.error('Mute failed', err); }
+    };
+
+    const toggleMessageSelection = (msgId) => {
+        setSelectedMessages(prev => {
+            const next = new Set(prev);
+            if (next.has(msgId)) next.delete(msgId);
+            else next.add(msgId);
+            return next;
+        });
+    };
+
+    const exitSelectionMode = () => {
+        setSelectionMode(false);
+        setSelectedMessages(new Set());
+    };
+
+    const deleteSelectedMessages = async () => {
+        const ids = [...selectedMessages];
+        try {
+            await Promise.all(ids.map(id =>
+                fetch(`${API}/api/messages/${id}/delete/`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+            ));
+            setMessages(prev => prev.filter(m => !selectedMessages.has(m.id)));
+        } catch (err) { console.error('Delete failed', err); }
+        exitSelectionMode();
+    };
+
+    const copySelectedMessages = () => {
+        const texts = messages
+            .filter(m => selectedMessages.has(m.id))
+            .map(m => m.text || m.content)
+            .join('\n');
+        navigator.clipboard.writeText(texts).catch(console.error);
+        exitSelectionMode();
+    };
+
     const visibleMessages = messages.slice(-visibleCount);
     const resolveUrl = (url) => url?.startsWith('http') ? url : `${API}${url}`;
 
@@ -351,6 +383,34 @@ export default function ActiveChat({
             ) : (
                 <div className={styles.innerChatContainer}>
                     {/* ── Header ── */}
+                    {selectionMode ? (
+                        <div className={styles.activeChatHeader} style={{ background: 'linear-gradient(-90deg, rgba(166,39,156,0.2), rgba(49,32,169,0.2))' }}>
+                            <div className={styles.headerLeftWrapper}>
+                                <button className={styles.iconBtn} onClick={exitSelectionMode}>
+                                    <MinusCircle size={22} />
+                                </button>
+                                <span style={{ color: '#fff', fontWeight: 600, fontSize: '1.1rem' }}>
+                                    {selectedMessages.size} selected
+                                </span>
+                            </div>
+                            <div className={styles.headerRightWrapper}>
+                                {selectedMessages.size > 0 && (
+                                    <>
+                                        <button className={styles.iconBtn} onClick={copySelectedMessages} title="Copy">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                            </svg>
+                                        </button>
+                                        <button className={`${styles.iconBtn}`} onClick={deleteSelectedMessages} title="Delete" style={{ color: '#ff4d4d' }}>
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                                            </svg>
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
                     <div className={styles.activeChatHeader}>
                         <div className={styles.headerLeftWrapper}>
                             <button className={styles.iconBtn} onClick={onBack}>
@@ -441,8 +501,12 @@ export default function ActiveChat({
                                         <button className={styles.menuItem} onClick={() => { setActiveChatMenuOpen(false); setActiveChatMenuRect(null); setShowGroupInfo(true); }}>
                                             <Info size={14} /> {selectedChat.is_group ? 'Group Info' : 'Chat Info'}
                                         </button>
-                                        <button className={styles.menuItem}><BellOff size={14} /> Mute notifications</button>
-                                        <button className={styles.menuItem}><CheckSquare size={14} /> Select messages</button>
+                                        <button className={styles.menuItem} onClick={() => { handleToggleMute(); setActiveChatMenuOpen(false); setActiveChatMenuRect(null); }}>
+                                            <BellOff size={14} /> {isMuted ? 'Unmute notifications' : 'Mute notifications'}
+                                        </button>
+                                        <button className={styles.menuItem} onClick={() => { setSelectionMode(true); setActiveChatMenuOpen(false); setActiveChatMenuRect(null); }}>
+                                            <CheckSquare size={14} /> Select messages
+                                        </button>
                                         <div className={styles.menuDivider} />
                                         <button className={`${styles.menuItem} ${styles.destructive}`} onClick={() => {
                                             setReportTargetId(selectedChat.is_group ? selectedChat.id : selectedChat.other_member_id);
@@ -457,6 +521,7 @@ export default function ActiveChat({
                             </div>
                         </div>
                     </div>
+                    )} {/* end selectionMode conditional header */}
 
                     {/* ── Messages ── */}
                     <div className={styles.activeChatInnerContainer}>
@@ -490,9 +555,39 @@ export default function ActiveChat({
                                         const isLastInGroup = !nextMsg || nextMsg.senderId !== msg.senderId || nextHasDateSeparator;
 
                                         return (
-                                            <div key={msg.id} ref={el => (messageRefs.current[msg.id] = el)}>
+                                            <div key={msg.id} ref={el => (messageRefs.current[msg.id] = el)}
+                                                style={{ position: 'relative' }}>
                                                 {dateLabel && <div className={styles.dateSeparator}><span>{dateLabel}</span></div>}
-                                                <div className={`${styles.messageWrapper} ${isMine ? styles.messageMineWrapper : styles.messageOtherWrapper} ${isGrouped ? styles.messageGrouped : ''}`}>
+                                                {selectionMode && selectedMessages.has(msg.id) && (
+                                                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(166,39,156,0.08)', pointerEvents: 'none', borderRadius: 8, zIndex: 0 }} />
+                                                )}
+                                                <div
+                                                    className={`${styles.messageWrapper} ${isMine ? styles.messageMineWrapper : styles.messageOtherWrapper} ${isGrouped ? styles.messageGrouped : ''}`}
+                                                    onClick={selectionMode ? () => toggleMessageSelection(msg.id) : undefined}
+                                                    style={selectionMode ? { cursor: 'pointer', userSelect: 'none', position: 'relative', zIndex: 1 } : undefined}
+                                                >
+                                                    {/* Selection circle */}
+                                                    {selectionMode && (
+                                                        <div style={{
+                                                            display: 'flex', alignItems: 'center', flexShrink: 0,
+                                                            order: isMine ? 3 : -1,
+                                                            padding: isMine ? '0 0 0 8px' : '0 8px 0 0',
+                                                        }}>
+                                                            <div style={{
+                                                                width: 22, height: 22, borderRadius: '50%',
+                                                                border: `2px solid ${selectedMessages.has(msg.id) ? '#A6279C' : 'rgba(255,255,255,0.35)'}`,
+                                                                background: selectedMessages.has(msg.id) ? '#A6279C' : 'transparent',
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                transition: 'all 0.15s ease', flexShrink: 0,
+                                                            }}>
+                                                                {selectedMessages.has(msg.id) && (
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                                                                        <polyline points="20 6 9 17 4 12"/>
+                                                                    </svg>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                     {!isMine && (
                                                         isLastInGroup
                                                             ? <img src={resolveUrl(msg.avatar)} alt="Sender" className={styles.messageAvatar} />
@@ -582,36 +677,28 @@ export default function ActiveChat({
                             </div>
 
                             {/* ── Typing indicator ── */}
-                            {/* ── Typing indicator ── */}
-                            {Object.keys(typingUsers).length > 0 && (
+                            {typingInfo && (
                                 <div style={{
                                     display: 'flex', alignItems: 'flex-end', gap: 8,
                                     padding: '4px 16px 8px',
                                 }}>
-                                    {/* Stack avatars */}
-                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                        {Object.values(typingUsers).map((t, i) => (
-                                            <img
-                                                key={i}
-                                                src={t.avatar
-                                                    ? (t.avatar.startsWith('http') ? t.avatar : `${API}${t.avatar}`)
-                                                    : `${API}/media/default-pfp.png`
-                                                }
-                                                alt={t.username}
-                                                style={{
-                                                    width: 32, height: 32,
-                                                    borderRadius: '50%',
-                                                    objectFit: 'cover',
-                                                    display: 'block',
-                                                    border: '2px solid #1a1a1a',
-                                                    marginLeft: i === 0 ? 0 : -10,
-                                                    zIndex: Object.keys(typingUsers).length - i,
-                                                }}
-                                            />
-                                        ))}
-                                    </div>
-
-                                    {/* Dots bubble */}
+                                    <img
+                                        src={typingInfo.avatar
+                                            ? (typingInfo.avatar.startsWith('http')
+                                                ? typingInfo.avatar
+                                                : `${API}${typingInfo.avatar}`)
+                                            : `${API}/media/default-pfp.png`
+                                        }
+                                        alt={typingInfo.username}
+                                        style={{
+                                            width: 36, height: 36,
+                                            borderRadius: '50%',
+                                            objectFit: 'cover',
+                                            flexShrink: 0,
+                                            display: 'block',
+                                            border: '2px solid rgba(255,255,255,0.1)',
+                                        }}
+                                    />
                                     <div style={{
                                         display: 'flex', alignItems: 'center', gap: 5,
                                         background: 'rgba(255,255,255,0.08)',
@@ -622,9 +709,6 @@ export default function ActiveChat({
                                         <span style={dotStyle(1)} />
                                         <span style={dotStyle(2)} />
                                     </div>
-
-                                    {/* Names */}
-                                  
                                 </div>
                             )}
 
@@ -683,8 +767,44 @@ export default function ActiveChat({
                                 </div>
                             )}
 
-                            {/* ── Input area ── */}
-                            {(() => {
+                            {/* ── Input area / Selection action bar ── */}
+                            {selectionMode ? (
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    padding: '12px 20px 16px',
+                                    background: 'rgba(30,30,30,0.8)',
+                                    borderTop: '1px solid rgba(255,255,255,0.06)',
+                                }}>
+                                    <button onClick={exitSelectionMode} style={{
+                                        background: 'rgba(255,255,255,0.08)', border: 'none', color: '#ccc',
+                                        padding: '10px 20px', borderRadius: 22, cursor: 'pointer', fontSize: '0.9rem',
+                                    }}>
+                                        Cancel
+                                    </button>
+                                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>
+                                        {selectedMessages.size === 0 ? 'Tap messages to select' : `${selectedMessages.size} selected`}
+                                    </span>
+                                    <div style={{ display: 'flex', gap: 10 }}>
+                                        {selectedMessages.size > 0 && (
+                                            <>
+                                                <button onClick={copySelectedMessages} style={{
+                                                    background: 'rgba(255,255,255,0.08)', border: 'none', color: '#ccc',
+                                                    padding: '10px 18px', borderRadius: 22, cursor: 'pointer', fontSize: '0.9rem',
+                                                }}>
+                                                    Copy
+                                                </button>
+                                                <button onClick={deleteSelectedMessages} style={{
+                                                    background: 'rgba(255,77,77,0.15)', border: '1px solid rgba(255,77,77,0.3)',
+                                                    color: '#ff4d4d', padding: '10px 18px', borderRadius: 22,
+                                                    cursor: 'pointer', fontSize: '0.9rem',
+                                                }}>
+                                                    Delete
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (() => {
                                 const canSend = !selectedChat?.is_group || !fullGroupData ||
                                     fullGroupData.allow_members_to_send_messages ||
                                     fullGroupData.members?.find(m => m.id === user?.id)?.is_admin ||

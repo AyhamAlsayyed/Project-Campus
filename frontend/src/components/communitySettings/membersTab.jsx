@@ -13,7 +13,7 @@ import BlockIcon from '../../Assets/icons/block.png';
 import InfoIcon from '../../Assets/icons/info.png';
 import { useNavigate } from 'react-router-dom';
 import StatusDot from '../presence/StatusDot';
-const API = 'http://localhost:8000';
+import API from '../../config';
 
 // ── Role helpers ──
 const getRoleTier = (member) => {

@@ -140,7 +140,7 @@ export default function FollowedPages() {
                     avatar: p.profile_image
                         ? (p.profile_image.startsWith("http")
                             ? p.profile_image
-                            : `http://localhost:8000${p.profile_image}`)
+                            : `${API}${p.profile_image}`)
                         : "/default-avatar.png",
                     category: p.page_type || "Page"
                 }));

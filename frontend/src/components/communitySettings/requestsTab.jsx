@@ -8,7 +8,7 @@ import DefaultPfp from '../../Assets/icons/default-pfp.png';
 import BlockIcon from '../../Assets/icons/block.png';
 import InfoIcon from '../../Assets/icons/info.png';
 import HelpIcon from '../../Assets/icons/help.png';
-
+import API from '../../config';
 export default function RequestsTab({ communityId, token, onBack, isPublic = false }) {
     const [activeTab, setActiveTab] = useState('post');
     const [isSelectMode, setIsSelectMode] = useState(false);
@@ -23,7 +23,7 @@ export default function RequestsTab({ communityId, token, onBack, isPublic = fal
     const [isLoadingJoins, setIsLoadingJoins] = useState(false);
     const actionMenuRef = useRef(null);
 
-    const API = 'http://localhost:8000';
+  
     const navigate = useNavigate();
     useEffect(() => {
         const handleClickOutside = (e) => {

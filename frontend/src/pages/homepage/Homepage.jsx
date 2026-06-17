@@ -51,7 +51,7 @@ export default function Homepage() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const mobileMenuRef = useRef(null)
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024)
-    
+
     // Announcement States
     const [isAnnouncement, setIsAnnouncement] = useState(false);
     const [announcementTitle, setAnnouncementTitle] = useState('');
@@ -280,7 +280,7 @@ export default function Homepage() {
         try {
             const formData = new FormData();
             formData.append("content", postContent);
-            
+
             if (isAnnouncement) {
                 formData.append("title", announcementTitle);
                 formData.append("post_type", "announcement");
@@ -512,7 +512,7 @@ export default function Homepage() {
                 ══════════════════════════════════════ */}
             {isMobile && (
                 <div style={{ display: "flex", flexDirection: "column", width: "100%", boxSizing: "border-box" }}>
-                    <div style={{ padding: "12px 10px 0 10px", minWidth:450, margin: "0 auto 0 auto" }}>
+                    <div style={{ padding: "12px 10px 0 10px", width: "100%", boxSizing: "border-box" }}>
                         <WeeklyNews isMobile={true} />
                     </div>
                     <div style={{ padding: "12px 10px 0 10px" }}>
@@ -633,41 +633,41 @@ export default function Homepage() {
                                 onError={e => { e.currentTarget.src = ProfilePicture; }}
                             />
                             <strong>{user?.full_name || user?.page_full_name || user?.username}</strong>
-                            
+
                             {(localStorage.getItem("user_type") === "university" ||
                                 localStorage.getItem("user_type") === "page" ||
                                 user?.role === "instructor") && (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginLeft: 'auto' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-                                        <span style={{ color: '#ADADAD', fontSize: '0.85rem' }}>
-                                            {user?.role === "instructor" ? "Academic?" : "Announcement?"}
-                                        </span>
-                                        <label className={styles.switch}>
-                                            <input
-                                                type="checkbox"
-                                                checked={isAnnouncement}
-                                                onChange={handleAnnouncementToggle}
-                                            />
-                                            <span className={styles.switchSlider}></span>
-                                        </label>
-                                    </div>
-                                    {(localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page") && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginLeft: 'auto' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
                                             <span style={{ color: '#ADADAD', fontSize: '0.85rem' }}>
-                                                Promote?
+                                                {user?.role === "instructor" ? "Academic?" : "Announcement?"}
                                             </span>
                                             <label className={styles.switch}>
                                                 <input
                                                     type="checkbox"
-                                                    checked={isPromote}
-                                                    onChange={handlePromoteToggle}
+                                                    checked={isAnnouncement}
+                                                    onChange={handleAnnouncementToggle}
                                                 />
                                                 <span className={styles.switchSlider}></span>
                                             </label>
                                         </div>
-                                    )}
-                                </div>
-                            )}
+                                        {(localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page") && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                                                <span style={{ color: '#ADADAD', fontSize: '0.85rem' }}>
+                                                    Promote?
+                                                </span>
+                                                <label className={styles.switch}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isPromote}
+                                                        onChange={handlePromoteToggle}
+                                                    />
+                                                    <span className={styles.switchSlider}></span>
+                                                </label>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                         </div>
 
                         {/* ANNOUNCEMENT FIELDS */}
@@ -930,8 +930,8 @@ export default function Homepage() {
                                 isAnnouncement
                                     ? (!announcementTitle.trim() || !announcementDesc.trim())
                                     : isPromote
-                                    ? (!promoteTitle.trim() || !promoteContent.trim() || !promoteDesc.trim())
-                                    : (!content.trim() && !images.length && !files.length && !isPollOpen)
+                                        ? (!promoteTitle.trim() || !promoteContent.trim() || !promoteDesc.trim())
+                                        : (!content.trim() && !images.length && !files.length && !isPollOpen)
                             }
                         >
                             Post

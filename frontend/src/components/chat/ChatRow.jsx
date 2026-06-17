@@ -21,7 +21,7 @@ function ChatStatusLabel({ userId, isGroup, isBlocked, isPage }) {
     if (isGroup) return <span className={styles.chatStatusText}>Group Chat</span>;
     if (isPage) return null;
     const status = onlineUsers[String(userId)] ?? 'offline';
-   
+
     return (
         <span className={styles.chatStatusText}>
             {status === 'online' ? 'Online' : status === 'away' ? 'Away' : status === 'offline' ? 'offline' : 'Do Not Disturb'}
@@ -68,6 +68,7 @@ const ChatRow = React.memo(({
     const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
     const menuWrapRef = useRef(null);
     const [reportTargetId, setReportTargetId] = useState(null);
+    const maskColor = document.documentElement.getAttribute('data-theme') === 'light' ? '#662D91' : '#CCCCCC';
 
 
     // Close on outside click
@@ -147,8 +148,8 @@ const ChatRow = React.memo(({
                 {/* ── Right ── */}
                 <div className={styles.chatItemRight}>
                     <div className={styles.chatIndicators}>
-                        {chat.is_pinned && <MaskIcon src={Pin} size={25} />}
-                        {chat.is_muted && <MaskIcon src={Mute} size={25} />}
+                        {chat.is_pinned && <MaskIcon src={Pin} size={25} color={maskColor} />}
+                        {chat.is_muted && <MaskIcon src={Mute} size={25} color={maskColor} />}
                     </div>
                     <div className={styles.chatDetails}>
                         <span className={styles.chatPreview}>{previewText}</span>
@@ -172,7 +173,7 @@ const ChatRow = React.memo(({
                                         position: 'fixed',
                                         top: menuPos.top,
                                         right: menuPos.right,
-                                     
+
                                         zIndex: 999999,
                                     }}
                                     onMouseDown={e => e.stopPropagation()}

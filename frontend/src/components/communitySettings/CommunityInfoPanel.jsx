@@ -6,7 +6,7 @@ import EditIcon from '../../Assets/icons/edit.png';
 import ArrowLeft from '../../Assets/icons/arrow-left.png';
 import CameraIcon from '../../Assets/icons/camera.png';
 
-const API = 'http://localhost:8000';
+import API from '../../config';
 
 export default function CommunityInfoPanel({ community, onBack }) {
     console.log('community in InfoPanel:', community);

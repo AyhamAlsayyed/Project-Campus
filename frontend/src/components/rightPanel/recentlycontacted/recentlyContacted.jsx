@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Messages from '../../../Assets/icons/messages.png'
 import StatusDot from '../../presence/StatusDot';
 import { usePresence } from '../../../context/presenceContext';
-
+import API from '../../../config';
 function ChatStatusLabel({ userId }) {
     const { onlineUsers } = usePresence();
     const status = onlineUsers[String(userId)] ?? 'offline';
@@ -30,7 +30,7 @@ export default function FriendsSuggestion() {
             return;
         }
         try {
-            const res = await fetch("http://localhost:8000/api/friends/recently_contacted/", {
+            const res = await fetch(`${API}/api/friends/recently_contacted/`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 }

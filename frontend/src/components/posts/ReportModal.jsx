@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, ChevronRight, AlertCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import styles from './ReportModal.module.css';
-
+import API from '../../config';
 const REPORT_REASONS = [
     { label: "Harassment & Abuse", value: "harassment_abuse", },
     { label: "Violence & Harm", value: "violence_harm", },
@@ -42,7 +42,7 @@ export default function ReportModal({ contentId, contentType, onClose }) {
         const token = localStorage.getItem('access');
         setSubmitting(true);
         try {
-            const res = await fetch('http://localhost:8000/api/reports/', {
+            const res = await fetch(`${API}/api/reports/`, {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`,

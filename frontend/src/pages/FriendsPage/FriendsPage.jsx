@@ -15,6 +15,7 @@ import Block from '../../Assets/icons/block.png'
 import InfoIcon from '../../Assets/icons/info.png'
 import API from '../../config';
 import useTheme from '../../hooks/useTheme'
+
 export default function FriendsPage() {
     const { theme, toggleTheme } = useTheme()
     const [currentUser, setCurrentUser] = useState(null);
@@ -84,7 +85,7 @@ export default function FriendsPage() {
                 }
 
 
-                const userRes = await fetch("http://localhost:8000/api/auth/me/", {
+                const userRes = await fetch(`${API}/api/auth/me/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (!userRes.ok) throw new Error("User fetch failed");
@@ -92,10 +93,10 @@ export default function FriendsPage() {
                 setCurrentUser(userData);
 
                 const [friendsRes, postsRes] = await Promise.all([
-                    fetch(`http://localhost:8000/api/users/${userData.id}/friends/`, {
+                    fetch(`${API}/api/users/${userData.id}/friends/`, {
                         headers: { Authorization: `Bearer ${token}` },
                     }),
-                    fetch(`http://localhost:8000/api/posts/feed/?filter=friends`, {
+                    fetch(`${API}/api/posts/feed/?filter=friends`, {
                         headers: { Authorization: `Bearer ${token}` },
                     })
                 ]);
@@ -114,7 +115,7 @@ export default function FriendsPage() {
                                 avatar: f.avatar_url
                                     ? (f.avatar_url.startsWith("http")
                                         ? f.avatar_url
-                                        : `http://localhost:8000${f.avatar_url}`)
+                                        : `${API}${f.avatar_url}`)
                                     : "/default-avatar.png",
                                 major: f.major || "No Major Set",
                                 is_online: f.is_online || false

@@ -1263,3 +1263,29 @@ css.acceptIcon {
   margin-bottom: 8px;
   opacity: 0.8;
 }
+/* Light mode prompt text */
+[data-theme="light"] .prompt {
+    color: #333333;
+}
+
+/* Ad reaction button base */
+.reactionBtn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reactionBtn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(1.15) !important;
+}
+
+[data-theme="light"] .reactionBtn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}

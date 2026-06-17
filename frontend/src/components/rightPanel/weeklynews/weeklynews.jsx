@@ -3,6 +3,7 @@ import styles from "./weeklynews.module.css";
 import { createPortal } from "react-dom";
 import ArrowRight from '../../../Assets/icons/arrow-right.png'
 import NeutralReview from '../../../Assets/icons/neutral-review.png'
+import API from "../../../config";
 export default function WeeklyNews({ communityId, useHighlights, isMobile }) {
     const [items, setItems] = useState([]);
     const [idx, setIdx] = useState(0);
@@ -13,10 +14,10 @@ export default function WeeklyNews({ communityId, useHighlights, isMobile }) {
             let url = "";
             if (communityId) {
                 url = useHighlights
-                    ? `http://localhost:8000/api/communities/${communityId}/highlights/`
-                    : `http://localhost:8000/api/communities/${communityId}/news/`;
+                    ? `${API}/api/communities/${communityId}/highlights/`
+                    : `${API}/api/communities/${communityId}/news/`;
             } else {
-                url = `http://localhost:8000/api/news/`;
+                url = `${API}/api/news/`;
             }
 
             const token = localStorage.getItem("access");

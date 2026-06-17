@@ -27,7 +27,7 @@ import SaveIcon from '../../Assets/icons/save-icon.png';
 import BellOn from '../../Assets/icons/notifications.png';
 import SearchIcon from '../../Assets/icons/search.png';
 import BellOff from '../../Assets/icons/mute.png';
-
+import API from "../../config";
 export default function PostCard({
   post, openComments, isOwnProfile, hasPinnedPost, onPinChange,
   isRequestMode, onAcceptPost, onRejectPost, isReportedMode,
@@ -70,7 +70,7 @@ export default function PostCard({
     (post?.top_3comments_avatar || []).map(c => {
       const avatar = c.author_avatar || c.avatar;
       if (!avatar) return null;
-      return avatar.startsWith("http") ? avatar : `http://localhost:8000${avatar}`;
+      return avatar.startsWith("http") ? avatar : `${API}${avatar}`;
     }).filter(Boolean)
   );
 
@@ -107,7 +107,7 @@ export default function PostCard({
     const newReaction = adReaction === reaction ? null : reaction;
     setAdReaction(newReaction);
     try {
-      const res = await fetch(`http://localhost:8000/api/posts/${postId}/react/`, {
+      const res = await fetch(`${API}/api/posts/${postId}/react/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ reaction: newReaction }),
@@ -125,7 +125,7 @@ export default function PostCard({
     if (prevFollowed) setIsNotified(false);
 
     try {
-      const res = await fetch(`http://localhost:8000/api/pages/${post.author.id}/follow/`, {
+      const res = await fetch(`${API}/api/pages/${post.author.id}/follow/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -165,7 +165,7 @@ export default function PostCard({
     const prev = isNotified;
     setIsNotified(!prev);
     try {
-      const res = await fetch(`http://localhost:8000/api/pages/${post.author.id}/notify/`, {
+      const res = await fetch(`${API}/api/pages/${post.author.id}/notify/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -198,7 +198,7 @@ export default function PostCard({
 
       setIsLoadingChats(true);
       try {
-        const res = await fetch("http://localhost:8000/api/chats/", {
+        const res = await fetch(`${API}/api/chats/`, {
           method: "GET",
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         });
@@ -222,7 +222,7 @@ export default function PostCard({
 
           const formatted = deduped.map(chat => ({
             ...chat,
-            avatar: chat.avatar ? chat.avatar.startsWith("http") ? chat.avatar : `http://localhost:8000${chat.avatar}` : "/default-avatar.png"
+            avatar: chat.avatar ? chat.avatar.startsWith("http") ? chat.avatar : `${API}${chat.avatar}` : "/default-avatar.png"
           }));
           setShareTargets(formatted);
         }
@@ -243,7 +243,7 @@ export default function PostCard({
     setLikesCount(prev => (isLiked ? prev - 1 : prev + 1));
     try {
       const postId = post.id || post.post_id;
-      const res = await fetch(`http://localhost:8000/api/posts/${postId}/like/`, {
+      const res = await fetch(`${API}/api/posts/${postId}/like/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
@@ -259,7 +259,7 @@ export default function PostCard({
       setIsBlocked(newBlocked);
       setShowMenu(false);
       try {
-        await fetch(`http://localhost:8000/api/posts/${postId}/block/`, {
+        await fetch(`${API}/api/posts/${postId}/block/`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -279,7 +279,7 @@ export default function PostCard({
       }
       try {
         const postId = post.id || post.post_id;
-        const res = await fetch(`http://localhost:8000/api/posts/${postId}/pin/`, {
+        const res = await fetch(`${API}/api/posts/${postId}/pin/`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -297,7 +297,7 @@ export default function PostCard({
 
     try {
       const postId = post.id || post.post_id;
-      const res = await fetch(`http://localhost:8000/api/posts/${postId}/${actionType}/`, {
+      const res = await fetch(`${API}/api/posts/${postId}/${actionType}/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: actionType === 'highlight' && communityId ? JSON.stringify({ community_id: communityId }) : null,
@@ -314,7 +314,7 @@ export default function PostCard({
     const token = localStorage.getItem("access");
     const postId = post.id || post.post_id;
     try {
-      const res = await fetch(`http://localhost:8000/api/posts/${postId}/`, {
+      const res = await fetch(`${API}/api/posts/${postId}/`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -327,7 +327,7 @@ export default function PostCard({
     const token = localStorage.getItem("access");
     const postId = post.id || post.post_id;
     try {
-      const res = await fetch(`http://localhost:8000/api/posts/${postId}/pin/`, {
+      const res = await fetch(`${API}/api/posts/${postId}/pin/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -345,7 +345,7 @@ export default function PostCard({
     if (!token) return;
     setIsSharing(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/messages/send/`, {
+      const res = await fetch(`${API}/api/messages/send/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -679,21 +679,23 @@ export default function PostCard({
                 <span className={styles.prompt}>how do you feel about this ad?</span>
                 <div className={styles.reactions}>
                   {[
-                    { key: 'good', src: GoodReview },
-                    { key: 'neutral', src: NatrualReview },
-                    { key: 'bad', src: BadReview },
-                  ].map(({ key, src }) => (
+                    { key: 'good', src: GoodReview, glow: 'rgba(34,197,94,0.35)' },
+                    { key: 'neutral', src: NatrualReview, glow: 'rgba(234,179,8,0.35)' },
+                    { key: 'bad', src: BadReview, glow: 'rgba(239,68,68,0.35)' },
+                  ].map(({ key, src, glow }) => (
                     <button
                       key={key}
                       className={styles.reactionBtn}
                       onClick={() => handleAdReaction(key)}
                       style={{
-                        transform: adReaction === key ? 'scale(1.25)' : 'scale(1)',
-                        filter: adReaction && adReaction !== key ? 'grayscale(1) opacity(0.4)' : 'none',
-                        transition: 'all 0.2s'
+                        transform: adReaction === key ? 'scale(1.3)' : 'scale(1)',
+                        filter: adReaction && adReaction !== key ? 'grayscale(1) opacity(0.3)' : 'none',
+                        boxShadow: adReaction === key ? `0 0 12px 3px ${glow}` : 'none',
+                        background: adReaction === key ? glow : 'transparent',
+                        transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
                       }}
                     >
-                      <img src={src} alt={key} width={28} height={28} />
+                      <img src={src} alt={key} width={30} height={30} />
                     </button>
                   ))}
                 </div>

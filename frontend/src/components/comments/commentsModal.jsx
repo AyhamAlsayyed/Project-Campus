@@ -8,7 +8,7 @@ import { useRef } from "react";
 import { createPortal } from "react-dom";
 import postStyles from '../posts/posts.module.css';
 import Share from '../../Assets/icons/share.png';
-
+import API from '../../config';
 export default function CommentModal({ post, onClose, currentUser }) {
     const highlightCommentId = post.highlightCommentId || {};
     const [highlightedId, setHighlightedId] = useState(highlightCommentId);
@@ -43,7 +43,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
             if (!token) return;
             setIsLoadingChats(true);
             try {
-                const res = await fetch("http://localhost:8000/api/chats/", {
+                const res = await fetch(`${API}/api/chats/`, {
                     method: "GET",
                     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 });
@@ -90,7 +90,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
         if (!token) return;
         setIsSharing(true);
         try {
-            const res = await fetch(`http://localhost:8000/api/messages/send/`, {
+            const res = await fetch(`${API}/api/messages/send/`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -144,7 +144,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
             try {
                 const token = localStorage.getItem("access");
                 const postId = post.id || post.post_id;
-                const res = await fetch(`http://localhost:8000/api/posts/${postId}/comments/`, {
+                const res = await fetch(`${API}/api/posts/${postId}/comments/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const data = await res.json();
@@ -171,7 +171,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
     const deleteComment = async (commentId) => {
         const token = localStorage.getItem("access");
         try {
-            const res = await fetch(`http://localhost:8000/api/comments/${commentId}/delete/`, {
+            const res = await fetch(`${API}/api/comments/${commentId}/delete/`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -186,7 +186,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
         const token = localStorage.getItem("access");
         try {
             const postId = post.id || post.post_id;
-            const res = await fetch(`http://localhost:8000/api/posts/${postId}/comments/create/`, {
+            const res = await fetch(`${API}/api/posts/${postId}/comments/create/`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -224,7 +224,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
         setIsLiked(!isLiked);
         setLikesCount(prev => (isLiked ? prev - 1 : prev + 1));
         try {
-            const res = await fetch(`http://localhost:8000/api/posts/${postId}/like/`, {
+            const res = await fetch(`${API}/api/posts/${postId}/like/`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
             });

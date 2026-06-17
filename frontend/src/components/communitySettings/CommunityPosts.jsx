@@ -4,7 +4,7 @@ import arrowLeft from '../../Assets/icons/arrow-left.png';
 import helpIcon from '../../Assets/icons/help.png';
 import PostCard from '../posts/postCard';
 
-const API = 'http://localhost:8000';
+import API from '../../config';
 
 const CommunityPosts = ({ onBack, communityId }) => {
     const token = localStorage.getItem('access');

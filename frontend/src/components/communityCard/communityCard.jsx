@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { createPortal } from 'react-dom';
 import Settings from '../../Assets/icons/setting.png';
+import API from '../../config';
 export default function CommunityCard({ community, variant = "large", setCommunities, fullWidth, isOwned, onSettingsClick }) {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const navigate = useNavigate();
@@ -28,9 +29,9 @@ export default function CommunityCard({ community, variant = "large", setCommuni
         try {
             let url = "";
             if (community.is_private) {
-                url = `http://localhost:8000/api/communities/${community.id}/request/`;
+                url = `${API}/api/communities/${community.id}/request/`;
             } else {
-                url = `http://localhost:8000/api/communities/${community.id}/join/`;
+                url = `${API}/api/communities/${community.id}/join/`;
             }
 
             const res = await fetch(url, {

@@ -20,11 +20,11 @@ const ChatListPanel = React.memo(({
     blockUser, reportUser,
 }) => {
     const [isPending, startTransition] = useTransition();
- 
+
     // Defer the query used for filtering — typing stays instant
     const deferredQuery = useDeferredValue(searchQuery);
     const isStale = deferredQuery !== searchQuery;
- 
+
     // This memo only re-runs when deferredQuery or filter changes,
     // never on every keystroke
     const visibleChats = useMemo(() => {
@@ -37,19 +37,19 @@ const ChatListPanel = React.memo(({
             return true;
         });
     }, [sortedChats, deferredQuery, filter]);
- 
+
     const handleSearch = useCallback((e) => setSearchQuery(e.target.value), [setSearchQuery]);
- 
+
     const handleFilterChange = useCallback((f) => {
         startTransition(() => setFilter(f));
     }, [setFilter]);
- 
+
     return (
         <>
             <h1 className={styles.title}>
                 <span className={styles.highlight}>Chats</span> section
             </h1>
- 
+
             <div className={styles.filterContainer}>
                 <div className={styles.filters}>
                     {FILTERS.map(f => (
@@ -71,11 +71,7 @@ const ChatListPanel = React.memo(({
                             padding: 8, cursor: 'pointer',
                         }}
                     >
-                        <img
-                            src={CreateGroupIcon}
-                            alt=""
-                            style={{ width: 25, height: 25, filter: 'brightness(0) invert(0.9)' }}
-                        />
+                        <img src={CreateGroupIcon} alt="" className={styles.createGroupIcon} />
                     </div>
                     <div
                         className={styles.requestsLink}
@@ -87,7 +83,7 @@ const ChatListPanel = React.memo(({
                     </div>
                 </div>
             </div>
- 
+
             <div className={styles.chatList}>
                 <div className={styles.innerContainer}>
                     <div className={styles.searchContainer}>
@@ -100,7 +96,7 @@ const ChatListPanel = React.memo(({
                             onChange={handleSearch}
                         />
                     </div>
- 
+
                     <div
                         className={styles.chatItemsContainer}
                         style={{
@@ -136,6 +132,6 @@ const ChatListPanel = React.memo(({
         </>
     );
 });
- 
+
 ChatListPanel.displayName = 'ChatListPanel';
 export default ChatListPanel;

@@ -4,7 +4,7 @@ import ArrowLeftIcon from '../../Assets/icons/arrow-left.png';
 import InfoIcon from '../../Assets/icons/help.png';
 import DefaultBanner from '../../Assets/Pictures/default-community-banner.png';
 import CameraIcon from '../../Assets/icons/camera.png';
-
+import API from '../../config';
 
 export default function CreateCommunity({ onBack, onSuccess }) {
     // Community fields
@@ -67,7 +67,7 @@ export default function CreateCommunity({ onBack, onSuccess }) {
             );
             if (bannerFile) formData.append('banner_image', bannerFile);
 
-            const res = await fetch('http://localhost:8000/api/communities/create/', {
+            const res = await fetch(`${API}/api/communities/create/`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
                 body: formData,
