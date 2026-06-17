@@ -116,6 +116,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 parent_message_id = data.get("parent_message_id", None)
                 shared_post_id = data.get("shared_post_id", None)
 
+                if shared_post_id and not content:
+                    content = "Shared a post"
+
                 if not content and not shared_post_id:
                     return
 
@@ -169,7 +172,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         "username": self.user.username,
                         "avatar": await self.get_user_avatar(self.user),
                         "is_typing": is_typing,
-                    }
+                    },
                 )
 
         except Exception:
@@ -196,21 +199,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_user_avatar(self, user):
         try:
+
             avatar = user.profile.profile_image
             return avatar.url if avatar else None
         except Exception as e:
-            print(f'[Avatar] error: {e}')
+            print(f"[Avatar] error: {e}")
             return None
-
-    @database_sync_to_async
-    def get_other_member_ids(self, conversation_id, exclude_user_id):
-        """Returns IDs of all conversation members except the sender"""
-        ConversationMember = apps.get_model("api", "ConversationMember")
-        return list(
-            ConversationMember.objects.filter(conversation_id=conversation_id)
-            .exclude(user_id=exclude_user_id)
-            .values_list('user_id', flat=True)
-        )
 
     @database_sync_to_async
     def check_membership(self, conversation_id, user):
