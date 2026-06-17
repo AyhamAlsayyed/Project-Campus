@@ -86,9 +86,51 @@ def create_post(request):
         )
 
     community = None
+    is_approved_post = True
+
     if community_id:
         try:
             community = Community.objects.get(pk=community_id)
+
+            membership = CommunityMember.objects.filter(
+                community=community, user=user, status=CommunityMember.Status.APPROVED
+            ).first()
+
+            if not membership and community.owner != user:
+                return Response(
+                    {"error": "You must be an approved member to post in this community."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            is_privileged_user = community.owner == user or (
+                membership and membership.role in [CommunityMember.Role.OWNER, CommunityMember.Role.ADMIN]
+            )
+
+            if not is_privileged_user:
+                has_page_profile = Page.objects.filter(user=user).exists()
+                has_instructor_profile = hasattr(user, "instructor_profile")
+                has_student_profile = hasattr(user, "student_profile")
+
+                if has_page_profile and not community.can_pages_post:
+                    return Response(
+                        {"error": "Pages are not allowed to post in this community."}, status=status.HTTP_403_FORBIDDEN
+                    )
+
+                if has_instructor_profile and not community.can_instructors_post:
+                    return Response(
+                        {"error": "Instructors are not allowed to post in this community."},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
+
+                if has_student_profile and not community.can_students_post:
+                    return Response(
+                        {"error": "Students are not allowed to post in this community."},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
+
+                if community.requires_post_approval:
+                    is_approved_post = False
+
         except Community.DoesNotExist:
             return Response({"error": "Community not found"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -99,7 +141,7 @@ def create_post(request):
         )
 
     computed_end_at = None
-    if is_announcement:
+    if is_announcement or is_ad:
         computed_end_at = calculate_announcement_end_date(duration_input)
 
     post = Post.objects.create(
@@ -110,6 +152,7 @@ def create_post(request):
         community=community,
         post_type=post_type_input,
         end_at=computed_end_at,
+        is_approved=is_approved_post,
     )
 
     media_index = 0
@@ -141,7 +184,10 @@ def create_post(request):
 
     has_page = Page.objects.filter(user=user).first()
 
-    if is_ad:
+    if not post.is_approved:
+        pass
+
+    elif is_ad:
         pass
 
     elif is_announcement:

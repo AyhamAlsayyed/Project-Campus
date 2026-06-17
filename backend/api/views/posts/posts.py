@@ -1,10 +1,12 @@
 from django.db.models import Case, F, IntegerField, Q, Value, When
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ...models import (
     Comment,
+    Community,
     CommunityMember,
     Friendship,
     Post,
@@ -55,10 +57,21 @@ def feed(request, community_id=None):
 
     # user profile feed
     if user_id:
-        qs = qs.filter(author_id=user_id).order_by("-is_pinned", "-created_at")
+        if int(user_id) == user.id:
+            qs = qs.filter(author_id=user_id)
+        else:
+            qs = qs.filter(author_id=user_id, is_approved=True)
 
+        qs = qs.order_by("-is_pinned", "-created_at")
+
+    # page profile feed
     elif page_id:
-        qs = qs.filter(author_id=page_id).order_by("-created_at")
+        if int(page_id) == user.id:
+            qs = qs.filter(author_id=page_id)
+        else:
+            qs = qs.filter(author_id=page_id, is_approved=True)
+
+        qs = qs.order_by("-created_at")
 
     # friends feed
     elif filter_type == "friends":
@@ -66,8 +79,9 @@ def feed(request, community_id=None):
         if not accepted_users:
             qs = Post.objects.none()
         else:
-            qs = qs.filter(author_id__in=accepted_users).order_by("-created_at")
+            qs = qs.filter(author_id__in=accepted_users, is_approved=True).order_by("-created_at")
 
+    # followed feed
     elif filter_type == "follow_page":
         followed_user_ids = Friendship.objects.filter(
             user1=user, status=Friendship.Status.FOLLOWING, relation_type=Friendship.RelationType.USER_TO_PAGE
@@ -75,16 +89,51 @@ def feed(request, community_id=None):
         if not followed_user_ids:
             qs = Post.objects.none()
         else:
-            qs = qs.filter(author_id__in=followed_user_ids).order_by("-created_at")
+            qs = qs.filter(author_id__in=followed_user_ids, is_approved=True).order_by("-created_at")
 
     # community feed
     elif community_id:
         qs = qs.filter(community_id=community_id)
 
+        is_privileged_moderator = False
+        try:
+            community_obj = Community.objects.get(pk=community_id)
+            if community_obj.owner == user:
+                is_privileged_moderator = True
+            else:
+                is_privileged_moderator = CommunityMember.objects.filter(
+                    community_id=community_id,
+                    user=user,
+                    status=CommunityMember.Status.APPROVED,
+                    role__in=[CommunityMember.Role.OWNER, CommunityMember.Role.ADMIN],
+                ).exists()
+        except Community.DoesNotExist:
+            return Response({"error": "Community not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if filter_type == "pending":
+            if not is_privileged_moderator:
+                return Response(
+                    {"error": "You do not have administrative permissions to view pending posts."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            qs = qs.filter(is_approved=False)
+
+        elif filter_type == "my_pending":
+            qs = qs.filter(author=user, is_approved=False)
+
+        # my approved community posts filter
+        elif filter_type == "my_approved":
+            qs = qs.filter(author=user, is_approved=True)
+
+        else:
+            if not is_privileged_moderator:
+                qs = qs.filter(is_approved=True)
+
         if filter_type in ["recommended", "popular", "trending"]:
             qs = qs.annotate(**engagement_annotations())
 
-        if filter_type == "recent":
+        # included 'my_approved' into the recent sorting layout
+        if filter_type in ["recent", "pending", "my_pending", "my_approved"]:
             qs = qs.order_by("-created_at")
         elif filter_type == "popular":
             qs = qs.order_by("-p_engagement", "-created_at")
@@ -99,6 +148,8 @@ def feed(request, community_id=None):
 
     # home feeed
     else:
+        qs = qs.filter(is_approved=True)
+
         community_ids = CommunityMember.objects.filter(user=user).values_list("community_id", flat=True)
         followed_user_ids = Friendship.objects.filter(
             user1=user, status=Friendship.Status.FOLLOWING, relation_type=Friendship.RelationType.USER_TO_PAGE
@@ -157,7 +208,7 @@ def feed(request, community_id=None):
     qs = qs.select_related("author__profile", "author__page", "community").prefetch_related("media")[:limit]
 
     serializer = PostSerializer(qs, many=True, context={"request": request})
-    return Response(serializer.data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
