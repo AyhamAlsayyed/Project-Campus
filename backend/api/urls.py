@@ -5,7 +5,12 @@ from .views.auth.signup.send_code import send_code
 from .views.auth.signup.signup import signup
 from .views.auth.signup.verify_code import verify_code
 from .views.auth.TFA import send_2fa_code, verify_2fa_code
-from .views.comment.comments import comment_list, create_comment, delete_comment
+from .views.comment.comments import (
+    comment_list,
+    create_comment,
+    delete_comment,
+    edit_comment,
+)
 from .views.communities.community import (  # delete_community,
     check_community_request_status,
     communities,
@@ -184,6 +189,7 @@ urlpatterns += [
     path("posts/<int:post_id>/comments/", comment_list),
     path("posts/<int:post_id>/comments/create/", create_comment),
     path("comments/<int:comment_id>/delete/", delete_comment),
+    path("comments/<int:comment_id>/edit/", edit_comment),
     # post share
     path("messages/send/", send_post),
     # post_action

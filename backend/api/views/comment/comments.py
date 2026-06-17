@@ -74,6 +74,29 @@ def create_comment(request, post_id):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+@api_view(["PUT", "PATCH"])
+@permission_classes([IsAuthenticated])
+def edit_comment(request, comment_id):
+    user = request.user
+    new_text = request.data.get("text", "").strip()
+
+    if not new_text:
+        return Response({"error": "Comment text cannot be empty."}, status=status.HTTP_400_BAD_REQUEST)
+
+    comment = get_object_or_404(Comment, comment_id=comment_id)
+
+    if comment.author != user:
+        return Response(
+            {"detail": "You do not have permission to edit this comment."}, status=status.HTTP_403_FORBIDDEN
+        )
+
+    comment.content = new_text
+    comment.save(update_fields=["content"])
+
+    serializer = CommentSerializer(comment, context={"request": request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_comment(request, comment_id):
