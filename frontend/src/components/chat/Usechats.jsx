@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API, normalizeMessages } from '../../pages/chatsPage/chatUtils';
+import { useNotificationContext } from '../../context/NotificationContext';
 
 export function useChats() {
     const token = localStorage.getItem('access');
@@ -22,8 +23,31 @@ export function useChats() {
     const [showCreateGroup, setShowCreateGroup] = useState(false);
 
     const didAutoSelectRef = useRef(false);
+    // Ref to avoid stale closure in the chat listener callback
+    const selectedChatRef = useRef(null);
+    useEffect(() => { selectedChatRef.current = selectedChat; }, [selectedChat]);
 
-    // ── Loaders ──────────────────────────────────────────────────────────────
+    // ── Notification context — one shared WS for the whole app ────────────
+    const { registerChatListener } = useNotificationContext();
+
+    useEffect(() => {
+        const unregister = registerChatListener((data) => {
+            const { conversation_id, preview, sender_username } = data;
+            setChats(prev => prev.map(chat => {
+                if (chat.id !== conversation_id) return chat;
+                const isActive = selectedChatRef.current?.id === conversation_id;
+                return {
+                    ...chat,
+                    unread_count: isActive ? chat.unread_count : (chat.unread_count || 0) + 1,
+                    preview: preview ? `${sender_username}: ${preview}` : chat.preview,
+                    last_message_time: new Date().toISOString(),
+                };
+            }));
+        });
+        return unregister;
+    }, [registerChatListener]);
+
+    // ── Loaders ───────────────────────────────────────────────────────────
 
     const loadUser = useCallback(async () => {
         if (!token) { setUserLoading(false); return; }
@@ -43,7 +67,6 @@ export function useChats() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
-             console.log('RAW API chats:', data);
             const unique = data.reduce((acc, chat) => {
                 const key = chat.name + chat.avatar;
                 const existing = acc.find(c => c.name + c.avatar === key);
@@ -59,7 +82,6 @@ export function useChats() {
                 }
                 return acc;
             }, []);
-           
 
             setChats(unique.map(chat => ({
                 ...chat,
@@ -72,7 +94,7 @@ export function useChats() {
         }
     }, [token, chatId]);
 
-    // ── Bootstrap ─────────────────────────────────────────────────────────────
+    // ── Bootstrap ─────────────────────────────────────────────────────────
 
     useEffect(() => {
         Promise.all([fetchChats(), loadUser()]);
@@ -88,7 +110,7 @@ export function useChats() {
             .catch(() => { });
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Auto-select chat from URL — runs once after chats load
+    // Auto-select chat from URL
     useEffect(() => {
         if (chatId && chats.length > 0 && !didAutoSelectRef.current) {
             didAutoSelectRef.current = true;
@@ -97,15 +119,13 @@ export function useChats() {
         }
     }, [chatId, chats]);
 
-    // ── Derived state ─────────────────────────────────────────────────────────
+    // ── Derived state ─────────────────────────────────────────────────────
 
     const academicGroups = useMemo(
         () => chats.filter(c => c.is_group && c.is_academic),
         [chats]
     );
 
-    // Only sort here — text search and tab filter are deferred inside ChatListPanel
-    // so typing never blocks the list render.
     const sortedChats = useMemo(() =>
         [...chats].sort((a, b) => {
             if (a.is_pinned && !b.is_pinned) return -1;
@@ -115,13 +135,15 @@ export function useChats() {
         [chats]
     );
 
-    // ── Chat actions ──────────────────────────────────────────────────────────
-    // All callbacks are stable (no `chats` array dependency) so React.memo'd
-    // children won't re-render when unrelated chats update.
+    // ── Chat actions ──────────────────────────────────────────────────────
 
     const selectChat = useCallback((chat) => {
         setSelectedChat(chat);
         navigate(`/chats/${chat.id}`);
+        // Clear unread immediately when opening
+        setChats(prev => prev.map(c =>
+            c.id === chat.id ? { ...c, unread_count: 0 } : c
+        ));
     }, [navigate]);
 
     const togglePin = useCallback(async (id) => {
@@ -133,7 +155,6 @@ export function useChats() {
             setChats(prev => prev.map(c => c.id === id ? { ...c, is_pinned: !c.is_pinned } : c));
     }, [token]);
 
-    // Receives the full chat object so we avoid a stale `chats` closure dep
     const markUnread = useCallback(async (chat) => {
         const isCurrentlyUnread = chat.unread_count > 0;
         const endpoint = isCurrentlyUnread ? 'mark-read' : 'mark-unread';
@@ -171,7 +192,6 @@ export function useChats() {
         });
         if (res.ok) {
             setChats(prev => prev.filter(c => c.id !== id));
-            // Functional update — no selectedChat dep needed
             setSelectedChat(prev => (prev?.id === id ? null : prev));
         }
     }, [token]);
@@ -201,7 +221,7 @@ export function useChats() {
         });
     }, [token]);
 
-    // ── Request actions ───────────────────────────────────────────────────────
+    // ── Request actions ───────────────────────────────────────────────────
 
     const openRequest = useCallback(async (req) => {
         setSelectedRequest(req);
@@ -255,7 +275,6 @@ export function useChats() {
     }, []);
 
     return {
-        // ─ state ─
         user, userLoading, chats, loadingChats,
         filter, setFilter,
         searchQuery, setSearchQuery,
@@ -266,14 +285,11 @@ export function useChats() {
         selectedRequest, setSelectedRequest,
         requestMessages,
         showCreateGroup, setShowCreateGroup,
-        // ─ derived ─
         academicGroups, sortedChats,
-        // ─ actions ─
         selectChat, togglePin, markUnread, clearChat, deleteChat,
         toggleMute, blockUser, reportUser,
         openRequest, acceptRequest, blockRequest, deleteRequest,
         markRead,
-        // ─ router ─
         token, navigate,
     };
 }

@@ -261,7 +261,7 @@
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
     padding: 20px 0;
-    background-color: #1e1e1e;
+    background-color: #262626;
 
 }
 
@@ -710,7 +710,6 @@
     width: 95%;
 }
 
-/* Updated to allow the chat to grow and fill the vertical space */
 .activeChatContainer {
     display: flex;
     flex: 1;

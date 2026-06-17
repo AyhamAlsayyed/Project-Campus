@@ -569,3 +569,118 @@
 [data-theme="light"] .manageBtn:hover {
     background: rgba(102, 45, 145, 0.15);
 }
+/* ══════════════════════════════════════
+   NOTIFICATIONS PAGE — MOBILE & NEW
+══════════════════════════════════════ */
+
+/* Filter chips */
+.filterRow {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.filterChip {
+    padding: 7px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: "Aktiv Grotesk", sans-serif;
+}
+
+.filterChip:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.filterChipActive {
+    background: linear-gradient(-90deg, rgba(166, 39, 156, 0.9), rgba(49, 32, 169, 0.9));
+    border-color: transparent;
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Mobile body wrapper */
+.mobileBody {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 12px 10px 0;
+    box-sizing: border-box;
+}
+
+.mobileBody .mainColumn {
+    margin-top: 0;
+}
+
+.mobileBody .postContainer {
+    max-width: 100%;
+    border-radius: 20px;
+}
+
+.mobileBody .innerContainer {
+    border-radius: 20px 20px 0 0;
+    min-height: 60vh;
+    padding: 16px 12px;
+}
+
+.mobileBody .titleRow {
+    padding: 0 4px;
+}
+
+.mobileBody .pageTitle {
+    font-size: 1.8rem;
+}
+
+.mobileBody .markAllBtn {
+    margin-left: auto;
+    padding: 7px 12px;
+    font-size: 0.78rem;
+}
+
+.mobileBody .filterRow {
+    padding: 0 4px;
+    gap: 6px;
+}
+
+.mobileBody .filterChip {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+}
+
+.mobileBody .notifItem {
+    padding: 12px 8px;
+    gap: 10px;
+}
+
+.mobileBody .notifAvatar {
+    width: 40px;
+    height: 40px;
+}
+
+.mobileBody .notifText {
+    font-size: 0.82rem;
+}
+
+/* Light mode filter chips */
+[data-theme="light"] .filterChip {
+    background: #f3e8ff;
+    border-color: rgba(102, 45, 145, 0.15);
+    color: #662D91;
+}
+
+[data-theme="light"] .filterChip:hover {
+    background: #e9d5ff;
+}
+
+[data-theme="light"] .filterChipActive {
+    background: linear-gradient(-90deg, #A0279C, #6923A2);
+    color: #fff;
+    border-color: transparent;
+}

@@ -116,6 +116,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
                 if not content and not shared_post_id:
                     return
+
                 message_data = await self.save_message(
                     conversation_id=self.conversation_id,
                     sender=self.user,
@@ -124,7 +125,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     post_id=shared_post_id,
                 )
 
-                await self.channel_layer.group_send(self.room_group_name, {"type": "chat_message", **message_data})
+                # Broadcast to everyone in the chat room
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {"type": "chat_message", **message_data}
+                )
+
+                # Notify other members via their personal notification channel
+                # so their unread badge updates even if they're not in this chat
+                other_member_ids = await self.get_other_member_ids(self.conversation_id, self.user.id)
+                for member_id in other_member_ids:
+                    await self.channel_layer.group_send(
+                        f"user_notifications_{member_id}",
+                        {
+                            "type": "new_chat_message_notify",
+                            "conversation_id": int(self.conversation_id),
+                            "sender_id": self.user.id,
+                            "sender_username": self.user.username,
+                            "preview": content[:60] if content else "Sent an attachment",
+                        }
+                    )
 
             elif action_type == "reaction":
                 message_id = data.get("message_id")
@@ -137,18 +157,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
                             self.room_group_name, {"type": "chat_reaction", **reaction_data}
                         )
 
-            elif action_type == "typing": 
+            elif action_type == "typing":
                 is_typing = data.get("is_typing", False)
                 await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "chat_typing",
-                    "user_id": self.user.id,
-                    "username": self.user.username,
-                    "avatar": await self.get_user_avatar(self.user),
-                    "is_typing": is_typing,
-                }
-            )
+                    self.room_group_name,
+                    {
+                        "type": "chat_typing",
+                        "user_id": self.user.id,
+                        "username": self.user.username,
+                        "avatar": await self.get_user_avatar(self.user),
+                        "is_typing": is_typing,
+                    }
+                )
 
         except Exception:
             await self.send(text_data=json.dumps({"error": "Failed to parse message string format."}))
@@ -158,26 +178,38 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def chat_reaction(self, event):
         await self.send(text_data=json.dumps(event))
+
     async def chat_typing(self, event):
-    # Don't send typing back to the person who is typing
+        # Don't send typing back to the person who is typing
         if event["user_id"] == self.user.id:
-         return
+            return
         await self.send(text_data=json.dumps({
-        "type": "typing",
-        "username": event["username"],
-        "avatar": event["avatar"],
-        "is_typing": event["is_typing"],
+            "type": "typing",
+            "user_id": event["user_id"],
+            "username": event["username"],
+            "avatar": event["avatar"],
+            "is_typing": event["is_typing"],
         }))
 
     @database_sync_to_async
     def get_user_avatar(self, user):
-            try:
-           
-             avatar = user.profile.profile_image
-             return avatar.url if avatar else None
-            except Exception as e:
-                print(f'[Avatar] error: {e}')
-                return None
+        try:
+            avatar = user.profile.profile_image
+            return avatar.url if avatar else None
+        except Exception as e:
+            print(f'[Avatar] error: {e}')
+            return None
+
+    @database_sync_to_async
+    def get_other_member_ids(self, conversation_id, exclude_user_id):
+        """Returns IDs of all conversation members except the sender"""
+        ConversationMember = apps.get_model("api", "ConversationMember")
+        return list(
+            ConversationMember.objects.filter(conversation_id=conversation_id)
+            .exclude(user_id=exclude_user_id)
+            .values_list('user_id', flat=True)
+        )
+
     @database_sync_to_async
     def check_membership(self, conversation_id, user):
         ConversationMember = apps.get_model("api", "ConversationMember")
@@ -199,23 +231,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
             parent_message_id=parent_id,
             shared_post_id=post_id,
         )
+
         avatar_url = None
         try:
-         avatar = sender.profile.profile_image
-         avatar_url = avatar.url if avatar else None
+            avatar = sender.profile.profile_image
+            avatar_url = avatar.url if avatar else None
         except Exception:
             pass
 
         ConversationMember = apps.get_model("api", "ConversationMember")
         ConversationMember.objects.filter(conversation_id=conversation_id, user=sender).update(last_read_at=msg.sent_at)
-        print(f"[Avatar] relations: {[a for a in dir(sender) if 'profile' in a.lower()]}")
 
         return {
             "message_id": msg.message_id,
             "conversation_id": int(conversation_id),
             "sender_id": sender.id,
             "username": sender.username,
-            "avatar": avatar_url,   
+            "avatar": avatar_url,
             "content": msg.content,
             "parent_message_id": msg.parent_message_id,
             "shared_post_id": msg.shared_post_id,
@@ -226,13 +258,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def handle_reaction(self, message_id, user, reaction_type):
         MessageReaction = apps.get_model("api", "MessageReaction")
 
-        existing = MessageReaction.objects.filter(message_id=message_id, user=user, message_reaction_type=reaction_type)
+        existing = MessageReaction.objects.filter(
+            message_id=message_id, user=user, message_reaction_type=reaction_type
+        )
 
         if existing.exists():
             existing.delete()
             action = "removed"
         else:
-            MessageReaction.objects.create(message_id=message_id, user=user, message_reaction_type=reaction_type)
+            MessageReaction.objects.create(
+                message_id=message_id, user=user, message_reaction_type=reaction_type
+            )
             action = "added"
 
         return {
@@ -262,11 +298,6 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_discard(self.notification_group_name, self.channel_name)
 
     async def receive(self, text_data):
-        """
-        WebSockets are 2-way, but notifications are almost always 1-way (Server -> Client).
-        However, if the frontend wants to send a "Mark as Read" event down the socket,
-        you can process it here.
-        """
         try:
             data = json.loads(text_data)
             action = data.get("action")
@@ -277,15 +308,26 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             pass
 
     async def send_notification(self, event):
+        """Handles general app notifications (likes, comments, follows, etc.)"""
         await self.send(
-            text_data=json.dumps(
-                {
-                    "id": event.get("id"),
-                    "notification_type": event.get("notification_type"),
-                    "title": event.get("title"),
-                    "description": event.get("description"),
-                    "created_at": event.get("created_at"),
-                    "extra_data": event.get("extra_data", {}),
-                }
-            )
+            text_data=json.dumps({
+                "id": event.get("id"),
+                "notification_type": event.get("notification_type"),
+                "title": event.get("title"),
+                "description": event.get("description"),
+                "created_at": event.get("created_at"),
+                "extra_data": event.get("extra_data", {}),
+            })
+        )
+
+    async def new_chat_message_notify(self, event):
+        """Handles real-time unread badge updates for chat rows"""
+        await self.send(
+            text_data=json.dumps({
+                "type": "new_message",
+                "conversation_id": event["conversation_id"],
+                "sender_id": event["sender_id"],
+                "sender_username": event["sender_username"],
+                "preview": event["preview"],
+            })
         )

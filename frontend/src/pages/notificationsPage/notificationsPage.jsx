@@ -2,13 +2,16 @@ import styles from './notificationsPage.module.css';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { MoreHorizontal, Volume2, Calendar, UserPlus, Heart, Users } from 'lucide-react';
+import { MoreHorizontal, Volume2, Calendar, UserPlus, Heart, Users, X } from 'lucide-react';
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
+import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import Read from '../../Assets/icons/read.png';
 import ProfilePicture from '../../Assets/icons/default-pfp.png';
+import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
 import useTheme from '../../hooks/useTheme';
 import API from '../../config';
+import { useNotificationContext } from '../../context/NotificationContext';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function resolveAvatar(url, fallback = ProfilePicture) {
@@ -18,7 +21,14 @@ function resolveAvatar(url, fallback = ProfilePicture) {
 
 function timeAgo(dateString) {
     if (!dateString) return '';
-    const date = new Date(dateString);
+    const normalized =
+        typeof dateString === 'string' &&
+        !dateString.includes('Z') &&
+        !dateString.includes('+') &&
+        !dateString.match(/[+-]\d{2}:\d{2}$/)
+            ? dateString + 'Z'
+            : dateString;
+    const date = new Date(normalized);
     if (isNaN(date.getTime())) return dateString;
     const diffInSeconds = Math.floor((Date.now() - date) / 1000);
     if (diffInSeconds < 60) return 'Just now';
@@ -34,11 +44,15 @@ function timeAgo(dateString) {
 
 function getBucket(dateString) {
     if (!dateString) return 'earlier';
-    const date = new Date(dateString);
+    const normalized =
+        typeof dateString === 'string' &&
+        !dateString.includes('Z') &&
+        !dateString.includes('+')
+            ? dateString + 'Z'
+            : dateString;
+    const date = new Date(normalized);
     if (isNaN(date.getTime())) return 'earlier';
-    const now = Date.now();
-    const diff = now - date.getTime();
-    const days = diff / (1000 * 60 * 60 * 24);
+    const days = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
     if (days <= 7) return 'week';
     if (days <= 30) return 'month';
     return 'earlier';
@@ -84,17 +98,36 @@ function formatNotif(item) {
 export default function NotificationsPage() {
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
+    const { liveNotifCount, clearLiveNotifCount } = useNotificationContext();
 
     const [currentUser, setCurrentUser] = useState(null);
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeFilter, setActiveFilter] = useState('All');
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const mobileMenuRef = useRef(null);
 
     const [openMenuId, setOpenMenuId] = useState(null);
     const [menuRect, setMenuRect] = useState(null);
     const menuBtnRef = useRef(null);
 
-    const filters = ['All', 'People you follow', 'Comments', 'Follows', 'Mentions'];
+    const filters = ['All', 'Comments', 'Follows', 'Mentions'];
+
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+    }, [theme]);
+
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
+
+    useEffect(() => {
+        document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
+    }, [mobileMenuOpen]);
 
     // ── Fetch user ──
     useEffect(() => {
@@ -112,10 +145,10 @@ export default function NotificationsPage() {
     }, []);
 
     // ── Fetch notifications ──
-    const fetchNotifications = useCallback(async () => {
+    const fetchNotifications = useCallback(async (showLoader = false) => {
         const token = localStorage.getItem('access');
         if (!token) return;
-        setLoading(true);
+        if (showLoader) setLoading(true);
         try {
             const res = await fetch(`${API}/api/notifications`, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -125,10 +158,24 @@ export default function NotificationsPage() {
                 setNotifications(data.map(formatNotif));
             }
         } catch (e) { console.error(e); }
-        finally { setLoading(false); }
+        finally { if (showLoader) setLoading(false); }
     }, []);
 
-    useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
+    useEffect(() => { fetchNotifications(true); }, [fetchNotifications]);
+
+    // ── Poll every 5 seconds ──
+    useEffect(() => {
+        const interval = setInterval(() => fetchNotifications(false), 5000);
+        return () => clearInterval(interval);
+    }, [fetchNotifications]);
+
+    // ── Clear live notif count when on this page ──
+    useEffect(() => {
+        if (liveNotifCount > 0) {
+            clearLiveNotifCount();
+            fetchNotifications(false);
+        }
+    }, [liveNotifCount]);
 
     // ── Menu rect tracking on scroll ──
     useEffect(() => {
@@ -204,7 +251,7 @@ export default function NotificationsPage() {
                 )
             );
         } catch {
-            fetchNotifications();
+            fetchNotifications(false);
         }
     }, [notifications, fetchNotifications]);
 
@@ -226,9 +273,7 @@ export default function NotificationsPage() {
             navigate('/home', { state: { openPost: { post, postId: post_id, commentId: comment_id } } });
             return;
         }
-
         if (n.event_id) { navigate(`/events/${n.event_id}`); return; }
-
         if (n.link?.id) navigate(`/profile/${n.link.id}`);
         else if (n.actor_id) navigate(`/profile/${n.actor_id}`);
     }, [navigate]);
@@ -245,6 +290,11 @@ export default function NotificationsPage() {
     const earlier = useMemo(() => filtered.filter(n => n.bucket === 'earlier'), [filtered]);
     const unreadCount = useMemo(() => notifications.filter(n => !n.is_read).length, [notifications]);
 
+    const rawAvatar = currentUser?.profile?.avatar || currentUser?.avatar || currentUser?.profile_image;
+    const avatarSrc = rawAvatar
+        ? (rawAvatar.startsWith('http') ? rawAvatar : `${API}${rawAvatar}`)
+        : ProfilePicture;
+
     // ── Render a single notification ──
     const renderNotif = (n) => (
         <div
@@ -253,7 +303,6 @@ export default function NotificationsPage() {
             onClick={() => handleNotifClick(n)}
         >
             {!n.is_read && <span className={styles.unreadDot} />}
-
             <div className={styles.notifAvatarWrap}>
                 <img
                     src={n.avatar}
@@ -265,7 +314,6 @@ export default function NotificationsPage() {
                     {getNotificationIcon(n.type)}
                 </div>
             </div>
-
             <div className={styles.notifBody}>
                 <div className={styles.notifTopRow}>
                     <span className={styles.notifType}>{n.type}</span>
@@ -273,11 +321,7 @@ export default function NotificationsPage() {
                 </div>
                 <p className={styles.notifText}>{n.text}</p>
             </div>
-
-            <div
-                className={styles.menuWrapper}
-                onMouseDown={e => e.stopPropagation()}
-            >
+            <div className={styles.menuWrapper} onMouseDown={e => e.stopPropagation()}>
                 <button
                     className={styles.menuBtn}
                     onClick={e => {
@@ -288,7 +332,6 @@ export default function NotificationsPage() {
                 >
                     <MoreHorizontal size={20} />
                 </button>
-
                 {openMenuId === n.id && menuRect && createPortal(
                     <div
                         className={styles.actionMenu}
@@ -310,10 +353,7 @@ export default function NotificationsPage() {
                         <button onClick={e => { e.stopPropagation(); navigate('/settings'); setOpenMenuId(null); }}>
                             Manage
                         </button>
-                        <button
-                            className={styles.deleteAction}
-                            onClick={e => { e.stopPropagation(); handleDelete(n.id); }}
-                        >
+                        <button className={styles.deleteAction} onClick={e => { e.stopPropagation(); handleDelete(n.id); }}>
                             Delete
                         </button>
                     </div>,
@@ -333,8 +373,113 @@ export default function NotificationsPage() {
         );
     };
 
+    const mainContent = (
+        <div className={styles.mainColumn}>
+            <div className={styles.titleRow}>
+                <h1 className={styles.pageTitle}>
+                    <span className={styles.highlight}>Notifications</span>
+                </h1>
+                {unreadCount > 0 && (
+                    <button className={styles.markAllBtn} onClick={handleMarkAllAsRead}>
+                        <img src={Read} alt="" style={{ width: 15, height: 15, filter: 'brightness(0) invert(1)' }} />
+                        Mark all as read
+                    </button>
+                )}
+            </div>
+
+        
+
+            <div className={styles.postContainer}>
+                <div className={styles.innerContainer}>
+                    {loading ? (
+                        <div className={styles.emptyState}>
+                            <p className={styles.emptyText}>Loading notifications…</p>
+                        </div>
+                    ) : filtered.length === 0 ? (
+                        <div className={styles.emptyState}>
+                            <span className={styles.emptyIcon}>🔔</span>
+                            <h2 className={styles.emptyTitle}>No notifications</h2>
+                            <p className={styles.emptySubtitle}>You're all caught up!</p>
+                        </div>
+                    ) : (
+                        <>
+                            {renderSection('This week', thisWeek)}
+                            {renderSection('This month', thisMonth)}
+                            {renderSection('Earlier', earlier)}
+                        </>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+
+    // ── MOBILE ──
+    if (isMobile) {
+        return (
+            <div className={styles.darkContainer} data-theme={theme}>
+                <MobileHeader
+                    avatarSrc={avatarSrc}
+                    user={currentUser}
+                    setMobileMenuOpen={setMobileMenuOpen}
+                    token={localStorage.getItem('access')}
+                    API={API}
+                />
+
+                {mobileMenuOpen && (
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }}>
+                        <div
+                            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+                            onClick={() => setMobileMenuOpen(false)}
+                        />
+                        <div
+                            ref={mobileMenuRef}
+                            style={{
+                                position: 'absolute', left: 0, top: 0,
+                                height: '100%', width: '75vw', maxWidth: 350,
+                                background: 'linear-gradient(135deg, var(--bg-main), var(--bg-secondary))',
+                                borderRight: '1px solid rgba(255,255,255,0.1)',
+                                display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                                boxShadow: '4px 0 30px rgba(0,0,0,0.6)'
+                            }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <button
+                                style={{
+                                    position: 'absolute', top: 14, right: 14, zIndex: 10,
+                                    width: 32, height: 32, borderRadius: '50%',
+                                    background: 'rgba(255,255,255,0.1)', border: 'none',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    cursor: 'pointer'
+                                }}
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                <X size={16} color="white" />
+                            </button>
+                            <div style={{
+                                display: 'flex', alignItems: 'center', gap: 10,
+                                padding: '20px 16px 16px',
+                                borderBottom: '1px solid rgba(255,255,255,0.08)'
+                            }}>
+                                <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
+                                <span style={{ color: '#fff', fontWeight: 800, fontSize: '1.3rem', letterSpacing: 1 }}>CAMPUS</span>
+                            </div>
+                            <div style={{ flex: 1, overflowY: 'auto' }}>
+                                <SideBarNav onClose={() => setMobileMenuOpen(false)} />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className={styles.mobileBody}>
+                    {mainContent}
+                </div>
+            </div>
+        );
+    }
+
+    // ── DESKTOP ──
     return (
-        <div className={styles.darkContainer}>
+        <div className={styles.darkContainer} data-theme={theme}>
             <div className={`${styles.header} ${styles.page}`}>
                 <Header theme={theme} toggleTheme={toggleTheme} user={currentUser} />
             </div>
@@ -342,48 +487,8 @@ export default function NotificationsPage() {
             <div className={`${styles.page} ${styles.content}`}>
                 <SideBarNav variant="default" currentUser={currentUser} />
 
-                <div className={styles.mainColumn}>
-                    {/* Title */}
-                    <div className={styles.titleRow}>
-                        <h1 className={styles.pageTitle}>
-                            <span className={styles.highlight}>Notifications</span>
-                        </h1>
-                        {unreadCount > 0 && (
-                            <button className={styles.markAllBtn} onClick={handleMarkAllAsRead}>
-                                <img src={Read} alt="" style={{ width: 15, height: 15, filter: 'brightness(0) invert(1)' }} />
-                                Mark all as read
-                            </button>
-                        )}
-                    </div>
+                {mainContent}
 
-                    {/* Filter chips */}
-
-
-                    {/* Outer card */}
-                    <div className={styles.postContainer}>
-                        <div className={styles.innerContainer}>
-                            {loading ? (
-                                <div className={styles.emptyState}>
-                                    <p className={styles.emptyText}>Loading notifications…</p>
-                                </div>
-                            ) : filtered.length === 0 ? (
-                                <div className={styles.emptyState}>
-                                    <span className={styles.emptyIcon}>🔔</span>
-                                    <h2 className={styles.emptyTitle}>No notifications</h2>
-                                    <p className={styles.emptySubtitle}>You're all caught up!</p>
-                                </div>
-                            ) : (
-                                <>
-                                    {renderSection('This week', thisWeek)}
-                                    {renderSection('This month', thisMonth)}
-                                    {renderSection('Earlier', earlier)}
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right section */}
                 <div className={styles.rightSection}>
                     <div className={styles.rightCard}>
                         <h3 className={styles.rightCardTitle}>Summary</h3>
@@ -403,9 +508,7 @@ export default function NotificationsPage() {
                             <span className={styles.summaryLabel}>This month</span>
                             <span className={styles.summaryValue}>{thisMonth.length}</span>
                         </div>
-
                         <div className={styles.rightDivider} />
-
                         <button className={styles.manageBtn} onClick={() => navigate('/settings')}>
                             Manage Preferences
                         </button>
