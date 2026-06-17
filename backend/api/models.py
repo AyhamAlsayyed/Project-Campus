@@ -715,6 +715,7 @@ class Post(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+    end_at = models.DateTimeField(null=True, blank=True)
     is_approved = models.BooleanField(default=False)
     is_highlighted = models.BooleanField(default=False)
     highlighted_at = models.DateTimeField(null=True, blank=True)

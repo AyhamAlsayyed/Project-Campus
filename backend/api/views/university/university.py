@@ -1,3 +1,9 @@
+from datetime import timedelta
+
+from django.db import transaction
+from django.db.models import Q
+from django.utils import timezone
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -34,19 +40,36 @@ def get_user_university(user):
     return None
 
 
+def calculate_extended_date(base_datetime, duration_str):
+    """
+    Adds the requested duration offset string to a base datetime object.
+    """
+    normalized_key = str(duration_str).lower().strip()
+
+    offsets = {
+        "1 week": timedelta(weeks=1),
+        "1 month": timedelta(days=30),
+        "3 months": timedelta(days=90),
+        "6 months": timedelta(days=180),
+        "1 year": timedelta(days=365),
+    }
+
+    target_offset = offsets.get(normalized_key, timedelta(days=30))
+    return base_datetime + target_offset
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def university_info(request):
     university_page = get_user_university(request.user)
 
     if not university_page:
-        return Response({"error": "No university found for this user"}, status=404)
+        return Response({"error": "No university found for this user"}, status=status.HTTP_404_NOT_FOUND)
 
     students_count = university_page.students.count()
     instructors_count = university_page.instructors.count()
 
     posts_count = Post.objects.filter(author=university_page.user).count()
-
     events_count = Event.objects.filter(page=university_page).count()
 
     return Response(
@@ -68,7 +91,8 @@ def university_info(request):
                 "events": events_count,
             },
             "created_at": university_page.created_at.isoformat(),
-        }
+        },
+        status=status.HTTP_200_OK,
     )
 
 
@@ -77,12 +101,17 @@ def university_info(request):
 def university_news(request):
     university_page = get_user_university(request.user)
     if not university_page:
-        return Response([])
+        return Response([], status=status.HTTP_403_FORBIDDEN)
 
-    posts = Post.objects.filter(
-        author=university_page.user,
-        post_type="announcement",
-    ).order_by("-created_at")
+    current_time = timezone.now()
+    posts = (
+        Post.objects.filter(
+            author=university_page.user,
+            post_type=Post.PostType.ANNOUNCEMENT,
+        )
+        .filter(Q(end_at__gt=current_time) | Q(end_at__isnull=True))
+        .order_by("-created_at")
+    )
 
     news_data = []
     for post in posts:
@@ -92,6 +121,26 @@ def university_news(request):
             if first_media:
                 image = file_url(request, first_media.media_file)
 
+        if post.end_at:
+            time_difference = post.end_at - current_time
+            days_remaining = time_difference.days
+
+            if time_difference.total_seconds() < 0:
+                status_message = "Expired"
+                days_left_value = 0
+            elif days_remaining == 0:
+                status_message = "Expires today"
+                days_left_value = 0
+            elif days_remaining == 1:
+                status_message = "Expires tomorrow"
+                days_left_value = 1
+            else:
+                status_message = f"{days_remaining} days left"
+                days_left_value = days_remaining
+        else:
+            status_message = "Permanent"
+            days_left_value = None
+
         news_data.append(
             {
                 "id": post.post_id,
@@ -99,10 +148,12 @@ def university_news(request):
                 "desc": post.content_text[:200] if getattr(post, "content_text", None) else "",
                 "date": post.created_at.strftime("%B %d, %Y"),
                 "img": image or "/default-news.jpg",
+                "days_left": days_left_value,
+                "status_message": status_message,
             }
         )
 
-    return Response(news_data)
+    return Response(news_data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
@@ -110,7 +161,7 @@ def university_news(request):
 def university_events(request):
     university_page = get_user_university(request.user)
     if not university_page:
-        return Response([])
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
     events = Event.objects.filter(page=university_page).order_by("start_date")[:10]
 
@@ -129,7 +180,7 @@ def university_events(request):
             }
         )
 
-    return Response(events_data)
+    return Response(events_data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
@@ -137,7 +188,7 @@ def university_events(request):
 def university_doctors(request):
     university_page = get_user_university(request.user)
     if not university_page:
-        return Response([])
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
     instructors = (
         Instructor.objects.filter(university_page=university_page)
@@ -167,4 +218,54 @@ def university_doctors(request):
             }
         )
 
-    return Response(doctors_data)
+    return Response(doctors_data, status=status.HTTP_200_OK)
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+def extend_announcement(request, post_id):
+    """
+    Extends the 'end_at' expiration lifespan of a university announcement.
+    """
+    duration_input = request.data.get("extend_by")
+    if not duration_input:
+        return Response(
+            {"error": "The field 'extend_by' (e.g., '3 months') is required to extend the post."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    with transaction.atomic():
+        try:
+            post = Post.objects.select_for_update().get(post_id=post_id, post_type=Post.PostType.ANNOUNCEMENT)
+        except Post.DoesNotExist:
+            return Response(
+                {"error": "Announcement post not found or it is not an announcement type."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if post.author != request.user:
+            return Response(
+                {"error": "You do not have permission to extend this announcement."}, status=status.HTTP_403_FORBIDDEN
+            )
+
+        current_time = timezone.now()
+
+        if post.end_at and post.end_at > current_time:
+            base_date = post.end_at
+        else:
+            base_date = current_time
+
+        post.end_at = calculate_extended_date(base_date, duration_input)
+        post.save(update_fields=["end_at"])
+
+    return Response(
+        {
+            "status": "success",
+            "message": "Announcement extended successfully!",
+            "post_id": post.post_id,
+            "extend_by": duration_input,
+            "new_end_date": post.end_at.strftime("%A - %d/%m/%Y"),
+            "is_active": post.end_at > current_time,
+        },
+        status=status.HTTP_200_OK,
+    )

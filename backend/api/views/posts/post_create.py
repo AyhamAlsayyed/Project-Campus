@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -24,21 +27,46 @@ from ...utils.feed import base_annotations
 User = get_user_model()
 
 
+def calculate_announcement_end_date(duration_str):
+    """
+    Translates frontend duration string selections into an absolute future expiration timestamp.
+    """
+    if not duration_str:
+        return timezone.now() + timedelta(days=30)
+
+    current_time = timezone.now()
+    normalized_key = str(duration_str).lower().strip()
+
+    offsets = {
+        "1 week": timedelta(weeks=1),
+        "1 month": timedelta(days=30),
+        "3 months": timedelta(days=90),
+        "6 months": timedelta(days=180),
+        "1 year": timedelta(days=365),
+    }
+    return current_time + offsets.get(normalized_key, timedelta(days=30))
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_post(request):
+    print(request.data)
     user = request.user
-    content = request.data.get("content", "")
-    description = request.data.get("description", "")
+    content = request.data.get("content", "").strip()
+    description = request.data.get("description", "").strip()
     medias = request.FILES.getlist("images")
     files = request.FILES.getlist("files")
     community_id = request.data.get("community")
-    post_title = request.data.get("title", "")
+    post_title = request.data.get("title", "").strip()
+    duration_input = request.data.get("duration")
 
     post_type_input = request.data.get("post_type", Post.PostType.NORMAL)
     is_announcement = post_type_input == Post.PostType.ANNOUNCEMENT
     is_academic = post_type_input == Post.PostType.ACADEMY
     is_ad = post_type_input == Post.PostType.ADVERTISEMENT
+
+    if not description and content:
+        description = content
 
     if (is_announcement or is_ad) and not medias:
         return Response(
@@ -70,6 +98,10 @@ def create_post(request):
             status=status.HTTP_403_FORBIDDEN,
         )
 
+    computed_end_at = None
+    if is_announcement:
+        computed_end_at = calculate_announcement_end_date(duration_input)
+
     post = Post.objects.create(
         title=post_title,
         content_text=content,
@@ -77,6 +109,7 @@ def create_post(request):
         author=user,
         community=community,
         post_type=post_type_input,
+        end_at=computed_end_at,
     )
 
     media_index = 0

@@ -83,8 +83,7 @@ from .views.event.event_action import toggle_event_reminder
 from .views.event.events import create_event, delete_event, events, update_event
 from .views.news.news import news_list
 from .views.notification.notification import get_notifications, notification_delete_mark
-
-# from .views.pages.page_update import update_page_profile
+from .views.pages.page_update import update_page_profile
 from .views.pages.pages import (
     followed_pages,
     page_detail,
@@ -122,6 +121,7 @@ from .views.posts.posts import feed, get_activity_posts, get_saved_posts
 from .views.report.report import create_report
 from .views.search.search import search
 from .views.university.university import (
+    extend_announcement,
     university_doctors,
     university_events,
     university_info,
@@ -165,7 +165,7 @@ urlpatterns += [
     path("users/<int:user_id>/", profile_view),
     path("users/<int:user_id>/block/", toggle_block_user),
     path("auth/check-username/", check_username),
-    path("auth/profile/update/", update_profile),  # the front dont send the degrees
+    path("auth/profile/update/", update_profile),
     path("posts/saved/", get_saved_posts),
     path("posts/activity/", get_activity_posts),
     path("users/<int:user_id>/friends/", user_friends_list),
@@ -278,6 +278,7 @@ urlpatterns += [
 ]
 # page
 urlpatterns += [
+    path("auth/page/profile/update/", update_page_profile),
     path("pages/followed/", followed_pages),
     path("pages/recommended/", recommended_pages),
     path("pages/<int:page_id>/", page_detail),
@@ -300,6 +301,7 @@ urlpatterns += [
     path("promotions/<int:promotion_id>/delete/", delete_page_promotion),
     # university
     path("university/news/", university_news),
+    path("university/news/<int:post_id>/extend/", extend_announcement),
     path("university/events/", university_events),
     path("university/doctors/", university_doctors),
     path("university/", university_info),
