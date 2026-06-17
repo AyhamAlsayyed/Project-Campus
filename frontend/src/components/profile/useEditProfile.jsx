@@ -29,49 +29,92 @@ export function useProfileEdit({ user, token, API, onSaved }) {
         const [year, month, day] = str.split('-');
         return { year: year || '', month: month || '', day: day || '' };
     };
+    const userType = localStorage.getItem('user_type');
+    const isPageOrUni = userType === 'page' || userType === 'university';
+    const birthParts = user?.profile?.birth_date?.split('-') || [];
 
-    const [formData, setFormData] = useState({
-        username: '', fullName: '', university: '', major: '', bio: '',
-        primaryEmail: '', secondaryEmail: '', primaryPhone: '', secondaryPhone: '',
-        birthday: { day: '', month: '', year: '' }
+    const [formData, setFormData] = useState(isPageOrUni ? {
+        // ── PAGE / UNIVERSITY ──
+        username: user?.page_name || '',
+        fullName: user?.page_full_name || '',
+        category: user?.page_type || '',
+        bio: user?.description || '',
+        pagePhone: user?.phone || '',
+        pageEmail: user?.email || '',
+        pageAddress: user?.location || '',
+        pageWebsite: user?.link || '',
+    } : {
+        // ── STUDENT / INSTRUCTOR ──
+        username: user?.username || '',
+        fullName: user?.profile?.full_name || '',
+        bio: user?.profile?.bio || '',
+        university: user?.university_full_name || '',
+        major: user?.major || '',
+        title: user?.academic_title || '',
+
+        // Contact
+        primaryEmail: user?.profile?.academic_email || '',
+        secondaryEmail: user?.personal_email || '',
+        primaryPhone: user?.profile?.primary_phone || '',
+        secondaryPhone: user?.profile?.secondary_phone || '',
+
+        // Birthday — parsed from "YYYY-MM-DD"
+        birthday: {
+            year: birthParts[0] || '',
+            month: birthParts[1] || '',
+            day: birthParts[2] || '',
+        },
+
+        // Arrays
+        degrees: user?.degrees || [],
+        teachingPositions: user?.teaching_positions || [],
+        communityPicks: [],
     });
-
     const syncFromUser = (u) => {
         if (!u) return;
 
+        if (isPageOrUni) {
+            const rawAvatar = u?.profile_image;
+            const rawCover = u?.banner_image;
+            setAvatarPreview(rawAvatar ? (rawAvatar.startsWith('http') ? rawAvatar : `${API}${rawAvatar}`) : null);
+            setCoverPreview(rawCover ? (rawCover.startsWith('http') ? rawCover : `${API}${rawCover}`) : null);
+            setFormData({
+                username: u?.page_name || '',
+                fullName: u?.page_full_name || '',
+                category: u?.page_type || '',
+                bio: u?.description || '',
+                pagePhone: u?.phone || '',
+                pageEmail: u?.email || '',
+                pageAddress: u?.location || '',
+                pageWebsite: u?.link || '',
+            });
+            return;
+        }
+
+        // existing student/instructor logic unchanged below
         const rawAvatar = u?.profile?.avatar || u?.avatar;
         const rawCover = u?.profile?.cover || u?.cover;
-
-        setAvatarPreview(
-            rawAvatar
-                ? (rawAvatar.startsWith('http') ? rawAvatar : `${API}${rawAvatar}`)
-                : null
-        );
-        setCoverPreview(
-            rawCover
-                ? (rawCover.startsWith('http') ? rawCover : `${API}${rawCover}`)
-                : null
-        );
-
+        setAvatarPreview(rawAvatar ? (rawAvatar.startsWith('http') ? rawAvatar : `${API}${rawAvatar}`) : null);
+        setCoverPreview(rawCover ? (rawCover.startsWith('http') ? rawCover : `${API}${rawCover}`) : null);
         setFormData({
             username: u.username || '',
-            fullName: u.profile?.full_name || u.full_name || '',
-            university: u.university || '',
+            fullName: u.profile?.full_name || '',
+            university: u.university_full_name || '',
             major: u.major || '',
-            bio: u.profile?.bio || u.bio || '',
-            primaryEmail: u.profile?.academic_email || u.academic_email || u.email || '',
+            bio: u.profile?.bio || '',
+            primaryEmail: u.profile?.academic_email || '',
             secondaryEmail: u.personal_email || '',
-            primaryPhone: u.profile?.primary_phone || u.primary_phone || '',
-            secondaryPhone: u.profile?.secondary_phone || u.secondary_phone || '',
-            birthday: parseBirthday(u.profile?.birth_date || u.birthday),
-            degrees: (u.degrees || u.degree || []).map(deg => ({
+            primaryPhone: u.profile?.primary_phone || '',
+            secondaryPhone: u.profile?.secondary_phone || '',
+            birthday: parseBirthday(u.profile?.birth_date),
+            degrees: (u.degrees || []).map(deg => ({
                 id: deg.id,
                 title: deg.degree_type,
                 field: deg.major,
-                institution: deg.institution
+                institution: deg.institution,
             })),
             educationEntries: u?.education || [],
-            teachingPositions: u?.teaching_positions || []
+            teachingPositions: u?.teaching_positions || [],
         });
     };
 
@@ -147,6 +190,25 @@ export function useProfileEdit({ user, token, API, onSaved }) {
     };
 
     const handleEditSave = async () => {
+        const userType = localStorage.getItem('user_type');
+        if (userType === 'page' || userType === 'university') {
+            const fd = new FormData();
+            if (avatarFile) fd.append('profile_image', avatarFile);
+            if (coverFile) fd.append('banner_image', coverFile);     
+            fd.append('description', formData.bio || '');      
+            fd.append('phone', formData.pagePhone || '');
+            fd.append('email', formData.pageEmail || '');
+            fd.append('location', formData.pageAddress || '');     
+            fd.append('link', formData.pageWebsite || '');     
+
+            await fetch(`${API}/api/page/profile/update/`, {
+                method: 'PATCH',
+                headers: { Authorization: `Bearer ${token}` },
+                body: fd,
+            });
+            setIsEditing(false);
+            return;
+        }
         if (usernameError) return;
         setEditSaving(true);
         try {

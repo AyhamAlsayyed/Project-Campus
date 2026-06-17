@@ -732,7 +732,7 @@ export default function Universities() {
                             <div className={styles.pill}>Doctors and Teachers</div>
                             <div className={styles.rightCard} style={{ minHeight: isUniversity ? "570px" : "200px" }}>
                                 <div className={styles.rightCardHeader}>
-                                    <div className={styles.searchContainer} style={{ width: isUniversity ? "60%" : "100%" }}>
+                                    <div className={styles.searchContainer} style={{width:"100%"}}>
                                         <Search size={16} className={styles.searchIcon} />
                                         <input
                                             type="text"
@@ -742,14 +742,7 @@ export default function Universities() {
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                         />
                                     </div>
-                                    {isUniversity && (
-                                        <button className={styles.manageBtn} onClick={() => {
-                                            setManageDoctorsSearch('');
-                                            setIsManageDoctorsOpen(true);
-                                        }}>
-                                            Manage
-                                        </button>
-                                    )}
+                                    
                                 </div>
                                 <DoctorsList />
                             </div>
@@ -975,160 +968,7 @@ export default function Universities() {
                 document.body
             )}
 
-            {/* MANAGE DOCTORS */}
-            {isManageDoctorsOpen && createPortal(
-                <div className={styles.manageModalOverlay} onClick={() => setIsManageDoctorsOpen(false)}>
-                    <div className={styles.manageModalContent} onClick={e => e.stopPropagation()}>
-                        <div className={styles.manageModalHeader}>
-                            <img
-                                src={ArrowLeft} alt="Back"
-                                className={styles.manageBackIcon}
-                                onClick={() => setIsManageDoctorsOpen(false)}
-                                style={{ width: 18, height: 18, filter: "brightness(0) invert(1)", cursor: "pointer" }}
-                            />
-                            <h2>Manage Doctors and Teachers</h2>
-                            <span className={styles.manageCounter}>{doctors.length} Members</span>
-                        </div>
-                        <div className={styles.manageDivider} />
-                        <div className={styles.manageControls}>
-                            <div className={styles.manageSearchInputWrapper}>
-                                <Search size={18} color="#808080" />
-                                <input
-                                    type="text"
-                                    placeholder="Search..."
-                                    value={manageDoctorsSearch}
-                                    onChange={(e) => setManageDoctorsSearch(e.target.value)}
-                                />
-                            </div>
-                            <button className={styles.manageInviteBtn} onClick={() => { setInviteStatus(null); setIsInviteOpen(true); }}>
-                                <img src={AddFriendIcon} alt="Invite" className={styles.inviteIcon} />
-                                Invite
-                            </button>
-                        </div>
-                        <div className={styles.notifList}>
-                            {doctors
-                                .filter(doc => doc.name.toLowerCase().includes(manageDoctorsSearch.toLowerCase()))
-                                .map((doc, idx, arr) => (
-                                    <div key={doc.id} className={styles.doctorRowWrapper}>
-                                        <div className={styles.manageListItem}>
-                                            <img
-                                                src={doc.avatar
-                                                    ? (doc.avatar.startsWith("http") ? doc.avatar : `${API}${doc.avatar}`)
-                                                    : DefaultPicture}
-                                                alt={doc.name}
-                                                className={styles.manageListAvatar}
-                                            />
-                                            <div className={styles.manageListInfo}>
-                                                <span className={styles.manageListName}>{doc.name}</span>
-                                                <span className={styles.manageListDesc}>{doc.desc} • {doc.type || "Full Time"}</span>
-                                            </div>
-                                            <div className={styles.manageListActions}>
-                                                <img
-                                                    src={RemovePersonIcon} alt="Remove"
-                                                    className={styles.actionRemove}
-                                                    title="Remove from university"
-                                                    style={{ cursor: "pointer", opacity: removingDoctorId === doc.id ? 0.4 : 1 }}
-                                                    onClick={() => {
-                                                        if (window.confirm(`Remove ${doc.name} from the university?`)) {
-                                                            handleRemoveDoctor(doc);
-                                                        }
-                                                    }}
-                                                />
-                                                <img
-                                                    src={MessagesIcon} alt="Message"
-                                                    className={styles.actionMessage}
-                                                    title="Send message"
-                                                    style={{ cursor: "pointer" }}
-                                                    onClick={() => { setIsManageDoctorsOpen(false); navigate(`/messages/${doc.id}`); }}
-                                                />
-                                            </div>
-                                        </div>
-                                        {idx < arr.length - 1 && <div className={styles.listItemDivider} />}
-                                    </div>
-                                ))}
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
-
-            {/* INVITE DOCTOR */}
-            {isInviteOpen && createPortal(
-                <div
-                    style={{
-                        position: "fixed", inset: 0, zIndex: 10000,
-                        background: "rgba(0,0,0,0.65)", display: "flex",
-                        alignItems: "center", justifyContent: "center"
-                    }}
-                    onClick={() => setIsInviteOpen(false)}
-                >
-                    <div
-                        style={{
-                            background: "#2a2a2a", borderRadius: 16, padding: "28px 28px 24px",
-                            maxWidth: 400, width: "90%", position: "relative",
-                            border: "1px solid rgba(255,255,255,0.1)"
-                        }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <button
-                            onClick={() => setIsInviteOpen(false)}
-                            style={{
-                                position: "absolute", top: 14, right: 14,
-                                background: "none", border: "none", color: "white",
-                                fontSize: "1.1rem", cursor: "pointer"
-                            }}
-                        >✕</button>
-                        <h3 style={{ color: "white", margin: "0 0 6px", fontSize: "1.05rem" }}>Invite Doctor / Teacher</h3>
-                        <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.82rem", margin: "0 0 18px" }}>
-                            Enter their email address — they'll receive an invitation link.
-                        </p>
-                        <input
-                            type="email"
-                            placeholder="Email address..."
-                            value={inviteEmail}
-                            onChange={e => { setInviteEmail(e.target.value); setInviteStatus(null); }}
-                            style={{
-                                width: "100%", boxSizing: "border-box",
-                                background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
-                                borderRadius: 8, padding: "10px 14px", color: "white",
-                                fontSize: "0.9rem", outline: "none", marginBottom: 12
-                            }}
-                        />
-                        {inviteStatus === 'success' && (
-                            <p style={{ color: "#5fcf80", fontSize: "0.85rem", margin: "0 0 12px" }}>
-                                ✓ Invitation sent successfully!
-                            </p>
-                        )}
-                        {inviteStatus === 'error' && (
-                            <p style={{ color: "#e05252", fontSize: "0.85rem", margin: "0 0 12px" }}>
-                                ✕ Failed to send. Please try again.
-                            </p>
-                        )}
-                        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                            <button
-                                onClick={() => setIsInviteOpen(false)}
-                                style={{
-                                    background: "rgba(255,255,255,0.08)", border: "none", color: "white",
-                                    padding: "8px 20px", borderRadius: 8, cursor: "pointer", fontSize: "0.9rem"
-                                }}
-                            >Cancel</button>
-                            <button
-                                onClick={handleSendInvite}
-                                disabled={!inviteEmail.trim()}
-                                style={{
-                                    background: inviteEmail.trim() ? "#4a7fe0" : "rgba(74,127,224,0.35)",
-                                    border: "none", color: "white",
-                                    padding: "8px 20px", borderRadius: 8,
-                                    cursor: inviteEmail.trim() ? "pointer" : "not-allowed",
-                                    fontSize: "0.9rem", fontWeight: 600,
-                                    transition: "background 0.2s"
-                                }}
-                            >Send Invite</button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
+          
         </div>
     );
 }

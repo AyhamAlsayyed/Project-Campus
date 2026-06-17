@@ -3,7 +3,7 @@ import {
     Languages, Home, HelpCircle, MessageSquare,
     Menu, X, Search, Check, MoreHorizontal,
     Volume2, Calendar, Heart, ChevronLeft,
-    Upload, Trash2, Mail, Phone, Edit2
+    Upload, Trash2, Mail, Phone, Edit2, Globe, MapPin
 } from "lucide-react";
 import { useState } from "react";
 import BackBtn from '../../Assets/icons/arrow-left.png'
@@ -50,6 +50,11 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
     const [newPosition, setNewPosition] = useState({ institution: '', type: 'parttime' });
 
     const isInstructor = user?.role === 'instructor';
+    const userType = localStorage.getItem('user_type');
+    const isPageOrUni = userType === 'page' || userType === 'university';
+
+    // Page-specific contact fields
+
     const cameraButtonRef = useRef(null);
     const [coverDropdownPos, setCoverDropdownPos] = useState({ top: 0, left: 0 });
     const [showPicksModal, setShowPicksModal] = useState(false);
@@ -315,8 +320,70 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                 <div style={{ display: "flex", gap: 16, marginBottom: 4, alignItems: "stretch" }}>
                     {/* Left: 2×2 inputs */}
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+                        {isPageOrUni ? (
+                            /* ── PAGE / UNIVERSITY ── */
+                            <>
+                                {/* Display name — locked */}
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        readOnly
+                                        className={styles.editFormInputReadOnly}
+                                        type="text"
+                                        value={formData.fullName || user?.name || ''}
+                                        placeholder="Page name"
+                                        style={{ width: '100%', boxSizing: 'border-box', opacity: 0.5 }}
+                                    />
+                                    <span style={{
+                                        position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                                        fontSize: 10, fontWeight: 600, letterSpacing: '0.06em',
+                                        color: 'rgba(139,45,255,0.7)',
+                                        background: 'rgba(139,45,255,0.1)', border: '1px solid rgba(139,45,255,0.25)',
+                                        borderRadius: 5, padding: '1px 6px', pointerEvents: 'none',
+                                        textTransform: 'uppercase'
+                                    }}>Read-only</span>
+                                </div>
 
-                        {isInstructor ? (
+                                {/* Category — locked */}
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        readOnly
+                                        className={styles.editFormInputReadOnly}
+                                        type="text"
+                                        value={formData.category || user?.category || ''}
+                                        placeholder="Category"
+                                        style={{ width: '100%', boxSizing: 'border-box', opacity: 0.5 }}
+                                    />
+                                    <span style={{
+                                        position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                                        fontSize: 10, fontWeight: 600, letterSpacing: '0.06em',
+                                        color: 'rgba(139,45,255,0.7)',
+                                        background: 'rgba(139,45,255,0.1)', border: '1px solid rgba(139,45,255,0.25)',
+                                        borderRadius: 5, padding: '1px 6px', pointerEvents: 'none',
+                                        textTransform: 'uppercase'
+                                    }}>Read-only</span>
+                                </div>
+
+                                {/* Username — editable */}
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        readOnly
+                                        className={styles.editFormInputReadOnly}
+                                        type="text"
+                                        value={formData.username}
+                                        placeholder="Username"
+                                        style={{ width: '100%', boxSizing: 'border-box', opacity: 0.5 }}
+                                    />
+                                    <span style={{
+                                        position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                                        fontSize: 10, fontWeight: 600, letterSpacing: '0.06em',
+                                        color: 'rgba(139,45,255,0.7)',
+                                        background: 'rgba(139,45,255,0.1)', border: '1px solid rgba(139,45,255,0.25)',
+                                        borderRadius: 5, padding: '1px 6px', pointerEvents: 'none',
+                                        textTransform: 'uppercase'
+                                    }}>Read-only</span>
+                                </div>
+                            </>
+                        ) : isInstructor ? (
                             <>
 
                                 <div style={{ display: "flex", gap: 12, alignItems: "stretch" }}>
@@ -513,103 +580,245 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
 
                 {/* Inset fields panel */}
                 <div className={styles.insetFieldsPanel}>
-
-                    {/* ── Contact Info ── */}
-                    <div className={styles.sectionLabelDivider}>
-                        <span>Contact Info</span>
-                        <div className={styles.dividerLine} />
-                    </div>
-
-                    <div className={styles.detailFieldItem}>
-                        <span>
-                            <img src={MailIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
-                            Primary Email
-                        </span>
-                        <span className={styles.fieldValueText}>{formData.primaryEmail || 'username@gmail.com'}</span>
-                        <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("email")} />
-                    </div>
-
-                    <div className={styles.detailFieldItem}>
-                        <span>
-                            <img src={MailIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
-                            Personal Email
-                        </span>
-                        <span className={styles.fieldValueText}>{formData.secondaryEmail}</span>
-                        <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("email")} />
-                    </div>
-
-                    <div className={styles.detailFieldItem}>
-                        <span>
-                            <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
-                            Primary Phone
-                        </span>
-                        <span className={styles.fieldValueText}>{formData.primaryPhone || '—'}</span>
-                        <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("phone")} />
-                    </div>
-
-                    {formData.secondaryPhone && (
-                        <div className={styles.detailFieldItem}>
-                            <span>
-                                <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
-                                Secondary Phone
-                            </span>
-                            <span className={styles.fieldValueText}>{formData.secondaryPhone}</span>
-                            <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("phone")} />
-                        </div>
-                    )}
-                    {/* ── Personal Details ── */}
-                    <div className={styles.sectionLabelDivider}>
-                        <span>Personal Details</span>
-                        <div className={styles.dividerLine} />
-                    </div>
-
-                    {/* Birthday */}
-                    <div className={styles.detailFieldItem}>
-                        <span>
-                            <img src={BirthdayIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)' }} />
-                            Birthday
-                        </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: "40%" }}>
-                            <input
-                                type="text"
-                                maxLength={2}
-                                placeholder="MM"
-                                value={formData.birthday.month}
-                                onChange={e => setFormData(p => ({ ...p, birthday: { ...p.birthday, month: e.target.value } }))}
-                                className={styles.editFormBirthdayInput} style={{ width: 48 }}
-                            />
-                            <span className={styles.editFormBirthdaySep}>/</span>
-                            <input
-                                type="text"
-                                maxLength={2}
-                                placeholder="DD"
-                                value={formData.birthday.day}
-                                onChange={e => setFormData(p => ({ ...p, birthday: { ...p.birthday, day: e.target.value } }))}
-                                className={styles.editFormBirthdayInput} style={{ width: 48 }}
-                            />
-                            <span className={styles.editFormBirthdaySep}>/</span>
-                            <input
-                                type="text"
-                                maxLength={4}
-                                placeholder="YYYY"
-                                value={formData.birthday.year}
-                                onChange={e => setFormData(p => ({ ...p, birthday: { ...p.birthday, year: e.target.value } }))}
-                                className={styles.editFormBirthdayInput} style={{ width: 64 }}
-                            />
-                        </div>
-                    </div>
-                    {/* ── Degrees (students only) ── */}
-                    {!isInstructor && (
+                    {isPageOrUni ? (
                         <>
-                            <SubLabel>Degrees</SubLabel>
-                            {(formData.degrees || []).map((deg, i) => (
-                                <div key={i}>
-                                    {editingDegreeIdx === i ? (
+                            <div className={styles.sectionLabelDivider}>
+                                <span>Contact Info</span>
+                                <div className={styles.dividerLine} />
+                            </div>
+
+                            {/* Phone */}
+                            <div className={styles.detailFieldItem}>
+                                <span>
+                                    <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                                    Phone
+                                </span>
+                                <input
+                                    type="tel"
+                                    value={formData.pagePhone}
+                                    placeholder="e.g. +970 593 440 216"
+                                    onChange={e => setFormData(p => ({ ...p, pagePhone: e.target.value }))}
+                                    className={styles.editFormInlineInput}
+                                    style={{ flex: 1, maxWidth: 300 }}
+                                />
+                            </div>
+
+                            {/* Email */}
+                            <div className={styles.detailFieldItem}>
+                                <span>
+                                    <img src={MailIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                                    Email
+                                </span>
+                                <input
+                                    type="email"
+                                    value={formData.pageEmail}
+                                    placeholder="e.g. info@yourpage.ps"
+                                    onChange={e => setFormData(p => ({ ...p, pageEmail: e.target.value }))}
+                                    className={styles.editFormInlineInput}
+                                    style={{ flex: 1, maxWidth: 300 }}
+                                />
+                            </div>
+
+                            {/* Address */}
+                            <div className={styles.detailFieldItem}>
+                                <span>
+                                    <MapPin size={18} color="rgba(255,255,255,0.53)" />
+                                    Address
+                                </span>
+                                <input
+                                    type="text"
+                                    value={formData.pageAddress}
+                                    placeholder="e.g. Palestinian Museum Street, Birzeit, Ramallah"
+                                    onChange={e => setFormData(p => ({ ...p, pageAddress: e.target.value }))}
+                                    className={styles.editFormInlineInput}
+                                    style={{ flex: 1, maxWidth: 360 }}
+                                />
+                            </div>
+
+                            {/* Website */}
+                            <div className={styles.detailFieldItem}>
+                                <span>
+                                    <Globe size={18} color="rgba(255,255,255,0.53)" />
+                                    Website
+                                </span>
+                                <input
+                                    type="url"
+                                    value={formData.pageWebsite}
+                                    placeholder="e.g. https://yourpage.ps"
+                                    onChange={e => setFormData(p => ({ ...p, pageWebsite: e.target.value }))}
+                                    className={styles.editFormInlineInput}
+                                    style={{ flex: 1, maxWidth: 300 }}
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className={styles.sectionLabelDivider}>
+                                <span>Contact Info</span>
+                                <div className={styles.dividerLine} />
+                            </div>
+
+                            <div className={styles.detailFieldItem}>
+                                <span>
+                                    <img src={MailIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                                    Primary Email
+                                </span>
+                                <span className={styles.fieldValueText}>{formData.primaryEmail || 'username@gmail.com'}</span>
+                                <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("email")} />
+                            </div>
+
+                            <div className={styles.detailFieldItem}>
+                                <span>
+                                    <img src={MailIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                                    Personal Email
+                                </span>
+                                <span className={styles.fieldValueText}>{formData.secondaryEmail}</span>
+                                <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("email")} />
+                            </div>
+
+                            <div className={styles.detailFieldItem}>
+                                <span>
+                                    <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                                    Primary Phone
+                                </span>
+                                <span className={styles.fieldValueText}>{formData.primaryPhone || '—'}</span>
+                                <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("phone")} />
+                            </div>
+
+                            {formData.secondaryPhone && (
+                                <div className={styles.detailFieldItem}>
+                                    <span>
+                                        <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                                        Secondary Phone
+                                    </span>
+                                    <span className={styles.fieldValueText}>{formData.secondaryPhone}</span>
+                                    <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("phone")} />
+                                </div>
+                            )}
+                            {/* ── Personal Details ── */}
+                            <div className={styles.sectionLabelDivider}>
+                                <span>Personal Details</span>
+                                <div className={styles.dividerLine} />
+                            </div>
+
+                            {/* Birthday */}
+                            <div className={styles.detailFieldItem}>
+                                <span>
+                                    <img src={BirthdayIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)' }} />
+                                    Birthday
+                                </span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: "40%" }}>
+                                    <input
+                                        type="text"
+                                        maxLength={2}
+                                        placeholder="MM"
+                                        value={formData.birthday.month}
+                                        onChange={e => setFormData(p => ({ ...p, birthday: { ...p.birthday, month: e.target.value } }))}
+                                        className={styles.editFormBirthdayInput} style={{ width: 48 }}
+                                    />
+                                    <span className={styles.editFormBirthdaySep}>/</span>
+                                    <input
+                                        type="text"
+                                        maxLength={2}
+                                        placeholder="DD"
+                                        value={formData.birthday.day}
+                                        onChange={e => setFormData(p => ({ ...p, birthday: { ...p.birthday, day: e.target.value } }))}
+                                        className={styles.editFormBirthdayInput} style={{ width: 48 }}
+                                    />
+                                    <span className={styles.editFormBirthdaySep}>/</span>
+                                    <input
+                                        type="text"
+                                        maxLength={4}
+                                        placeholder="YYYY"
+                                        value={formData.birthday.year}
+                                        onChange={e => setFormData(p => ({ ...p, birthday: { ...p.birthday, year: e.target.value } }))}
+                                        className={styles.editFormBirthdayInput} style={{ width: 64 }}
+                                    />
+                                </div>
+                            </div>
+                            {/* ── Degrees (students only) ── */}
+                            {!isInstructor && (
+                                <>
+                                    <SubLabel>Degrees</SubLabel>
+                                    {(formData.degrees || []).map((deg, i) => (
+                                        <div key={i}>
+                                            {editingDegreeIdx === i ? (
+                                                <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', flexWrap: 'wrap' }}>
+                                                    <select
+                                                        value={editingDegree.title}
+                                                        onChange={e => setEditingDegree(p => ({ ...p, title: e.target.value }))}
+                                                        className={styles.editFormInlineInput} style={{ flex: 1 }}
+                                                    >
+                                                        <option value="">Degree type</option>
+                                                        <option value="High School Diploma">Diploma</option>
+                                                        <option value="Bachelor's">Bachelor's</option>
+                                                        <option value="Master's">Master's</option>
+                                                        <option value="PhD">PhD</option>
+                                                    </select>
+                                                    <input
+                                                        placeholder="Field e.g. Computer Science"
+                                                        value={editingDegree.field}
+                                                        onChange={e => setEditingDegree(p => ({ ...p, field: e.target.value }))}
+                                                        className={styles.editFormInlineInput} style={{ flex: 1.5 }}
+                                                    />
+                                                    <input
+                                                        placeholder="Institution e.g. Harvard University"
+                                                        value={editingDegree.institution}
+                                                        onChange={e => setEditingDegree(p => ({ ...p, institution: e.target.value }))}
+                                                        className={styles.editFormInlineInput} style={{ flex: 1.5 }}
+
+                                                    />
+                                                    <button
+                                                        className={styles.editFormAddBtn}
+                                                        onClick={() => {
+                                                            if (!editingDegree.title.trim()) return;
+                                                            setFormData(p => ({
+                                                                ...p,
+                                                                degrees: p.degrees.map((d, idx) => idx === i ? editingDegree : d)
+                                                            }));
+                                                            setEditingDegreeIdx(null);
+                                                        }}
+                                                    >
+                                                        Save
+                                                    </button>
+                                                    <button className={styles.editFormCancelIconBtn} onClick={() => setEditingDegreeIdx(null)}>
+                                                        <X size={16} />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div key={i} className={styles.detailFieldItem}>
+                                                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                        <span style={{ fontSize: 16 }}>🎓</span>
+                                                        <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
+                                                            {deg.title}{deg.field ? ` — ${deg.field}` : ''}{deg.institution ? ` · ${deg.institution}` : ''}
+                                                        </span>
+                                                    </span>
+                                                    <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
+                                                        <button
+                                                            style={{ background: 'transparent', border: 'none', color: '#c084fc', cursor: 'pointer', padding: 4 }}
+                                                            onClick={() => { setEditingDegreeIdx(i); setEditingDegree(deg); }}
+                                                        >
+                                                            <Edit2 size={14} />
+                                                        </button>
+                                                        <button
+                                                            className={styles.editFormTrashBtn}
+                                                            onClick={() => setFormData(p => ({ ...p, degrees: p.degrees.filter((_, idx) => idx !== i) }))}
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+
+                                    {showAddDegree ? (
                                         <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', flexWrap: 'wrap' }}>
                                             <select
-                                                value={editingDegree.title}
-                                                onChange={e => setEditingDegree(p => ({ ...p, title: e.target.value }))}
+                                                value={newDegree.title}
+                                                onChange={e => setNewDegree(p => ({ ...p, title: e.target.value }))}
                                                 className={styles.editFormInlineInput} style={{ flex: 1 }}
+
                                             >
                                                 <option value="">Degree type</option>
                                                 <option value="High School Diploma">Diploma</option>
@@ -619,244 +828,180 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                             </select>
                                             <input
                                                 placeholder="Field e.g. Computer Science"
-                                                value={editingDegree.field}
-                                                onChange={e => setEditingDegree(p => ({ ...p, field: e.target.value }))}
+                                                value={newDegree.field}
+                                                onChange={e => {
+                                                    const val = e.target.value;
+                                                    setNewDegree(p => ({ ...p, field: val.charAt(0).toUpperCase() + val.slice(1) }));
+                                                }}
                                                 className={styles.editFormInlineInput} style={{ flex: 1.5 }}
+
                                             />
                                             <input
                                                 placeholder="Institution e.g. Harvard University"
-                                                value={editingDegree.institution}
-                                                onChange={e => setEditingDegree(p => ({ ...p, institution: e.target.value }))}
+                                                value={newDegree.institution}
+                                                onChange={e => {
+                                                    const val = e.target.value;
+                                                    setNewDegree(p => ({ ...p, institution: val.charAt(0).toUpperCase() + val.slice(1) }));
+                                                }}
                                                 className={styles.editFormInlineInput} style={{ flex: 1.5 }}
 
                                             />
                                             <button
                                                 className={styles.editFormAddBtn}
                                                 onClick={() => {
-                                                    if (!editingDegree.title.trim()) return;
-                                                    setFormData(p => ({
-                                                        ...p,
-                                                        degrees: p.degrees.map((d, idx) => idx === i ? editingDegree : d)
-                                                    }));
-                                                    setEditingDegreeIdx(null);
+                                                    if (!newDegree.title.trim()) return;
+                                                    setFormData(p => ({ ...p, degrees: [...(p.degrees || []), newDegree] }));
+                                                    setNewDegree({ title: '', field: '', institution: '' });
+                                                    setShowAddDegree(false);
                                                 }}
                                             >
-                                                Save
+                                                Add
                                             </button>
-                                            <button className={styles.editFormCancelIconBtn} onClick={() => setEditingDegreeIdx(null)}>
+                                            <button className={styles.editFormCancelIconBtn} onClick={() => { setShowAddDegree(false); setNewDegree({ title: '', field: '', institution: '' }); }}>
                                                 <X size={16} />
                                             </button>
                                         </div>
                                     ) : (
+                                        <button className={styles.editFormDashedBtn} onClick={() => setShowAddDegree(true)}>
+                                            + Add Degree
+                                        </button>
+                                    )}
+                                </>
+                            )}
+
+                            {/* ── Instructor only: Teaching Positions + Education ── */}
+                            {isInstructor && (
+                                <>
+                                    {/* Teaching Positions */}
+                                    <SubLabel>Teaching Positions</SubLabel>
+
+                                    {(formData.teachingPositions || []).map((pos, i) => (
                                         <div key={i} className={styles.detailFieldItem}>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                <span style={{ fontSize: 16 }}>🎓</span>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                                <span style={{ fontSize: 16 }}>🏛️</span>
                                                 <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
-                                                    {deg.title}{deg.field ? ` — ${deg.field}` : ''}{deg.institution ? ` · ${deg.institution}` : ''}
+                                                    {pos.institution_name || pos.institution}
+                                                </span>
+                                                <span style={{
+                                                    fontSize: 11, fontWeight: 600,
+                                                    background: (pos.employment_type || pos.type) === 'primary' ? 'rgba(139,45,255,0.15)' : 'rgba(255,180,0,0.12)',
+                                                    color: (pos.employment_type || pos.type) === 'primary' ? '#c084fc' : '#f59e0b',
+                                                    border: `1px solid ${(pos.employment_type || pos.type) === 'primary' ? 'rgba(139,45,255,0.3)' : 'rgba(245,158,11,0.3)'}`,
+                                                    borderRadius: 6, padding: '1px 7px'
+                                                }}>
+                                                    {(pos.employment_type || pos.type) === 'primary' ? 'Primary' : 'Part-time'}
                                                 </span>
                                             </span>
-                                            <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
-                                                <button
-                                                    style={{ background: 'transparent', border: 'none', color: '#c084fc', cursor: 'pointer', padding: 4 }}
-                                                    onClick={() => { setEditingDegreeIdx(i); setEditingDegree(deg); }}
-                                                >
-                                                    <Edit2 size={14} />
-                                                </button>
-                                                <button
-                                                    className={styles.editFormTrashBtn}
-                                                    onClick={() => setFormData(p => ({ ...p, degrees: p.degrees.filter((_, idx) => idx !== i) }))}
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
+                                            <button
+                                                className={styles.editFormTrashBtn}
+                                                onClick={() => setFormData(p => ({ ...p, teachingPositions: p.teachingPositions.filter((_, idx) => idx !== i) }))}
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
                                         </div>
+                                    ))}
+
+                                    {showAddPosition ? (
+                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', flexWrap: 'wrap' }}>
+                                            <input
+                                                placeholder="Institution name"
+                                                value={newPosition.institution}
+                                                onChange={e => setNewPosition(p => ({ ...p, institution: e.target.value }))}
+                                                className={styles.editFormInlineInput} style={{ flex: 2 }}
+                                            />
+                                            <select
+                                                value={newPosition.type}
+                                                onChange={e => setNewPosition(p => ({ ...p, type: e.target.value }))}
+                                                className={styles.editFormSelect} style={{ flex: 1 }}
+                                            >
+                                                <option value="primary">Primary</option>
+                                                <option value="parttime">Part-time</option>
+                                            </select>
+                                            <button
+                                                className={styles.editFormAddBtn}
+                                                onClick={() => {
+                                                    if (!newPosition.institution.trim()) return;
+                                                    setFormData(p => ({ ...p, teachingPositions: [...(p.teachingPositions || []), newPosition] }));
+                                                    setNewPosition({ institution: '', type: 'parttime' });
+                                                    setShowAddPosition(false);
+                                                }}
+                                            >
+                                                Add
+                                            </button>
+                                            <button className={styles.editFormCancelIconBtn} onClick={() => { setShowAddPosition(false); setNewPosition({ institution: '', type: 'parttime' }); }}>
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button className={styles.editFormDashedBtn} onClick={() => setShowAddPosition(true)}>
+                                            + Add Teaching Position
+                                        </button>
                                     )}
-                                </div>
-                            ))}
 
-                            {showAddDegree ? (
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', flexWrap: 'wrap' }}>
-                                    <select
-                                        value={newDegree.title}
-                                        onChange={e => setNewDegree(p => ({ ...p, title: e.target.value }))}
-                                        className={styles.editFormInlineInput} style={{ flex: 1 }}
+                                    {/* Education */}
+                                    <SubLabel>Education</SubLabel>
 
-                                    >
-                                        <option value="">Degree type</option>
-                                        <option value="High School Diploma">Diploma</option>
-                                        <option value="Bachelor's">Bachelor's</option>
-                                        <option value="Master's">Master's</option>
-                                        <option value="PhD">PhD</option>
-                                    </select>
-                                    <input
-                                        placeholder="Field e.g. Computer Science"
-                                        value={newDegree.field}
-                                        onChange={e => {
-                                            const val = e.target.value;
-                                            setNewDegree(p => ({ ...p, field: val.charAt(0).toUpperCase() + val.slice(1) }));
-                                        }}
-                                        className={styles.editFormInlineInput} style={{ flex: 1.5 }}
+                                    {(formData.degrees || []).map((deg, i) => (
+                                        <div key={i} className={styles.detailFieldItem}>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                <span style={{ fontSize: 16 }}> <img src={EducationIcon} style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} /></span>
+                                                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
+                                                    {deg.university || deg.institution}
+                                                </span>
+                                            </span>
+                                            <button
+                                                className={styles.editFormTrashBtn}
+                                                onClick={() => setFormData(p => ({ ...p, degrees: p.degrees.filter((_, idx) => idx !== i) }))}
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
 
-                                    />
-                                    <input
-                                        placeholder="Institution e.g. Harvard University"
-                                        value={newDegree.institution}
-                                        onChange={e => {
-                                            const val = e.target.value;
-                                            setNewDegree(p => ({ ...p, institution: val.charAt(0).toUpperCase() + val.slice(1) }));
-                                        }}
-                                        className={styles.editFormInlineInput} style={{ flex: 1.5 }}
+                                    {showAddEducation ? (
+                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0' }}>
+                                            <input
+                                                placeholder="Institution"
+                                                value={newEducation.institution}
+                                                onChange={e => setNewEducation(p => ({ ...p, institution: e.target.value }))}
+                                                className={styles.editFormInlineInput} style={{ flex: 1.5 }}
+                                            />
+                                            <input
+                                                placeholder="Degree obtained"
+                                                value={newEducation.degree}
+                                                onChange={e => setNewEducation(p => ({ ...p, degree: e.target.value }))}
+                                                className={styles.editFormInlineInput} style={{ flex: 1 }}
 
-                                    />
-                                    <button
-                                        className={styles.editFormAddBtn}
-                                        onClick={() => {
-                                            if (!newDegree.title.trim()) return;
-                                            setFormData(p => ({ ...p, degrees: [...(p.degrees || []), newDegree] }));
-                                            setNewDegree({ title: '', field: '', institution: '' });
-                                            setShowAddDegree(false);
-                                        }}
-                                    >
-                                        Add
-                                    </button>
-                                    <button className={styles.editFormCancelIconBtn} onClick={() => { setShowAddDegree(false); setNewDegree({ title: '', field: '', institution: '' }); }}>
-                                        <X size={16} />
-                                    </button>
-                                </div>
-                            ) : (
-                                <button className={styles.editFormDashedBtn} onClick={() => setShowAddDegree(true)}>
-                                    + Add Degree
-                                </button>
+                                            />
+                                            <button
+                                                className={styles.editFormAddBtn}
+                                                onClick={() => {
+                                                    if (!newEducation.institution.trim()) return;
+                                                    setFormData(p => ({ ...p, educationEntries: [...(p.educationEntries || []), newEducation] }));
+                                                    setNewEducation({ institution: '', degree: '' });
+                                                    setShowAddEducation(false);
+                                                }}
+                                            >
+                                                Add
+                                            </button>
+                                            <button className={styles.editFormCancelIconBtn} onClick={() => { setShowAddEducation(false); setNewEducation({ institution: '', degree: '' }); }}>
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button className={styles.editFormDashedBtn} onClick={() => setShowAddEducation(true)}>
+                                            + Add Education
+                                        </button>
+                                    )}
+                                </>
                             )}
+
                         </>
+
                     )}
 
-                    {/* ── Instructor only: Teaching Positions + Education ── */}
-                    {isInstructor && (
-                        <>
-                            {/* Teaching Positions */}
-                            <SubLabel>Teaching Positions</SubLabel>
 
-                            {(formData.teachingPositions || []).map((pos, i) => (
-                                <div key={i} className={styles.detailFieldItem}>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                                        <span style={{ fontSize: 16 }}>🏛️</span>
-                                        <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
-                                            {pos.institution_name || pos.institution}
-                                        </span>
-                                        <span style={{
-                                            fontSize: 11, fontWeight: 600,
-                                            background: (pos.employment_type || pos.type) === 'primary' ? 'rgba(139,45,255,0.15)' : 'rgba(255,180,0,0.12)',
-                                            color: (pos.employment_type || pos.type) === 'primary' ? '#c084fc' : '#f59e0b',
-                                            border: `1px solid ${(pos.employment_type || pos.type) === 'primary' ? 'rgba(139,45,255,0.3)' : 'rgba(245,158,11,0.3)'}`,
-                                            borderRadius: 6, padding: '1px 7px'
-                                        }}>
-                                            {(pos.employment_type || pos.type) === 'primary' ? 'Primary' : 'Part-time'}
-                                        </span>
-                                    </span>
-                                    <button
-                                        className={styles.editFormTrashBtn}
-                                        onClick={() => setFormData(p => ({ ...p, teachingPositions: p.teachingPositions.filter((_, idx) => idx !== i) }))}
-                                    >
-                                        <Trash2 size={14} />
-                                    </button>
-                                </div>
-                            ))}
 
-                            {showAddPosition ? (
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', flexWrap: 'wrap' }}>
-                                    <input
-                                        placeholder="Institution name"
-                                        value={newPosition.institution}
-                                        onChange={e => setNewPosition(p => ({ ...p, institution: e.target.value }))}
-                                        className={styles.editFormInlineInput} style={{ flex: 2 }}
-                                    />
-                                    <select
-                                        value={newPosition.type}
-                                        onChange={e => setNewPosition(p => ({ ...p, type: e.target.value }))}
-                                        className={styles.editFormSelect} style={{ flex: 1 }}
-                                    >
-                                        <option value="primary">Primary</option>
-                                        <option value="parttime">Part-time</option>
-                                    </select>
-                                    <button
-                                        className={styles.editFormAddBtn}
-                                        onClick={() => {
-                                            if (!newPosition.institution.trim()) return;
-                                            setFormData(p => ({ ...p, teachingPositions: [...(p.teachingPositions || []), newPosition] }));
-                                            setNewPosition({ institution: '', type: 'parttime' });
-                                            setShowAddPosition(false);
-                                        }}
-                                    >
-                                        Add
-                                    </button>
-                                    <button className={styles.editFormCancelIconBtn} onClick={() => { setShowAddPosition(false); setNewPosition({ institution: '', type: 'parttime' }); }}>
-                                        <X size={16} />
-                                    </button>
-                                </div>
-                            ) : (
-                                <button className={styles.editFormDashedBtn} onClick={() => setShowAddPosition(true)}>
-                                    + Add Teaching Position
-                                </button>
-                            )}
-
-                            {/* Education */}
-                            <SubLabel>Education</SubLabel>
-
-                            {(formData.degrees || []).map((deg, i) => (
-                                <div key={i} className={styles.detailFieldItem}>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                        <span style={{ fontSize: 16 }}> <img src={EducationIcon} style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} /></span>
-                                        <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
-                                            {deg.university || deg.institution}
-                                        </span>
-                                    </span>
-                                    <button
-                                        className={styles.editFormTrashBtn}
-                                        onClick={() => setFormData(p => ({ ...p, degrees: p.degrees.filter((_, idx) => idx !== i) }))}
-                                    >
-                                        <Trash2 size={14} />
-                                    </button>
-                                </div>
-                            ))}
-
-                            {showAddEducation ? (
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0' }}>
-                                    <input
-                                        placeholder="Institution"
-                                        value={newEducation.institution}
-                                        onChange={e => setNewEducation(p => ({ ...p, institution: e.target.value }))}
-                                        className={styles.editFormInlineInput} style={{ flex: 1.5 }}
-                                    />
-                                    <input
-                                        placeholder="Degree obtained"
-                                        value={newEducation.degree}
-                                        onChange={e => setNewEducation(p => ({ ...p, degree: e.target.value }))}
-                                        className={styles.editFormInlineInput} style={{ flex: 1 }}
-
-                                    />
-                                    <button
-                                        className={styles.editFormAddBtn}
-                                        onClick={() => {
-                                            if (!newEducation.institution.trim()) return;
-                                            setFormData(p => ({ ...p, educationEntries: [...(p.educationEntries || []), newEducation] }));
-                                            setNewEducation({ institution: '', degree: '' });
-                                            setShowAddEducation(false);
-                                        }}
-                                    >
-                                        Add
-                                    </button>
-                                    <button className={styles.editFormCancelIconBtn} onClick={() => { setShowAddEducation(false); setNewEducation({ institution: '', degree: '' }); }}>
-                                        <X size={16} />
-                                    </button>
-                                </div>
-                            ) : (
-                                <button className={styles.editFormDashedBtn} onClick={() => setShowAddEducation(true)}>
-                                    + Add Education
-                                </button>
-                            )}
-                        </>
-                    )}
 
                 </div>{/* end insetFieldsPanel */}
             </div>{/* end editForm */}

@@ -90,7 +90,7 @@ export default function MobileProfileView({
             <div className={styles.mobileProfileHeaderWrap}>
                 <div className={styles.mobileAvatarNameRow}>
 
-                 
+
                     <div className={styles.mobileAvatarCircle}>
                         {avatarUrl
                             ? <img src={avatarUrl} alt="avatar" className={styles.mobileAvatarImg} />
@@ -139,7 +139,7 @@ export default function MobileProfileView({
                     {!isOwnProfile ? (
                         <div className={styles.mobileActionBtns}>
                             <button className={styles.messageBtn} onClick={handleMessage} style={{ width: 36, height: 36 }}>
-                               <img src={MessagesIcon} alt="message" width={18} height={18} className={styles.iconMsg} />
+                                <img src={MessagesIcon} alt="message" width={18} height={18} className={styles.iconMsg} />
                             </button>
                             {user?.type === 'page' ? (
                                 <>
@@ -237,9 +237,54 @@ export default function MobileProfileView({
                     </div>
                 )}
 
-                {/* Details — visitor view */}
                 {activeTab === 'Details' && (
-                    <UserDetails user={user} hidePill />
+                    <>
+                        <UserDetails user={user} hidePill />
+                        {user?.role === 'instructor' && communityPicks.length > 0 && (
+                            <div className={styles.picksCard} style={{ marginTop: 16 }}>
+                                <div className={styles.picksHeader}>
+                                    <Users size={18} />
+                                    <span className={styles.picksTitle}>{user?.username?.split(' ')[0]}'s Community Picks</span>
+                                </div>
+                                <div className={styles.picksSliderWrapper}>
+                                    <button className={styles.picksArrow}
+                                        onClick={() => setPicksSlide(p => Math.max(0, p - 1))}
+                                        disabled={picksSlide === 0}>‹</button>
+                                    <div className={styles.picksSlide}>
+                                        {communityPicks[picksSlide] && (() => {
+                                            const pick = communityPicks[picksSlide];
+                                            return (
+                                                <div className={styles.pickItem}>
+                                                    {pick.cover_image && (
+                                                        <img src={pick.cover_image} alt={pick.name} className={styles.pickCoverImage} />
+                                                    )}
+                                                    <div className={styles.pickInfo}>
+                                                        <div className={styles.pickNameRow}>
+                                                            <span className={styles.pickName}>{pick.name}</span>
+                                                            <button className={styles.pickViewBtn}>View</button>
+                                                        </div>
+                                                        <p className={styles.pickDescription}>{pick.description}</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                    <button className={styles.picksArrow}
+                                        onClick={() => setPicksSlide(p => Math.min(communityPicks.length - 1, p + 1))}
+                                        disabled={picksSlide === communityPicks.length - 1}>›</button>
+                                </div>
+                                {communityPicks.length > 1 && (
+                                    <div className={styles.picksDots}>
+                                        {communityPicks.map((_, i) => (
+                                            <button key={i}
+                                                className={`${styles.picksDot} ${i === picksSlide ? styles.picksDotActive : ''}`}
+                                                onClick={() => setPicksSlide(i)} />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {/* About — own profile */}
@@ -416,43 +461,7 @@ export default function MobileProfileView({
                     </div>
                 )}
 
-                {/* Community picks (visitor) */}
-                {!isOwnProfile && activeTab !== 'Details' && communityPicks.length > 0 && (
-                    <div className={styles.picksCard} style={{ marginTop: 8 }}>
-                        <div className={styles.picksHeader}>
-                            <Users size={18} />
-                            <span className={styles.picksTitle}>{user?.username?.split(' ')[0]}'s Picks</span>
-                        </div>
-                        <div className={styles.picksSliderWrapper}>
-                            <button className={styles.picksArrow} onClick={() => setPicksSlide(p => Math.max(0, p - 1))} disabled={picksSlide === 0}>‹</button>
-                            <div className={styles.picksSlide}>
-                                {communityPicks[picksSlide] && (() => {
-                                    const pick = communityPicks[picksSlide];
-                                    return (
-                                        <div className={styles.pickItem}>
-                                            {pick.cover_image && <img src={pick.cover_image} alt={pick.name} className={styles.pickCoverImage} />}
-                                            <div className={styles.pickInfo}>
-                                                <div className={styles.pickNameRow}>
-                                                    <span className={styles.pickName}>{pick.name}</span>
-                                                    <button className={styles.pickViewBtn}>View</button>
-                                                </div>
-                                                <p className={styles.pickDescription}>{pick.description}</p>
-                                            </div>
-                                        </div>
-                                    );
-                                })()}
-                            </div>
-                            <button className={styles.picksArrow} onClick={() => setPicksSlide(p => Math.min(communityPicks.length - 1, p + 1))} disabled={picksSlide === communityPicks.length - 1}>›</button>
-                        </div>
-                        {communityPicks.length > 1 && (
-                            <div className={styles.picksDots}>
-                                {communityPicks.map((_, i) => (
-                                    <button key={i} className={`${styles.picksDot} ${i === picksSlide ? styles.picksDotActive : ''}`} onClick={() => setPicksSlide(i)} />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
+
             </div>
         </div>
     );
