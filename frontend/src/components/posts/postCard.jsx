@@ -520,7 +520,66 @@ export default function PostCard({
                 <MoreHorizontal size={30} strokeWidth={4} />
               </button>
             )}
-            {showMenu && createPortal(/* ... unchanged ... */)}
+            {showMenu && document.body && createPortal(
+              <div
+                className={styles.postMenu}
+                style={{ position: 'fixed', top: menuPosition.top, right: menuPosition.right, zIndex: 999999 }}
+                onMouseDown={e => e.stopPropagation()}
+              >
+                <button className={styles.postMenuItem} onClick={() => handleMenuAction('save')}>
+                  <img src={SaveIcon} alt="" width={16} height={16} />
+                  {isSaved ? 'Unsave post' : 'Save post'}
+                </button>
+                <MenuDivider />
+
+                {isOwnPost && (
+                  <>
+                    <button className={styles.postMenuItem} onClick={() => handleMenuAction('pin')}>
+                      <img src={Pin} alt="" width={16} height={16} />
+                      {isPinned ? 'Unpin post' : 'Pin post'}
+                    </button>
+                    <MenuDivider />
+                  </>
+                )}
+
+                {communityContext && isAdmin && (
+                  <>
+                    <button className={styles.postMenuItem} onClick={() => handleMenuAction('highlight')}>
+                      <img src={HighLight} alt="" width={16} height={16} />
+                      {isHighlighted ? 'Remove highlight' : 'Highlight post'}
+                    </button>
+                    <MenuDivider />
+                  </>
+                )}
+
+                {!isOwnPost && (
+                  <>
+                    <button className={styles.postMenuItem} onClick={() => handleMenuAction('block')}>
+                      <img src={Block} alt="" width={16} height={16} />
+                      {isBlocked ? 'Unblock user' : 'Block user'}
+                    </button>
+                    <MenuDivider />
+                    <button className={`${styles.postMenuItem} ${styles.postMenuItemDestructive}`}
+                      onClick={() => { setShowReport(true); setShowMenu(false); }}>
+                      <img src={Report} alt="" width={16} height={16} />
+                      Report post
+                    </button>
+                  </>
+                )}
+
+                {isOwnPost && (
+                  <>
+                
+                    <button className={`${styles.postMenuItem} ${styles.postMenuItemDestructive}`}
+                      onClick={() => handleMenuAction('delete')}>
+                      <img src={DeletePost} alt="" width={16} height={16} />
+                      Delete post
+                    </button>
+                  </>
+                )}
+              </div>,
+              document.body
+            )}
           </div>
         </div>
       </div>
