@@ -256,6 +256,66 @@ def send_message(request, conversation_id):
     )
 
 
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_message(request, message_id):
+    user = request.user
+
+    msg = get_object_or_404(Message.objects.select_related("conversation"), message_id=message_id)
+    conv = msg.conversation
+
+    try:
+        membership = ConversationMember.objects.get(conversation=conv, user=user)
+    except ConversationMember.DoesNotExist:
+        return Response({"error": "You are not part of this conversation."}, status=status.HTTP_403_FORBIDDEN)
+
+    is_sender = msg.sender == user
+    is_admin = conv.is_group and membership.role == ConversationMember.Role.ADMIN
+
+    if not (is_sender or is_admin):
+        raise PermissionDenied("You do not have permission to delete this message.")
+
+    with transaction.atomic():
+        if conv.last_message == msg:
+            previous_msg = (
+                Message.objects.filter(conversation=conv).exclude(message_id=message_id).order_by("-sent_at").first()
+            )
+            conv.last_message = previous_msg
+            conv.save(update_fields=["last_message"])
+
+        msg.delete()
+
+    return Response({"message": "Message deleted successfully for everyone."}, status=status.HTTP_200_OK)
+
+
+@api_view(["PUT", "PATCH"])
+@permission_classes([IsAuthenticated])
+def edit_message(request, message_id):
+    user = request.user
+    new_text = request.data.get("text", "").strip()
+    msg = get_object_or_404(Message.objects.prefetch_related("media"), message_id=message_id)
+
+    if msg.sender != user:
+        raise PermissionDenied("You cannot edit a message sent by another user.")
+
+    has_media = msg.media.exists()
+    if not new_text and not has_media:
+        return Response({"error": "Cannot edit message to be completely empty."}, status=status.HTTP_400_BAD_REQUEST)
+
+    msg.content = new_text
+    msg.save(update_fields=["content"])
+
+    return Response(
+        {
+            "message": "Message edited successfully.",
+            "id": msg.message_id,
+            "text": msg.content,
+            "time": msg.sent_at.strftime("%H:%M"),
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_dm(request, user_id):

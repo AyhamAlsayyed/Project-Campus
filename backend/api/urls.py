@@ -42,6 +42,8 @@ from .views.communities.community_member_action import (
 from .views.conversation.conversation import (
     create_dm,
     create_group_conversation,
+    delete_message,
+    edit_message,
     get_conversations,
     get_messages,
     send_message,
@@ -235,6 +237,8 @@ urlpatterns += [
     # message
     path("chats/<int:conversation_id>/messages/", get_messages),
     path("chats/<int:conversation_id>/send/", send_message),
+    path("messages/<int:message_id>/delete/", delete_message),
+    path("messages/<int:message_id>/edit/", edit_message),
     # chat_action
     path("chats/<int:conversation_id>/pin/", toggle_pin),
     path("chats/<int:conversation_id>/mute/", toggle_mute),
