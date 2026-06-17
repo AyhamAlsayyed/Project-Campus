@@ -203,19 +203,22 @@ export default function EventsPage() {
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    setPromoCart(data.map(item => ({
-                        id: item.id,
-                        eventId: item.object_id,
-                        event: {
-                            title: item.object_name || `Event #${item.object_id}`,
-                            banner: item.object_banner || null,
-                            image: item.object_banner || null,
-                            description: null,
-                        },
-                        durationIdx: item.duration_idx ?? 2,
-                        label: item.duration || 'Unknown',
-                        cost: parseFloat(item.cost) || 0,
-                    })));
+                    setPromoCart(data.map(item => {
+                        const details = item.target_details || {};
+                        return {
+                            id: item.promotion_id,
+                            eventId: item.object_id,
+                            event: {
+                                title: details.title || `Event #${item.object_id}`,
+                                banner: details.image || null,
+                                image: details.image || null,
+                                description: details.description || null,
+                            },
+                            durationIdx: item.duration_idx ?? 2,
+                            label: item.duration || 'Unknown',
+                            cost: parseFloat(item.cost) || 0,
+                        };
+                    }));
                 }
             } catch (err) { console.error("Failed to load promo cart:", err); }
         };
@@ -373,295 +376,295 @@ export default function EventsPage() {
             {/* Desktop Content */}
             {!isMobile && (
                 <div className={`${styles.content} ${styles.page}`}>
-                <SideBarNav />
-                {showCreateEvent ? (
-                    <div className={styles.createEventContent}>
-                        <div className={styles.createEventProfileContent}>
-                            <div className={styles.createEventProfileCard}>
-                                <CreateEventForm {...createEvent.formProps} onBack={() => setShowCreateEvent(false)} />
+                    <SideBarNav />
+                    {showCreateEvent ? (
+                        <div className={styles.createEventContent}>
+                            <div className={styles.createEventProfileContent}>
+                                <div className={styles.createEventProfileCard}>
+                                    <CreateEventForm {...createEvent.formProps} onBack={() => setShowCreateEvent(false)} />
+                                </div>
+                            </div>
+                            <div className={styles.rightSection}>
+                                <CreateEventRightSidebar {...createEvent.sidebarProps} />
                             </div>
                         </div>
-                        <div className={styles.rightSection}>
-                            <CreateEventRightSidebar {...createEvent.sidebarProps} />
-                        </div>
-                    </div>
-                ) : (
-                    <>
-                        <div className={styles.mainContent}>
-                            {isUserPage && (
-                                <>
-                                    <div className={styles.yourEventsWrapper}>
-                                        <div className={styles.yourEventsHeader}>
-                                            <h2 className={styles.yourEventsTitleText}>
-                                                Your <span className={styles.highlight}>EVENTS</span>
-                                            </h2>
-                                            <div className={styles.yourEventsBtns}>
-                                                <button className={styles.manageEventsBtn} onClick={() => setShowManageEvents(true)}>Manage Events</button>
-                                                <button className={styles.createEventBtn} onClick={() => setShowCreateEvent(true)}>Create</button>
-                                            </div>
-                                        </div>
-                                        <div className={styles.yourEventsCardsRow}>
-                                            {ownPageEvents.slice(0, 2).map((event) => (
-                                                <div key={event.id} className={styles.yourEventCardWrapper}>
-                                                    <img
-                                                        src={event.image
-                                                            ? (event.image.startsWith('http') ? event.image : `${API}${event.image}`)
-                                                            : DefaultBanner}
-                                                        className={styles.yourEventBannerImg}
-                                                        alt="Event Banner"
-                                                    />
-                                                    <div className={styles.yourEventDateBadge}>
-                                                        <p>Starts {formatDate(event.start_date)}</p>
-                                                        <p>Ends {formatDate(event.end_date)}</p>
-                                                    </div>
-                                                    <div className={styles.yourEventBottomOverlay}>
-                                                        <h3>{event.title}</h3>
-                                                        <p>
-                                                            {event.description?.substring(0, 80)}
-                                                            {event.description?.length > 80 && (
-                                                                <span className={styles.yourEventReadMore} onClick={() => setPopupEvent(event)}> read more</span>
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className={styles.middleDivider}></div>
-                                </>
-                            )}
-
-                            <h1 className={styles.title} style={{ marginTop: isUserPage ? '30px' : '0' }}>
-                                Looking for - <br /> <span className={styles.highlight}>EVENTS</span> to participate in?
-                            </h1>
-
-                            <div className={styles.eventsContainer}>
-                                {events.map((event) => (
-                                    <div key={event.id} id={`event-${event.id}`} className={styles.eventCard}>
-                                        <div className={styles.cardHeader}>
-                                            <div className={styles.orgInfo} onClick={() => navigate(`/page/${event.pageId}`)} style={{ cursor: 'pointer' }}>
-                                                <img src={event.avatar} alt="Logo" className={styles.avatar} />
-                                                <div className={styles.orgText}>
-                                                    <div className={styles.orgNameRow}>
-                                                        <h3>{event.orgName}</h3>
-                                                        <img src={VerifiedBadge} alt="verified" className={styles.verifiedIcon} style={{ width: 18, height: 18, marginLeft: 3 }} />
-                                                    </div>
-                                                    <p>{event.pageType}</p>
+                    ) : (
+                        <>
+                            <div className={styles.mainContent}>
+                                {isUserPage && (
+                                    <>
+                                        <div className={styles.yourEventsWrapper}>
+                                            <div className={styles.yourEventsHeader}>
+                                                <h2 className={styles.yourEventsTitleText}>
+                                                    Your <span className={styles.highlight}>EVENTS</span>
+                                                </h2>
+                                                <div className={styles.yourEventsBtns}>
+                                                    <button className={styles.manageEventsBtn} onClick={() => setShowManageEvents(true)}>Manage Events</button>
+                                                    <button className={styles.createEventBtn} onClick={() => setShowCreateEvent(true)}>Create</button>
                                                 </div>
                                             </div>
-                                            <div className={styles.headerActions}>
-                                                {event.isFollowed && (
-                                                    <button className={styles.bellBtn} onClick={() => handlePageNotification(event.pageId)}>
+                                            <div className={styles.yourEventsCardsRow}>
+                                                {ownPageEvents.slice(0, 2).map((event) => (
+                                                    <div key={event.id} className={styles.yourEventCardWrapper}>
                                                         <img
-                                                            src={pageNotifyStatus[event.pageId] ? BellOn : BellOff}
-                                                            alt="notifications" width={20} height={pageNotifyStatus[event.pageId] ? 24 : 20}
-                                                            style={{ filter: 'brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)' }}
+                                                            src={event.image
+                                                                ? (event.image.startsWith('http') ? event.image : `${API}${event.image}`)
+                                                                : DefaultBanner}
+                                                            className={styles.yourEventBannerImg}
+                                                            alt="Event Banner"
                                                         />
-                                                    </button>
-                                                )}
-                                                <button
-                                                    className={event.isFollowed ? styles.followedBtn : styles.followBtn}
-                                                    onClick={() => handleFollow(event.id, event.pageId)}
-                                                >
-                                                    {event.isFollowed ? 'Followed' : 'Follow'}
-                                                </button>
+                                                        <div className={styles.yourEventDateBadge}>
+                                                            <p>Starts {formatDate(event.start_date)}</p>
+                                                            <p>Ends {formatDate(event.end_date)}</p>
+                                                        </div>
+                                                        <div className={styles.yourEventBottomOverlay}>
+                                                            <h3>{event.title}</h3>
+                                                            <p>
+                                                                {event.description?.substring(0, 80)}
+                                                                {event.description?.length > 80 && (
+                                                                    <span className={styles.yourEventReadMore} onClick={() => setPopupEvent(event)}> read more</span>
+                                                                )}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
+                                        <div className={styles.middleDivider}></div>
+                                    </>
+                                )}
 
-                                        {event.banner && (
-                                            <div className={styles.bannerContainer}>
-                                                <img src={event.banner} className={styles.bannerImg} alt="Event Banner" />
-                                                <div className={styles.dateWidget}>
-                                                    <div className={styles.dateText}>
-                                                        <p>Starts {formatDate(event.startDate)}</p>
-                                                        <p>Ends — {formatDate(event.endDate)}</p>
+                                <h1 className={styles.title} style={{ marginTop: isUserPage ? '30px' : '0' }}>
+                                    Looking for - <br /> <span className={styles.highlight}>EVENTS</span> to participate in?
+                                </h1>
+
+                                <div className={styles.eventsContainer}>
+                                    {events.map((event) => (
+                                        <div key={event.id} id={`event-${event.id}`} className={styles.eventCard}>
+                                            <div className={styles.cardHeader}>
+                                                <div className={styles.orgInfo} onClick={() => navigate(`/page/${event.pageId}`)} style={{ cursor: 'pointer' }}>
+                                                    <img src={event.avatar} alt="Logo" className={styles.avatar} />
+                                                    <div className={styles.orgText}>
+                                                        <div className={styles.orgNameRow}>
+                                                            <h3>{event.orgName}</h3>
+                                                            <img src={VerifiedBadge} alt="verified" className={styles.verifiedIcon} style={{ width: 18, height: 18, marginLeft: 3 }} />
+                                                        </div>
+                                                        <p>{event.pageType}</p>
                                                     </div>
+                                                </div>
+                                                <div className={styles.headerActions}>
+                                                    {event.isFollowed && (
+                                                        <button className={styles.bellBtn} onClick={() => handlePageNotification(event.pageId)}>
+                                                            <img
+                                                                src={pageNotifyStatus[event.pageId] ? BellOn : BellOff}
+                                                                alt="notifications" width={20} height={pageNotifyStatus[event.pageId] ? 24 : 20}
+                                                                style={{ filter: 'brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)' }}
+                                                            />
+                                                        </button>
+                                                    )}
                                                     <button
-                                                        className={`${styles.reminderBtn} ${reminders[event.id] ? styles.reminderBtnSet : ''}`}
-                                                        onClick={() => handleReminder(event.id)}
-
+                                                        className={event.isFollowed ? styles.followedBtn : styles.followBtn}
+                                                        onClick={() => handleFollow(event.id, event.pageId)}
                                                     >
-                                                        {reminders[event.id] ? "✓ Reminder set" : "Set reminder"}
+                                                        {event.isFollowed ? 'Followed' : 'Follow'}
                                                     </button>
                                                 </div>
-                                                <div className={styles.bannerOverlay} style={{ pointerEvents: "none" }}>
-                                                    <div className={styles.bannerContent} style={{ pointerEvents: "auto" }}>
-                                                        {event.title?.length > 20 ? (
-                                                            <div className={styles.titleMarqueeWrapper}>
-                                                                <span className={styles.titleMarquee}>{event.title}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <h2>{event.title}</h2>
-                                                        )}
-                                                        <p>
-                                                            {event.description?.length > 40
-                                                                ? <>{event.description.substring(0, 80)}... <span className={styles.readMore} onClick={(e) => { e.stopPropagation(); setPopupEvent(event); }} style={{ cursor: "pointer" }}>read more</span></>
-                                                                : event.description
-                                                            }
-                                                        </p>
+                                            </div>
+
+                                            {event.banner && (
+                                                <div className={styles.bannerContainer}>
+                                                    <img src={event.banner} className={styles.bannerImg} alt="Event Banner" />
+                                                    <div className={styles.dateWidget}>
+                                                        <div className={styles.dateText}>
+                                                            <p>Starts {formatDate(event.startDate)}</p>
+                                                            <p>Ends — {formatDate(event.endDate)}</p>
+                                                        </div>
+                                                        <button
+                                                            className={`${styles.reminderBtn} ${reminders[event.id] ? styles.reminderBtnSet : ''}`}
+                                                            onClick={() => handleReminder(event.id)}
+
+                                                        >
+                                                            {reminders[event.id] ? "✓ Reminder set" : "Set reminder"}
+                                                        </button>
+                                                    </div>
+                                                    <div className={styles.bannerOverlay} style={{ pointerEvents: "none" }}>
+                                                        <div className={styles.bannerContent} style={{ pointerEvents: "auto" }}>
+                                                            {event.title?.length > 20 ? (
+                                                                <div className={styles.titleMarqueeWrapper}>
+                                                                    <span className={styles.titleMarquee}>{event.title}</span>
+                                                                </div>
+                                                            ) : (
+                                                                <h2>{event.title}</h2>
+                                                            )}
+                                                            <p>
+                                                                {event.description?.length > 40
+                                                                    ? <>{event.description.substring(0, 80)}... <span className={styles.readMore} onClick={(e) => { e.stopPropagation(); setPopupEvent(event); }} style={{ cursor: "pointer" }}>read more</span></>
+                                                                    : event.description
+                                                                }
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
 
-                        <div className={styles.rightSection}>
-                            {isUserPage ? (
-                                <>
-                                    <div className={styles.pillContainer}>
-                                        <div className={styles.pill}>ON-HOLD</div>
-                                    </div>
-                                    <div className={styles.onHoldContainer}>
-                                        <div className={styles.pendingText}>{promoCart.length} Pending checkout</div>
-                                        <div className={styles.onHoldDivider}></div>
-                                        <div className={styles.checkoutList}>
-                                            {promoCart.length === 0 ? (
-                                                <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.82rem', textAlign: 'center', padding: '16px 0' }}>
-                                                    No promotions queued. Use "Manage" below to add one.
-                                                </p>
-                                            ) : promoCart.map(item => {
-                                                const eventData = item.event || {};
-                                                const imgSrc = eventData.banner
-                                                    ? (eventData.banner.startsWith('http') ? eventData.banner : `${API}${eventData.banner}`)
-                                                    : (eventData.image
-                                                        ? (eventData.image.startsWith('http') ? eventData.image : `${API}${eventData.image}`)
-                                                        : '/default-banner.png');
-                                                return (
-                                                    <div key={item.eventId} className={styles.checkoutItemWrap}>
-                                                        <div className={styles.checkoutCard}>
-                                                            <img src={imgSrc} alt={item.event.title} className={styles.checkoutBannerImg} />
-                                                            <div className={styles.checkoutOverlay}>
-                                                                <div className={styles.checkoutOverlayLeft}>
-                                                                    <h4 className={styles.checkoutTitle}>{item.event.title}</h4>
-                                                                    <p className={styles.checkoutDesc}>
-                                                                        {item.event.description?.substring(0, 50)}
-                                                                        {item.event.description?.length > 50 && '...'}
-                                                                    </p>
-                                                                </div>
-                                                                <button className={styles.detailsBtn} onClick={async () => {
-                                                                    const token = localStorage.getItem("access");
-                                                                    if (item.id) {
-                                                                        await fetch(`${API}/api/promotions/${item.id}/delete/`, {
-                                                                            method: "DELETE",
-                                                                            headers: { Authorization: `Bearer ${token}` }
-                                                                        });
-                                                                    }
-                                                                    setPromoCart(prev => prev.filter(c => c.eventId !== item.eventId));
-                                                                }}>
-                                                                    Remove
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                        <div className={styles.checkoutSubInfo}>
-                                                            <span>Plan: {item.label} promotion</span>
-                                                            <span>Price: ${item.cost.toFixed(2)}</span>
-                                                        </div>
-                                                        <div className={styles.onHoldDivider}></div>
-                                                    </div>
-                                                );
-                                            })}
+                            <div className={styles.rightSection}>
+                                {isUserPage ? (
+                                    <>
+                                        <div className={styles.pillContainer}>
+                                            <div className={styles.pill}>ON-HOLD</div>
                                         </div>
-                                        <div className={styles.checkoutBottom}>
-                                            <span className={styles.totalText}>
-                                                Total: ${promoCart.reduce((sum, item) => sum + item.cost, 0).toFixed(2)}
-                                            </span>
-                                            <button
-                                                className={styles.proceedBtn}
-                                                onClick={() => promoCart.length > 0 && setIsCheckoutModalOpen(true)}
-                                                disabled={promoCart.length === 0}
-                                                style={promoCart.length === 0 ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
-                                            >
-                                                Proceed to check-out
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div className={styles.promoContainer}>
-                                        <div className={styles.promoHeaderContainer}>
-                                            <div className={styles.promoIconColored}></div>
-                                            <h3 className={styles.promoTitle}>Event Promotion</h3>
-                                        </div>
-                                        <div className={styles.promoBodyContainer}>
-                                            <p className={styles.promoText}>Manage your promotion plan and get more users to notice your event.</p>
-                                            <button className={styles.promoManageBtn} onClick={() => setIsPromoModalOpen(true)}>Manage</button>
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div className={styles.pill} style={{ left: "20px" }}>RECOMMENDED</div>
-                                    <div className={styles.rightCard}>
-                                        <div className={styles.rightList}>
-                                            {recommendedEvents.map((rec, index) => (
-                                                <div key={rec.id} className={styles.recItemWrapper}>
-                                                    <div className={styles.recCard}>
-                                                        <img src={rec.banner || DefaultBanner} className={styles.recBanner} alt="" />
-                                                        <div className={styles.recOverlay}>
-                                                            <div className={styles.recHeader}>
-                                                                <div className={styles.recOrgInfo} onClick={() => navigate(`/profile/${rec.pageId}`)} style={{ cursor: 'pointer' }}>
-                                                                    <img src={rec.avatar} className={styles.recAvatar} alt="" />
-                                                                    <div className={styles.recOrgText}>
-                                                                        <div className={styles.recNameRow}>
-                                                                            <h4>{rec.orgName}</h4>
-                                                                            <img src={VerifiedBadge} alt="verified" style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', marginLeft: 3 }} />
-                                                                        </div>
-                                                                        <p>{rec.pageType}</p>
+                                        <div className={styles.onHoldContainer}>
+                                            <div className={styles.pendingText}>{promoCart.length} Pending checkout</div>
+                                            <div className={styles.onHoldDivider}></div>
+                                            <div className={styles.checkoutList}>
+                                                {promoCart.length === 0 ? (
+                                                    <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.82rem', textAlign: 'center', padding: '16px 0' }}>
+                                                        No promotions queued. Use "Manage" below to add one.
+                                                    </p>
+                                                ) : promoCart.map(item => {
+                                                    const eventData = item.event || {};
+                                                    const imgSrc = eventData.banner
+                                                        ? (eventData.banner.startsWith('http') ? eventData.banner : `${API}${eventData.banner}`)
+                                                        : (eventData.image
+                                                            ? (eventData.image.startsWith('http') ? eventData.image : `${API}${eventData.image}`)
+                                                            : '/default-banner.png');
+                                                    return (
+                                                        <div key={item.eventId} className={styles.checkoutItemWrap}>
+                                                            <div className={styles.checkoutCard}>
+                                                                <img src={imgSrc} alt={item.event.title} className={styles.checkoutBannerImg} />
+                                                                <div className={styles.checkoutOverlay}>
+                                                                    <div className={styles.checkoutOverlayLeft}>
+                                                                        <h4 className={styles.checkoutTitle}>{item.event.title}</h4>
+                                                                        <p className={styles.checkoutDesc}>
+                                                                            {item.event.description?.substring(0, 50)}
+                                                                            {item.event.description?.length > 50 && '...'}
+                                                                        </p>
                                                                     </div>
-                                                                </div>
-                                                                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                                                                    {rec.isFollowed && (
-                                                                        <button className={styles.bellBtn} onClick={() => handlePageNotification(rec.pageId)} style={{ width: 28, height: 28 }}>
-                                                                            <img
-                                                                                src={pageNotifyStatus[rec.pageId] ? BellOn : BellOff}
-                                                                                alt="notifications"
-                                                                                width={pageNotifyStatus[rec.pageId] ? 15 : 16}
-                                                                                height={pageNotifyStatus[rec.pageId] ? 18 : 16}
-                                                                                style={{ filter: 'brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)' }}
-                                                                            />
-                                                                        </button>
-                                                                    )}
-                                                                    <button
-                                                                        className={rec.isFollowed ? styles.followBtnSmall : styles.followBtnSmall}
-                                                                        onClick={() => handleFollow(rec.id, rec.pageId)}
-                                                                    >
-                                                                        {rec.isFollowed ? 'Followed' : 'Follow'}
+                                                                    <button className={styles.detailsBtn} onClick={async () => {
+                                                                        const token = localStorage.getItem("access");
+                                                                        if (item.id) {
+                                                                            await fetch(`${API}/api/promotions/${item.id}/delete/`, {
+                                                                                method: "DELETE",
+                                                                                headers: { Authorization: `Bearer ${token}` }
+                                                                            });
+                                                                        }
+                                                                        setPromoCart(prev => prev.filter(c => c.eventId !== item.eventId));
+                                                                    }}>
+                                                                        Remove
                                                                     </button>
                                                                 </div>
                                                             </div>
-                                                            <div className={styles.recBody}>
-                                                                <div style={{ overflow: "hidden", width: "100%" }}>
-                                                                    {rec.title?.length > 15 ? (
-                                                                        <div className={styles.titleMarqueeWrapper}>
-                                                                            <span style={{ display: "inline-block", whiteSpace: "nowrap", animation: "marquee 8s linear infinite", color: "white", fontSize: "1.1rem", fontWeight: 700 }}>
-                                                                                {rec.title}
-                                                                            </span>
+                                                            <div className={styles.checkoutSubInfo}>
+                                                                <span>Plan: {item.label} promotion</span>
+                                                                <span>Price: ${item.cost.toFixed(2)}</span>
+                                                            </div>
+                                                            <div className={styles.onHoldDivider}></div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            <div className={styles.checkoutBottom}>
+                                                <span className={styles.totalText}>
+                                                    Total: ${promoCart.reduce((sum, item) => sum + item.cost, 0).toFixed(2)}
+                                                </span>
+                                                <button
+                                                    className={styles.proceedBtn}
+                                                    onClick={() => promoCart.length > 0 && setIsCheckoutModalOpen(true)}
+                                                    disabled={promoCart.length === 0}
+                                                    style={promoCart.length === 0 ? { opacity: 0.4, cursor: 'not-allowed' } : {}}
+                                                >
+                                                    Proceed to check-out
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className={styles.promoContainer}>
+                                            <div className={styles.promoHeaderContainer}>
+                                                <div className={styles.promoIconColored}></div>
+                                                <h3 className={styles.promoTitle}>Event Promotion</h3>
+                                            </div>
+                                            <div className={styles.promoBodyContainer}>
+                                                <p className={styles.promoText}>Manage your promotion plan and get more users to notice your event.</p>
+                                                <button className={styles.promoManageBtn} onClick={() => setIsPromoModalOpen(true)}>Manage</button>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className={styles.pill} style={{ left: "20px" }}>RECOMMENDED</div>
+                                        <div className={styles.rightCard}>
+                                            <div className={styles.rightList}>
+                                                {recommendedEvents.map((rec, index) => (
+                                                    <div key={rec.id} className={styles.recItemWrapper}>
+                                                        <div className={styles.recCard}>
+                                                            <img src={rec.banner || DefaultBanner} className={styles.recBanner} alt="" />
+                                                            <div className={styles.recOverlay}>
+                                                                <div className={styles.recHeader}>
+                                                                    <div className={styles.recOrgInfo} onClick={() => navigate(`/profile/${rec.pageId}`)} style={{ cursor: 'pointer' }}>
+                                                                        <img src={rec.avatar} className={styles.recAvatar} alt="" />
+                                                                        <div className={styles.recOrgText}>
+                                                                            <div className={styles.recNameRow}>
+                                                                                <h4>{rec.orgName}</h4>
+                                                                                <img src={VerifiedBadge} alt="verified" style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)', marginLeft: 3 }} />
+                                                                            </div>
+                                                                            <p>{rec.pageType}</p>
                                                                         </div>
-                                                                    ) : (
-                                                                        <h5>{rec.title}</h5>
-                                                                    )}
-                                                                    <p>
-                                                                        {rec.description?.length > 30
-                                                                            ? <>{rec.description.substring(0, 60)}... <span className={styles.readMoreSmall} onClick={(e) => { e.stopPropagation(); setPopupEvent(rec); }} style={{ cursor: "pointer" }}>read more</span></>
-                                                                            : rec.description
-                                                                        }
-                                                                    </p>
+                                                                    </div>
+                                                                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                                                                        {rec.isFollowed && (
+                                                                            <button className={styles.bellBtn} onClick={() => handlePageNotification(rec.pageId)} style={{ width: 28, height: 28 }}>
+                                                                                <img
+                                                                                    src={pageNotifyStatus[rec.pageId] ? BellOn : BellOff}
+                                                                                    alt="notifications"
+                                                                                    width={pageNotifyStatus[rec.pageId] ? 15 : 16}
+                                                                                    height={pageNotifyStatus[rec.pageId] ? 18 : 16}
+                                                                                    style={{ filter: 'brightness(0) saturate(100%) invert(85%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)' }}
+                                                                                />
+                                                                            </button>
+                                                                        )}
+                                                                        <button
+                                                                            className={rec.isFollowed ? styles.followBtnSmall : styles.followBtnSmall}
+                                                                            onClick={() => handleFollow(rec.id, rec.pageId)}
+                                                                        >
+                                                                            {rec.isFollowed ? 'Followed' : 'Follow'}
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                                <div className={styles.recBody}>
+                                                                    <div style={{ overflow: "hidden", width: "100%" }}>
+                                                                        {rec.title?.length > 15 ? (
+                                                                            <div className={styles.titleMarqueeWrapper}>
+                                                                                <span style={{ display: "inline-block", whiteSpace: "nowrap", animation: "marquee 8s linear infinite", color: "white", fontSize: "1.1rem", fontWeight: 700 }}>
+                                                                                    {rec.title}
+                                                                                </span>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <h5>{rec.title}</h5>
+                                                                        )}
+                                                                        <p>
+                                                                            {rec.description?.length > 30
+                                                                                ? <>{rec.description.substring(0, 60)}... <span className={styles.readMoreSmall} onClick={(e) => { e.stopPropagation(); setPopupEvent(rec); }} style={{ cursor: "pointer" }}>read more</span></>
+                                                                                : rec.description
+                                                                            }
+                                                                        </p>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
+                                                        {index !== recommendedEvents.length - 1 && <div className={styles.separator} />}
                                                     </div>
-                                                    {index !== recommendedEvents.length - 1 && <div className={styles.separator} />}
-                                                </div>
-                                            ))}
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    </>
-                )}
-            </div>
+                                    </>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </div>
             )}
 
             {/* Mobile Content */}

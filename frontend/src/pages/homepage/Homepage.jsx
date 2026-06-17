@@ -288,7 +288,7 @@ export default function Homepage() {
             } else if (isPromote) {
                 formData.append("title", promoteTitle);
                 formData.append("description", promoteDesc);
-                formData.append("post_type", "promote");
+                formData.append("post_type", "advertisement"); 
                 formData.append("duration", ["1 week", "1 month", "3 months", "6 months", "1 year"][promoteDuration]);
             }
 

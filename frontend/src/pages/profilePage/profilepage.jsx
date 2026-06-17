@@ -482,28 +482,17 @@ export default function ProfilePage({ type }) {
             setCurrentUser(data);
         } catch (e) { console.error(e); }
     };
-
     const loadPromotions = async () => {
         setPromotionsLoading(true);
         try {
             const headers = { Authorization: `Bearer ${token}` };
-
-            const [postsRes, communitiesRes, eventsRes] = await Promise.all([
-                fetch(`${API}/api/posts/promotions/`, { headers }),
-                fetch(`${API}/api/communities/promotions/`, { headers }),
-                fetch(`${API}/api/events/promotions/`, { headers }),
-            ]);
-
-            const [postsData, communitiesData, eventsData] = await Promise.all([
-                postsRes.ok ? postsRes.json() : [],
-                communitiesRes.ok ? communitiesRes.json() : [],
-                eventsRes.ok ? eventsRes.json() : [],
-            ]);
+            const res = await fetch(`${API}/api/promotions/`, { headers });
+            const data = res.ok ? await res.json() : { posts: [], communities: [], events: [] };
 
             setPromotionsData({
-                posts: postsData,
-                communities: communitiesData,
-                events: eventsData,
+                posts: data.posts || [],
+                communities: data.communities || [],
+                events: data.events || [],
             });
         } catch (e) { console.error(e); }
         finally { setPromotionsLoading(false); }
@@ -2049,9 +2038,6 @@ export default function ProfilePage({ type }) {
                         </div>
 
                         <div className={styles.promoMgmtBody}>
-
-
-
                             {/* List */}
                             <div className={styles.promoMgmtList}>
                                 {promotionsLoading ? (
@@ -2064,8 +2050,10 @@ export default function ProfilePage({ type }) {
                                         </p>
                                     );
                                     return items.map((promo, index) => {
-                                        const imgSrc = promo.object_banner
-                                            ? (promo.object_banner.startsWith('http') ? promo.object_banner : `${API}${promo.object_banner}`)
+                                        const details = promo.target_details || {};
+                                        const rawImg = details.image;
+                                        const imgSrc = rawImg
+                                            ? (rawImg.startsWith('http') ? rawImg : `${API}${rawImg}`)
                                             : null;
 
                                         const statusClass = {
@@ -2076,7 +2064,7 @@ export default function ProfilePage({ type }) {
                                         }[promo.status] || styles.promoMgmtStatusExpired;
 
                                         return (
-                                            <div key={promo.id}>
+                                            <div key={promo.promotion_id}>
                                                 <div className={styles.promoMgmtItem}>
                                                     <div className={styles.promoMgmtThumb}>
                                                         {imgSrc
@@ -2088,7 +2076,7 @@ export default function ProfilePage({ type }) {
                                                     <div className={styles.promoMgmtInfo}>
                                                         <div className={styles.promoMgmtNameRow}>
                                                             <span className={styles.promoMgmtName}>
-                                                                {promo.object_name || `Item #${promo.object_id}`}
+                                                                {details.name || `Item #${promo.object_id}`}
                                                             </span>
                                                             <span className={`${styles.promoMgmtStatusBadge} ${statusClass}`}>
                                                                 {promo.status === 'ONHOLD' ? 'On Hold' : promo.status.charAt(0).toUpperCase() + promo.status.slice(1)}
@@ -2114,14 +2102,14 @@ export default function ProfilePage({ type }) {
                                                             className={styles.promoMgmtRemoveBtn}
                                                             onClick={async () => {
                                                                 try {
-                                                                    const res = await fetch(`${API}/api/promotions/${promo.id}/delete/`, {
+                                                                    const res = await fetch(`${API}/api/promotions/${promo.promotion_id}/delete/`, {
                                                                         method: 'DELETE',
                                                                         headers: { Authorization: `Bearer ${token}` }
                                                                     });
                                                                     if (res.ok) {
                                                                         setPromotionsData(prev => ({
                                                                             ...prev,
-                                                                            [activePromoTab]: prev[activePromoTab].filter(p => p.id !== promo.id)
+                                                                            [activePromoTab]: prev[activePromoTab].filter(p => p.promotion_id !== promo.promotion_id)
                                                                         }));
                                                                     }
                                                                 } catch (e) { console.error(e); }

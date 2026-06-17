@@ -254,22 +254,25 @@ export default function Settings() {
     const handleLogout = async () => {
         setLoading(true);
         try {
-            // Call the backend logout API path
+        
+            const refreshToken = localStorage.getItem('refresh');
             await fetch(`${API}/api/auth/logout/`, {
                 method: 'POST',
-                headers: authHeaders()
+                headers: authHeaders(),
+                body: JSON.stringify({ refresh: refreshToken })
             });
         } catch (err) {
             console.error('Logout error:', err);
         }
-        // Clear all local storage values
+
+        // Clear all local storage items (tokens, user data, etc.)
         localStorage.clear();
         showToast('Logged out successfully.');
 
-        // Redirect to landing/login page
+        // Redirect to the login/landing page
         setTimeout(() => {
             window.location.href = '/';
-        }, 1000);
+        }, 1500);
         setLoading(false);
     };
 
@@ -458,7 +461,7 @@ export default function Settings() {
                         <h1 className={styles.sectionHeading}>{activeTab}</h1>
 
                         {/* SECTION 1: ACCOUNT */}
-               
+
                         {activeTab === 'Account' && (
                             <div className={styles.settingsFormGroup}>
                                 <div className={styles.settingRow}>
