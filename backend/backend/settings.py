@@ -36,11 +36,15 @@ db_password = os.environ.get("db_password")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "cn1lr481-8000.uks1.devtunnels.ms",
+    "https://9j7q7x4h-8000.uks1.devtunnels.ms",
     "mv8f3wcb-8000.euw.devtunnels.ms",
+    "9j7q7x4h-8000.uks1.devtunnels.ms",
 ]
 
 # Application definition
@@ -75,9 +79,8 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://cn1lr481-3000.uks1.devtunnels.ms",
+    "https://9j7q7x4h-3000.uks1.devtunnels.ms",
     "https://mv8f3wcb-3000.euw.devtunnels.ms",
-    "https://mv8f3wcb-8000.euw.devtunnels.ms",
 ]
 
 SIMPLE_JWT = {

@@ -415,6 +415,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     user_status = serializers.SerializerMethodField()
     conversations_owner = serializers.SerializerMethodField()
     other_member_id = serializers.SerializerMethodField()
+    other_member = serializers.SerializerMethodField()
     allow_members_to_edit_settings = serializers.BooleanField(
         source="conversation.allow_members_to_edit_settings", read_only=True
     )
@@ -445,19 +446,27 @@ class ConversationSerializer(serializers.ModelSerializer):
             "user_status",
             "conversations_owner",
             "other_member_id",
+            "other_member",
             "allow_members_to_edit_settings",
             "allow_members_to_send_messages",
             "allow_members_to_add_others",
         ]
 
     def _get_other_member(self, obj):
+        if hasattr(obj, "_cached_other_member"):
+            return obj._cached_other_member
+
         request = self.context.get("request")
         if not request:
+            obj._cached_other_member = None
             return None
 
         conv = obj.conversation
         all_members = conv.members.all()
-        return next((m for m in all_members if m.user != request.user), None)
+        other = next((m for m in all_members if m.user != request.user), None)
+
+        obj._cached_other_member = other
+        return other
 
     def get_name(self, obj):
         conv = obj.conversation
@@ -551,15 +560,20 @@ class ConversationSerializer(serializers.ModelSerializer):
 
     def get_user_status(self, obj):
         conv = obj.conversation
-        if not conv.is_group:
-            other_member_obj = self._get_other_member(obj)
-            if other_member_obj and other_member_obj.user:
-                profile = getattr(other_member_obj.user, "profile", None)
-                if profile:
-                    return profile.status
-            return "offline"
+        if conv.is_group:
+            return None
 
-        return None
+        other_member_obj = self._get_other_member(obj)
+        if other_member_obj and other_member_obj.user:
+            other_user = other_member_obj.user
+            if hasattr(other_user, "page"):
+                return None
+
+            profile = getattr(other_user, "profile", None)
+            if profile:
+                return profile.status
+
+        return "offline"
 
     def get_conversations_owner(self, obj):
         conv = obj.conversation
@@ -572,6 +586,14 @@ class ConversationSerializer(serializers.ModelSerializer):
         other_member_obj = self._get_other_member(obj)
         if other_member_obj and other_member_obj.user:
             return other_member_obj.user.id
+        return None
+
+    def get_other_member(self, obj):
+        if obj.conversation.is_group:
+            return None
+        other_member_obj = self._get_other_member(obj)
+        if other_member_obj and other_member_obj.user:
+            return other_member_obj.user.username
         return None
 
 
