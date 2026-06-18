@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Comment, Post
+from ...models import Comment, CommentReaction, Post
 from ...serializers import CommentSerializer
 from ...utils.blocked_users import get_blocked_user_sets, is_normal_post
 from ...utils.notifications import send_global_notification
@@ -119,3 +119,23 @@ def delete_comment(request, comment_id):
     return Response(
         {"message": "Comment and all its nested replies were successfully deleted."}, status=status.HTTP_200_OK
     )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def toggle_comment_like(request, comment_id):
+    """
+    Toggles a like reaction on a specific comment for the authenticated user.
+    If the reaction already exists, it unlikes it (deletes the record).
+    """
+    user = request.user
+    comment = get_object_or_404(Comment, pk=comment_id)
+
+    existing_reaction = CommentReaction.objects.filter(comment=comment, user=user).first()
+
+    if existing_reaction:
+        existing_reaction.delete()
+        return Response({"message": "Comment unliked successfully.", "is_liked": False}, status=status.HTTP_200_OK)
+    else:
+        CommentReaction.objects.create(comment=comment, user=user)
+        return Response({"message": "Comment liked successfully.", "is_liked": True}, status=status.HTTP_201_CREATED)

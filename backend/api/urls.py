@@ -6,7 +6,7 @@ from .views.auth.signup.send_code import send_code
 from .views.auth.signup.signup import signup
 from .views.auth.signup.verify_code import change_password, verify_code
 from .views.auth.TFA import send_2fa_code, verify_2fa_code
-from .views.comment.comments import (
+from .views.comment.comments import (  # toggle_comment_like,
     comment_list,
     create_comment,
     delete_comment,
@@ -45,7 +45,7 @@ from .views.communities.community_member_action import (
     kick_community_member,
     toggle_community_admin,
 )
-from .views.conversation.conversation import (
+from .views.conversation.conversation import (  # toggle_message_reaction,
     create_dm,
     create_group_conversation,
     delete_message,

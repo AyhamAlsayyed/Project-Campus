@@ -9,7 +9,13 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Conversation, ConversationMember, Message, MessageMedia
+from ...models import (
+    Conversation,
+    ConversationMember,
+    Message,
+    MessageMedia,
+    MessageReaction,
+)
 from ...serializers import ConversationSerializer, MessageSerializer
 from ...utils.blocked_users import is_blocked
 from ...utils.conversation import get_or_create_direct_conversation
@@ -256,6 +262,30 @@ def send_message(request, conversation_id):
     )
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def toggle_message_reaction(request, message_id):
+    """
+    Toggles a 'like' reaction on a chat message.
+    No body content is required from the frontend for now.
+    """
+    user = request.user
+    message = get_object_or_404(Message, pk=message_id)
+
+    reaction_type = "like"
+
+    existing_reaction = MessageReaction.objects.filter(
+        message=message, user=user, message_reaction_type=reaction_type
+    ).first()
+
+    if existing_reaction:
+        existing_reaction.delete()
+        return Response({"message": "Message unliked successfully.", "is_liked": False}, status=status.HTTP_200_OK)
+    else:
+        MessageReaction.objects.create(message=message, user=user, message_reaction_type=reaction_type)
+        return Response({"message": "Message liked successfully.", "is_liked": True}, status=status.HTTP_201_CREATED)
+
+
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_message(request, message_id):
@@ -303,7 +333,10 @@ def edit_message(request, message_id):
         return Response({"error": "Cannot edit message to be completely empty."}, status=status.HTTP_400_BAD_REQUEST)
 
     msg.content = new_text
-    msg.save(update_fields=["content"])
+    msg.is_edited = True
+    msg.edited_at = timezone.now()
+
+    msg.save()
 
     return Response(
         {
@@ -311,6 +344,8 @@ def edit_message(request, message_id):
             "id": msg.message_id,
             "text": msg.content,
             "time": msg.sent_at.strftime("%H:%M"),
+            "is_edited": msg.is_edited,
+            "edited_at": msg.edited_at,
         },
         status=status.HTTP_200_OK,
     )
