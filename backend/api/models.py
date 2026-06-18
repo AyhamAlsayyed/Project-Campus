@@ -1355,22 +1355,8 @@ class Notification(models.Model):
         db_column="actor_id",
     )
 
-    class Type(models.TextChoices):
-        FRIEND_REQUEST = "friend_request", "Friend Request"
-        ACCEPTED_FRIEND_REQUEST = "accepted_friend_request", "Accepted Friend Request"
-        ANNOUNCEMENTS = "announcements", "Announcements"
-        LIKE = "like", "Like"
-        COMMENT = "comment", "Comment"
-        MESSAGE = "message", "Message"
-        UPCOMING_EVENT = "upcoming_event", "Upcoming Event"
-        SYSTEM = "system", "System"
-        REACTED_TO_YOUR_POST = "reacted_post", "Reacted to your post"
-        POST_CREATED = "post_created", "New Post Created"
+    type = models.CharField(max_length=50, null=False, blank=False)
 
-    type = models.CharField(
-        max_length=30,
-        choices=Type.choices,
-    )
     content = models.TextField()
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
@@ -1400,7 +1386,7 @@ class Notification(models.Model):
     def __str__(self):
         receiver_name = self.receiver.username if self.receiver else f"User {self.receiver_id}"
         status = "Read" if self.is_read else "Unread"
-        return f"Notif for {receiver_name}: {self.get_type_display()} ({status})"
+        return f"Notif for {receiver_name}: {self.type} ({status})"
 
 
 class NotificationSetting(models.Model):

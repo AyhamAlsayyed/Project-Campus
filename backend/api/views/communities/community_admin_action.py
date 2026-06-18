@@ -65,7 +65,7 @@ def process_join_request(request, community_id, member_id):
         send_global_notification(
             sender=admin_user,
             receiver=membership.user,
-            notification_type="community_join_status",
+            notification_type="COMMUNITY JOIN STATUS",
             target_object=community,
             custom_text=f"Your request to join {community.name} was approved!",
         )
@@ -77,7 +77,7 @@ def process_join_request(request, community_id, member_id):
         send_global_notification(
             sender=admin_user,
             receiver=membership.user,
-            notification_type="community_join_status",
+            notification_type="COMMUNITY JOIN STATUS",
             target_object=community,
             custom_text=f"Your request to join {community.name} was rejected.",
         )

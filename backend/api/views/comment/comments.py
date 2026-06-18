@@ -66,7 +66,7 @@ def create_comment(request, post_id):
     send_global_notification(
         sender=author,
         receiver=parent_comment.author if parent_comment else post.author,
-        notification_type="comment_reply" if parent_comment else "post_comment",
+        notification_type="COMMENT" if parent_comment else "COMMENTED ON YOUR POST",
         target_object=comment,
     )
 

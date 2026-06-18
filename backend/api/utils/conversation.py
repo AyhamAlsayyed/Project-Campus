@@ -85,7 +85,7 @@ def get_or_create_direct_conversation(current_user, target_user):
             send_global_notification(
                 sender=current_user,
                 receiver=target_user,
-                notification_type="dm-request",
+                notification_type="DM REQUEST",
                 target_object=new_conv,
                 custom_text=f"{current_user.username} wants to start a conversation with you.",
             )
