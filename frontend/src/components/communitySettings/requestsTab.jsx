@@ -48,24 +48,14 @@ export default function RequestsTab({ communityId, token, onBack, isPublic = fal
     }, [communityId, token]);
     // ── FETCH: Join requests ──
     useEffect(() => {
-        console.log('communityId:', communityId);
-        console.log('token:', token);
         if (!communityId || !token) return;
         setIsLoadingJoins(true);
         fetch(`${API}/api/communities/${communityId}/join-requests/`, {
             headers: { Authorization: `Bearer ${token}` }
         })
-            .then(res => {
-                console.log('Status:', res.status);
-                return res.json();
-            })
-            .then(data => {
-                console.log('Raw data:', data);  // what does it actually return?
-                console.log('Is array:', Array.isArray(data));
-                console.log('First item:', data[0]);  // does it have a .user field?
-                setJoinRequests(Array.isArray(data) ? data : []);
-            })
-            .catch(err => console.error('Error:', err))
+            .then(res => res.json())
+            .then(data => setJoinRequests(Array.isArray(data) ? data : []))
+            .catch(() => {})
             .finally(() => setIsLoadingJoins(false));
     }, [communityId, token]);
 
@@ -122,10 +112,10 @@ export default function RequestsTab({ communityId, token, onBack, isPublic = fal
     const handleReport = async (userId) => {
         setOpenActionMenuId(null);
         try {
-            await fetch(`${API}/api/users/${userId}/report/`, {
+            await fetch(`${API}/api/reports/`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ reason: 'Reported from group join request' })
+                body: JSON.stringify({ reported_user: userId, reason: 'Reported from group join request' })
             });
         } catch (err) { console.error('Error reporting user:', err); }
     };

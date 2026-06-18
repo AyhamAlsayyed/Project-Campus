@@ -1,10 +1,15 @@
 import styles from './settings.module.css';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import Header from '../../components/pagelayout/header/header';
+import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Setting from '../../Assets/icons/setting.png';
+import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
+import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import useTheme from '../../hooks/useTheme';
 import API from '../../config';
+import { X as XIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const authHeaders = () => ({
     'Content-Type': 'application/json',
@@ -57,6 +62,7 @@ const Toast = ({ message, type, onClose }) => {
 
 // ── Main Component ───────────────────────────────────────────────────────────
 export default function Settings() {
+    const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
     const [appearanceTheme, setAppearanceTheme] = useState(theme);
     const [currentUser, setCurrentUser] = useState(null);
@@ -111,26 +117,26 @@ export default function Settings() {
     const [bugSubmitted, setBugSubmitted] = useState(false);
     const [cacheSize, setCacheSize] = useState('...');
     const [autoplayMedia, setAutoplayMedia] = useState('Always');
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
+    const mobileMenuRef = useRef(null);
 
     // ── Fetch current user ───────────────────────────────────────────────────
     useEffect(() => {
         const fetchUser = async () => {
-            const token = localStorage.getItem('access');
-            console.log('token:', token);
-            console.log('API:', API);
+           
+        
             if (!token) return;
             try {
                 const res = await fetch(`${API}/api/auth/me/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                console.log('status:', res.status);          // ← add this
                 const data = await res.json().catch(() => ({}));
-                console.log('data:', data);                   // ← and this
                 if (!res.ok) return;
                 setCurrentUser(data);
-                console.log('currentUser set to:', data);     // ← and this
             } catch (e) {
-                console.error('fetch error:', e);             // ← and this
+                // silently fail
             }
         };
         fetchUser();
@@ -154,11 +160,12 @@ export default function Settings() {
                     const res = await fetch(`${API}/api/settings/blocked/`, { headers: authHeaders() });
                     if (res.ok) {
                         const d = await res.json();
-                        setBlockedUsers(d.map(u => ({
+                        const list = Array.isArray(d) ? d : (d.results || []);
+                        setBlockedUsers(list.map(u => ({
                             id: u.id,
                             username: u.username,
                             university: u.university || '',
-                            pfp: u.profile_picture || 'https://via.placeholder.com/40'
+                            pfp: u.avatar || u.profile_picture || '/default-avatar.png'
                         })));
                     }
                 }
@@ -179,12 +186,7 @@ export default function Settings() {
                     }
                 }
                 if (activeTab === 'Data & Storage') {
-                    const res = await fetch(`${API}/api/settings/storage/`, { headers: authHeaders() });
-                    if (res.ok) {
-                        const d = await res.json();
-                        setCacheSize(d.cache_size || '0.0 MB');
-                        setAutoplayMedia(d.autoplay_media === 'never' ? 'Never' : 'Always');
-                    }
+                    await estimateCacheSize();
                 }
             } catch (err) { console.error(err); }
         };
@@ -239,16 +241,8 @@ export default function Settings() {
     };
 
     const saveStorage = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch(`${API}/api/settings/storage/`, {
-                method: 'PATCH', headers: authHeaders(),
-                body: JSON.stringify({ autoplay_media: autoplayMedia.toLowerCase() })
-            });
-            if (res.ok) showToast('Storage preferences saved.');
-            else showToast('Failed to save.', 'error');
-        } catch { showToast('Network error.', 'error'); }
-        setLoading(false);
+        localStorage.setItem('autoplay_media', autoplayMedia.toLowerCase());
+        showToast('Storage preferences saved.');
     };
 
     const handleLogout = async () => {
@@ -355,8 +349,8 @@ export default function Settings() {
 
     const handleUnblock = async (userId) => {
         try {
-            const res = await fetch(`${API}/api/settings/blocked/${userId}/`, {
-                method: 'DELETE', headers: authHeaders()
+            const res = await fetch(`${API}/api/users/${userId}/block/`, {
+                method: 'POST', headers: authHeaders()
             });
             if (res.ok) {
                 setBlockedUsers(prev => prev.filter(u => u.id !== userId));
@@ -365,15 +359,37 @@ export default function Settings() {
         } catch { showToast('Network error.', 'error'); }
     };
 
+    const estimateCacheSize = async () => {
+        try {
+            if ('storage' in navigator && 'estimate' in navigator.storage) {
+                const { usage } = await navigator.storage.estimate();
+                const mb = (usage / (1024 * 1024)).toFixed(1);
+                setCacheSize(`${mb} MB`);
+            } else {
+                let total = 0;
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    total += (localStorage.getItem(key) || '').length * 2;
+                }
+                setCacheSize(`${(total / (1024 * 1024)).toFixed(1)} MB`);
+            }
+        } catch { setCacheSize('Unknown'); }
+    };
+
     const handleClearCache = async () => {
         if (!window.confirm('Clear locally cached media and data?')) return;
-        try {
-            await fetch(`${API}/api/settings/storage/clear-cache/`, { method: 'POST', headers: authHeaders() });
-        } catch { /* best-effort */ }
-        localStorage.removeItem('cached_media');
+        const keysToKeep = ['access', 'refresh', 'login_user', 'user_type', 'theme'];
+        const saved = {};
+        keysToKeep.forEach(k => { const v = localStorage.getItem(k); if (v) saved[k] = v; });
+        localStorage.clear();
+        keysToKeep.forEach(k => { if (saved[k]) localStorage.setItem(k, saved[k]); });
         sessionStorage.clear();
-        setCacheSize('0.0 MB');
-        showToast('Cache cleared.');
+        if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+        }
+        await estimateCacheSize();
+        showToast('Cache cleared successfully.');
     };
 
     const handleContactSubmit = async () => {
@@ -416,6 +432,23 @@ export default function Settings() {
         if (window.confirm('Switching language will reload the page. Continue?')) setLanguage(lang);
     };
 
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
+
+    useEffect(() => {
+        document.body.style.overflow = (mobileMenuOpen || mobileNavOpen) ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
+    }, [mobileMenuOpen, mobileNavOpen]);
+
+    const rawAvatar = currentUser?.profile?.avatar || currentUser?.avatar || currentUser?.profile_image;
+    const avatarSrc = rawAvatar
+        ? (rawAvatar.startsWith('http') ? rawAvatar : `${API}${rawAvatar}`)
+        : ProfilePicture;
+   
+
     const navItems = [
         { key: 'Account', label: 'Account' },
         { key: 'Privacy', label: 'Privacy' },
@@ -447,17 +480,79 @@ export default function Settings() {
     );
 
     return (
-        <div className={styles.darkContainer}>
+        <div className={styles.darkContainer} data-theme={theme}>
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-            <div className={`${styles.header} ${styles.page}`}>
-                <Header theme={theme} toggleTheme={toggleTheme} user={currentUser} />
-            </div>
-            <div className={`${styles.page} ${styles.content}`}>
-                <SideBarNav variant="profile" currentUser={currentUser} />
+            {/* ── Mobile Header ── */}
+            {isMobile && (
+                <MobileHeader
+                    avatarSrc={avatarSrc}
+                    user={currentUser}
+                    setMobileMenuOpen={setMobileMenuOpen}
+                    token={token}
+                    API={API}
+                />
+            )}
 
-                <div className={styles.settingsMainContainer}>
+            {/* ── Mobile side-drawer (hamburger) ── */}
+            {isMobile && mobileMenuOpen && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }}>
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setMobileMenuOpen(false)} />
+                    <div ref={mobileMenuRef} style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: '75vw', maxWidth: 350, background: 'linear-gradient(135deg, var(--bg-main), var(--bg-secondary))', borderRight: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '4px 0 30px rgba(0,0,0,0.6)' }} onClick={e => e.stopPropagation()}>
+                        <button style={{ position: 'absolute', top: 14, right: 14, zIndex: 10, width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} onClick={() => setMobileMenuOpen(false)}>
+                            <XIcon size={16} color="white" />
+                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '20px 16px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                            <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
+                            <span style={{ color: '#fff', fontWeight: 800, fontSize: '1.3rem', letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
+                        </div>
+                        <div style={{ flex: 1, overflowY: 'auto' }}>
+                            <SideBarNav variant="profile" currentUser={currentUser} onClose={() => setMobileMenuOpen(false)} />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Mobile settings-nav drawer ── */}
+            {isMobile && mobileNavOpen && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 9997 }}>
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(3px)' }} onClick={() => setMobileNavOpen(false)} />
+                    <div style={{ position: 'absolute', right: 0, top: 0, height: '100%', width: '75vw', maxWidth: 300, background: '#1e1e1e', borderLeft: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', overflowY: 'auto', boxShadow: '-4px 0 30px rgba(0,0,0,0.6)', padding: '24px 20px' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+                            <span style={{ color: '#fff', fontWeight: 700, fontSize: '1.2rem' }}>Settings</span>
+                            <button style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => setMobileNavOpen(false)}><XIcon size={18} color="white" /></button>
+                        </div>
+                        {navItems.map(item => {
+                            const active = activeTab === item.key;
+                            return (
+                                <div key={item.key} onClick={() => { setActiveTab(item.key); setMobileNavOpen(false); }} style={{ padding: '14px 12px', borderRadius: 12, marginBottom: 4, background: active ? 'linear-gradient(90deg,rgba(134,37,160,0.25),rgba(160,39,157,0.1))' : 'transparent', borderLeft: active ? '3px solid #A6279C' : '3px solid transparent', cursor: 'pointer', color: active ? '#fff' : 'rgba(255,255,255,0.6)', fontWeight: active ? 700 : 400, fontSize: '0.95rem' }}>
+                                    {item.label}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Desktop Header ── */}
+            {!isMobile && (
+                <div className={`${styles.header} ${styles.page}`}>
+                    <Header theme={theme} toggleTheme={toggleTheme} user={currentUser} />
+                </div>
+            )}
+
+            <div className={`${styles.page} ${styles.content}`} style={isMobile ? { width: '100%', margin: 0, padding: '8px 10px 0', boxSizing: 'border-box', flexDirection: 'column' } : {}}>
+                {!isMobile && <SideBarNav variant="profile" currentUser={currentUser} />}
+
+                <div className={styles.settingsMainContainer} style={isMobile ? { minWidth: 0, width: '100%', margin: 0, borderRadius: '20px 20px 0 0' } : {}}>
                     <div className={styles.innerContainer}>
+                        {/* Mobile: tab selector bar */}
+                        {isMobile && (
+                            <button onClick={() => setMobileNavOpen(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '12px 16px', marginBottom: 24, cursor: 'pointer', color: '#fff', fontSize: '0.95rem', fontWeight: 600 }}>
+                                <span>{activeTab}</span>
+                                <span style={{ opacity: 0.5, fontSize: '0.8rem' }}>▼</span>
+                            </button>
+                        )}
                         <h1 className={styles.sectionHeading}>{activeTab}</h1>
 
                         {/* SECTION 1: ACCOUNT */}
@@ -833,8 +928,8 @@ export default function Settings() {
                     </div>
                 </div>
 
-                {/* RIGHT NAV */}
-                <div className={styles.rightSection}>
+                {/* RIGHT NAV — desktop only */}
+                {!isMobile && <div className={styles.rightSection}>
                     <div className={styles.settingsNavContainer}>
                         <div className={styles.settingsNavHeader}>
                             {renderSolidIcon(Setting, theme === 'light' ? '#662D91' : '#E6E6E6', '25px', '25px')}
@@ -853,7 +948,7 @@ export default function Settings() {
                             })}
                         </div>
                     </div>
-                </div>
+                </div>}
             </div>
 
             {/* MODALS */}
@@ -1055,7 +1150,7 @@ export default function Settings() {
                                                     ? { personalEmail: twoFAInput, username: currentUser?.username }
                                                     : { phone: twoFAInput, username: currentUser?.username };
 
-                                                const res = await fetch(`${API}/api/auth/send_code/`, {
+                                                const res = await fetch(`${API}/api/auth/2fa/send/`, {
                                                     method: 'POST', headers: authHeaders(),
                                                     body: JSON.stringify(body)
                                                 });
@@ -1099,7 +1194,7 @@ export default function Settings() {
                                                     ? { personalEmail: twoFAInput, username: currentUser?.username, code: twoFACode }
                                                     : { phone: twoFAInput, username: currentUser?.username, code: twoFACode };
 
-                                                const res = await fetch(`${API}/api/auth/verify_code/`, {
+                                                const res = await fetch(`${API}/api/auth/2fa/verify/`, {
                                                     method: 'POST', headers: authHeaders(),
                                                     body: JSON.stringify(body)
                                                 });

@@ -163,8 +163,9 @@ const CommunityPosts = ({ onBack, communityId }) => {
 
     const handleReportAction = async (postId) => {
         try {
-            await fetch(`${API}/api/posts/${postId}/report/`, {
-                method: 'POST', headers: { Authorization: `Bearer ${token}` }
+            await fetch(`${API}/api/reports/`, {
+                method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ post: postId })
             });
         } catch (err) { console.error('Report action failed:', err); }
     };
@@ -218,12 +219,12 @@ const CommunityPosts = ({ onBack, communityId }) => {
                 <div className={styles.centeredDivider} />
 
                 {/* WHO CAN POST */}
-                <div className={`${styles.sectionRow} flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 w-full`}>
-                    <div className={`${styles.inlineInfo} flex flex-col gap-1 flex-1`}>
-                        <h3 className={`${styles.sectionTitle} m-0`}>Who can post</h3>
+                <div className={`${styles.sectionRow} flex flex-col items-start gap-4 w-full`}>
+                    <div className={`${styles.inlineInfo} flex flex-col gap-1 w-full`}>
+                        <h3 className={`${styles.sectionTitle} m-0`} style={{ whiteSpace: 'normal' }}>Who can post</h3>
                         <p className={`${styles.sectionSubtext} m-0`}>Decide who can post in your community</p>
                     </div>
-                    <div className={`${styles.checkboxColumn} flex flex-col gap-3 shrink-0 sm:min-w-[150px]`}>
+                    <div className={`${styles.checkboxColumn} flex flex-col gap-3 w-full`}>
                         {['admins', 'instructors', 'students'].map(role => (
                             <label key={role} className={styles.checkboxLabel}>
                                 <input
@@ -241,12 +242,12 @@ const CommunityPosts = ({ onBack, communityId }) => {
                 <div className={styles.centeredDivider} />
 
                 {/* HIGHLIGHTS */}
-                <div className={`${styles.sectionRow} flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full`}>
+                <div className={`${styles.sectionRow} flex flex-row items-center justify-between gap-4 w-full`}>
                     <div className={`${styles.inlineInfo} flex flex-col gap-1 flex-1`}>
                         <h3 className={`${styles.sectionTitle} m-0`}>Highlights</h3>
                         <p className={`${styles.sectionSubtext} m-0`}>Manage highlighted content in the community</p>
                     </div>
-                    <div className={`${styles.actionGroup} flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto shrink-0`}>
+                    <div className={`${styles.actionGroup} flex items-center gap-4 shrink-0`}>
                         <span className={styles.countText}>{highlights.length}/{highlightLimit}</span>
                         <button className={styles.actionBtn} onClick={() => setShowManageModal(true)}>
                             Manage
@@ -257,14 +258,14 @@ const CommunityPosts = ({ onBack, communityId }) => {
                 <div className={styles.centeredDivider} />
 
                 {/* REPORTED */}
-                <div className={`${styles.sectionRow} flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full`}>
+                <div className={`${styles.sectionRow} flex flex-row items-center justify-between gap-4 w-full`}>
                     <div className={`${styles.inlineInfo} flex flex-col gap-1 flex-1`}>
                         <h3 className={`${styles.sectionTitle} m-0`}>Reported</h3>
                         <p className={`${styles.sectionSubtext} m-0`}>
                             View all reported posts and take actions with them. (dismiss, delete, Kick, Block)
                         </p>
                     </div>
-                    <div className={`${styles.actionGroup} flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto shrink-0`}>
+                    <div className={`${styles.actionGroup} flex items-center gap-4 shrink-0`}>
                         <span className={styles.countText}>{reportedPosts.length} reported</span>
                         <button className={styles.actionBtn} onClick={() => setShowReportedModal(true)}>
                             View all

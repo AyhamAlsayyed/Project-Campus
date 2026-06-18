@@ -47,9 +47,27 @@ export default function MobileProfileView({
     handleEventsTabReminder,
     handleReview,
     reviewRating = 0,
+    // Issue 1: blocked state
+    isBlocked = false,
+    handleBlock,
+    // Issue 3: unfriend
+    onUnfriend,
+    // Issue 4: block/report menu
+    setReportTargetId,
+    // Issue 5 & 6: page owner tabs/events
+    isPageUser = false,
+    ownPageEvents = [],
+    setShowManageEvents,
+    setShowCreateEvent,
+    loadPromotions,
+    setShowPromotionsModal,
+    // Issue 7: manage picks
+    onManagePicks,
     ...rest
 }) {
     const [showCalendarMonthPicker, setShowCalendarMonthPicker] = useState(false);
+    // Issue 4: cover menu state
+    const [coverMenuOpen, setCoverMenuOpen] = useState(false);
 
     const username = user?.username || "Username";
     const role = user?.role || "Role";
@@ -73,17 +91,92 @@ export default function MobileProfileView({
     }).filter(Boolean));
     const cells = [...Array(startDay).fill(null), ...Array.from({ length: totalDays }, (_, i) => i + 1)];
 
-    const ownTabs = ['Posts', 'Activities', 'About', 'Calendar'];
+    const ownTabs = isOwnProfile && isPageUser
+        ? ['Posts', 'Activities', 'About']
+        : ['Posts', 'Activities', 'About', 'Calendar'];
+
     const otherTabs = user?.type === 'page'
         ? ['Posts', 'Photos', 'Events', 'Info']
         : ['Posts', 'Photos', 'Friends', 'Details'];
+
+    // Issue 1: blocked state render
+    if (isBlocked && !isOwnProfile) {
+        return (
+            <div className={styles.mobileRoot}>
+                <div className={styles.mobileProfileHeaderWrap}>
+                    <div className={styles.mobileAvatarNameRow}>
+                        <div className={styles.mobileAvatarCircle}>
+                            {avatarUrl
+                                ? <img src={avatarUrl} alt="avatar" className={styles.mobileAvatarImg} />
+                                : <User size={36} color="white" />}
+                        </div>
+                        <div className={styles.mobileNameBlock}>
+                            <h2 className={styles.mobileUsername} style={{ opacity: 0.5 }}>{username}</h2>
+                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', margin: '4px 0 0 0' }}>
+                                You've blocked this user. Their content is hidden.
+                            </p>
+                        </div>
+                        <button className={styles.mobileEditBtn} onClick={handleBlock}>Unblock</button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.mobileRoot}>
 
             {/* ── Cover ── */}
-            <div className={styles.mobileCoverWrap}>
+            <div className={styles.mobileCoverWrap} style={{ position: 'relative' }}>
                 {coverUrl && <img src={coverUrl} alt="cover" className={styles.mobileCoverImg} />}
+                {/* Issue 4: 3-dot cover menu for non-own profiles */}
+                {!isOwnProfile && (
+                    <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 10 }}>
+                        <button
+                            onClick={() => setCoverMenuOpen(p => !p)}
+                            style={{
+                                background: 'rgba(0,0,0,0.5)',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: 34,
+                                height: 34,
+                                cursor: 'pointer',
+                                color: 'white',
+                                fontSize: '1.2rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >⋯</button>
+                        {coverMenuOpen && (
+                            <div style={{
+                                position: 'absolute',
+                                top: 38,
+                                right: 0,
+                                background: '#222',
+                                borderRadius: 10,
+                                overflow: 'hidden',
+                                border: '1px solid rgba(255,255,255,0.12)',
+                                minWidth: 150,
+                                boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                            }}>
+                                <button
+                                    onClick={() => { handleBlock?.(); setCoverMenuOpen(false); }}
+                                    style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: '#e84d70', padding: '10px 16px', textAlign: 'left', cursor: 'pointer', fontSize: '0.85rem' }}
+                                >
+                                    {isBlocked ? 'Unblock user' : 'Block user'}
+                                </button>
+                                <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
+                                <button
+                                    onClick={() => { setReportTargetId?.(Number(user?.id)); setCoverMenuOpen(false); }}
+                                    style={{ display: 'block', width: '100%', background: 'none', border: 'none', color: '#e84d70', padding: '10px 16px', textAlign: 'left', cursor: 'pointer', fontSize: '0.85rem' }}
+                                >
+                                    Report user
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* ── Avatar + Name ── */}
@@ -131,6 +224,8 @@ export default function MobileProfileView({
                                 </div>
                                 <div className={styles.mobileFullName}>{fullName}</div>
                                 <div className={styles.mobileUniMajor}>{university} — {major}</div>
+                                {/* Issue 2: bio for regular users */}
+                                {bio && <p className={styles.mobileBio}>{bio}</p>}
                             </>
                         )}
                     </div>
@@ -159,7 +254,8 @@ export default function MobileProfileView({
                                     {friendStatus === "none" && <button className={styles.addFriendBtn} onClick={handleAddFriend} style={{ padding: '6px 12px', fontSize: '0.8rem' }}><UserPlus size={14} />Add</button>}
                                     {friendStatus === "sent" && <button className={styles.pendingBtn} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>⏳ Sent</button>}
                                     {friendStatus === "received" && (<><button className={styles.acceptBtn} onClick={handleAccept} style={{ padding: '6px 10px', fontSize: '0.8rem' }}>✅</button><button className={styles.declineBtn} onClick={handleDecline} style={{ padding: '6px 10px', fontSize: '0.8rem' }}>❌</button></>)}
-                                    {friendStatus === "friends" && <button className={styles.friendsBtn} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>👥 Friends</button>}
+                                    {/* Issue 3: unfriend button with onClick */}
+                                    {friendStatus === "friends" && <button className={styles.friendsBtn} onClick={onUnfriend} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>👥 Friends</button>}
                                 </>
                             )}
                         </div>
@@ -289,7 +385,82 @@ export default function MobileProfileView({
 
                 {/* About — own profile */}
                 {activeTab === 'About' && (
-                    <UserDetails user={user} hidePill darker noBorder />
+                    <>
+                        {isOwnProfile && isPageUser ? (
+                            <>
+                                        <UserDetails user={user} hidePill darker noBorder />
+
+                                {/* Your Events widget — matches desktop layout */}
+                                <div className={styles.yourEventsWidgetWrap}>
+                                    <div className={styles.yourEventsWrapper}>
+                                        <div className={styles.yourEventsHeader}>
+                                            <div className={styles.eventsIconColored} />
+                                            <span className={styles.yourEventsTitle}>
+                                                Upcoming Events of <span className={styles.uppercaseText}>YOURS</span>
+                                            </span>
+                                        </div>
+                                        <div className={styles.eventsDivider} />
+                                        <div className={styles.eventCardContainer}>
+                                            {ownPageEvents?.length > 0 ? (() => {
+                                                const next = ownPageEvents[0];
+                                                const bannerSrc = next.image
+                                                    ? (next.image.startsWith('http') ? next.image : `http://localhost:8000${next.image}`)
+                                                    : '';
+                                                return (
+                                                    <div className={styles.eventCardBg} style={{ backgroundImage: `url(${bannerSrc})` }}>
+                                                        <div className={styles.eventTimeBox}>
+                                                            Starts {new Date(next.start_date).toLocaleDateString()} - {new Date(next.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}<br />
+                                                            Ends - {new Date(next.end_date).toLocaleDateString()} - {new Date(next.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </div>
+                                                        <div className={styles.eventDetailsBottom}>
+                                                            <div className={styles.eventTextContent}>
+                                                                <div className={styles.eventTitle}>{next.title}</div>
+                                                                <div className={styles.eventDescWrapper}>
+                                                                    <span className={styles.eventDesc}>{next.description}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })() : (
+                                                <div style={{ color: 'rgba(255,255,255,0.4)', padding: '20px', textAlign: 'center', fontSize: '0.85rem' }}>
+                                                    No upcoming events yet.
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className={styles.eventsDivider} />
+                                        <div className={styles.eventsActionRow}>
+                                            <button className={styles.manageEventsBtn} onClick={() => setShowManageEvents?.(true)}>Manage Events</button>
+                                            <button className={styles.createEventBtn} onClick={() => setShowCreateEvent?.(true)}>Create</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Promotions widget — matches desktop layout */}
+                                <div className={styles.promotionsContainer}>
+                                    <div className={styles.promoHeaderRow}>
+                                        <div className={styles.promoIconColored} />
+                                        <span className={styles.promoTitle}>Promotions</span>
+                                    </div>
+                                    <div className={styles.promoContentRow}>
+                                        <p className={styles.promoDesc}>Track, manage, and review your active promotions and history.</p>
+                                        <button className={styles.promoManageBtn} onClick={() => { loadPromotions?.(); setShowPromotionsModal?.(true); }}>Manage</button>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <UserDetails user={user} hidePill darker noBorder />
+                                {isOwnProfile && user?.role === 'instructor' && (
+                                    <div style={{ padding: '12px 0' }}>
+                                        <button className={styles.mobileEditBtn} onClick={onManagePicks}>
+                                            Manage Picks
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </>
                 )}
 
                 {/* Activities */}
@@ -328,8 +499,8 @@ export default function MobileProfileView({
                     </div>
                 )}
 
-                {/* Events */}
-                {activeTab === 'Events' && (
+                {/* Events — page viewer (non-own) */}
+                {activeTab === 'Events' && !isOwnProfile && (
                     pageEvents.length === 0
                         ? <div className={styles.notice}>No events yet.</div>
                         : pageEvents.map(event => {
@@ -393,6 +564,7 @@ export default function MobileProfileView({
                             );
                         })
                 )}
+
 
                 {/* Calendar */}
                 {activeTab === 'Calendar' && (

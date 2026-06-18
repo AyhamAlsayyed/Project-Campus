@@ -27,13 +27,28 @@ export function useCreateEvent({ onSuccess } = {}) {
     const [endPeriod, setEndPeriod] = useState('PM');
     const [address, setAddress] = useState('');
 
+    const toDate = (day, month, year, hour, minute, period) => {
+        const d = parseInt(day, 10), mo = parseInt(month, 10), yr = parseInt(year, 10);
+        const h = parseInt(hour, 10), mi = parseInt(minute, 10);
+        if (!d || !mo || !yr || yr < 1000 || !h || isNaN(mi)) return null;
+        let h24 = h % 12;
+        if (period === 'PM') h24 += 12;
+        return new Date(yr, mo - 1, d, h24, mi);
+    };
+
+    const startDt = toDate(startDay, startMonth, startYear, startHour, startMinute, startPeriod);
+    const endDt = toDate(endDay, endMonth, endYear, endHour, endMinute, endPeriod);
+    const now = new Date();
+
     const isFormValid =
         !!bannerFile &&
         eventName.trim() !== '' &&
         description.trim() !== '' &&
         address.trim() !== '' &&
         startDay && startMonth && startYear && startHour && startMinute &&
-        endDay && endMonth && endYear && endHour && endMinute;
+        endDay && endMonth && endYear && endHour && endMinute &&
+        startDt && startDt >= now &&
+        endDt && endDt > startDt;
 
     // Converts segmented inputs + AM/PM into ISO datetime string
     const buildDatetime = (day, month, year, hour, minute, period) => {

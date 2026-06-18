@@ -363,3 +363,30 @@
   color: #ffffff;
   border: none;
 }
+
+@media (max-width: 1023px) {
+  .infoPanelContainer {
+    padding: 20px 16px;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .infoTitle {
+    font-size: 1.4rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.2rem;
+  }
+
+  .descriptionInputWrapper {
+    width: 100%;
+  }
+
+  .centeredDivider {
+    width: 100%;
+  }
+
+  .infoHeaderLeft {
+    gap: 12px;
+  }
+}

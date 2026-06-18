@@ -431,7 +431,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
     try {
       await Promise.all(
         unreadIds.map((id) =>
-          fetch(`${API}/api/chats/${id}/read/`, {
+          fetch(`${API}/api/chats/${id}/mark-read/`, {
             method: "POST",
             headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
           })
@@ -530,7 +530,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
           alt="Logo"
           className={styles.darkModeIcon}
         />
-        <button className={styles.title} type="button">CAMPUS</button>
+        <button className={styles.title} type="button" onClick={() => navigate('/home')}>CAMPUS</button>
       </div>
 
       {/* ── SEARCH ── */}

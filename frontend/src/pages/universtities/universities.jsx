@@ -53,13 +53,24 @@ export default function Universities() {
     const isUniversity = localStorage.getItem("user_type") === "university";
     const token = localStorage.getItem("access");
 
-    const durationSteps = [
-        { label: "1 week", addedText: "0 months & 12 days", dateStr: "Friday - 24/6/2026" },
-        { label: "1 month", addedText: "1 month & 5 days", dateStr: "Friday - 17/7/2026" },
-        { label: "3 months", addedText: "3 months & 5 days", dateStr: "Thursday - 17/9/2026" },
-        { label: "6 months", addedText: "6 months & 5 days", dateStr: "Thursday - 17/12/2026" },
-        { label: "1 year", addedText: "12 months & 5 days", dateStr: "Thursday - 17/6/2027" }
-    ];
+    const buildDurationSteps = () => {
+        const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        const fmt = (d) => `${days[d.getDay()]} - ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+        const add = (months, extraDays) => {
+            const d = new Date();
+            d.setMonth(d.getMonth() + months);
+            d.setDate(d.getDate() + extraDays);
+            return d;
+        };
+        return [
+            { label: "1 week",   addedText: "7 days",         dateStr: fmt(add(0, 7))   },
+            { label: "1 month",  addedText: "1 month",        dateStr: fmt(add(1, 0))   },
+            { label: "3 months", addedText: "3 months",       dateStr: fmt(add(3, 0))   },
+            { label: "6 months", addedText: "6 months",       dateStr: fmt(add(6, 0))   },
+            { label: "1 year",   addedText: "12 months",      dateStr: fmt(add(12, 0))  },
+        ];
+    };
+    const durationSteps = buildDurationSteps();
     const getDaysRemaining = (endDate) => {
         if (!endDate) return null;
         const today = new Date();
@@ -85,6 +96,7 @@ export default function Universities() {
     }, [mobileMenuOpen]);
 
     useEffect(() => {
+        if (!token) return;
         const fetchData = async () => {
             const headers = {
                 Authorization: `Bearer ${token}`,
@@ -110,7 +122,7 @@ export default function Universities() {
                 if (userRes.ok) {
                     const userData = await userRes.json();
                     // resolve avatar same as communities.jsx
-                    if (userData.role === 'uni' || localStorage.getItem('user_type') === 'university') {
+                    if ((userData.role === 'uni' || localStorage.getItem('user_type') === 'university') && userData.id) {
                         const pageRes = await fetch(`${API}/api/pages/${userData.id}/`, { headers });
                         if (pageRes.ok) {
                             const pageData = await pageRes.json();
@@ -336,7 +348,7 @@ export default function Universities() {
                             padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)"
                         }}>
                             <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1 }}>CAMPUS</span>
+                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
                         </div>
                         <div style={{ flex: 1, overflowY: "auto" }}>
                             <SidebarNav onClose={() => setMobileMenuOpen(false)} />

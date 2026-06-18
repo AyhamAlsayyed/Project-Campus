@@ -133,9 +133,10 @@ export default function CommunityPage() {
             const res = await fetch(`${API}/api/auth/me/`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
+            if (!res.ok) return;
             const data = await res.json();
 
-            if (data.role === 'university' || localStorage.getItem('user_type') === 'university') {
+            if ((data.role === 'university' || localStorage.getItem('user_type') === 'university') && data.id) {
                 const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -153,7 +154,7 @@ export default function CommunityPage() {
         const fetchJoinedCommunities = async () => {
             if (!token) return;
             try {
-                const res = await fetch(`${API}/api/communities/joined/`, {
+                const res = await fetch(`${API}/api/communities/?filter=joined`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (res.ok) {
@@ -259,7 +260,7 @@ export default function CommunityPage() {
                         </button>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                             <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1 }}>CAMPUS</span>
+                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
                         </div>
                         <div style={{ flex: 1, overflowY: "auto" }}>
                             <SideBarNav onClose={() => setMobileMenuOpen(false)} />

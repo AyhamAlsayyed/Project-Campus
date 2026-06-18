@@ -25,8 +25,10 @@ import CommunityPermissions from '../../components/createCommunity/CommunityPerm
 import API from '../../config';
 import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import useTheme from '../../hooks/useTheme';
+import { useNavigate } from 'react-router-dom';
 
 export default function Community() {
+    const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
     const [loading, setLoading] = useState(true)
     const [user, setUser] = useState(null)
@@ -86,6 +88,7 @@ export default function Community() {
 
     useEffect(() => {
         const fetchOwned = async () => {
+            if (!token) return;
             try {
                 const res = await fetch(`${API}/api/communities/?filter=owned`, {
                     headers: { Authorization: `Bearer ${token}` },
@@ -145,6 +148,7 @@ export default function Community() {
 
     useEffect(() => {
         const fetchFriendsRelated = async () => {
+            if (!token) return;
             try {
                 const res = await fetch(`${API}/api/communities/?filter=friends_related`, {
                     headers: { Authorization: `Bearer ${token}` },
@@ -174,8 +178,9 @@ export default function Community() {
             const res = await fetch(`${API}/api/auth/me/`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
+            if (!res.ok) return;
             const data = await res.json();
-            if (data.role === 'uni' || localStorage.getItem('user_type') === 'university') {
+            if ((data.role === 'uni' || localStorage.getItem('user_type') === 'university') && data.id) {
                 const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -192,6 +197,7 @@ export default function Community() {
 
     useEffect(() => {
         const checkRequestStatus = async () => {
+            if (!token) return;
             try {
                 const res = await fetch(`${API}/api/communities/request/status/`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -525,7 +531,7 @@ export default function Community() {
                             padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)"
                         }}>
                             <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1 }}>CAMPUS</span>
+                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
                         </div>
                         <div style={{ flex: 1, overflowY: "auto" }}>
                             <SideBarNav onClose={() => setMobileMenuOpen(false)} />

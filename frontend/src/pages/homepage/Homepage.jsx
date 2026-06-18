@@ -107,7 +107,7 @@ export default function Homepage() {
             const data = await res.json().catch(() => ({}))
 
             if (!res.ok) { setUserError("Failed to load user"); setUser(null); return }
-            if (data.role === 'uni' || localStorage.getItem('user_type') === 'university') {
+            if ((data.role === 'uni' || localStorage.getItem('user_type') === 'university') && data.id) {
                 const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -220,6 +220,7 @@ export default function Homepage() {
     }, [hasMore, loadingMore, loading, offset]);
 
     const fetchJoined = async () => {
+        if (!token) return;
         const res = await fetch(`${API}/api/communities/?filter=joined`, { headers: { Authorization: `Bearer ${token}` } });
         if (res.ok) { const data = await res.json(); setJoinedCommunities(data); }
     };
@@ -460,7 +461,7 @@ export default function Homepage() {
                             padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)"
                         }}>
                             <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1 }}>
+                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>
                                 CAMPUS
                             </span>
                         </div>
@@ -538,7 +539,11 @@ export default function Homepage() {
                             ) : loading ? (
                                 <p style={{ padding: 20, color: "rgba(255,255,255,0.5)" }}>Loading...</p>
                             ) : posts.length === 0 ? (
-                                <div className={styles.emptyState}><div>📰</div><h2>No posts yet</h2></div>
+                                <div className={styles.emptyState}>
+                                    <div className={styles.emptyStateIcon}>📭</div>
+                                    <h2 className={styles.emptyStateTitle}>Nothing here yet</h2>
+                                    <p className={styles.emptyStateSubtitle}>Your feed is empty right now. Check back soon.</p>
+                                </div>
                             ) : (
                                 <div className={styles.feed}>
                                     {posts.map(post => (
@@ -571,7 +576,11 @@ export default function Homepage() {
                             ) : loading ? (
                                 <p>Loading...</p>
                             ) : posts.length === 0 ? (
-                                <div className={styles.emptyState}><div>📰</div><h2>No posts yet</h2></div>
+                                <div className={styles.emptyState}>
+                                    <div className={styles.emptyStateIcon}>📭</div>
+                                    <h2 className={styles.emptyStateTitle}>Nothing here yet</h2>
+                                    <p className={styles.emptyStateSubtitle}>Your feed is empty right now. Check back soon.</p>
+                                </div>
                             ) : (
                                 <div className={styles.feed}>
                                     {posts.map(post => (

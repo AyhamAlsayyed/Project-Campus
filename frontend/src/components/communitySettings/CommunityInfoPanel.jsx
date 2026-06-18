@@ -9,10 +9,6 @@ import CameraIcon from '../../Assets/icons/camera.png';
 import API from '../../config';
 
 export default function CommunityInfoPanel({ community, onBack }) {
-    console.log('community in InfoPanel:', community);
-    console.log('community.image:', community?.image);
-    console.log('community.banner_image:', community?.banner_image);
-
     const token = localStorage.getItem('access');
     const [originalDescription, setOriginalDescription] = useState(community?.description || "");
     const [originalPrivacy, setOriginalPrivacy] = useState(community?.is_private ? 'Private' : 'Public');

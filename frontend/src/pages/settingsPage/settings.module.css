@@ -1063,3 +1063,63 @@ body {
 [data-theme="light"] .customDropdownArrow {
     background-color: #662D91;
 }
+
+/* ════════════════════════════════════════
+   MOBILE RESPONSIVE
+   ════════════════════════════════════════ */
+@media (max-width: 1023px) {
+    .darkContainer {
+        overflow-x: hidden;
+    }
+
+    .settingsMainContainer {
+        min-width: 0;
+        width: 100%;
+        margin: 0;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .innerContainer {
+        padding: 20px 16px 40px;
+    }
+
+    .sectionHeading {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
+
+    .settingRow {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .settingActionBtn,
+    .deleteBtn,
+    .primaryBtn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .customDropdownContainer {
+        width: 100%;
+    }
+
+    .customDropdownValueBox {
+        min-width: 0 !important;
+        width: 100%;
+    }
+
+    .segmentedSelector {
+        flex-wrap: wrap;
+    }
+
+    .notificationsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .modalContent {
+        width: 92vw;
+        max-width: none;
+        padding: 24px 18px;
+    }
+}

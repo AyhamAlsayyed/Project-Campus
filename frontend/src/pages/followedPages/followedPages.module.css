@@ -1073,3 +1073,50 @@ body {
 .verifiedIcon{
     filter: invert(87%) sepia(5%) saturate(297%) hue-rotate(185deg) brightness(96%) contrast(85%);
 }
+
+/* ════════════════════════════════════════
+   MOBILE RESPONSIVE
+   ════════════════════════════════════════ */
+@media (max-width: 1023px) {
+    .darkContainer {
+        overflow-x: hidden;
+    }
+
+    .postContainer {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .rightSection {
+        position: static;
+        width: 100%;
+        flex: none;
+        margin: 0;
+    }
+
+    .followedPagesPosts {
+        margin-top: 0;
+    }
+
+    .recCardsContainer {
+        justify-content: flex-start;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 6px;
+    }
+
+    .recommendedHeaderRow {
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .recommendedTitle {
+        font-size: 1.8rem;
+    }
+
+    .viewAllBtn {
+        padding: 10px 18px;
+        font-size: 12px;
+    }
+}

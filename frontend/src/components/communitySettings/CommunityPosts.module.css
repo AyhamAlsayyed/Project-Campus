@@ -404,3 +404,19 @@
 [data-theme="light"] .modalBody::-webkit-scrollbar-thumb:hover {
   background: #662D91;
 }
+
+@media (max-width: 1023px) {
+  .postsContainer {
+    padding: 16px 12px;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .headerRow {
+    font-size: 1.4rem;
+  }
+
+  .controlsRow {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}

@@ -55,7 +55,7 @@
   width: 100%;
   top: 10px;
   z-index: 10;
-  min-height: calc(100vh - 396px);
+  min-height: calc(100vh - 217px);
 }
 
 
@@ -1046,4 +1046,46 @@
 
 [data-theme="light"] .annImageWarningClose:hover {
   color: rgba(0, 0, 0, 0.7);
+}
+
+/* ════════════════════════════════════════
+   EMPTY STATE
+   ════════════════════════════════════════ */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px 80px;
+  gap: 16px;
+  text-align: center;
+}
+
+.emptyStateIcon {
+  font-size: 56px;
+  opacity: 0.5;
+  filter: grayscale(0.3);
+}
+
+.emptyStateTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+}
+
+.emptyStateSubtitle {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.38);
+  margin: 0;
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+[data-theme="light"] .emptyStateTitle {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="light"] .emptyStateSubtitle {
+  color: rgba(0, 0, 0, 0.38);
 }

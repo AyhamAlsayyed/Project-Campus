@@ -621,19 +621,20 @@ export default function PostCard({
                 >
                   <div className={styles.adTextContent}>
                     <h3 className={styles.adTitle}>
-                      {post.ad_title}
+                      {post.title}
                     </h3>
-                    <p className={styles.adDesc}>
-                      {post.ad_description || post.content}
-                    </p>
-                  </div>
-
-                  <div className={styles.adArrowWrapper}>
-                    <img
-                      src={ArrowRight}
-                      alt="Learn more"
-                      className={styles.adArrow}
-                    />
+                    <div className={styles.adDescRow}>
+                      <p className={styles.adDesc}>
+                        {post.description}
+                      </p>
+                      <div className={styles.adArrowWrapper}>
+                        <img
+                          src={ArrowRight}
+                          alt="Learn more"
+                          className={styles.adArrow}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </a>
               )}
@@ -641,8 +642,15 @@ export default function PostCard({
           )}
 
           {validMedia[current]?.type === "video" && (
-            <video controls className={styles.mediaItem}>
+            <video
+              controls
+              className={styles.mediaItem}
+              preload="metadata"
+              playsInline
+              style={{ display: 'block', width: '100%', maxHeight: 480, borderRadius: 18, background: '#000', objectFit: 'contain' }}
+            >
               <source src={validMedia[current].url} type="video/mp4" />
+              <source src={validMedia[current].url} type="video/webm" />
             </video>
           )}
 

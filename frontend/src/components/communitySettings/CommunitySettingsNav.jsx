@@ -2,7 +2,7 @@ import React from 'react';
 import styles from './communitySettingsNav.module.css';
 import Setting from '../../Assets/icons/setting.png';
 
-export default function CommunitySettingsNav({ activeTab, setActiveTab }) {
+export default function CommunitySettingsNav({ activeTab, setActiveTab, isMobile }) {
   const navItems = [
     { key: 'Community info', label: 'Community info' },
     { key: 'Members', label: 'Members' },
@@ -30,6 +30,26 @@ export default function CommunitySettingsNav({ activeTab, setActiveTab }) {
     />
   );
 
+  if (isMobile) {
+    return (
+      <div className={styles.mobileTabBar}>
+        {navItems.map((item) => {
+          const isActive = activeTab?.toLowerCase() === item.key.toLowerCase() ||
+            (activeTab === 'Settings' && item.key === 'Community info');
+          return (
+            <button
+              key={item.key}
+              onClick={() => setActiveTab(item.key)}
+              className={`${styles.mobileTabItem} ${isActive ? styles.mobileTabItemActive : ''} ${item.isDelete ? styles.mobileTabItemDelete : ''}`}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className={styles.settingsNavContainer}>
       {/* ── HEADER ── */}
@@ -43,7 +63,7 @@ export default function CommunitySettingsNav({ activeTab, setActiveTab }) {
       {/* ── NAVIGATION LIST ── */}
       <div className={styles.settingsNavList}>
         {navItems.map((item) => {
-          const isActive = activeTab?.toLowerCase() === item.key.toLowerCase() || 
+          const isActive = activeTab?.toLowerCase() === item.key.toLowerCase() ||
                            (activeTab === 'Settings' && item.key === 'Community info');
 
           let textClass = 'navTextDefault';

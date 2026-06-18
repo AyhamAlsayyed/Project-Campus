@@ -13,10 +13,12 @@ import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import API from '../../config';
 import { X } from 'lucide-react';
 import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
+import { useNavigate } from 'react-router-dom';
 
 const ActiveChat = lazy(() => import('./ActiveChats'));
 
 export default function ChatsPage() {
+    const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
     const ctx = useChats();
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
@@ -101,7 +103,7 @@ export default function ChatsPage() {
                                 borderBottom: '1px solid rgba(255,255,255,0.08)'
                             }}>
                                 <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                                <span style={{ color: '#fff', fontWeight: 800, fontSize: '1.3rem', letterSpacing: 1 }}>CAMPUS</span>
+                                <span style={{ color: '#fff', fontWeight: 800, fontSize: '1.3rem', letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
                             </div>
                             <div style={{ flex: 1, overflowY: 'auto' }}>
                                 <SideBarNav onClose={() => setMobileMenuOpen(false)} />

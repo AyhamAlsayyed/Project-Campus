@@ -7,3 +7,15 @@
 .mainContent {
     flex: 1;
 }
+
+.layoutContainerMobile {
+    flex-direction: column;
+    gap: 0;
+}
+
+@media (max-width: 1023px) {
+    .layoutContainer {
+        flex-direction: column;
+        gap: 0;
+    }
+}

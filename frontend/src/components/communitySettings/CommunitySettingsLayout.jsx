@@ -12,15 +12,20 @@ export default function CommunitySettingsLayout({ community }) {
     const [activeTab, setActiveTab] = useState('Settings');
     const [prevTab, setPrevTab] = useState('Settings');
     const [myRole, setMyRole] = useState('member');
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
     const { id } = useParams();
     const navigate = useNavigate();
     const token = localStorage.getItem("access");
-    console.log('useParams id:', id);
-    console.log('community prop:', community);
     const API = "http://localhost:8000";
 
-    const communityId = id || community?.community_id; // 👈 move this UP before the useEffect
+    const communityId = id || community?.community_id;
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         if (!communityId || !token) return;
@@ -30,13 +35,10 @@ export default function CommunitySettingsLayout({ community }) {
             .then(r => r.json())
             .then(members => {
                 const loginUser = JSON.parse(localStorage.getItem('login_user'));
-                console.log('loginUser?.username:', loginUser?.username);
-                console.log('all usernames in data:', data.map(m => m.username));
-                const me = data.find(m => m.username === loginUser?.username);
-                console.log('me:', me);
+                const me = members.find(m => m.username === loginUser?.username);
                 if (me) setMyRole(me.role);
             })
-            .catch(err => console.log('fetch failed:', err));
+            .catch(() => {});
     }, [communityId, token]);
 
     useEffect(() => {
@@ -59,8 +61,8 @@ export default function CommunitySettingsLayout({ community }) {
     const displayedTab = activeTab === 'Delete' ? prevTab : activeTab;
 
     return (
-        <div className={styles.layoutContainer}>
-            <CommunitySettingsNav activeTab={activeTab} setActiveTab={setActiveTab} />
+        <div className={`${styles.layoutContainer} ${isMobile ? styles.layoutContainerMobile : ''}`}>
+            <CommunitySettingsNav activeTab={activeTab} setActiveTab={setActiveTab} isMobile={isMobile} />
 
             <div className={styles.mainContent}>
                 {(displayedTab === 'Settings' || displayedTab === 'Community info') && (

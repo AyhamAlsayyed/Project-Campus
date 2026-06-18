@@ -13,8 +13,8 @@
     width: min(1800px, 90%);
     margin: 0 auto;
     --left-col: 300px;
-    --right-col: 380px;
-    --col-gap: 40px;
+    --right-col: 420px;
+    --col-gap: 65px;
 }
 
 .header {
@@ -261,4 +261,23 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+}
+
+/* ════════════════════════════════════════
+   MOBILE RESPONSIVE
+   ════════════════════════════════════════ */
+@media (max-width: 1023px) {
+    .innerContainer {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .resultsContainer {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .cardGrid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
 }

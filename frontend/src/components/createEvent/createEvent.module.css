@@ -12,12 +12,12 @@
                      MIDDLE CONTAINER STYLES
    ========================================================= */
 .createEventMiddleContainer {
-  
+  background-color: #333333;
     border-radius: 35px 35px 0 0;
     flex: 1;
     padding: 32px 0;
     max-width: 850px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    
 }
 
 .eventFormHeader {
@@ -503,6 +503,57 @@
 
 [data-theme="light"] .floatingCharCounterDisplay {
   color: #888888;
+}
+
+@media (max-width: 1023px) {
+  .createEventPageLayout {
+    flex-direction: column;
+    min-height: unset;
+  }
+
+  .createEventRightWrapper {
+    min-width: unset;
+    max-width: 100%;
+    width: 100%;
+    padding: 0 0 40px;
+  }
+
+  .createEventRightContainer {
+    border-radius: 0;
+    box-shadow: none;
+    padding: 24px 16px;
+  }
+
+  .createEventMiddleContainer {
+    max-width: 100%;
+    width: 100%;
+    padding: 20px 0 40px;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .eventFormHeader {
+    padding: 0 16px;
+  }
+
+  .formInnerBody {
+    padding: 0 16px;
+  }
+
+  .bannerUploadPreviewWrapper {
+    width: 100%;
+  }
+
+  .eventTextInputMiddle {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .eventTextAreaMiddle {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 120px;
+  }
 }
 
 [data-theme="light"] .disabledCreateBtn {

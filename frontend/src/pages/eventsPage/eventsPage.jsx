@@ -133,7 +133,7 @@ export default function EventsPage() {
                     setUser(userData);
 
                     const userType = localStorage.getItem('user_type');
-                    if (userData.role === 'university' || ['university', 'uni', 'page'].includes(userType)) {
+                    if ((userData.role === 'university' || ['university', 'uni', 'page'].includes(userType)) && userData.page_id) {
                         pageIdRef.current = userData.page_id;
                         const evRes = await fetch(`${API}/api/pages/${userData.page_id}/events/`, {
                             headers: { Authorization: `Bearer ${token}` }
@@ -195,8 +195,13 @@ export default function EventsPage() {
     }, []);
 
     useEffect(() => {
+        const userType = localStorage.getItem('user_type');
+        const isPageOrUni = userType === 'university' || userType === 'page' || userType === 'uni';
+        if (!isPageOrUni) return;
+
         const fetchPromoCart = async () => {
             const token = localStorage.getItem("access");
+            if (!token) return;
             try {
                 const res = await fetch(`${API}/api/events/promotions/`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -355,7 +360,7 @@ export default function EventsPage() {
                             padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)"
                         }}>
                             <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1 }}>
+                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>
                                 CAMPUS
                             </span>
                         </div>

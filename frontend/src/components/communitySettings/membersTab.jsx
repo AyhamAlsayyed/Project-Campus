@@ -360,7 +360,7 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                                         className={styles.avatar}
                                         onError={e => { e.target.src = DefaultPfp; }}
                                     />
-                                    <span style={{ position: 'absolute', bottom: 0, right: 0, border: '2px solid #2a2a2a', borderRadius: '50%' }}>
+                                    <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
                                         <StatusDot userId={member.id} size="sm" />
                                     </span>
                                 </div>

@@ -446,21 +446,6 @@ export default function ProfilePage({ type }) {
             currentUser.page_id === Number(userId);
 
         if (isOwn && user?.type === 'page') { loadOwnPageEvents(); return; }
-        if (isOwn && user?.role === 'instructor') { loadCommunityPicks(); return; }
-        if (isOwn) return;
-        if (user.role === 'instructor') loadCommunityPicks();
-        if (user.type !== 'page') loadFriends(userId);
-    }, [user, currentUser, userId]);
-
-    useEffect(() => {
-        if (!user || !currentUser) return;
-        const isOwn =
-            currentUser.id === Number(profileId) ||
-            currentUser.id === Number(userId) ||
-            currentUser.page_id === Number(profileId) ||
-            currentUser.page_id === Number(userId);
-
-        if (isOwn && user?.type === 'page') { loadOwnPageEvents(); return; }
         if (isOwn) loadReminders();
         if (user.role === 'instructor') loadCommunityPicks();
         if (user.type !== 'page') loadFriends(userId);
@@ -471,8 +456,9 @@ export default function ProfilePage({ type }) {
     const loadCurrentUser = async () => {
         try {
             const res = await fetch(`${API}/api/auth/me/`, { headers: { Authorization: `Bearer ${token}` } });
+            if (!res.ok) return;
             const data = await res.json();
-            if (data.role === 'university' || localStorage.getItem('user_type') === 'university') {
+            if ((data.role === 'university' || localStorage.getItem('user_type') === 'university') && data.id) {
                 const pageRes = await fetch(`${API}/api/pages/${data.id}/`, { headers: { Authorization: `Bearer ${token}` } });
                 if (pageRes.ok) {
                     const pageData = await pageRes.json();
@@ -499,6 +485,7 @@ export default function ProfilePage({ type }) {
     };
 
     const loadProfileUser = async () => {
+        if (!profileId) return;
         try {
             let res, raw, isPageType;
 
@@ -807,7 +794,7 @@ export default function ProfilePage({ type }) {
     const handleMessage = async () => {
         try {
             const chats = await (await fetch(`${API}/api/chats/`, { headers: { Authorization: `Bearer ${token}` } })).json();
-            const existing = chats.find(c => !c.is_group && c.name === username);
+            const existing = chats.find(c => !c.is_group && String(c.other_member_id) === String(userId));
             if (existing) { navigate(`/chats/${existing.id}`); return; }
             const res = await fetch(`${API}/api/conversations/create/${userId}/`, {
                 method: 'POST',
@@ -984,7 +971,7 @@ export default function ProfilePage({ type }) {
                             <X size={16} color="white" />
                         </button>
                         <div className={styles.mobileDrawerHeader}>
-                            <span className={styles.mobileDrawerTitle}>CAMPUS</span>
+                            <span className={styles.mobileDrawerTitle} style={{ cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
                         </div>
                         <div className={styles.mobileDrawerNav}>
                             <SideBarNav variant={isOwnProfile ? 'profile' : 'default'} currentUser={currentUser} onClose={() => setMobileMenuOpen(false)} />
@@ -1682,7 +1669,14 @@ export default function ProfilePage({ type }) {
             )}
 
             {/* Mobile layout */}
-            {isMobile && (
+            {isMobile && showCreateEvent && (
+                <div style={{ background: '#333333', minHeight: '100vh', overflowY: 'auto' }}>
+                    <CreateEventForm {...createEvent.formProps} onBack={() => setShowCreateEvent(false)} />
+                    <CreateEventRightSidebar {...createEvent.sidebarProps} hidePill />
+                </div>
+            )}
+
+            {isMobile && !showCreateEvent && (
                 <div className={styles.mobileWrapper}>
                     <div className={styles.mobileGradientWrap}>
                         {isEditing ? (
@@ -1719,6 +1713,35 @@ export default function ProfilePage({ type }) {
                                 handleEventsTabReminder={handleEventsTabReminder}
                                 handleReview={handleReview}
                                 reviewRating={reviewRating}
+                                isBlocked={isBlocked}
+                                handleBlock={handleBlock}
+                                onUnfriend={() => setUnfriendPopup(true)}
+                                setReportTargetId={setReportTargetId}
+                                isPageUser={isPageUser}
+                                ownPageEvents={ownPageEvents}
+                                setShowManageEvents={setShowManageEvents}
+                                setShowCreateEvent={setShowCreateEvent}
+                                loadPromotions={loadPromotions}
+                                setShowPromotionsModal={setShowPromotionsModal}
+                                onManagePicks={async () => {
+                                    setShowPicksModal(true);
+                                    setPicksLoading(true);
+                                    try {
+                                        const [communitiesRes, picksRes] = await Promise.all([
+                                            fetch(`${API}/api/communities/?filter=joined`, { headers: { Authorization: `Bearer ${token}` } }),
+                                            fetch(`${API}/api/users/${currentUser.id}/community-picks/`, { headers: { Authorization: `Bearer ${token}` } }),
+                                        ]);
+                                        if (communitiesRes.ok) {
+                                            const data = await communitiesRes.json();
+                                            setJoinedCommunities(data.map(c => ({ ...c, bgImage: c.image })));
+                                        }
+                                        if (picksRes.ok) {
+                                            const picks = await picksRes.json();
+                                            setModalPicks(Array.isArray(picks) ? picks.map(p => ({ ...p, id: p.id ?? p.community_id })) : []);
+                                        }
+                                    } catch (e) { console.error(e); }
+                                    finally { setPicksLoading(false); }
+                                }}
                             />
                         )}
                     </div>

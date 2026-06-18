@@ -280,3 +280,17 @@ body {
 [data-theme="light"] .emptySubtitle {
     color: #888888;
 }
+
+/* ════════════════════════════════════════
+   MOBILE RESPONSIVE
+   ════════════════════════════════════════ */
+@media (max-width: 1023px) {
+    .postContainer {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .followedCommunitiesPosts {
+        margin-top: 0;
+    }
+}

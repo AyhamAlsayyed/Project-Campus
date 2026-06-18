@@ -190,7 +190,7 @@ export default function Signup() {
         <div className={`${theme === 'dark' ? styles.darkContainer : styles.lightContainer} max-lg:!overflow-auto`}>
             <div className={`${styles.header} max-lg:!px-6 max-lg:!py-4 max-lg:!gap-4`}>
                 <img src={theme === 'dark' ? darkMode : lightMode} alt="Campus Logo" className={`${styles.darkModeImage} max-lg:!h-12`} />
-                <button className={`${styles.homeButton} max-lg:!text-xl max-lg:!h-auto`}>{t.homepage}</button>
+                <button className={`${styles.homeButton} max-lg:!text-xl max-lg:!h-auto`} onClick={() => navigate('/')}>{t.homepage}</button>
                 <LanguageDropdown language={language} onChange={setLanguage} />
                 <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
             </div>

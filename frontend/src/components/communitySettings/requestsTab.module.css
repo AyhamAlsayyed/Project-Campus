@@ -542,3 +542,36 @@
 [data-theme="light"] .iconAction {
   filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
 }
+
+@media (max-width: 1023px) {
+  .membersContainer {
+    padding: 16px 12px;
+    min-height: unset;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .headerTitle {
+    font-size: 1.4rem;
+  }
+
+  .centeredDivider {
+    width: 100%;
+  }
+
+  .controlsRow {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .memberItem {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .memberActionGroup {
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

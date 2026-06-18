@@ -725,3 +725,24 @@
     border-color: #ffffff;
     background-color: #c0c0c0;
 }
+
+/* ════════════════════════════════════════
+   MOBILE RESPONSIVE
+   ════════════════════════════════════════ */
+@media (max-width: 1023px) {
+    .postContainer {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .rightSection {
+        position: static;
+        width: 100%;
+        flex: none;
+        margin: 0;
+    }
+
+    .friendsPostsSection {
+        margin-top: 0;
+    }
+}

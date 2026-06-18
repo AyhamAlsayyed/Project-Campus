@@ -103,7 +103,7 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
         if (!token) return;
         setDrawerNotifsLoading(true);
         try {
-            const res = await fetch(`${API}/api/notifications`, {
+            const res = await fetch(`${API}/api/notifications/`, {
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
             if (res.ok) {
@@ -231,7 +231,7 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                 </button>
 
                 {/* Logo */}
-                <img src={darkModeIcon} alt="Logo" className={headerStyles.logo} />
+                <img src={darkModeIcon} alt="Logo" className={headerStyles.logo} onClick={() => navigate('/home')} style={{ cursor: 'pointer' }} />
 
                 {/* Search bar */}
                 <div className={headerStyles.searchBar}>

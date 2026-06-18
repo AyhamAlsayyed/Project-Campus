@@ -127,3 +127,59 @@
 [data-theme="light"] .settingsNavHeader > div {
   background-color: #662D91 !important;
 }
+
+/* ── MOBILE TAB BAR ── */
+.mobileTabBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 4px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  width: 100%;
+}
+
+.mobileTabBar::-webkit-scrollbar {
+  display: none;
+}
+
+.mobileTabItem {
+  flex-shrink: 0;
+  background-color: #333333;
+  border: none;
+  border-radius: 20px;
+  color: #B3B3B3;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.mobileTabItemActive {
+  background: linear-gradient(90deg, #612886, #892A82);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.mobileTabItemDelete {
+  color: #D4145A;
+}
+
+.mobileTabItemDelete.mobileTabItemActive {
+  background: linear-gradient(90deg, #8B1A1A, #D4145A);
+  color: #ffffff;
+}
+
+[data-theme="light"] .mobileTabItem {
+  background-color: #f0f0f0;
+  color: #555555;
+}
+
+[data-theme="light"] .mobileTabItemActive {
+  background: linear-gradient(90deg, #612886, #892A82);
+  color: #ffffff;
+}

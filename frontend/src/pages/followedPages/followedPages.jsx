@@ -5,7 +5,7 @@ import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
 import PostCard from '../../components/posts/postCard'
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X as XIcon } from 'lucide-react'
 import CommentsModal from '../../components/comments/commentsModal'
 import Search from '../../Assets/icons/search.png';
 import VerifiedBadge from '../../Assets/icons/verified-mark.png';
@@ -16,6 +16,9 @@ import Block from '../../Assets/icons/block.png';
 import ReportModal from '../../components/posts/ReportModal';
 import API from '../../config';
 import useTheme from '../../hooks/useTheme'
+import MobileHeader from '../../components/mobileHeader/mobileHeader';
+import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
+import ProfilePicture from '../../Assets/icons/default-pfp.png';
 export default function FollowedPages() {
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
@@ -31,6 +34,9 @@ export default function FollowedPages() {
     const { userId } = useParams();
     const [reportTargetId, setReportTargetId] = useState(null);
 
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const mobileMenuRef = useRef(null);
 
     const [userError, setUserError] = useState("");
     const [userLoading, setUserLoading] = useState(true);
@@ -106,10 +112,10 @@ export default function FollowedPages() {
                 const userRes = await fetch(`${API}/api/auth/me/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
+                if (!userRes.ok) return;
                 const userData = await userRes.json();
 
-
-                if (userData.role === 'university' || localStorage.getItem('user_type') === 'university') {
+                if ((userData.role === 'university' || localStorage.getItem('user_type') === 'university') && userData.id) {
                     const pageRes = await fetch(`${API}/api/pages/${userData.id}/`, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
@@ -209,32 +215,22 @@ export default function FollowedPages() {
         fetchRecommended();
     }, []);
 
+
     useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const token = localStorage.getItem("access");
-                if (!token) return;
-
-                const res = await fetch(`${API}/api/auth/me/`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (!res.ok) throw new Error("Failed to fetch user");
-
-                const data = await res.json();
-                setCurrentUser(data);
-            } catch (err) {
-                console.error(err);
-                setUserError("Failed to load user");
-            } finally {
-                setUserLoading(false);
-            }
-        };
-
-        fetchUser();
+        const check = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener("resize", check);
+        return () => window.removeEventListener("resize", check);
     }, []);
+
+    useEffect(() => {
+        document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
+    }, [mobileMenuOpen]);
+
+    const rawAvatar = currentUser?.profile?.avatar || currentUser?.avatar || currentUser?.profile_image;
+    const avatarSrc = rawAvatar
+        ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
+        : ProfilePicture;
 
     const handleNextSlide = () => {
         setCurrentSlide((prev) => (prev + 1) % recommendedPages.length);
@@ -244,183 +240,203 @@ export default function FollowedPages() {
         setCurrentSlide((prev) => (prev === 0 ? recommendedPages.length - 1 : prev - 1));
     };
 
-    return (
-        <div className={styles.darkContainer}>
-            <div className={`${styles.header} ${styles.page}`}>
-                <Header theme={theme} toggleTheme={toggleTheme} user={currentUser} />
+    const recommendedSection = (
+        <>
+            <div className={styles.recommendedHeaderRow}>
+                <div className={styles.recommendedTitle}>
+                    <span className={styles.highlightText}>Recommended</span>
+                    <span className={styles.normalText}> pages</span>
+                </div>
+                <button className={styles.viewAllBtn} onClick={() => setShowAllRec(prev => !prev)}>
+                    {showAllRec ? 'Show less' : 'View all'}
+                </button>
             </div>
-            <div className={`${styles.page} ${styles.content}`}>
-                <SideBarNav
-                    variant={userId ? "profile" : "default"}
-                    currentUser={currentUser}
-                />
-                <div className={styles.followedPagesPosts}>
+            {recommendedPages.length > 0 && (
+                <div className={styles.recCardsContainer}>
+                    {(showAllRec ? recommendedPages : recommendedPages.slice(0, 3))
+                        .filter(page => page.id !== ownPageId)
+                        .map(page => (
+                            <div key={page.id} className={styles.recCard} onClick={() => navigate(`/page/${page.id}`)}>
+                                <img src={page.avatar} alt={page.name} className={styles.recCardImg} />
+                                <div className={styles.recCardInfo}>
+                                    <span className={styles.recCardName}>{page.name || page.page_name}</span>
+                                    <img src={VerifiedBadge} alt="Verified" className={styles.verifiedIcon} />
+                                </div>
+                            </div>
+                        ))}
+                </div>
+            )}
+        </>
+    );
 
-
-                    <div className={styles.recommendedHeaderRow}>
-                        <div className={styles.recommendedTitle}>
-                            <span className={styles.highlightText}>Recommended</span>
-                            <span className={styles.normalText}> pages</span>
-                        </div>
-                        <button
-                            className={styles.viewAllBtn}
-                            onClick={() => setShowAllRec(prev => !prev)}
-                        >
-                            {showAllRec ? 'Show less' : 'View all'}
-                        </button>
+    const postsSection = (
+        <>
+            <div className={styles.sectionDivider}></div>
+            {posts.length > 0 ? (
+                <div className={styles.postContainer} style={isMobile ? { minWidth: 0 } : {}}>
+                    <div className={styles.innerContainer}>
+                        {posts.map(post => (
+                            <PostCard key={post.id} post={post} isOwnProfile={false} openComments={() => handleOpenComments(post)} />
+                        ))}
                     </div>
+                </div>
+            ) : (
+                <div className={styles.emptyState}>
+                    <div className={styles.emptyIconWrapper}>
+                        <span className={styles.emptyIcon}>📭</span>
+                    </div>
+                    <h2 className={styles.emptyTitle}>No posts yet</h2>
+                    <p className={styles.emptySubtitle}>Pages you follow haven't posted anything yet.</p>
+                </div>
+            )}
+        </>
+    );
 
-                    {recommendedPages.length > 0 && (
-                        <div className={styles.recCardsContainer}>
-                            {(showAllRec ? recommendedPages : recommendedPages.slice(0, 3))
-                                .filter(page => page.id !== ownPageId)
-                                .map(page => (
-                                    <div
-                                        key={page.id}
-                                        className={styles.recCard}
-                                        onClick={() => navigate(`/page/${page.id}`)}
-                                    >
-                                        <img
-                                            src={page.avatar}
-                                            alt={page.name}
-                                            className={styles.recCardImg}
-                                        />
-                                        <div className={styles.recCardInfo}>
-                                            <span className={styles.recCardName}>
-                                                {page.name || page.page_name}
-                                            </span>
-                                            <img
-                                                src={VerifiedBadge}
-                                                alt="Verified"
-                                                className={styles.verifiedIcon}
-
-                                            />
+    const rightPanelContent = (showPill) => (
+        <div className={styles.rightSectionWrapper}>
+            {showPill && <div className={styles.pill}>FOLLOWED PAGES</div>}
+            <div className={styles.rightCard}>
+                <div className={styles.followedHeaderRow} style={{ marginBottom: '12px', flexWrap: 'wrap', gap: 8 }}>
+                    <div className={styles.searchContactWrap} style={{ flex: 1, minWidth: 0 }}>
+                        <img src={Search} alt="Search" className={styles.searchIcon} />
+                        <input
+                            type="text"
+                            placeholder="Search followed pages..."
+                            className={styles.searchInput}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <button
+                        className={styles.viewAllBtn}
+                        style={{ flexShrink: 0, padding: "10px 20px" }}
+                        onClick={() => setShowAllPopup(true)}
+                    >
+                        View All
+                    </button>
+                </div>
+                <div className={styles.rightList}>
+                    {pages
+                        .filter(page => page.id !== ownPageId)
+                        .filter(page => (page.name || "").toLowerCase().includes(searchTerm.toLowerCase()))
+                        .map((page, index) => (
+                            <div key={page.id} className={styles.pageWrapper}>
+                                <div className={styles.pageItemRow}>
+                                    <div className={styles.pageItemLeft} onClick={() => navigate(`/page/${page.id}`)}>
+                                        <div className={styles.pageAvatarWrapper}>
+                                            <img src={page.avatar} alt={page.name} className={styles.pageAvatar} />
+                                        </div>
+                                        <div className={styles.pageInfo}>
+                                            <div className={styles.pageName}>{page.name}</div>
+                                            <div className={styles.pageCategory}>{page.category || "Page"}</div>
                                         </div>
                                     </div>
-                                ))}
-                        </div>
-                    )}
-
-                    {/* ── Section Divider ── */}
-                    <div className={styles.sectionDivider}></div>
-
-                    {/* ── Posts ── */}
-                    {posts.length > 0 ? (
-                        <div className={styles.postContainer}>
-                            <div className={styles.innerContainer}>
-                                {posts.map(post => (
-                                    <PostCard
-                                        key={post.id}
-                                        post={post}
-                                        isOwnProfile={false}
-                                        openComments={() => handleOpenComments(post)}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className={styles.emptyState}>
-                            <div className={styles.emptyIconWrapper}>
-                                <span className={styles.emptyIcon}>📭</span>
-                            </div>
-                            <h2 className={styles.emptyTitle}>No posts yet</h2>
-                            <p className={styles.emptySubtitle}>Pages you follow haven't posted anything yet.</p>
-                        </div>
-                    )}
-                </div>
-
-                {/* ── Right Section ── */}
-                <div className={styles.rightSection}>
-
-                    {/* YOU FOLLOW block */}
-                    <div className={styles.rightSectionWrapper}>
-                        <div className={styles.pill}>FOLLOWED PAGES</div>
-
-                        <div className={styles.rightCard}>
-                            <div className={styles.followedHeaderRow} style={{ marginBottom: '12px' }}>
-
-
-                                <div className={styles.searchContactWrap}>
-                                    <img src={Search} alt="Search" className={styles.searchIcon} />
-
-                                    <input
-                                        type="text"
-                                        placeholder="Search followed pages..."
-                                        className={styles.searchInput}
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </div>
-                                <button
-                                    className={styles.viewAllBtn}
-                                    style={{ marginBottom: "20px", padding: "13px 30px" }}
-                                    onClick={() => setShowAllPopup(true)}
-                                >
-                                    View All
-                                </button>
-
-
-                            </div>
-
-
-                            <div className={styles.rightList}>
-                                {pages
-                                    .filter(page => page.id !== ownPageId)
-                                    .filter(page =>
-                                        (page.name || "")
-                                            .toLowerCase()
-                                            .includes(searchTerm.toLowerCase())
-                                    )
-                                    .map((page, index) => (
-                                        <div key={page.id} className={styles.pageWrapper}>
-                                            <div className={styles.pageItemRow}>
-                                                <div
-                                                    className={styles.pageItemLeft}
-                                                    onClick={() => navigate(`/page/${page.id}`)}
-                                                >
-                                                    <div className={styles.pageAvatarWrapper}>
-                                                        <img
-                                                            src={page.avatar}
-                                                            alt={page.name}
-                                                            className={styles.pageAvatar}
-                                                        />
-                                                    </div>
-
-                                                    <div className={styles.pageInfo}>
-                                                        <div className={styles.pageName}>
-                                                            {page.name}
-                                                        </div>
-                                                        <div className={styles.pageCategory}>
-                                                            {page.category || "Page"}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className={styles.pageActions}>
-                                                    <div className={styles.dropdownContainer}>
-
-                                                        <button
-                                                            className={styles.actionBtn}
-                                                            onClick={(e) => handleToggleMenu(e, page.id)}
-                                                        >
-                                                            •••
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {index !== pages.length - 1 && (
-                                                <div className={styles.divider}></div>
-                                            )}
+                                    <div className={styles.pageActions}>
+                                        <div className={styles.dropdownContainer}>
+                                            <button className={styles.actionBtn} onClick={(e) => handleToggleMenu(e, page.id)}>•••</button>
                                         </div>
-                                    ))}
+                                    </div>
+                                </div>
+                                {index !== pages.length - 1 && <div className={styles.divider}></div>}
                             </div>
-                        </div>
-                    </div>
-
-
+                        ))}
                 </div>
             </div>
+        </div>
+    );
+
+    return (
+        <div className={styles.darkContainer} data-theme={theme}>
+            {/* ══════════════════════════════════════
+                    MOBILE HEADER BAR
+                ══════════════════════════════════════ */}
+            {isMobile && (
+                <MobileHeader
+                    avatarSrc={avatarSrc}
+                    user={currentUser}
+                    setMobileMenuOpen={setMobileMenuOpen}
+                    token={token}
+                    API={API}
+                />
+            )}
+
+            {/* ══════════════════════════════════════
+                    MOBILE DRAWER
+                ══════════════════════════════════════ */}
+            {isMobile && mobileMenuOpen && (
+                <div style={{ position: "fixed", inset: 0, zIndex: 9998 }}>
+                    <div
+                        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+                        onClick={() => setMobileMenuOpen(false)}
+                    />
+                    <div
+                        ref={mobileMenuRef}
+                        style={{
+                            position: "absolute", left: 0, top: 0,
+                            height: "100%", width: "75vw", maxWidth: 350,
+                            background: "linear-gradient(135deg, var(--bg-main), var(--bg-secondary))",
+                            borderRight: "1px solid rgba(255,255,255,0.1)",
+                            display: "flex", flexDirection: "column", overflow: "hidden",
+                            boxShadow: "4px 0 30px rgba(0,0,0,0.6)"
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button
+                            style={{
+                                position: "absolute", top: 14, right: 14, zIndex: 10,
+                                width: 32, height: 32, borderRadius: "50%",
+                                background: "rgba(255,255,255,0.1)", border: "none",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                cursor: "pointer"
+                            }}
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            <XIcon size={16} color="white" />
+                        </button>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                            <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
+                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
+                        </div>
+                        <div style={{ flex: 1, overflowY: "auto" }}>
+                            <SideBarNav variant="profile" currentUser={currentUser} onClose={() => setMobileMenuOpen(false)} />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ══════════════════════════════════════
+                    DESKTOP HEADER
+                ══════════════════════════════════════ */}
+            {!isMobile && (
+                <div className={`${styles.header} ${styles.page}`}>
+                    <Header theme={theme} toggleTheme={toggleTheme} user={currentUser} />
+                </div>
+            )}
+
+            {/* ══════════════════════════════════════
+                    MOBILE BODY
+                ══════════════════════════════════════ */}
+            {isMobile && (
+                <div style={{ display: "flex", flexDirection: "column", width: "100%", boxSizing: "border-box", padding: "12px 10px 0 10px" }}>
+                    {recommendedSection}
+                    {rightPanelContent(false)}
+                    {postsSection}
+                </div>
+            )}
+
+            {/* ══════════════════════════════════════
+                    DESKTOP BODY
+                ══════════════════════════════════════ */}
+            {!isMobile && (
+                <div className={`${styles.page} ${styles.content}`}>
+                    <SideBarNav variant={userId ? "profile" : "default"} currentUser={currentUser} />
+                    <div className={styles.followedPagesPosts}>
+                        {recommendedSection}
+                        {postsSection}
+                    </div>
+                    <div className={styles.rightSection}>{rightPanelContent(true)}</div>
+                </div>
+            )}
 
             {/* VIEW ALL POPUP MODAL */}
             {showAllPopup && (

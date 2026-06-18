@@ -12,8 +12,10 @@ import { createPortal } from 'react-dom';
 import API from '../../config';
 import useTheme from '../../hooks/useTheme';
 import DefaultBanner from '../../Assets/Pictures/default-community-banner.png';
+import { useNavigate } from 'react-router-dom';
 
 export default function PageEventsPage() {
+    const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
 
     const [currentUser, setCurrentUser] = useState(null);
@@ -185,7 +187,7 @@ export default function PageEventsPage() {
                             padding: '20px 16px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)'
                         }}>
                             <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                            <span style={{ color: '#fff', fontWeight: 800, fontSize: '1.3rem', letterSpacing: 1 }}>CAMPUS</span>
+                            <span style={{ color: '#fff', fontWeight: 800, fontSize: '1.3rem', letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
                         </div>
                         <div style={{ flex: 1, overflowY: 'auto' }}>
                             <SideBarNav onClose={() => setMobileMenuOpen(false)} />

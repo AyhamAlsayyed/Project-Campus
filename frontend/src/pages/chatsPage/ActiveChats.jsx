@@ -405,14 +405,14 @@ export default function ActiveChat({
                 <GroupInfoPanel
                     group={fullGroupData || selectedChat}
                     API={API}
-                    members={[]}
+                    members={fullGroupData?.members || []}
                     currentUser={user}
                     token={token}
                     messages={messages}
                     otherMemberId={selectedChat?.other_member_id}
                     onBack={() => setShowGroupInfo(false)}
                     onMakeMemberAdmin={async (member) => {
-                        await fetch(`${API}/api/groups/${selectedChat.id}/make-admin/`, {
+                        await fetch(`${API}/api/groups/${selectedChat.id}/toggle-admin/`, {
                             method: 'POST',
                             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                             body: JSON.stringify({ member_id: member.id })
