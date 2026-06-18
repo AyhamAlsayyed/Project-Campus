@@ -1,3 +1,5 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -5,9 +7,16 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
-from ...models import Community, Message, Notification, Post, PostReaction, SavedPost
+
+from ...models import (
+    Community,
+    Message,
+    Notification,
+    Post,
+    PostAdReaction,
+    PostReaction,
+    SavedPost,
+)
 from ...utils.community import ensure_community_admin
 from ...utils.notifications import send_global_notification
 
@@ -96,7 +105,7 @@ def send_post(request):
     user = request.user
     text = request.data.get("text", "")
     post_id = request.data.get("post_id")
-
+    conversation_id = request.data["recipient_id"]
     shared_post = None
     if post_id:
         try:
@@ -110,7 +119,7 @@ def send_post(request):
         return Response({"error": "Empty message"}, status=status.HTTP_400_BAD_REQUEST)
 
     msg = Message.objects.create(
-        conversation_id=request.data["recipient_id"],
+        conversation_id=conversation_id,
         content=text,
         sender=user,
         shared_post=shared_post,
@@ -128,7 +137,7 @@ def send_post(request):
             "content": msg.content or "",
             "shared_post_id": msg.shared_post_id,
             "sent_at": msg.sent_at.isoformat(),
-        }
+        },
     )
 
     return Response(
@@ -201,4 +210,56 @@ def toggle_community_highlight(request, post_id):
         return Response(
             {"is_highlighted": True, "message": "Post successfully added to community highlights."},
             status=status.HTTP_200_OK,
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def toggle_react(request, post_id):
+    user = request.user
+    reaction_input = request.data.get("reaction")
+
+    try:
+        post = Post.objects.get(pk=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if post.post_type != Post.PostType.ADVERTISEMENT:
+        return Response(
+            {"error": "This feedback system is only available for advertisement posts."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    existing_reaction = PostAdReaction.objects.filter(post=post, user=user).first()
+
+    if reaction_input is None:
+        if existing_reaction:
+            existing_reaction.delete()
+            return Response(
+                {"message": "Reaction cleared successfully", "status": "removed"}, status=status.HTTP_200_OK
+            )
+        return Response({"message": "No reaction existed to clear", "status": "no_change"}, status=status.HTTP_200_OK)
+
+    reaction_str = str(reaction_input).lower().strip()
+    if reaction_str not in ["good", "neutral", "bad"]:
+        return Response(
+            {"error": "Invalid reaction choice. Must be 'good', 'neutral', or 'bad'."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if existing_reaction:
+        if existing_reaction.reaction_type == reaction_str:
+            existing_reaction.delete()
+            return Response({"message": "Reaction removed", "status": "removed"}, status=status.HTTP_200_OK)
+        else:
+            existing_reaction.reaction_type = reaction_str
+            existing_reaction.save()
+            return Response(
+                {"message": f"Reaction updated to {reaction_str}", "status": "updated"}, status=status.HTTP_200_OK
+            )
+    else:
+        PostAdReaction.objects.create(post=post, user=user, reaction_type=reaction_str)
+        return Response(
+            {"message": f"Reaction {reaction_str} added successfully", "status": "created"},
+            status=status.HTTP_201_CREATED,
         )

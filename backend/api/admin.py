@@ -23,6 +23,7 @@ from .models import (
     Page,
     PageRating,
     Post,
+    PostAdReaction,
     PostMedia,
     PostReaction,
     Promotion,
@@ -37,6 +38,7 @@ from .models import (
 )
 
 admin.site.register(UserProfile)
+admin.site.register(PostAdReaction)
 admin.site.register(EmailVerification)
 admin.site.register(Page)
 admin.site.register(Subscription)

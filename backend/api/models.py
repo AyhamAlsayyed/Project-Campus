@@ -785,6 +785,29 @@ class SavedPost(models.Model):
         return f"{username} saved Post #{self.post_id}"
 
 
+class PostAdReaction(models.Model):
+    class FeedbackType(models.TextChoices):
+        GOOD = "good", "Good"
+        NEUTRAL = "neutral", "Neutral"
+        BAD = "bad", "Bad"
+
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="ad_reactions", db_column="post_id")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="ad_reactions", db_column="user_id"
+    )
+    reaction_type = models.CharField(max_length=10, choices=FeedbackType.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "post_ad_reaction"
+        constraints = [
+            models.UniqueConstraint(fields=["post", "user"], name="uniq_post_user_ad_reaction"),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.post_id} ({self.reaction_type})"
+
+
 class PostMedia(models.Model):
     media_id = models.BigAutoField(primary_key=True, db_column="media_id")
 

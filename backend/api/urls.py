@@ -115,6 +115,7 @@ from .views.posts.post_action import (
     toggle_community_highlight,
     toggle_like,
     toggle_pin_post,
+    toggle_react,
 )
 from .views.posts.post_create import create_post
 from .views.posts.posts import feed, get_activity_posts, get_saved_posts
@@ -200,6 +201,7 @@ urlpatterns += [
     path("messages/send/", send_post),
     # post_action
     path("posts/<int:post_id>/like/", toggle_like),
+    path("posts/<int:post_id>/react/", toggle_react),
     path("posts/<int:post_id>/save/", save_post),
     path("posts/<int:post_id>/pin/", toggle_pin_post),
     path("posts/<int:post_id>/", delete_post),

@@ -19,6 +19,7 @@ from .models import (
     Page,
     PageRating,
     Post,
+    PostAdReaction,
     PostMedia,
     Promotion,
     Subscription,
@@ -787,6 +788,17 @@ class PostSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
     top_3comments_avatar = serializers.SerializerMethodField()
+    ad_reaction = serializers.SerializerMethodField()  # 🛠️ Add the new field method reference
+
+    def get_ad_reaction(self, obj):
+        if obj.post_type != Post.PostType.ADVERTISEMENT:
+            return None
+
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            reaction = PostAdReaction.objects.filter(post=obj, user=request.user).first()
+            return reaction.reaction_type if reaction else None
+        return None
 
     def get_is_saved(self, obj):
         return getattr(obj, "is_saved", False)
@@ -934,6 +946,7 @@ class PostSerializer(serializers.ModelSerializer):
             "comments_count",
             "is_pinned",
             "top_3comments_avatar",
+            "ad_reaction",
         ]
 
 
