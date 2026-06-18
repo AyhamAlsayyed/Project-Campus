@@ -292,7 +292,7 @@ export default function Homepage() {
             const formData = new FormData();
             formData.append("content", postContent);
 
-            if (isAnnouncement) {
+            if (isAnnouncement && localStorage.getItem("user_type") === "university") {
                 formData.append("title", announcementTitle);
                 formData.append("post_type", "announcement");
                 formData.append("duration", ["1 week", "1 month", "3 months", "6 months", "1 year"][announcementDuration]);
@@ -305,6 +305,7 @@ export default function Homepage() {
 
             if (isAnnouncement && user?.role === "instructor") {
                 formData.append("is_academic", "true");
+                formData.append("post_type", "academy");
             }
 
             images.forEach(img => formData.append("images", img));
@@ -965,7 +966,7 @@ export default function Homepage() {
                                 handleCreatePost();
                             }}
                             disabled={
-                                isAnnouncement
+                                isAnnouncement && localStorage.getItem("user_type") === "university"
                                     ? (!announcementTitle.trim() || !announcementDesc.trim())
                                     : isPromote
                                         ? (!promoteTitle.trim() || !promoteContent.trim() || !promoteDesc.trim())

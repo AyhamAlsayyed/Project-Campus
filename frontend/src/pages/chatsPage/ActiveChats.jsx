@@ -14,6 +14,7 @@ import { API, normalizeMessages, getSenderName } from './chatUtils';
 import ReportModal from '../../components/posts/ReportModal';
 import { useChatSocket } from '../../hooks/useChatSocket';
 import SharedAdModal from '../../components/chat/SharedAdModal';
+import StatusDot from '../../components/presence/StatusDot';
 
 function dotStyle(i) {
     return {
@@ -446,22 +447,32 @@ export default function ActiveChat({
                                 <button className={styles.iconBtn} onClick={onBack}>
                                     <img src={BackButton} alt="" style={{ width: 22, height: 22, filter: 'brightness(0) invert(1) opacity(0.9)' }} />
                                 </button>
-                                <img
-                                    src={resolveUrl(selectedChat.avatar)}
-                                    alt={selectedChat.name}
-                                    className={styles.activeChatAvatar}
-                                    onClick={() => {
-                                        if (!selectedChat.is_group && selectedChat.other_member_id)
-                                            window.location.href = `/profile/${selectedChat.other_member_id}`;
-                                    }}
-                                    style={!selectedChat.is_group ? { cursor: 'pointer' } : {}}
-                                />
+                                <div className={styles.avatarStatusWrapper}>
+                                    <img
+                                        src={resolveUrl(selectedChat.avatar)}
+                                        alt={selectedChat.name}
+                                        className={styles.activeChatAvatar}
+                                        onClick={() => {
+                                            if (!selectedChat.is_group && selectedChat.other_member_id)
+                                                window.location.href = `/profile/${selectedChat.other_member_id}`;
+                                        }}
+                                        style={!selectedChat.is_group ? { cursor: 'pointer' } : {}}
+                                    />
+                                    {!selectedChat.is_group && selectedChat.other_member_id && (
+                                        <span className={styles.headerStatusDot}>
+                                            <StatusDot userId={selectedChat.other_member_id} size="lg" />
+                                        </span>
+                                    )}
+                                </div>
                                 {!chatSearchOpen && (
                                     <div className={styles.headerTitleInfo}>
                                         {selectedChat.is_group && (
                                             <span className={styles.professorName}>{selectedChat.conversations_owner}</span>
                                         )}
                                         <h2 className={styles.groupName}>{selectedChat.name}</h2>
+                                        {!selectedChat.is_group && selectedChat.full_name && (
+                                            <span className={styles.headerFullName}>{selectedChat.full_name}</span>
+                                        )}
                                         <p className={styles.memberSubtitle}>{selectedChat.members}</p>
                                     </div>
                                 )}

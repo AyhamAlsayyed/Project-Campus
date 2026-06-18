@@ -192,8 +192,10 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    min-height: calc(100vh - 350px);
-    max-height:calc(100vh - 350px) ;
+    height: 100svh;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
 }
 
 .messageAvatar {
@@ -734,20 +736,37 @@
     letter-spacing: 0.5px;
 }
 
+.avatarStatusWrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
 .activeChatAvatar {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-
     object-fit: cover;
     border: 1px solid #333;
-    /* Optional: adds a slight border like the reference */
+    display: block;
+}
+
+.headerStatusDot {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    line-height: 0;
 }
 
 .groupName {
     font-size: 1.3rem;
     margin: 2px 0;
     color: #fff;
+}
+
+.headerFullName {
+    font-size: 0.78rem;
+    color: #aaa;
+    margin: -2px 0 2px;
 }
 
 .memberSubtitle {
@@ -996,11 +1015,9 @@
     gap: 12px;
     padding: 15px 20px;
     background: rgba(30, 30, 30, 0.6);
-  
     border-radius: 30px;
     margin: 10px 20px 20px 20px;
     border: 1px solid rgba(255, 255, 255, 0.05);
-
 }
 
 .messageInput {
