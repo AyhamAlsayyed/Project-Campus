@@ -43,7 +43,7 @@ def toggle_like(request, post_id):
             actor=user,
             content_type=post_content_type,
             object_id=post.post_id,
-            type=Notification.Type.COMMENT,
+            type="COMMENT",
         ).delete()
 
     else:

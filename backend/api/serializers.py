@@ -404,6 +404,7 @@ class TeachingPositionSerializer(serializers.ModelSerializer):
 class ConversationSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source="conversation.conversation_id", read_only=True)
     name = serializers.SerializerMethodField()
+    full_name = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
     preview = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
@@ -432,6 +433,7 @@ class ConversationSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
+            "full_name",
             "avatar",
             "description",
             "role",
@@ -475,9 +477,28 @@ class ConversationSerializer(serializers.ModelSerializer):
             return conv.name or "Group"
 
         other_member_obj = self._get_other_member(obj)
-        if other_member_obj:
+        if other_member_obj and other_member_obj.user:
+            return other_member_obj.user.username or "Deleted Account"
+        return "Unknown"
+
+    def get_full_name(self, obj):
+        conv = obj.conversation
+        if conv.is_group:
+            return conv.name or "Group"
+
+        other_member_obj = self._get_other_member(obj)
+        if other_member_obj and other_member_obj.user:
             other_user = other_member_obj.user
-            return other_user.username if other_user else "Deleted Account"
+
+            if hasattr(other_user, "page"):
+                return other_user.page.page_full_name or other_user.username
+
+            profile = getattr(other_user, "profile", None)
+            if profile and getattr(profile, "full_name", None):
+                return profile.full_name
+
+            return other_user.username or "Deleted Account"
+
         return "Unknown"
 
     def get_avatar(self, obj):
@@ -969,6 +990,8 @@ class CommentSerializer(serializers.ModelSerializer):
             "has_reacted",
             "replies_count",
             "created_at",
+            "is_edited",
+            "edited_at",
         ]
 
     def get_reactions_count(self, obj):
@@ -1390,6 +1413,8 @@ class MessageSerializer(serializers.ModelSerializer):
             "parent_message",
             "sent_at",
             "media",
+            "is_edited",
+            "edited_at",
         ]
         read_only_fields = ["sent_at"]
 

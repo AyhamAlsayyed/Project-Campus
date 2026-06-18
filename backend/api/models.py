@@ -864,6 +864,9 @@ class Comment(models.Model):
         db_column="parent_comment_id",
     )
 
+    is_edited = models.BooleanField(default=False)
+    edited_at = models.DateTimeField(null=True, blank=True)
+
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
@@ -1157,7 +1160,16 @@ class Message(models.Model):
 
     sent_at = models.DateTimeField(auto_now_add=True)
 
+    is_edited = models.BooleanField(default=False)
+    edited_at = models.DateTimeField(null=True, blank=True)
+
     def save(self, *args, **kwargs):
+        if self.pk:
+            original = Message.objects.get(pk=self.pk)
+            if original.content != self.content:
+                self.is_edited = True
+                self.edited_at = timezone.now()
+
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -1179,9 +1191,10 @@ class Message(models.Model):
         else:
             destination = f"DM Chat ({self.conversation.conversation_id})"
 
+        edited_suffix = " [Edited]" if self.is_edited else ""
         snippet = f": {self.content[:25]}..." if self.content else " [Media/Shared Content]"
 
-        return f"{sender_name} in {destination}{snippet}"
+        return f"{sender_name} in {destination}{snippet}{edited_suffix}"
 
 
 class MessageMedia(models.Model):

@@ -179,7 +179,7 @@ def create_post(request):
     # notification
     recipient_users = set()
     notification_content_text = f"{user.username} posted something new"
-    db_enum_type = Notification.Type.POST_CREATED
+    db_enum_type = "NEW POST"
     notification_type_key = "friend_post"
 
     has_page = Page.objects.filter(user=user).first()
