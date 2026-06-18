@@ -1399,8 +1399,8 @@ class MessageSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source="message_id", read_only=True)
     sender = UserMinimalSerializer(read_only=True)
     media = MessageMediaSerializer(many=True, read_only=True)
-
     shared_post = PostSerializer(read_only=True)
+    reactions = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
@@ -1415,8 +1415,47 @@ class MessageSerializer(serializers.ModelSerializer):
             "media",
             "is_edited",
             "edited_at",
+            "reactions",
         ]
         read_only_fields = ["sent_at"]
+
+    def get_reactions(self, obj):
+        request = self.context.get("request")
+        current_user_id = request.user.id if request and not request.user.is_anonymous else None
+
+        groups = {}
+        for reaction in obj.reactions.all():
+            key = reaction.message_reaction_type
+            if key not in groups:
+                groups[key] = []
+            groups[key].append(reaction)
+
+        result = []
+        for reaction_type, reaction_list in groups.items():
+            emoji = "❤️" if reaction_type == "like" else reaction_type
+            is_me = any(r.user_id == current_user_id for r in reaction_list) if current_user_id else False
+            reactors = []
+            for r in reaction_list:
+                if r.user:
+                    avatar = None
+                    try:
+                        if r.user.profile and r.user.profile.profile_image and request:
+                            avatar = request.build_absolute_uri(r.user.profile.profile_image.url)
+                    except Exception:
+                        pass
+                    reactors.append({
+                        "username": r.user.username,
+                        "avatar": avatar,
+                        "isMe": r.user_id == current_user_id,
+                    })
+            result.append({
+                "emoji": emoji,
+                "count": len(reaction_list),
+                "isMe": is_me,
+                "reactors": reactors,
+            })
+
+        return result
 
 
 class PromotionSerializer(serializers.ModelSerializer):

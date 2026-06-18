@@ -1,3 +1,5 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Q
@@ -70,7 +72,7 @@ def get_messages(request, conversation_id):
             "parent_message__sender",
             "shared_post",
         )
-        .prefetch_related("media")
+        .prefetch_related("media", "reactions__user__profile")
         .order_by("sent_at")
     )
 
@@ -239,6 +241,35 @@ def send_message(request, conversation_id):
 
     conv.last_message = msg
     conv.save(update_fields=["last_message"])
+
+    # Broadcast to WS group so other members receive media messages in real-time
+    try:
+        avatar_url = None
+        try:
+            avatar = user.profile.profile_image
+            if avatar:
+                avatar_url = request.build_absolute_uri(avatar.url)
+        except Exception:
+            pass
+
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{conversation_id}",
+            {
+                "type": "chat_message",
+                "message_id": msg.message_id,
+                "conversation_id": int(conversation_id),
+                "sender_id": user.id,
+                "username": user.username,
+                "avatar": avatar_url,
+                "content": msg.content,
+                "parent_message_id": parent_message.message_id if parent_message else None,
+                "sent_at": msg.sent_at.isoformat(),
+                "media": media_data_response,
+            },
+        )
+    except Exception:
+        pass  # WS broadcast is best-effort; REST response is authoritative
 
     return Response(
         {

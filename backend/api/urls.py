@@ -6,7 +6,8 @@ from .views.auth.signup.send_code import send_code
 from .views.auth.signup.signup import signup
 from .views.auth.signup.verify_code import change_password, verify_code
 from .views.auth.TFA import send_2fa_code, verify_2fa_code
-from .views.comment.comments import (  # toggle_comment_like,
+from .views.comment.comments import (
+    toggle_comment_like,
     comment_list,
     create_comment,
     delete_comment,
@@ -45,7 +46,8 @@ from .views.communities.community_member_action import (
     kick_community_member,
     toggle_community_admin,
 )
-from .views.conversation.conversation import (  # toggle_message_reaction,
+from .views.conversation.conversation import (  
+    toggle_message_reaction,
     create_dm,
     create_group_conversation,
     delete_message,
@@ -198,6 +200,7 @@ urlpatterns += [
     path("posts/<int:post_id>/comments/create/", create_comment),
     path("comments/<int:comment_id>/delete/", delete_comment),
     path("comments/<int:comment_id>/edit/", edit_comment),
+    path("comments/<int:comment_id>/react/", toggle_comment_like),
     # post share
     path("messages/send/", send_post),
     # post_action
@@ -254,6 +257,7 @@ urlpatterns += [
     path("chats/<int:conversation_id>/send/", send_message),
     path("messages/<int:message_id>/delete/", delete_message),
     path("messages/<int:message_id>/edit/", edit_message),
+    path("messages/<int:message_id>/react/", toggle_message_reaction),
     # chat_action
     path("chats/<int:conversation_id>/pin/", toggle_pin),
     path("chats/<int:conversation_id>/mute/", toggle_mute),

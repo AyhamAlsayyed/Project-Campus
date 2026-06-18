@@ -298,14 +298,14 @@ export default function CommentModal({ post, onClose, currentUser }) {
             c.id === id ? { ...c, isLiked: !c.isLiked, likes: c.isLiked ? c.likes - 1 : c.likes + 1 } : c
         ));
         try {
-            const res = await fetch(`${API}/api/comments/${id}/like/`, {
+            const res = await fetch(`${API}/api/comments/${id}/react/`, {
                 method: "POST",
-                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
                 const data = await res.json();
                 setComments(prev => prev.map(c =>
-                    c.id === id ? { ...c, isLiked: data.liked, likes: data.reactions_count } : c
+                    c.id === id ? { ...c, isLiked: data.is_liked } : c
                 ));
             } else {
                 // Revert on failure
@@ -511,23 +511,30 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                             <img src={c.user_avatar || defaultPfp} className={styles.commentAvatar} alt="" />
                                         </Link>
                                         <div className={styles.commentContent}>
-                                            <div className={`${styles.commentBubble} ${highlightedId === c.id ? styles.highlighted : ''}`}>
-                                                <div className={styles.commentAuthor}>{c.user}</div>
-                                                <p>
-                                                    {c.text}
-                                                    {c.is_edited && (
-                                                        <span style={{ fontSize: '0.7rem', opacity: 0.7, marginLeft: '6px', fontStyle: 'italic' }}>
-                                                            (edited)
-                                                        </span>
-                                                    )}
-                                                </p>
+                                            <div className={styles.commentBubbleWrap}>
+                                                <div className={`${styles.commentBubble} ${highlightedId === c.id ? styles.highlighted : ''}`}>
+                                                    <div className={styles.commentAuthor}>{c.user}</div>
+                                                    <p>
+                                                        {c.text}
+                                                        {c.is_edited && (
+                                                            <span style={{ fontSize: '0.7rem', opacity: 0.7, marginLeft: '6px', fontStyle: 'italic' }}>
+                                                                (edited)
+                                                            </span>
+                                                        )}
+                                                    </p>
+                                                </div>
+                                                {c.likes > 0 && (
+                                                    <div className={styles.likesBadge} onClick={() => toggleLike(c.id)}>
+                                                        👍 <span>{c.likes}</span>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div className={styles.commentActions}>
+                                            <div className={styles.commentActions} style={{ marginTop: c.likes > 0 ? 14 : 4 }}>
                                                 <span
                                                     className={c.isLiked ? styles.liked : ""}
                                                     onClick={() => toggleLike(c.id)}
                                                 >
-                                                    {c.isLiked ? "Liked" : "Like"}{c.likes > 0 ? ` · ${c.likes}` : ""}
+                                                    Like
                                                 </span>
                                                 <span onClick={() => { setParentComment(c); setEditingComment(null); setNewComment(""); }}>Reply</span>
                                                 {c.user === currentUser?.username && (
@@ -553,24 +560,31 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                                 <img src={reply.user_avatar || defaultPfp} className={styles.replyAvatar} alt="" />
                                             </Link>
                                             <div className={styles.replyContent}>
-                                                <div className={`${styles.replyBubble} ${highlightedId === reply.id ? styles.highlighted : ''}`}>
-                                                    <b>{reply.user}</b>
-                                                    <p>
-                                                        <span className={styles.replyingTo}>@{reply.replying_to || c.user}</span>{" "}
-                                                        {reply.text}
-                                                        {reply.is_edited && (
-                                                            <span style={{ fontSize: '0.7rem', opacity: 0.7, marginLeft: '6px', fontStyle: 'italic' }}>
-                                                                (edited)
-                                                            </span>
-                                                        )}
-                                                    </p>
+                                                <div className={styles.commentBubbleWrap}>
+                                                    <div className={`${styles.replyBubble} ${highlightedId === reply.id ? styles.highlighted : ''}`}>
+                                                        <b>{reply.user}</b>
+                                                        <p>
+                                                            <span className={styles.replyingTo}>@{reply.replying_to || c.user}</span>{" "}
+                                                            {reply.text}
+                                                            {reply.is_edited && (
+                                                                <span style={{ fontSize: '0.7rem', opacity: 0.7, marginLeft: '6px', fontStyle: 'italic' }}>
+                                                                    (edited)
+                                                                </span>
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                    {reply.likes > 0 && (
+                                                        <div className={styles.likesBadge} onClick={() => toggleLike(reply.id)}>
+                                                            👍 <span>{reply.likes}</span>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div className={styles.commentActions}>
+                                                <div className={styles.commentActions} style={{ marginTop: reply.likes > 0 ? 14 : 4 }}>
                                                     <span
                                                         className={reply.isLiked ? styles.liked : ""}
                                                         onClick={() => toggleLike(reply.id)}
                                                     >
-                                                        {reply.isLiked ? "Liked" : "Like"}{reply.likes > 0 ? ` · ${reply.likes}` : ""}
+                                                        Like
                                                     </span>
                                                     <span onClick={() => { setParentComment(reply || c); setEditingComment(null); setNewComment(""); }}>Reply</span>
                                                     {reply.user === currentUser?.username && (

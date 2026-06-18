@@ -67,6 +67,7 @@ export function useProfileEdit({ user, token, API, onSaved }) {
 
         // Arrays
         degrees: user?.degrees || [],
+        educationEntries: user?.education || [],
         teachingPositions: user?.teaching_positions || [],
         communityPicks: [],
     });

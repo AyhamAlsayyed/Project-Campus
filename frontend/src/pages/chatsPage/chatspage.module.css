@@ -1289,14 +1289,15 @@
 }
 
 .msgActionGroup {
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.15s, visibility 0.15s;
+    display: none;
+    flex-direction: row;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
 }
 
 .messageWrapper:hover .msgActionGroup {
-    opacity: 1;
-    visibility: visible;
+    display: flex;
 }
 
 .replyIconButton:hover {

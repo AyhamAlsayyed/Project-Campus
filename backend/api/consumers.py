@@ -214,6 +214,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return None
 
     @database_sync_to_async
+    def get_other_member_ids(self, conversation_id, current_user_id):
+        ConversationMember = apps.get_model("api", "ConversationMember")
+        return list(
+            ConversationMember.objects
+            .filter(conversation_id=conversation_id)
+            .exclude(user_id=current_user_id)
+            .values_list("user_id", flat=True)
+        )
+
+    @database_sync_to_async
     def check_membership(self, conversation_id, user):
         ConversationMember = apps.get_model("api", "ConversationMember")
         return ConversationMember.objects.filter(conversation_id=conversation_id, user=user).exists()
@@ -308,10 +318,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
             action = "added"
 
+        try:
+            avatar = user.profile.profile_image
+            avatar_url = avatar.url if avatar else None
+        except Exception:
+            avatar_url = None
+
         return {
             "message_id": message_id,
             "user_id": user.id,
             "username": user.username,
+            "avatar": avatar_url,
             "reaction_type": reaction_type,
             "action": action,
         }

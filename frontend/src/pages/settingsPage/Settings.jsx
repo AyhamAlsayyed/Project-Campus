@@ -1,4 +1,4 @@
-import styles from './settings.module.css';
+import styles from './Settings.module.css';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import Header from '../../components/pagelayout/header/header';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';

@@ -107,3 +107,4 @@
 [data-theme="light"] .sideBarButton:not(.active) img {
   filter: brightness(0) saturate(100%) invert(40%) !important;
 }
+

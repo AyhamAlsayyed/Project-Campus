@@ -971,9 +971,9 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     {(formData.degrees || []).map((deg, i) => (
                                         <div key={i} className={styles.detailFieldItem}>
                                             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                <span style={{ fontSize: 16 }}> <img src={EducationIcon} style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} /></span>
+                                                <span style={{ fontSize: 16 }}><img src={EducationIcon} style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} /></span>
                                                 <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
-                                                    {deg.university || deg.institution}
+                                                    {deg.institution}{deg.title ? ` — ${deg.title}` : ''}
                                                 </span>
                                             </span>
                                             <button
@@ -986,25 +986,27 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     ))}
 
                                     {showAddEducation ? (
-                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0' }}>
+                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', flexWrap: 'wrap' }}>
+                                            <DegreeSelect
+                                                value={newEducation.degree}
+                                                onChange={val => setNewEducation(p => ({ ...p, degree: val }))}
+                                                styles={styles}
+                                            />
                                             <input
-                                                placeholder="Institution"
+                                                placeholder="Institution e.g. Harvard University"
                                                 value={newEducation.institution}
                                                 onChange={e => setNewEducation(p => ({ ...p, institution: e.target.value }))}
                                                 className={styles.editFormInlineInput} style={{ flex: 1.5 }}
-                                            />
-                                            <input
-                                                placeholder="Degree obtained"
-                                                value={newEducation.degree}
-                                                onChange={e => setNewEducation(p => ({ ...p, degree: e.target.value }))}
-                                                className={styles.editFormInlineInput} style={{ flex: 1 }}
-
                                             />
                                             <button
                                                 className={styles.editFormAddBtn}
                                                 onClick={() => {
                                                     if (!newEducation.institution.trim()) return;
-                                                    setFormData(p => ({ ...p, educationEntries: [...(p.educationEntries || []), newEducation] }));
+                                                    setFormData(p => ({ ...p, degrees: [...(p.degrees || []), {
+                                                        title: newEducation.degree,
+                                                        field: '',
+                                                        institution: newEducation.institution,
+                                                    }]}));
                                                     setNewEducation({ institution: '', degree: '' });
                                                     setShowAddEducation(false);
                                                 }}

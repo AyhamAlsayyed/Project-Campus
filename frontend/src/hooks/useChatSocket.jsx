@@ -75,6 +75,16 @@ export function useChatSocket({ conversationId, token, onMessage, onTyping }) {
         }));
     }, []);
 
+    const sendReaction = useCallback((messageId, reactionType) => {
+        if (wsRef.current?.readyState !== WebSocket.OPEN) return false;
+        wsRef.current.send(JSON.stringify({
+            action: 'reaction',
+            message_id: messageId,
+            reaction_type: reactionType,
+        }));
+        return true;
+    }, []);
+
     useEffect(() => {
         intentionalClose.current = false;
         connect();
@@ -87,5 +97,5 @@ export function useChatSocket({ conversationId, token, onMessage, onTyping }) {
         };
     }, [connect]);
 
-    return { sendMessage, sendTyping };
+    return { sendMessage, sendTyping, sendReaction };
 }

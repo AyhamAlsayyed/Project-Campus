@@ -57,6 +57,8 @@ export default function ActiveChat({
     const [selectedMessages, setSelectedMessages] = useState(new Set());
     const [msgMenuOpen, setMsgMenuOpen] = useState(null); // { id, rect }
     const [msgReactionOpen, setMsgReactionOpen] = useState(null); // { id, rect }
+    const [reactionDetail, setReactionDetail] = useState(null); // { reactions: [] }
+    const [reactionDetailTab, setReactionDetailTab] = useState('all');
 
     const messagesScrollRef = useRef(null);
     const messagesEndRef = useRef(null);
@@ -79,6 +81,48 @@ export default function ActiveChat({
     }, [chatSearchOpen]);
     
     const handleWsMessage = useCallback((data) => {
+        if (data.type === 'chat_reaction') {
+            setMessages(prev => prev.map(m => {
+                if (m.id !== data.message_id) return m;
+                const reactions = m.reactions || [];
+                const emoji = data.reaction_type;
+                const isMe = data.user_id === user?.id;
+                const avatarUrl = isMe
+                    ? (user?.profile?.avatar || user?.avatar || data.avatar || null)
+                    : (data.avatar || null);
+                const reactor = { username: data.username, avatar: avatarUrl, isMe };
+
+                if (data.action === 'added') {
+                    const existing = reactions.find(r => r.emoji === emoji);
+                    if (existing) {
+                        // Idempotent: skip if this user already counted
+                        const alreadyIn = (existing.reactors || []).some(u => u.username === data.username);
+                        if (alreadyIn) return m;
+                        return { ...m, reactions: reactions.map(r => r.emoji === emoji ? {
+                            ...r,
+                            count: r.count + 1,
+                            ...(isMe ? { isMe: true } : {}),
+                            reactors: [...(r.reactors || []), reactor],
+                        } : r) };
+                    }
+                    return { ...m, reactions: [...reactions, { emoji, count: 1, isMe, reactors: [reactor] }] };
+                } else {
+                    return {
+                        ...m,
+                        reactions: reactions
+                            .map(r => r.emoji === emoji ? {
+                                ...r,
+                                count: r.count - 1,
+                                ...(isMe ? { isMe: false } : {}),
+                                reactors: (r.reactors || []).filter(u => isMe ? !u.isMe : u.username !== data.username),
+                            } : r)
+                            .filter(r => r.count > 0),
+                    };
+                }
+            }));
+            return;
+        }
+
         if (data.type !== 'chat_message') return;
         clearTimeout(typingClearTimer.current);
         setTypingInfo(null);
@@ -91,7 +135,7 @@ export default function ActiveChat({
             if (data.parent_message_id) {
                 const parent = prev.find(m => m.id === data.parent_message_id);
                 if (parent) {
-                    reply_to_details = { id: parent.id, text: parent.text, sender_name: parent.sender };
+                    reply_to_details = { id: parent.id, text: parent.text, sender_name: parent.sender, media: parent.media };
                 }
             }
 
@@ -106,14 +150,27 @@ export default function ActiveChat({
                 date: data.sent_at,
                 reply_to_details,
                 post: data.shared_post || null,
-                type: 'text',
-                media: [],
+                type: data.media?.length > 0 ? 'media' : 'text',
+                media: data.media || [],
+                reactions: [],
             };
+
+            // If this is our own echo, replace the optimistic temp message
+            if (data.sender_id === user?.id) {
+                for (let i = prev.length - 1; i >= 0; i--) {
+                    const m = prev[i];
+                    if (typeof m.id === 'string' && m.id.startsWith('temp_') && m.text === data.content) {
+                        const updated = [...prev];
+                        updated[i] = newMsg;
+                        return updated;
+                    }
+                }
+            }
 
             return [...prev, newMsg];
         });
         scrollToBottom();
-    }, [scrollToBottom, token]);
+    }, [scrollToBottom, token, user]);
 
     const handleWsTyping = useCallback((data) => {
         if (data.is_typing) {
@@ -126,7 +183,7 @@ export default function ActiveChat({
         }
     }, []);
 
-    const { sendMessage, sendTyping } = useChatSocket({
+    const { sendMessage, sendTyping, sendReaction } = useChatSocket({
         conversationId: selectedChat?.id,
         token,
         onMessage: handleWsMessage,
@@ -159,7 +216,7 @@ export default function ActiveChat({
                         return {
                             ...m,
                             reply_to_details: parent
-                                ? { id: parent.id, text: parent.text, sender_name: parent.sender }
+                                ? { id: parent.id, text: parent.text, sender_name: parent.sender, media: parent.media }
                                 : null,
                         };
                     }
@@ -277,7 +334,7 @@ export default function ActiveChat({
                         const [nm] = normalizeMessages([newMsg]);
                         if (nm.reply_to_details && typeof nm.reply_to_details === 'number') {
                             const parent = prev.find(m => m.id === nm.reply_to_details);
-                            nm.reply_to_details = parent ? { id: parent.id, text: parent.text, sender_name: parent.sender } : null;
+                            nm.reply_to_details = parent ? { id: parent.id, text: parent.text, sender_name: parent.sender, media: parent.media } : null;
                         }
                         return [...prev, nm];
                     });
@@ -285,8 +342,28 @@ export default function ActiveChat({
                 }
             } catch (err) { console.error('Error sending attachments:', err); }
         } else if (inputText.trim()) {
-            const sent = sendMessage(inputText.trim(), replyingTo?.id ?? null);
+            const text = inputText.trim();
+            const replyId = replyingTo?.id ?? null;
+            const sent = sendMessage(text, replyId);
             if (sent) {
+                // Optimistic: show message immediately; WS echo replaces the temp entry
+                const tempId = `temp_${Date.now()}`;
+                const tempMsg = {
+                    id: tempId,
+                    text,
+                    content: text,
+                    senderId: user?.id || 'me',
+                    sender: user?.username || 'You',
+                    avatar: user?.profile?.avatar || user?.avatar || null,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    date: new Date().toISOString(),
+                    reply_to_details: replyingTo || null,
+                    post: null,
+                    type: 'text',
+                    media: [],
+                    reactions: [],
+                };
+                setMessages(prev => [...prev, tempMsg]);
                 setInputText('');
                 setReplyingTo(null);
                 onMarkRead(selectedChat.id);
@@ -304,7 +381,7 @@ export default function ActiveChat({
                             const [nm] = normalizeMessages([newMessage]);
                             if (nm.reply_to_details && typeof nm.reply_to_details === 'number') {
                                 const parent = prev.find(m => m.id === nm.reply_to_details);
-                                nm.reply_to_details = parent ? { id: parent.id, text: parent.text, sender_name: parent.sender } : null;
+                                nm.reply_to_details = parent ? { id: parent.id, text: parent.text, sender_name: parent.sender, media: parent.media } : null;
                             }
                             return [...prev, nm];
                         });
@@ -341,6 +418,44 @@ export default function ActiveChat({
             console.error('Error editing message:', err);
         }
     };
+
+    const handleReaction = useCallback(async (messageId, emoji) => {
+        setMsgReactionOpen(null);
+        const sent = sendReaction(messageId, emoji);
+        if (sent) return; // WS will echo chat_reaction back → state updated in handleWsMessage
+
+        // Fallback: WS not open, use REST
+        try {
+            const res = await fetch(`${API}/api/messages/${messageId}/react/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            const meAvatar = user?.profile?.avatar || user?.avatar || null;
+            const meReactor = { username: user?.username || 'You', avatar: meAvatar, isMe: true };
+            setMessages(prev => prev.map(m => {
+                if (m.id !== messageId) return m;
+                const reactions = m.reactions || [];
+                if (data.is_liked) {
+                    const withoutMe = reactions.filter(r => !r.isMe);
+                    const exists = withoutMe.find(r => r.emoji === emoji);
+                    if (exists) {
+                        return { ...m, reactions: withoutMe.map(r => r.emoji === emoji ? { ...r, count: r.count + 1, isMe: true, reactors: [...(r.reactors || []), meReactor] } : r) };
+                    }
+                    return { ...m, reactions: [...withoutMe, { emoji, count: 1, isMe: true, reactors: [meReactor] }] };
+                } else {
+                    return {
+                        ...m,
+                        reactions: reactions
+                            .map(r => r.isMe ? { ...r, count: r.count - 1, isMe: false, reactors: (r.reactors || []).filter(u => !u.isMe) } : r)
+                            .filter(r => r.count > 0),
+                    };
+                }
+            }));
+        } catch (err) {
+            console.error('Reaction error:', err);
+        }
+    }, [sendReaction, token, user]);
 
     const handleFileSelect = (e, type) => {
         const files = Array.from(e.target.files);
@@ -700,7 +815,17 @@ export default function ActiveChat({
                                                                             {(msg.reply_to_details.senderId === 'me' || msg.reply_to_details.senderId === user?.id || msg.reply_to_details.sender_name === user?.username)
                                                                                 ? 'You' : getSenderName(msg.reply_to_details.sender_name || msg.reply_to_details.sender)}
                                                                         </span>
-                                                                        <p className={styles.replyTextPreview}>{msg.reply_to_details.text}</p>
+                                                                        <p className={styles.replyTextPreview}>
+                                                                            {msg.reply_to_details.text || (() => {
+                                                                                const m = msg.reply_to_details.media?.[0];
+                                                                                if (!m) return '📎 Attachment';
+                                                                                const t = m.media_type || m.type;
+                                                                                if (t === 'image') return '📷 Photo';
+                                                                                if (t === 'video') return '🎥 Video';
+                                                                                if (t === 'audio') return '🎵 Audio';
+                                                                                return '📎 File';
+                                                                            })()}
+                                                                        </p>
                                                                     </div>
                                                                 )}
 
@@ -789,7 +914,7 @@ export default function ActiveChat({
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <div className={styles.msgActionGroup} style={{ display: 'flex', flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                                                            <div className={styles.msgActionGroup}>
                                                                 {/* Emoji reaction button */}
                                                                 <button
                                                                     className={styles.replyIconButton}
@@ -816,6 +941,45 @@ export default function ActiveChat({
                                                                 </button>
                                                             </div>
                                                         </div>
+                                                        {/* ── WhatsApp-style reaction pills ── */}
+                                                        {msg.reactions?.length > 0 && (
+                                                            <div style={{
+                                                                display: 'flex',
+                                                                gap: 3,
+                                                                marginTop: 4,
+                                                                marginBottom: 2,
+                                                                ...(isMine
+                                                                    ? { justifyContent: 'flex-end', paddingRight: 10 }
+                                                                    : { justifyContent: 'flex-start', paddingLeft: 10 }),
+                                                            }}>
+                                                                {msg.reactions.map(r => (
+                                                                    <button
+                                                                        key={r.emoji}
+                                                                        onClick={() => {
+                                                                            setReactionDetailTab('all');
+                                                                            setReactionDetail({ reactions: msg.reactions, messageId: msg.id });
+                                                                        }}
+                                                                        style={{
+                                                                            background: '#2e2e2e',
+                                                                            border: `2px solid ${r.isMe ? 'rgba(166,39,156,0.6)' : '#1a1a1a'}`,
+                                                                            borderRadius: 999,
+                                                                            padding: '1px 7px',
+                                                                            cursor: 'pointer',
+                                                                            fontSize: 13,
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            gap: 3,
+                                                                            color: 'rgba(255,255,255,0.9)',
+                                                                            boxShadow: '0 2px 8px rgba(0,0,0,0.6)',
+                                                                            minHeight: 26,
+                                                                            lineHeight: 1,
+                                                                        }}
+                                                                    >
+                                                                        {r.emoji}<span style={{ fontSize: 11, fontWeight: 600 }}>{r.count}</span>
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -895,11 +1059,84 @@ export default function ActiveChat({
                                             style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 20, padding: '2px 4px', borderRadius: 8, transition: 'transform 0.15s' }}
                                             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.3)'}
                                             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                                            onClick={() => setMsgReactionOpen(null)}
+                                            onClick={() => handleReaction(msgReactionOpen.id, emoji)}
                                         >
                                             {emoji}
                                         </button>
                                     ))}
+                                </div>,
+                                document.body
+                            )}
+
+                            {/* ── Reaction detail modal ── */}
+                            {reactionDetail && createPortal(
+                                <div
+                                    style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }}
+                                    onMouseDown={() => setReactionDetail(null)}
+                                >
+                                    <div
+                                        style={{ background: '#1e1e1e', borderRadius: 16, width: 340, maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.7)' }}
+                                        onMouseDown={e => e.stopPropagation()}
+                                    >
+                                        {/* header */}
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 0' }}>
+                                            <span style={{ color: 'white', fontWeight: 600, fontSize: 15 }}>Reactions</span>
+                                            <button onClick={() => setReactionDetail(null)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: 2 }}>×</button>
+                                        </div>
+                                        {/* emoji tabs */}
+                                        {(() => {
+                                            const { reactions, messageId } = reactionDetail;
+                                            const allReactors = reactions.flatMap(r => (r.reactors || []).map(u => ({ ...u, emoji: r.emoji })));
+                                            const displayed = reactionDetailTab === 'all' ? allReactors : allReactors.filter(u => u.emoji === reactionDetailTab);
+                                            const myReaction = reactions.find(r => r.isMe);
+                                            return (
+                                                <>
+                                                    <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '0 16px', marginTop: 10 }}>
+                                                        <button
+                                                            onClick={() => setReactionDetailTab('all')}
+                                                            style={{ background: 'transparent', border: 'none', color: reactionDetailTab === 'all' ? '#A6279C' : 'rgba(255,255,255,0.5)', borderBottom: reactionDetailTab === 'all' ? '2px solid #A6279C' : '2px solid transparent', padding: '8px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+                                                        >
+                                                            All {allReactors.length}
+                                                        </button>
+                                                        {reactions.map(r => (
+                                                            <button
+                                                                key={r.emoji}
+                                                                onClick={() => setReactionDetailTab(r.emoji)}
+                                                                style={{ background: 'transparent', border: 'none', color: reactionDetailTab === r.emoji ? '#A6279C' : 'rgba(255,255,255,0.5)', borderBottom: reactionDetailTab === r.emoji ? '2px solid #A6279C' : '2px solid transparent', padding: '8px 10px', cursor: 'pointer', fontSize: 16 }}
+                                                            >
+                                                                {r.emoji} <span style={{ fontSize: 11, marginLeft: 2 }}>{r.count}</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <div style={{ overflowY: 'auto', flex: 1, padding: '6px 0' }}>
+                                                        {displayed.length === 0 ? (
+                                                            <div style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: 24, fontSize: 14 }}>No reactions yet</div>
+                                                        ) : displayed.map((u, i) => (
+                                                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px' }}>
+                                                                <img
+                                                                    src={u.avatar ? (u.avatar.startsWith('http') ? u.avatar : `${API}${u.avatar}`) : `${API}/media/default-pfp.png`}
+                                                                    alt={u.username}
+                                                                    style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                                                                />
+                                                                <span style={{ color: 'white', fontSize: 14, fontWeight: 500, flex: 1 }}>{u.isMe ? 'You' : u.username}</span>
+                                                                <span style={{ fontSize: 20 }}>{u.emoji}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    {myReaction && (
+                                                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '10px 16px' }}>
+                                                            <button
+                                                                onClick={() => { handleReaction(messageId, myReaction.emoji); setReactionDetail(null); }}
+                                                                style={{ width: '100%', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.45)', fontSize: 13, cursor: 'pointer', textAlign: 'center', padding: '4px 0' }}
+                                                            >
+                                                                Tap to remove your {myReaction.emoji}
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
                                 </div>,
                                 document.body
                             )}

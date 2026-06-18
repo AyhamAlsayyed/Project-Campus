@@ -284,6 +284,12 @@
     flex-direction: column;
 }
 
+.commentBubbleWrap {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+}
+
 .commentBubble {
     background: rgba(255, 255, 255, 0.04);
     padding: 8px 12px;
@@ -292,7 +298,36 @@
     border: 1px solid rgba(255, 255, 255, 0.02);
     overflow-wrap: break-word;
     word-break: break-word;
-    max-width: 100%;  /* ← also add this so it can't grow past container */
+    max-width: 100%;
+}
+
+.likesBadge {
+    position: absolute;
+    bottom: -11px;
+    right: 6px;
+    background: #3a3a3a;
+    border: 1.5px solid #505050;
+    border-radius: 999px;
+    padding: 2px 7px 2px 5px;
+    font-size: 11.5px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+    z-index: 1;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.82);
+    transition: background 0.15s;
+    user-select: none;
+}
+
+.likesBadge:hover {
+    background: #484848;
+}
+
+.likesBadge span {
+    font-weight: 600;
 }
 
 .commentAuthor {
@@ -606,6 +641,17 @@
 [data-theme="light"] .commentBubble {
   background: #f2f2f2;
   border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .likesBadge {
+  background: #ffffff;
+  border-color: #d0d0d0;
+  color: rgba(0, 0, 0, 0.7);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .likesBadge:hover {
+  background: #f5f5f5;
 }
 
 [data-theme="light"] .commentAuthor {
