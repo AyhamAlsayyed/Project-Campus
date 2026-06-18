@@ -63,7 +63,7 @@ def notify_community_admins(community, actor, text):
         send_global_notification(
             sender=actor,
             receiver=member.user,
-            notification_type="community_admin_alert",
+            notification_type="COMMUNITY ADMIN ALERT",
             target_object=community,
             custom_text=text,
         )

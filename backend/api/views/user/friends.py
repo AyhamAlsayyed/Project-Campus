@@ -35,7 +35,7 @@ def send_friend_request(request):
         friendship = Friendship.objects.create(user1=from_user, user2=to_user, status=Friendship.Status.PENDING)
 
         send_global_notification(
-            sender=from_user, receiver=to_user, notification_type="friend_request", target_object=friendship
+            sender=from_user, receiver=to_user, notification_type="FRIEND REQUEST", target_object=friendship
         )
         return Response({"message": "Request sent"}, status=201)
 
@@ -49,7 +49,7 @@ def send_friend_request(request):
         friendship.save()
 
         send_global_notification(
-            sender=from_user, receiver=to_user, notification_type="friend_request", target_object=friendship
+            sender=from_user, receiver=to_user, notification_type="FRIEND REQUEST", target_object=friendship
         )
 
         return Response({"message": "Request re-sent"}, status=200)
@@ -88,7 +88,7 @@ def accept_friend_request(request):
     friendship.save()
 
     send_global_notification(
-        sender=current_user, receiver=from_user, notification_type="friend_accepted", target_object=friendship
+        sender=current_user, receiver=from_user, notification_type="ACCEPTED FRIEND REQUEST", target_object=friendship
     )
 
     return Response({"message": "Friend request accepted"}, status=200)

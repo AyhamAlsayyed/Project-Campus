@@ -51,7 +51,7 @@ def toggle_like(request, post_id):
         liked = True
 
         send_global_notification(
-            sender=user, receiver=post.author, notification_type="post_reaction", target_object=post
+            sender=user, receiver=post.author, notification_type="REACTED TO YOUR POST", target_object=post
         )
 
     likes_count = PostReaction.objects.filter(post=post, user__isnull=False).count()

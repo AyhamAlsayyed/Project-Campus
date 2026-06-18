@@ -42,7 +42,7 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "https://9j7q7x4h-8000.uks1.devtunnels.ms",
+    "9j7q7x4h-8000.uks1.devtunnels.ms",
     "mv8f3wcb-8000.euw.devtunnels.ms",
     "9j7q7x4h-8000.uks1.devtunnels.ms",
 ]

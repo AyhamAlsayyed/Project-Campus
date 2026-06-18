@@ -131,7 +131,6 @@ def feed(request, community_id=None):
         if filter_type in ["recommended", "popular", "trending"]:
             qs = qs.annotate(**engagement_annotations())
 
-        # included 'my_approved' into the recent sorting layout
         if filter_type in ["recent", "pending", "my_pending", "my_approved"]:
             qs = qs.order_by("-created_at")
         elif filter_type == "popular":

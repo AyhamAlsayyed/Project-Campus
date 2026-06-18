@@ -9,16 +9,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import (
-    Event,
-    EventReminder,
-    Friendship,
-    Notification,
-    NotificationSetting,
-    Page,
-)
+from ...models import Event, EventReminder, Friendship, Notification, Page
 from ...serializers import EventSerializer
-from ...utils.notifications import send_global_notification
+from ...utils.notifications import send_global_notification, should_send_notification
 
 
 def notify_page_and_event_followers(event, custom_text):
@@ -42,7 +35,7 @@ def notify_page_and_event_followers(event, custom_text):
         send_global_notification(
             sender=page_user,
             receiver=user,
-            notification_type="event_update",
+            notification_type="EVENT UPDATE",
             target_object=event,
             custom_text=custom_text,
         )
@@ -142,24 +135,19 @@ def create_event(request):
         follower_users = [f.user1 for f in page_followers if f.user1 != user]
 
         if follower_users:
-            follower_ids = [u.id for u in follower_users]
-            settings_lookup = {
-                setting.user_id: setting for setting in NotificationSetting.objects.filter(user_id__in=follower_ids)
-            }
-
             eligible_notifications = []
             content_type = ContentType.objects.get_for_model(event)
             notification_text = f"New Event: '{page.page_full_name}' posted a new event: '{event.title}'."
 
             for follower in follower_users:
-                profile = settings_lookup.get(follower.id)
+                if not should_send_notification(follower, "new_event"):
+                    continue
 
-              
                 eligible_notifications.append(
                     Notification(
                         receiver=follower,
                         actor=user,
-                        type=Notification.Type.SYSTEM,
+                        type="New Event",
                         content=notification_text,
                         content_type=content_type,
                         object_id=event.event_id,
@@ -184,6 +172,7 @@ def update_event(request, event_id):
     title_changed = "title" in request.data and request.data.get("title") != event.title
     location_changed = "location" in request.data and request.data.get("location") != event.location
 
+    old_title = event.title
     event.title = request.data.get("title", event.title)
     event.description = request.data.get("description", event.description)
     event.start_date = request.data.get("start_date", event.start_date)
@@ -197,7 +186,7 @@ def update_event(request, event_id):
 
     change_msg = f"The event '{event.title}' hosted by {event.page.page_full_name} has updated details."
     if title_changed:
-        change_msg = f"Event '{event.title}' has been changed to '{event.title}'."
+        change_msg = f"Event '{old_title}' has been changed to '{event.title}'."
 
     if location_changed:
         change_msg = f"Location change: '{event.title}' is now at {event.location}."
