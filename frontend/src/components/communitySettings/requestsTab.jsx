@@ -38,7 +38,7 @@ export default function RequestsTab({ communityId, token, onBack, isPublic = fal
     useEffect(() => {
         if (!communityId || !token) return;
         setIsLoadingPosts(true);
-        fetch(`${API}/api/communities/${communityId}/post-requests/`, {
+        fetch(`${API}/api/communities/${communityId}/post-requests/?filter=pending`, {
             headers: { Authorization: `Bearer ${token}` }
         })
             .then(res => res.ok ? res.json() : [])

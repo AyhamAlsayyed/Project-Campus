@@ -236,6 +236,8 @@ export default function CommunityPage() {
         { key: "recent", label: "Most Recent" },
         { key: "popular", label: "Popular" },
         { key: "trending", label: "Trending" },
+        ...(!canManage ? [{ key: "my_pending", label: "My Pending" }] : []),
+        { key: "my_approved", label: "By You" },
     ];
     
     useEffect(() => {
