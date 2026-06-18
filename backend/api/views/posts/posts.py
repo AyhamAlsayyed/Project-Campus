@@ -126,8 +126,7 @@ def feed(request, community_id=None):
             qs = qs.filter(author=user, is_approved=True)
 
         else:
-            if not is_privileged_moderator:
-                qs = qs.filter(is_approved=True)
+            qs = qs.filter(is_approved=True)
 
         if filter_type in ["recommended", "popular", "trending"]:
             qs = qs.annotate(**engagement_annotations())
