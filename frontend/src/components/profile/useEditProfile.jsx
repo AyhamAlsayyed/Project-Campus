@@ -201,7 +201,7 @@ export function useProfileEdit({ user, token, API, onSaved }) {
             fd.append('location', formData.pageAddress || '');     
             fd.append('link', formData.pageWebsite || '');     
 
-            await fetch(`${API}/api/page/profile/update/`, {
+            await fetch(`${API}/api/auth/page/profile/update/`, {
                 method: 'PATCH',
                 headers: { Authorization: `Bearer ${token}` },
                 body: fd,
