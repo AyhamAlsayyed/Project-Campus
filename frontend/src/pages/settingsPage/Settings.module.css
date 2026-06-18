@@ -83,11 +83,11 @@ body {
 
 
 .sectionHeading {
-    font-size: 2rem; 
+    font-size: 2rem;
     font-weight: 600;
     margin-top: 0;
     margin-bottom: 30px;
-    color: #CCCCCC; 
+    color: #CCCCCC;
 }
 
 .settingsFormGroup {
@@ -285,7 +285,7 @@ body {
     left: 0;
     background: #333333; /* Exact color required */
     border-radius: 12px; /* Border radius required */
-    width: 100%; 
+    width: 100%;
     min-width: 250px;
     box-shadow: 0 6px 16px rgba(0,0,0,0.4);
     z-index: 100;
@@ -352,7 +352,7 @@ body {
 
 .uiCheckbox:disabled {
     cursor: default;
-    opacity: 0.9; 
+    opacity: 0.9;
 }
 
 
@@ -486,9 +486,9 @@ body {
 }
 
 .subGridHeader {
-    font-size: 1.05rem; 
+    font-size: 1.05rem;
     text-transform: uppercase;
-    color: #CCCCCC; 
+    color: #CCCCCC;
     margin: 15px 0 5px 0;
     letter-spacing: 0.8px;
     font-weight: 600;
@@ -499,7 +499,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 6px 10px;
-  
+
     border-radius: 8px;
 }
 
@@ -850,7 +850,7 @@ body {
 }
 
 .radioOption input {
-    display: none; 
+    display: none;
 }
 
 .radioCircle {
@@ -1124,4 +1124,3 @@ body {
         padding: 24px 18px;
     }
 }
-

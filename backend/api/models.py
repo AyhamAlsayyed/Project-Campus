@@ -182,6 +182,7 @@ class Page(models.Model):
         SERVICE = "service", "Service"
         LOCAL_BUSINESS = "local_business", "Local Business"
         YOUTH_DEVELOPMENT_ORGANIZATION = "Youth Developer Organization", "Youth Developer Organization"
+        TELECOMMUNICATION = "telecommunication", "Telecommunication"
         OTHER = "other", "Other"
 
     page_type = models.CharField(
