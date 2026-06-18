@@ -1,4 +1,4 @@
-import styles from './Settings.module.css';
+import styles from './settings.module.css';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import Header from '../../components/pagelayout/header/header';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
@@ -127,8 +127,8 @@ export default function Settings() {
     // ── Fetch current user ───────────────────────────────────────────────────
     useEffect(() => {
         const fetchUser = async () => {
-           
-        
+
+
             if (!token) return;
             try {
                 const res = await fetch(`${API}/api/auth/me/`, {
@@ -250,7 +250,7 @@ export default function Settings() {
     const handleLogout = async () => {
         setLoading(true);
         try {
-        
+
             const refreshToken = localStorage.getItem('refresh');
             await fetch(`${API}/api/auth/logout/`, {
                 method: 'POST',
@@ -449,7 +449,7 @@ export default function Settings() {
     const avatarSrc = rawAvatar
         ? (rawAvatar.startsWith('http') ? rawAvatar : `${API}${rawAvatar}`)
         : ProfilePicture;
-   
+
 
     const navItems = [
         { key: 'Account', label: 'Account' },

@@ -1,9 +1,10 @@
 import random
 import re
 
-from django.conf import settings
+# from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
+
+# from django.core.mail import send_mail
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import status
@@ -117,7 +118,7 @@ def send_code(request):
                 return Response({"message": "Recovery email format is invalid."}, status=status.HTTP_400_BAD_REQUEST)
 
     last_request = EmailVerification.objects.filter(academic_email=target_email).order_by("-created_at").first()
-    if last_request and (timezone.now() - last_request.created_at).total_seconds() < 60:
+    if last_request and (timezone.now() - last_request.created_at).total_seconds() < 0:
         return Response(
             {"message": "Please wait before requesting another code."}, status=status.HTTP_429_TOO_MANY_REQUESTS
         )
@@ -128,13 +129,18 @@ def send_code(request):
     verification_entry = EmailVerification(username=username_to_save, academic_email=target_email, code=code)
     verification_entry.set_expiry(minutes=10)
     verification_entry.save()
+    return Response({"message": "Verification code sent successfully."}, status=status.HTTP_200_OK)
 
+
+"""
     message_body = (
         "Welcome to Project Campus\n\n"
         "A security check code was generated for your verification flow handler.\n"
         f"Your verification code is: {code}\n\n"
         "This configuration pin expires completely in 10 minutes."
     )
+
+
 
     try:
         send_mail(
@@ -147,3 +153,4 @@ def send_code(request):
         return Response({"message": "Verification code sent successfully."}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"message": f"SMTP Delivery failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+"""
