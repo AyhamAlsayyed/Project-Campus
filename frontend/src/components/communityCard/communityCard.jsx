@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { createPortal } from 'react-dom';
 import Settings from '../../Assets/icons/setting.png';
 import API from '../../config';
+import DefaultBanner from '../../Assets/Pictures/default-community-banner.png';
 export default function CommunityCard({ community, variant = "large", setCommunities, fullWidth, isOwned, onSettingsClick }) {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const navigate = useNavigate();
@@ -68,8 +69,8 @@ export default function CommunityCard({ community, variant = "large", setCommuni
         <>
             <div
                 className={`${styles.communityItem} ${variant === "small" ? styles.small : ""} ${fullWidth ? styles.fullWidth : ""}`}
-                style={{ backgroundImage: `url(${community.image})` }}
-            >
+             >
+                <img src={community.image || DefaultBanner} alt="" className={styles.bgImage} />
                 <div className={styles.overlay} />
                 <div className={styles.content}>
                     <div className={styles.left}>
@@ -116,7 +117,7 @@ export default function CommunityCard({ community, variant = "large", setCommuni
 
 
             {variant === "small" && community.sample_members?.length > 0 && (
-                <div style={{ padding: '6px 4px 0' }}>
+                <div style={{ padding: '6px 4px 0', textAlign: 'center' }}>
                     <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
                         <span className={styles.joinedByLabel}>Joined by: </span>
                         {community.sample_members.map(f => f.username).join(', ')}

@@ -107,6 +107,7 @@ export default function NotificationsPage() {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [isDeletingAll, setIsDeletingAll] = useState(false);
+    const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
     const mobileMenuRef = useRef(null);
 
     const [openMenuId, setOpenMenuId] = useState(null);
@@ -299,6 +300,12 @@ export default function NotificationsPage() {
         setOpenMenuId(null);
         const type = (n.type || '').toLowerCase();
 
+        const communityId = n.link?.community_id || n.link?.community?.id;
+        if (communityId) {
+            navigate(`/communities/${communityId}`);
+            return;
+        }
+
         if (type.includes('friend') || type.includes('request')) {
             const profileId = typeof n.link === 'number' ? n.link : n.link?.id || n.actor_id;
             if (profileId) navigate(`/profile/${profileId}`);
@@ -429,7 +436,7 @@ export default function NotificationsPage() {
                     {notifications.length > 0 && (
                         <button
                             className={styles.deleteAllBtn}
-                            onClick={handleDeleteAll}
+                            onClick={() => setShowDeleteAllConfirm(true)}
                             disabled={isDeletingAll}
                         >
                             <Trash2 size={15} />
@@ -467,6 +474,18 @@ export default function NotificationsPage() {
     if (isMobile) {
         return (
             <div className={styles.darkContainer} data-theme={theme}>
+                {showDeleteAllConfirm && (
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ background: '#1e1e1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '32px', width: 300, textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
+                            <p style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, margin: '0 0 8px' }}>Delete all notifications?</p>
+                            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', margin: '0 0 24px' }}>This action cannot be undone.</p>
+                            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                                <button onClick={() => setShowDeleteAllConfirm(false)} style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.07)', color: '#fff', cursor: 'pointer', fontSize: '0.9rem' }}>Cancel</button>
+                                <button onClick={() => { setShowDeleteAllConfirm(false); handleDeleteAll(); }} style={{ padding: '10px 20px', borderRadius: 12, border: 'none', background: '#c0392b', color: '#fff', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600 }}>Delete all</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <MobileHeader
                     avatarSrc={avatarSrc}
                     user={currentUser}
@@ -530,6 +549,18 @@ export default function NotificationsPage() {
     // ── DESKTOP ──
     return (
         <div className={styles.darkContainer} data-theme={theme}>
+            {showDeleteAllConfirm && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: '#1e1e1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '32px', width: 340, textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
+                        <p style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, margin: '0 0 8px' }}>Delete all notifications?</p>
+                        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', margin: '0 0 24px' }}>This action cannot be undone.</p>
+                        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                            <button onClick={() => setShowDeleteAllConfirm(false)} style={{ padding: '10px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.07)', color: '#fff', cursor: 'pointer', fontSize: '0.9rem' }}>Cancel</button>
+                            <button onClick={() => { setShowDeleteAllConfirm(false); handleDeleteAll(); }} style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: '#c0392b', color: '#fff', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600 }}>Delete all</button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <div className={`${styles.header} ${styles.page}`}>
                 <Header theme={theme} toggleTheme={toggleTheme} user={currentUser} />
             </div>

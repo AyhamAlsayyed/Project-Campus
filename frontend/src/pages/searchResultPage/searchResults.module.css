@@ -6,7 +6,7 @@
     flex-direction: column;
     position: relative;
     overflow: visible;
-
+    background: linear-gradient(315deg, var(--bg-main), var(--bg-secondary));
 }
 
 .page {
@@ -41,7 +41,7 @@
 
 .highlight {
     font-weight: 600;
-    background: linear-gradient(30deg, #c72cff, #8b2dff);
+    background: #93278F;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -60,7 +60,7 @@
     border-radius: 30px;
     height: auto;
     z-index: 1;
-    min-width: 900px;
+    min-width: 850px;
     position: relative;
     margin: 2% 0 0 0;
 }
@@ -75,6 +75,7 @@
   width: 100%;
   top: 10px;
   z-index: 10;
+  min-height: calc(100vh - 170px);
 }
 .filters {
   display: flex;
@@ -117,14 +118,23 @@
 
 .section {
     margin-bottom: 36px;
+    position: relative;
+}
+
+.section:not(:last-child)::after {
+    content: "";
+    display: block;
+    width: 50%;
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+    margin: 36px auto 0;
 }
 
 .sectionTitle {
-    font-size: 1rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    color: rgba(255,255,255,0.5);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.01em;
     margin-bottom: 14px;
 }
 
@@ -144,11 +154,12 @@
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    transition: background 0.2s, transform 0.2s;
+    transition: background 0.2s, transform 0.2s, border-color 0.2s;
 }
 
 .personCard:hover {
     background: rgba(255,255,255,0.08);
+    border-color: rgba(180, 80, 220, 0.3);
     transform: translateY(-3px);
 }
 
@@ -157,6 +168,8 @@
     height: 72px;
     border-radius: 50%;
     object-fit: cover;
+    outline: 2px solid rgba(180, 80, 220, 0.35);
+    outline-offset: 2px;
 }
 
 .personName {
@@ -164,45 +177,74 @@
     font-weight: 700;
     font-size: 0.9rem;
     text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
 }
 
 .personSub {
     color: rgba(255,255,255,0.4);
     font-size: 0.75rem;
     text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
 }
 
 .listStack {
     display: flex;
     flex-direction: column;
-    
-    gap: 4px;
+    gap: 2px;
+}
+
+.communityStack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
 }
 
 .listItem {
     display: flex;
     align-items: center;
-   
     gap: 14px;
     padding: 12px 16px;
     border-radius: 14px;
     cursor: pointer;
     transition: background 0.15s;
+    position: relative;
 }
 
-.listItem:hover { background: rgba(255,255,255,0.05); }
+.listItem:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.listItem:hover::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 55%;
+    background: linear-gradient(180deg, #c72cff, #8b2dff);
+    border-radius: 999px;
+}
 
 .listAvatar {
     width: 44px;
     height: 44px;
     object-fit: cover;
     flex-shrink: 0;
+    border-radius: 12px;
 }
 
 .listAvatarPlaceholder {
     width: 44px;
     height: 44px;
-    border-radius: 10px;
+    border-radius: 12px;
     background: rgba(255,255,255,0.07);
     display: flex;
     align-items: center;
@@ -260,7 +302,99 @@
 .postsStack {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
+}
+
+/* ════════════════════════════════════════
+   LIGHT MODE
+   ════════════════════════════════════════ */
+[data-theme="light"] .darkContainer {
+    background: linear-gradient(315deg, var(--bg-main), var(--bg-secondary));
+}
+
+[data-theme="light"] .title {
+    color: rgba(0,0,0,0.85);
+}
+
+[data-theme="light"] .highlight {
+    background: linear-gradient(30deg, #9b00d4, #5a1fd1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .innerContainer {
+    background-color: #f5f5f7;
+}
+
+[data-theme="light"] .sectionTitle {
+    color: rgba(0,0,0,0.75);
+}
+
+[data-theme="light"] .section:not(:last-child)::after {
+    background: rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .filterBtn {
+    background-color: white;
+    color: #662D91;
+}
+
+[data-theme="light"] .filterBtn:hover {
+    background-color: #f3e8ff;
+    color: #4a1f6e;
+}
+
+[data-theme="light"] .filterBtn.active {
+    background-color: #662D91;
+    color: #ffffff;
+}
+
+[data-theme="light"] .filterCount {
+    background: rgba(0,0,0,0.1);
+    color: #333;
+}
+
+[data-theme="light"] .notice {
+    color: rgba(0,0,0,0.45);
+}
+
+[data-theme="light"] .personCard {
+    background: rgba(0,0,0,0.03);
+    border-color: rgba(0,0,0,0.08);
+}
+
+[data-theme="light"] .personCard:hover {
+    background: rgba(0,0,0,0.06);
+    border-color: rgba(150, 50, 200, 0.3);
+}
+
+[data-theme="light"] .personName {
+    color: #111;
+}
+
+[data-theme="light"] .personSub {
+    color: rgba(0,0,0,0.45);
+}
+
+[data-theme="light"] .listItem:hover {
+    background: rgba(0,0,0,0.04);
+}
+
+[data-theme="light"] .listAvatarPlaceholder {
+    background: rgba(0,0,0,0.06);
+}
+
+[data-theme="light"] .listName {
+    color: #111;
+}
+
+[data-theme="light"] .listSub {
+    color: rgba(0,0,0,0.45);
+}
+
+[data-theme="light"] .joinedBadge {
+    background: rgba(0,0,0,0.08);
+    color: rgba(0,0,0,0.5);
 }
 
 /* ════════════════════════════════════════

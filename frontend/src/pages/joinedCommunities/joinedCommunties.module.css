@@ -1,4 +1,4 @@
-html {
+﻿html {
     height: auto;
     min-height: auto;
     display: flow-root;
@@ -10,7 +10,7 @@ body {
     padding: 0;
     min-height: 100vh;
     background: transparent;
-    background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
+    background: linear-gradient(315deg, var(--bg-main), var(--bg-secondary));
     background-attachment: fixed;
     background-size: cover;
 }
@@ -66,7 +66,7 @@ body {
 .highlight {
     font-size: 40px;
     font-weight: 600;
-    background: linear-gradient(30deg, #c72cff, #8b2dff);
+    background: #93278F;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -165,7 +165,7 @@ body {
     padding: 16px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(10px);
-    max-height: 65vh;       
+    min-height: 580px;       
     overflow-y: auto;      
     scrollbar-width: thin;  
     scrollbar-color: rgba(255, 255, 255, 0.15) transparent;  

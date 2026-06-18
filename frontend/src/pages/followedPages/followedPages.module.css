@@ -1,4 +1,4 @@
-html {
+﻿html {
     height: auto;
     min-height: auto;
     display: flow-root;
@@ -10,7 +10,7 @@ body {
     padding: 0;
     min-height: 100vh;
     background: transparent;
-    background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
+    background: linear-gradient(315deg, var(--bg-main), var(--bg-secondary));
     background-attachment: fixed;
     background-size: cover;
 }
@@ -99,7 +99,7 @@ body {
     z-index: 2;
     display: flex;
     flex-direction: column;
-    background: rgba(61, 60, 60, 0.45);
+    background: #333333;
     border-radius: 24px;
     padding: 16px;
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -135,14 +135,14 @@ body {
     align-items: center;
     gap: 15px;
     padding: 12px 10px;
-    border-radius: 18px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background 0.15s;
     position: relative;
 }
 
 .pageItem:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.07);
 }
 
 .pageItem:active {
@@ -226,14 +226,17 @@ body {
 
 .pageItemRow {
     display: flex;
-    border-radius: 25px;
+    border-radius: 12px;
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    padding: 6px 8px;
+    transition: background 0.15s;
+    cursor: pointer;
 }
 
 .pageItemRow:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.07);
 }
 
 .pageItemLeft {
@@ -850,14 +853,14 @@ body {
     align-items: center;
     gap: 15px;
     padding: 12px 10px;
-    border-radius: 18px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background 0.15s;
     position: relative;
 }
 
 .pageItem:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.07);
 }
 
 .pageItem:active {

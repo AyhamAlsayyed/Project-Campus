@@ -1,4 +1,4 @@
-:root {
+﻿:root {
     --bg-main: #1b1b1d;
     --bg-secondary: #2f2f31;
     --text-main: #7a2fd6;
@@ -20,7 +20,7 @@
 .lightContainer {
     min-height: 100vh;
     box-sizing: border-box;
-    background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
+    background: linear-gradient(315deg, var(--bg-main), var(--bg-secondary));
     font-family: "Aktiv Grotesk", sans-serif;
     display: flex;
     flex-direction: column;

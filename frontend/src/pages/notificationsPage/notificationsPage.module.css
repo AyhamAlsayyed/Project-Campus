@@ -55,7 +55,9 @@
 }
 
 .highlight {
-    color: #C43BB8;
+    background: #93278F;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 
@@ -292,11 +294,14 @@
 }
 
 .deleteAction {
-    color: #ff4d4d !important;
+    color: #ff6b6b !important;
+    background: rgba(255, 77, 77, 0.08) !important;
+    border-top: 1px solid rgba(255, 77, 77, 0.15) !important;
 }
 
 .deleteAction:hover {
-    background: rgba(255, 77, 77, 0.1) !important;
+    background: rgba(255, 77, 77, 0.18) !important;
+    color: #ff4d4d !important;
 }
 
 /* ── Empty state ─────────────────────────────────────────────────────────── */
@@ -344,7 +349,7 @@
 }
 
 .rightCard {
-    background: rgba(61, 60, 60, 0.45);
+    background: #333333;
     border-radius: 24px;
     padding: 20px;
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -400,20 +405,24 @@
 }
 
 .manageBtn {
-    background: rgba(196, 59, 184, 0.12);
-    border: 1px solid rgba(196, 59, 184, 0.3);
-    border-radius: 12px;
-    padding: 11px 0;
-    color: #C43BB8;
-    font-size: 0.88rem;
-    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 9px 18px;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.85rem;
+    font-weight: 600;
     cursor: pointer;
     width: 100%;
-    transition: background 0.2s;
+    transition: background 0.2s, color 0.2s;
 }
 
 .manageBtn:hover {
-    background: rgba(196, 59, 184, 0.22);
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -525,6 +534,12 @@
 
 [data-theme="light"] .actionMenu .deleteAction {
     color: #d63b6e !important;
+    background: rgba(214, 59, 110, 0.06) !important;
+    border-top: 1px solid rgba(214, 59, 110, 0.15) !important;
+}
+
+[data-theme="light"] .actionMenu .deleteAction:hover {
+    background: rgba(214, 59, 110, 0.14) !important;
 }
 
 [data-theme="light"] .emptyTitle {
@@ -561,9 +576,14 @@
 }
 
 [data-theme="light"] .manageBtn {
-    background: rgba(102, 45, 145, 0.08);
-    border-color: rgba(102, 45, 145, 0.25);
-    color: #662D91;
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.12);
+    color: rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="light"] .manageBtn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #1a1a1a;
 }
 
 [data-theme="light"] .manageBtn:hover {
@@ -700,7 +720,9 @@
 }
 
 .highlight {
-    color: #C43BB8;
+    background: #93278F;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 /* ── Title action buttons group ──────────────────────────────────────────── */

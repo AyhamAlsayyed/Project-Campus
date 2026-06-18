@@ -10,9 +10,10 @@ import API from '../../config';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
 import ProfilePicture from '../../Assets/icons/default-pfp.png';
+import useTheme from '../../hooks/useTheme';
 
 export default function SearchResults() {
-    const [theme, setTheme] = useState('dark');
+    const { theme, toggleTheme } = useTheme();
     const [user, setUser] = useState(null);
     const [filter, setFilter] = useState("All");
     const [results, setResults] = useState({ people: [], communities: [], posts: [], pages: [] });
@@ -26,8 +27,6 @@ export default function SearchResults() {
     const query = searchParams.get("q") || "";
     const navigate = useNavigate();
     const token = localStorage.getItem("access");
-
-    const toggleTheme = () => setTheme(p => p === 'dark' ? 'light' : 'dark');
 
     const filters = [
         { key: "All", label: "All" },
@@ -154,7 +153,7 @@ export default function SearchResults() {
                         {visibleCommunities.length > 0 && (
                             <section className={styles.section}>
                                 {filter === "All" && <h2 className={styles.sectionTitle}>Communities</h2>}
-                                <div className={styles.listStack}>
+                                <div className={styles.communityStack}>
                                     {visibleCommunities.map(c => (
                                         <CommunityCard
                                             key={c.id}

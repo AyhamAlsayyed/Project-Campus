@@ -32,7 +32,7 @@ export default function PostCard({
   post, openComments, isOwnProfile, hasPinnedPost, onPinChange,
   isRequestMode, onAcceptPost, onRejectPost, isReportedMode,
   onDismiss, onReportDelete, onKick, onReportAction, isAdmin,
-  communityContext, communityId
+  communityContext, communityId, currentUser
 }) {
   const [current, setCurrent] = useState(0);
   const [isLiked, setIsLiked] = useState(post?.is_liked || post?.has_liked || false);
@@ -42,6 +42,7 @@ export default function PostCard({
   const [showMenu, setShowMenu] = useState(false);
   const [isPinned, setIsPinned] = useState(!!post?.is_pinned);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showReportDeleteConfirm, setShowReportDeleteConfirm] = useState(false);
   const [shareSearch, setShareSearch] = useState("");
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [shareTargets, setShareTargets] = useState([]);
@@ -56,6 +57,7 @@ export default function PostCard({
   const [isFollowed, setIsFollowed] = useState(post?.author?.is_followed);
   const [isNotified, setIsNotified] = useState(post?.author?.is_notified || false);
   const [isHighlighted, setIsHighlighted] = useState(!!post?.is_highlighted);
+  const [lightboxUrl, setLightboxUrl] = useState(null);
 
   const shareMenuRef = useRef(null);
   const menuRef = useRef(null);
@@ -430,6 +432,21 @@ export default function PostCard({
         </div>
       )}
 
+      {showReportDeleteConfirm && (
+        <div className={styles.modalOverlay} onClick={() => setShowReportDeleteConfirm(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalContent}>
+              <h3 className={styles.modalTitle}>Delete this post?</h3>
+              <p className={styles.modalText}>This will permanently delete the reported post.</p>
+            </div>
+            <div className={styles.modalActions}>
+              <button className={styles.cancelBtn} onClick={() => setShowReportDeleteConfirm(false)}>Cancel</button>
+              <button className={styles.deleteConfirmBtn} onClick={() => { onReportDelete?.(post.id || post.post_id); setShowReportDeleteConfirm(false); }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Pin Confirmation Modal */}
       {showPinConfirm && (
         <div className={styles.modalOverlay} onClick={() => setShowPinConfirm(false)}>
@@ -462,7 +479,11 @@ export default function PostCard({
             <div className={styles.nameLine}>
               <div className={styles.nameHeaderWrapper}>
                 <div className={styles.nameRow}>
-                  <span className={styles.name}>{post.author?.username || "User"}</span>
+                  <Link
+                    to={post.author?.type === 'page' ? `/page/${post.author?.id || post.author_id}` : `/profile/${post.author?.id || post.author_id}`}
+                    className={styles.name}
+                    style={{ textDecoration: 'none' }}
+                  >{post.author?.username || "User"}</Link>
                   <span className={styles.time}>·</span>
                   <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>
                   {post.post_type === "academic" && <><span className={styles.time}>·</span><span className={styles.time}>Educational</span></>}
@@ -496,9 +517,15 @@ export default function PostCard({
                     className={styles.bellIcon} />
                 </button>
               )}
-              <button className={isFollowed ? styles.followedBtn : styles.followBtn} onClick={handleFollow}>
-                {isFollowed ? 'Followed' : 'Follow'}
-              </button>
+              {currentUser?.university_full_name && post.author?.username === currentUser.university_full_name ? (
+                <button className={styles.followedBtn} style={{ cursor: 'default', opacity: 0.7 }}>
+                  Followed
+                </button>
+              ) : (
+                <button className={isFollowed ? styles.followedBtn : styles.followBtn} onClick={handleFollow}>
+                  {isFollowed ? 'Followed' : 'Follow'}
+                </button>
+              )}
             </div>
           )}
 
@@ -611,7 +638,13 @@ export default function PostCard({
           {/* ADDED: Image Ad Banner Override */}
           {validMedia[current]?.type === "image" && (
             <div className={styles.imageWrapper}>
-              <img src={validMedia[current].url} alt="" className={styles.mediaItem} />
+              <img
+                src={validMedia[current].url}
+                alt=""
+                className={styles.mediaItem}
+                style={post.post_type !== 'advertisement' ? { cursor: 'zoom-in' } : {}}
+                onClick={post.post_type !== 'advertisement' ? () => setLightboxUrl(validMedia[current].url) : undefined}
+              />
               {post.post_type === "advertisement" && (
                 <a
                   href={post.ad_url || "#"}
@@ -697,7 +730,7 @@ export default function PostCard({
             <img src={XIcon} alt="Dismiss" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
             Dismiss
           </button>
-          <button onClick={() => onReportDelete?.(post.id || post.post_id)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+          <button onClick={() => setShowReportDeleteConfirm(true)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
             <img src={BinIcon} alt="Delete" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
             Delete
           </button>
@@ -742,23 +775,35 @@ export default function PostCard({
                 <span className={styles.prompt}>how do you feel about this ad?</span>
                 <div className={styles.reactions}>
                   {[
-                    { key: 'good', src: GoodReview, glow: 'rgba(34,197,94,0.35)' },
-                    { key: 'neutral', src: NatrualReview, glow: 'rgba(234,179,8,0.35)' },
-                    { key: 'bad', src: BadReview, glow: 'rgba(239,68,68,0.35)' },
-                  ].map(({ key, src, glow }) => (
+                    { key: 'good', src: GoodReview },
+                    { key: 'neutral', src: NatrualReview },
+                    { key: 'bad', src: BadReview },
+                  ].map(({ key, src }) => (
                     <button
                       key={key}
                       className={styles.reactionBtn}
                       onClick={() => handleAdReaction(key)}
                       style={{
                         transform: adReaction === key ? 'scale(1.3)' : 'scale(1)',
-                        filter: adReaction && adReaction !== key ? 'grayscale(1) opacity(0.3)' : 'none',
-                        boxShadow: adReaction === key ? `0 0 12px 3px ${glow}` : 'none',
-                        background: adReaction === key ? glow : 'transparent',
+                        background: 'transparent',
+                        boxShadow: 'none',
                         transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
                       }}
                     >
-                      <img src={src} alt={key} width={30} height={30} />
+                      <img
+                        src={src}
+                        alt={key}
+                        width={30}
+                        height={30}
+                        style={{
+                          filter: adReaction === key
+                            ? 'brightness(0) invert(1) opacity(0.55)'
+                            : adReaction && adReaction !== key
+                              ? 'grayscale(1) opacity(0.3)'
+                              : 'none',
+                          transition: 'filter 0.2s ease',
+                        }}
+                      />
                     </button>
                   ))}
                 </div>
@@ -767,7 +812,7 @@ export default function PostCard({
               <div
                 className={styles.commentInputPill}
                 style={{ maxWidth: "200px", display: "flex", alignItems: "center", padding: "0 8px 0 16px" }}
-                onClick={() => openComments(post)}
+                onClick={() => openComments({ ...post, is_liked: isLiked, likes_count: likesCount })}
               >
                 <span className={styles.placeholderText}>Add a comment ...</span>
                 {commenterAvatars.length > 0 && (
@@ -873,6 +918,43 @@ export default function PostCard({
           contentType="post"
           onClose={() => setShowReport(false)}
         />
+      )}
+
+      {lightboxUrl && createPortal(
+        <div
+          onClick={() => setLightboxUrl(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 99999,
+            background: 'rgba(0,0,0,0.9)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'zoom-out',
+          }}
+        >
+          <img
+            src={lightboxUrl}
+            alt=""
+            onClick={e => e.stopPropagation()}
+            style={{
+              maxWidth: '90vw', maxHeight: '90vh',
+              borderRadius: 12,
+              objectFit: 'contain',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
+              cursor: 'default',
+            }}
+          />
+          <button
+            onClick={() => setLightboxUrl(null)}
+            style={{
+              position: 'fixed', top: 20, right: 24,
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: '50%', width: 40, height: 40,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: '#fff', fontSize: 20,
+            }}
+          >✕</button>
+        </div>,
+        document.body
       )}
     </article>
   );

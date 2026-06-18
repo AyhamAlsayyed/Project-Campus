@@ -16,8 +16,10 @@
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(10px);
   z-index: 2;
-  min-height: 300px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  height: 320px;
+  min-height: 320px;
+  max-height: 320px;
+  overflow: hidden;
 }
 
 .newsWrap {

@@ -1,4 +1,5 @@
 import styles from './profilepage.module.css';
+import DefaultBanner from '../../Assets/Pictures/default-community-banner.png';
 import Header from '../../components/pagelayout/header/header';
 import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -327,8 +328,8 @@ export default function ProfilePage({ type }) {
     const [showPromotionsModal, setShowPromotionsModal] = useState(false);
     const [promotionsData, setPromotionsData] = useState({ posts: [], communities: [], events: [] });
     const [promotionsLoading, setPromotionsLoading] = useState(false);
-    const [activePromoTab, setActivePromoTab] = useState('communities');
-    const [activePromoStatusFilter, setActivePromoStatusFilter] = useState('ONHOLD');
+    const [activePromoTab, setActivePromoTab] = useState('posts');
+    const [activePromoStatusFilter, setActivePromoStatusFilter] = useState('all');
 
     // refs
     const menuRef = useRef(null);
@@ -367,11 +368,15 @@ export default function ProfilePage({ type }) {
         user?.type === 'page' || user?.role === 'university'
     );
 
+    const isViewingUniPage = !isOwnProfile &&
+        currentUser?.university &&
+        user?.page_name === currentUser.university;
+
     const username = user?.username || 'Username';
     const role = user?.role || 'Role';
-    const fullName = user?.full_name || user?.fullName || 'Full name';
+    const fullName = user?.full_name || user?.fullName || '';
     const university = user?.university || 'University';
-    const major = user?.major || 'Major';
+    const major = user?.major || '';
     const bio = user?.bio;
     const avatarUrl = user?.avatar_url || user?.avatar || '';
     const coverUrl = user?.cover_url || user?.cover || '';
@@ -1035,7 +1040,7 @@ export default function ProfilePage({ type }) {
                             <div className={styles.profileCard}>
                                 {/* Cover */}
                                 <div className={styles.coverWrap}>
-                                    {coverUrl ? <img className={styles.coverImage} src={coverUrl} alt="cover" /> : <div className={styles.coverPlaceholder} />}
+                                    <img className={styles.coverImage} src={coverUrl || DefaultBanner} alt="cover" />
                                     {!isOwnProfile && (
                                         <div ref={menuRef} className={styles.coverMenuWrap}>
                                             <button onClick={() => setMenuOpen(p => !p)} className={`${styles.messageBtn} ${styles.coverMenuBtn}`}>
@@ -1092,8 +1097,8 @@ export default function ProfilePage({ type }) {
                                                     </button>
                                                 </div>
                                                 <div className={styles.subRow} style={{ gap: 10 }}>
-                                                    <span className={styles.fullName}>{fullName}</span>
-                                                    <span className={styles.dot} />
+                                                    {fullName && <span className={styles.fullName}>{fullName}</span>}
+                                                    {fullName && user?.university && <span className={styles.dot} />}
                                                     <span className={styles.uni}>{user?.university}</span>
                                                 </div>
                                                 {user?.bio && <p className={styles.bio}>{user.bio}</p>}
@@ -1129,10 +1134,14 @@ export default function ProfilePage({ type }) {
                                                         </button>
                                                     </div>
                                                     <div className={styles.subRow}>
-                                                        <span className={styles.fullName}>{fullName}</span>
-                                                        <div className={styles.uniInfo}>
-                                                            <span className={styles.uni}>{university} - {major}</span>
-                                                        </div>
+                                                        {fullName && <span className={styles.fullName}>{fullName}</span>}
+                                                        {(university || major) && (
+                                                            <div className={styles.uniInfo}>
+                                                                <span className={styles.uni}>
+                                                                    {university}{university && major ? ' - ' : ''}{major}
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 {user?.bio && <p className={styles.bio}>{user.bio}</p>}
@@ -1147,13 +1156,17 @@ export default function ProfilePage({ type }) {
                                                         </div>
                                                     </div>
                                                     <div className={styles.subRow} style={{ gap: '8px' }}>
-                                                        <span className={styles.fullName}>{fullName}</span>
-                                                        <span className={styles.dot} />
+                                                        {fullName && <span className={styles.fullName}>{fullName}</span>}
+                                                        {fullName && <span className={styles.dot} />}
                                                         <span className={styles.friendsCount}>{user?.friends_count || 0} friends</span>
                                                     </div>
-                                                    <div className={styles.uniRow}>
-                                                        <span className={styles.uni}>{university} - {major}</span>
-                                                    </div>
+                                                    {(university || major) && (
+                                                        <div className={styles.uniRow}>
+                                                            <span className={styles.uni}>
+                                                                {university}{university && major ? ' - ' : ''}{major}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 {user?.bio && <p className={styles.bio}>{user.bio}</p>}
                                             </>
@@ -1172,9 +1185,15 @@ export default function ProfilePage({ type }) {
                                                         <img src={eventsTabNotify ? BellOn : BellOff} width={18} height={18} className={styles.iconBell} />
 
                                                     </button>
-                                                    <button className={isFollowing ? styles.friendsBtn : styles.addFriendBtn} onClick={handleFollow}>
-                                                        {isFollowing ? 'Followed' : 'Follow'}
-                                                    </button>
+                                                    {isViewingUniPage ? (
+                                                        <button className={styles.friendsBtn} style={{ cursor: 'default', opacity: 0.7 }}>
+                                                            Followed
+                                                        </button>
+                                                    ) : (
+                                                        <button className={isFollowing ? styles.friendsBtn : styles.addFriendBtn} onClick={handleFollow}>
+                                                            {isFollowing ? 'Followed' : 'Follow'}
+                                                        </button>
+                                                    )}
                                                 </>
                                             ) : (
                                                 <>
@@ -1260,7 +1279,7 @@ export default function ProfilePage({ type }) {
                                     <div className={styles.postsSection}>
                                         {postsLoading ? <div className={styles.notice}>Loading...</div> : posts.map(post => (
                                             <PostCard key={post.id} post={post} openComments={setSelectedPost}
-                                                isOwnProfile={isOwnProfile} hasPinnedPost={posts.some(p => p.is_pinned)} onPinChange={handlePinChange} />
+                                                isOwnProfile={isOwnProfile} hasPinnedPost={posts.some(p => p.is_pinned)} onPinChange={handlePinChange} currentUser={currentUser} />
                                         ))}
                                     </div>
                                 )}
@@ -1281,7 +1300,7 @@ export default function ProfilePage({ type }) {
                                             return postsToShow.length > 0
                                                 ? postsToShow.map(post => (
                                                     <PostCard key={post.id} post={post} openComments={setSelectedPost}
-                                                        isOwnProfile={currentUser?.id === (post.author?.id || post.author_id)} />
+                                                        isOwnProfile={currentUser?.id === (post.author?.id || post.author_id)} currentUser={currentUser} />
                                                 ))
                                                 : <div className={styles.notice}>No {activitiesFilter === 'saves' ? 'saved' : activitiesFilter === 'likes' ? 'liked' : 'commented'} posts yet.</div>;
                                         })()}
@@ -1334,15 +1353,23 @@ export default function ProfilePage({ type }) {
                                                                         />
                                                                     </button>
                                                                 )}
-                                                                <button
-                                                                    onClick={handleFollow}
-                                                                    style={isFollowing
-                                                                        ? { background: 'rgba(255,255,255,0.15)', color: 'white', border: 'none', borderRadius: 20, padding: '8px 20px', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }
-                                                                        : { background: 'linear-gradient(135deg, #5B2598, #962892)', color: 'white', border: 'none', borderRadius: 20, padding: '8px 20px', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }
-                                                                    }
-                                                                >
-                                                                    {isFollowing ? 'Followed' : 'Follow'}
-                                                                </button>
+                                                                {isViewingUniPage ? (
+                                                                    <button
+                                                                        style={{ background: 'rgba(255,255,255,0.15)', color: 'white', border: 'none', borderRadius: 20, padding: '8px 20px', fontSize: '0.85rem', fontWeight: 500, cursor: 'default', whiteSpace: 'nowrap', opacity: 0.7 }}
+                                                                    >
+                                                                        Followed
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={handleFollow}
+                                                                        style={isFollowing
+                                                                            ? { background: 'rgba(255,255,255,0.15)', color: 'white', border: 'none', borderRadius: 20, padding: '8px 20px', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }
+                                                                            : { background: 'linear-gradient(135deg, #5B2598, #962892)', color: 'white', border: 'none', borderRadius: 20, padding: '8px 20px', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }
+                                                                        }
+                                                                    >
+                                                                        {isFollowing ? 'Followed' : 'Follow'}
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>
@@ -2069,15 +2096,18 @@ export default function ProfilePage({ type }) {
                                 {promotionsLoading ? (
                                     <p className={styles.promoMgmtEmpty}>Loading...</p>
                                 ) : (() => {
-                                    const items = (promotionsData[activePromoTab] || []).filter(p => p.status === activePromoStatusFilter);
+                                    const items = (promotionsData[activePromoTab] || []).filter(p => activePromoStatusFilter === 'all' || p.status === activePromoStatusFilter);
                                     if (items.length === 0) return (
                                         <p className={styles.promoMgmtEmpty}>
-                                            No {activePromoStatusFilter === 'ONHOLD' ? 'on-hold' : activePromoStatusFilter} {activePromoTab} promotions.
+                                            No {activePromoTab} promotions found.
                                         </p>
                                     );
                                     return items.map((promo, index) => {
                                         const details = promo.target_details || {};
-                                        const rawImg = details.image;
+                                        const rawImg = details.image
+                                            || details.profile_image
+                                            || (Array.isArray(details.media) && details.media[0]?.url)
+                                            || null;
                                         const imgSrc = rawImg
                                             ? (rawImg.startsWith('http') ? rawImg : `${API}${rawImg}`)
                                             : null;
@@ -2102,7 +2132,7 @@ export default function ProfilePage({ type }) {
                                                     <div className={styles.promoMgmtInfo}>
                                                         <div className={styles.promoMgmtNameRow}>
                                                             <span className={styles.promoMgmtName}>
-                                                                {details.name || `Item #${promo.object_id}`}
+                                                                {details.title || details.name || `Item #${promo.object_id}`}
                                                             </span>
                                                             <span className={`${styles.promoMgmtStatusBadge} ${statusClass}`}>
                                                                 {promo.status === 'ONHOLD' ? 'On Hold' : promo.status.charAt(0).toUpperCase() + promo.status.slice(1)}

@@ -13,7 +13,7 @@ def get_notifications(request):
         Notification.objects.filter(receiver=request.user).select_related("actor__profile").order_by("-created_at")
     )
 
-    serializer = NotificationSerializer(notifications, many=True)
+    serializer = NotificationSerializer(notifications, many=True, context={"request": request})
     return Response(serializer.data)
 
 

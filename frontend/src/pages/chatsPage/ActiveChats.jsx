@@ -13,6 +13,7 @@ import GroupInfoPanel from '../../components/chat/groupInfoPanel';
 import { API, normalizeMessages, getSenderName } from './chatUtils';
 import ReportModal from '../../components/posts/ReportModal';
 import { useChatSocket } from '../../hooks/useChatSocket';
+import SharedAdModal from '../../components/chat/SharedAdModal';
 
 function dotStyle(i) {
     return {
@@ -41,6 +42,7 @@ export default function ActiveChat({
     const [fullGroupData, setFullGroupData] = useState(null);
     const [lightboxUrl, setLightboxUrl] = useState(null);
     const [openPost, setOpenPost] = useState(null);
+    const [openAdPost, setOpenAdPost] = useState(null);
     const [activeChatMenuOpen, setActiveChatMenuOpen] = useState(false);
     const [activeChatMenuRect, setActiveChatMenuRect] = useState(null);
     const [chatSearchOpen, setChatSearchOpen] = useState(false);
@@ -88,7 +90,7 @@ export default function ActiveChat({
             time: new Date(data.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             date: data.sent_at,
             reply_to_details: null,
-            post: null,
+            post: data.shared_post || null,
             type: 'text',
             media: [],
         };
@@ -98,27 +100,6 @@ export default function ActiveChat({
             return exists ? prev : [...prev, newMsg];
         });
         scrollToBottom();
-
-        // If shared post — fetch it and update the message
-        if (data.shared_post_id) {
-            fetch(`${API}/api/posts/${data.shared_post_id}/`, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-                .then(res => res.ok ? res.json() : null)
-                .then(post => {
-                    if (!post) return;
-                    // API may return array or single object
-                    const postData = Array.isArray(post)
-                        ? post.find(p => (p.id || p.post_id) === data.shared_post_id)
-                        : post;
-                    if (postData) {
-                        setMessages(prev => prev.map(m =>
-                            m.id === newMsg.id ? { ...m, post: postData } : m
-                        ));
-                    }
-                })
-                .catch(() => { });
-        }
     }, [scrollToBottom, token]);
 
     const handleWsTyping = useCallback((data) => {
@@ -655,6 +636,8 @@ export default function ActiveChat({
                                                                 ${msg.post ? styles.bubblePost : isMine ? styles.bubbleMine : styles.bubbleOther}
                                                                 ${isGrouped ? styles.bubbleGrouped : ''}
                                                                 ${isLastInGroup ? styles.bubbleLastInGroup : ''}
+                                                                ${msg.type === 'media' && msg.media?.every(m => (m.media_type || m.type) === 'image' || (m.media_type || m.type) === 'video') && !msg.text && !msg.reply_to_details ? styles.bubbleTransparent : ''}
+                                                                ${msg.type === 'media' && msg.media?.some(m => !['image','video'].includes(m.media_type || m.type)) ? styles.bubbleFile : ''}
                                                             `}>
                                                                 {msg.reply_to_details && (
                                                                     <div className={styles.replyQuoteBox} onClick={() => scrollToMessage(msg.reply_to_details.id)}>
@@ -676,8 +659,8 @@ export default function ActiveChat({
                                                                             ) : type === 'video' ? (
                                                                                 <video key={m.id ?? i} src={resolveUrl(src)} controls className={styles.mediaVideo} />
                                                                             ) : (
-                                                                                <a key={m.id ?? i} href={resolveUrl(src)} target="_blank" rel="noreferrer" className={styles.fileAttachment}>
-                                                                                    <div className={styles.fileIconWrapper}><span className={styles.pdfLabel}>{src?.split('.').pop()?.toUpperCase() ?? 'FILE'}</span></div>
+                                                                                <a key={m.id ?? i} href={resolveUrl(src)} target="_blank" rel="noreferrer" className={styles.fileAttachment} style={isMine ? { background: 'rgba(28,28,28,0.85)', border: '1px solid rgba(255,255,255,0.08)' } : {}}>
+                                                                                    {(() => { const ext = src?.split('.').pop()?.toLowerCase(); const iconBg = (ext === 'zip' || ext === 'rar') ? 'rgba(220,50,50,0.85)' : 'rgba(150,40,220,0.75)'; return <div className={styles.fileIconWrapper} style={{ background: iconBg }}><span className={styles.pdfLabel}>{ext?.toUpperCase() ?? 'FILE'}</span></div>; })()}
                                                                                     <div className={styles.fileDetails}><strong className={styles.fileName}>{src?.split('/').pop()}</strong><span className={styles.fileMeta}>{type ?? 'file'}</span></div>
                                                                                     <div className={styles.downloadWrapper}><Download size={20} strokeWidth={2.5} /></div>
                                                                                 </a>
@@ -686,6 +669,39 @@ export default function ActiveChat({
                                                                         {msg.text && <span style={{ whiteSpace: 'pre-wrap', display: 'block', marginTop: 6 }}>{msg.text}</span>}
                                                                     </div>
                                                                 ) : msg.post ? (
+                                                                    msg.post.post_type === 'advertisement' ? (
+                                                                        /* ── Shared Ad bubble ── */
+                                                                        <div
+                                                                            onClick={() => setOpenAdPost(msg.post)}
+                                                                            style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(199,44,255,0.25)', borderRadius: 14, overflow: 'hidden', maxWidth: 320, transition: 'background 0.2s' }}
+                                                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                                                                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                                                                        >
+                                                                            {/* Ad image with Sponsored badge overlay */}
+                                                                            {(msg.post.media?.[0]?.url || msg.post.image) && (
+                                                                                <div style={{ position: 'relative', width: '100%', height: 140 }}>
+                                                                                    <img src={msg.post.media?.[0]?.url || msg.post.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                                                                    <span style={{ position: 'absolute', top: 8, left: 8, background: 'linear-gradient(90deg, #c72cff, #8b2dff)', color: '#fff', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 999 }}>Sponsored</span>
+                                                                                </div>
+                                                                            )}
+                                                                            <div style={{ padding: '10px 12px' }}>
+                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                                                                                    <img src={msg.post.author?.avatar || '/default-avatar.png'} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
+                                                                                    <div>
+                                                                                        <span style={{ color: 'white', fontWeight: 600, fontSize: '0.82rem', display: 'block' }}>{msg.post.author?.username || 'Page'}</span>
+                                                                                        <span style={{ color: 'rgba(199,44,255,0.9)', fontSize: '0.68rem', fontWeight: 600 }}>Ad · Shared with you</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                                {msg.post.title && (
+                                                                                    <p style={{ color: 'white', fontSize: '0.82rem', fontWeight: 600, margin: '0 0 4px' }}>
+                                                                                        {msg.post.title}
+                                                                                    </p>
+                                                                                )}
+                                                                                <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', marginTop: 4, display: 'block' }}>Tap to view ad</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    ) : (
+                                                                    /* ── Shared regular post bubble ── */
                                                                     <div onClick={() => setOpenPost(msg.post)}
                                                                         style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, overflow: 'hidden', maxWidth: 320, transition: 'background 0.2s' }}
                                                                         onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
@@ -706,6 +722,7 @@ export default function ActiveChat({
                                                                             <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', marginTop: 6, display: 'block' }}>Tap to view post</span>
                                                                         </div>
                                                                     </div>
+                                                                    )
                                                                 ) : (
                                                                     <span style={{ whiteSpace: 'pre-wrap' }}>
                                                                         {msg.text}
@@ -901,7 +918,6 @@ export default function ActiveChat({
                                                 <div className={styles.attachmentMenu}>
                                                     <button className={styles.attachmentMenuItem} onClick={() => imageInputRef.current.click()}>🖼️ Image</button>
                                                     <button className={styles.attachmentMenuItem} onClick={() => fileInputRef.current.click()}>📄 File / PDF</button>
-                                                    <button className={styles.attachmentMenuItem} onClick={() => { setPollOpen(true); setAttachmentMenuOpen(false); }}>📊 Poll</button>
                                                 </div>
                                             )}
                                         </div>
@@ -929,6 +945,7 @@ export default function ActiveChat({
 
             {/* ── Comment modal ── */}
             {openPost && <CommentModal post={openPost} onClose={() => setOpenPost(null)} currentUser={user} />}
+            {openAdPost && <SharedAdModal post={openAdPost} onClose={() => setOpenAdPost(null)} currentUser={user} />}
 
             {/* ── Lightbox ── */}
             {lightboxUrl && (

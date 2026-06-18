@@ -121,7 +121,7 @@
     border-radius: 30px;
     height: auto;
     z-index: 1;
-    min-width: 850px;
+    min-width: 0;
     position: relative;
     margin: 1% 0 0 0;
 }
@@ -137,6 +137,7 @@
     width: 100%;
     top: 10px;
     z-index: 10;
+    min-height: calc(100vh - 170px);
 }
 
 .sectionTitle {
@@ -252,13 +253,13 @@
     transform: scale(1.3);
 }
 
-/* --- Right Section --- */
+
 .rightSection {
     position: relative;
-    flex: 0 0 400px;
-
-    width: 55%;
-    margin: 5% 1% 0 0;
+    flex: 0 0 420px;
+    width: 300px;
+    min-width: 0;
+    margin: 4% 1% 0 0;
     gap: 70px;
     display: flex;
     flex-direction: column;

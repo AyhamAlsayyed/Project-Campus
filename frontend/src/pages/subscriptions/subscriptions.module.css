@@ -1,4 +1,4 @@
-html {
+﻿html {
     height: auto;
     min-height: auto;
     display: flow-root;
@@ -10,7 +10,7 @@ body {
     padding: 0;
     min-height: 100vh;
     background: transparent;
-    background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
+    background: linear-gradient(315deg, var(--bg-main), var(--bg-secondary));
     background-attachment: fixed;
     background-size: cover;
 }
@@ -125,7 +125,8 @@ body {
 }
 
 .progressBarBackground {
-    width: 456px;
+    width: 100%;
+    max-width: 456px;
     height: 25px;
     background-color: #4D4D4D;
     border-radius: 12px;

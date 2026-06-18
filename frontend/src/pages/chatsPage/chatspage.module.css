@@ -1,13 +1,10 @@
-.darkContainer {
+﻿.darkContainer {
     min-height: 100vh;
     box-sizing: border-box;
     font-family: "Aktiv Grotesk", sans-serif;
     display: flex;
     flex-direction: column;
     position: relative;
-
-
-
 }
 
 .page {
@@ -32,24 +29,13 @@
     margin: 20px auto 0 auto;
     gap: var(--col-gap);
     margin-top: 20px;
-    align-items: stretch;
-
-    flex: 1;
-    min-height: 0;
-
 }
 
 .mainContent {
     flex: 1;
-
-    align-items: flex-start;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    min-height: 0;
-    min-width: 0;
-
-
 }
 
 .title {
@@ -61,7 +47,7 @@
 .highlight {
     font-size: 45px;
     font-weight: 600;
-    background: linear-gradient(30deg, #c72cff, #8b2dff);
+    background: #93278F;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -162,24 +148,6 @@
     display: flex;
     flex-direction: column;
     padding: 0 20px 30px 20px;
-
-    overflow-y: auto;
-
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-}
-
-.chatItemsContainer::-webkit-scrollbar {
-    width: 4px;
-}
-
-.chatItemsContainer::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.chatItemsContainer::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
 }
 
 /* Individual Chat Row */
@@ -220,12 +188,12 @@
 
 .chatArea {
     width: 100%;
-
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    min-height: 0;
+    min-height: calc(100vh - 350px);
+    max-height:calc(100vh - 350px) ;
 }
 
 .messageAvatar {
@@ -254,15 +222,12 @@
 .messagesScrollArea {
     flex: 1;
     overflow-y: auto;
-     overflow-x: hidden;
-
+    overflow-x: hidden;
     min-height: 0;
-    max-height: 500px;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
     padding: 20px 0;
     background-color: #262626;
-
 }
 
 .messagesScrollArea::-webkit-scrollbar {
@@ -509,10 +474,8 @@
     background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
     width: 100%;
     padding-top: 6px;
-    flex: 1;
     display: flex;
     flex-direction: column;
-    height: 100%;
     border-radius: 30px;
     z-index: 1;
     position: relative;
@@ -522,7 +485,6 @@
 .innerContainer {
     background-color: #333333;
     border-radius: 30px;
-    flex: 1;
     padding-top: 30px;
     gap: 40px;
     display: flex;
@@ -530,7 +492,6 @@
     align-items: stretch;
     width: 100%;
     top: 10px;
-    min-height: 0;
     z-index: 10;
 }
 
@@ -698,7 +659,7 @@
 }
 
 .activeChatInnerContainer {
-    background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
+    background: linear-gradient(315deg, var(--bg-main), var(--bg-secondary));
     border-radius: 24px;
     flex: 1;
     display: flex;
@@ -830,7 +791,7 @@
     display: flex;
     gap: 12px;
     width: 100%;
-    margin-bottom: 2%;
+   
     padding: 0 24px;
     box-sizing: border-box;
 }
@@ -897,7 +858,6 @@
     line-height: 1.5;
     position: relative;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-
 }
 
 .bubbleOther {
@@ -908,11 +868,22 @@
    
 }
 
+.bubbleTransparent {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
 .bubblePost {
     background: transparent !important;
     padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
+}
+
+.bubbleFile {
+    width: fit-content;
 }
 
 .bubblePost::after {
@@ -979,11 +950,11 @@
     display: flex;
     align-items: center;
     gap: 15px;
-    min-width: 220px;
+    
     background: rgba(0, 0, 0, 0.15);
-    /* Sleek darker inset background */
+
     border: 1px solid rgba(255, 255, 255, 0.1);
-    /* Subtle border */
+  
     padding: 10px 14px;
     border-radius: 12px;
     margin-top: 4px;
@@ -1506,12 +1477,11 @@
 .fileAttachment {
     display: flex;
     align-items: center;
-    background: rgba(28, 28, 28, 0.85);
-    /* Dark translucent card inside the bubble */
+    background: rgba(100, 30, 180, 0.80);
+    border: 1px solid rgba(150, 60, 220, 0.25);
     border-radius: 16px;
     padding: 12px 16px;
     margin-bottom: 8px;
-    /* Adds space if there is text below it */
     text-decoration: none;
     gap: 16px;
     width: 100%;
@@ -1520,14 +1490,14 @@
 }
 
 .fileAttachment:hover {
-    background: rgba(28, 28, 28, 0.95);
+    background: rgba(100, 30, 180, 0.35);
 }
 
 /* ── Custom Red PDF Icon ── */
 .fileIconWrapper {
     width: 42px;
     height: 52px;
-    background: #E53935;
+    background: rgba(150, 40, 220, 0.75);
     border-radius: 6px;
     position: relative;
     display: flex;
@@ -1544,8 +1514,7 @@
     right: 0;
     border-width: 0 14px 14px 0;
     border-style: solid;
-    /* This matches the dark card background to simulate a cut corner */
-    border-color: #1C1C1C #1C1C1C rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.3);
+    border-color: rgba(28,28,28,0.85) rgba(28,28,28,0.85) rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.2);
     border-bottom-left-radius: 4px;
 }
 

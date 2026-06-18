@@ -140,14 +140,13 @@ export default function Login() {
         finally { setSubscribing(false); }
     };
 
-    const [currentIndex, setCurrentIndex] = useState(0);
-
     const slides = [
         { image: imageOne, },
         { image: imageTwo, },
         { image: imageThree, },
         { image: imageFour, }
     ];
+    const [currentIndex] = useState(0);
     const currentSlide = slides[currentIndex];
 
     const handlesubmit = async (e) => {
@@ -198,12 +197,6 @@ export default function Login() {
         }
     }
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length);
-        }, 4000);
-        return () => clearInterval(interval);
-    }, [slides.length]);
 
 
     useEffect(() => {

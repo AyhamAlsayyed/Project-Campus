@@ -35,15 +35,23 @@ export default function WeeklyNews({ communityId, useHighlights, isMobile }) {
         fetchNews();
     }, [communityId]);
 
+    useEffect(() => {
+        if (items.length <= 1) return;
+        const timer = setInterval(() => {
+            setIdx(prev => (prev + 1) % items.length);
+        }, 60000);
+        return () => clearInterval(timer);
+    }, [items.length]);
+
     const next = () => {
         setIdx((prev) => (prev + 1) % items.length);
     };
     const current = items[Math.min(idx, items.length - 1)];
     const title = current?.title || "No Title";
-    const description = current?.description || "No Description";
-    const imageUrl = current?.image_url || "https://via.placeholder.com/400x200?text=No+Image";
-    const start = current?.start_date || current?.startDate || "";
-    const end = current?.end_date || current?.endDate || "";
+    const description = current?.desc || current?.description || "No Description";
+    const imageUrl = current?.img || current?.image_url || "https://via.placeholder.com/400x200?text=No+Image";
+    const endDate = current?.date || "";
+    const statusMessage = current?.status_message || "";
     return (
         <div className={styles.container}>
             <div className={styles.newsWrap}>
@@ -68,7 +76,10 @@ export default function WeeklyNews({ communityId, useHighlights, isMobile }) {
                                 <div className={styles.bannerTint} />
                                 <div className={styles.bannerText}>
                                     <div className={styles.bannerTitle}>{title}</div>
-                                    <div className={styles.bannerDate}>Starting {start} - Ending {end}</div>
+                                    <div className={styles.bannerDate}>
+                                        {endDate ? `Ending ${endDate}` : ""}
+                                        {statusMessage ? ` · ${statusMessage}` : ""}
+                                    </div>
                                 </div>
                                 <button className={styles.bannerArrow} onClick={next} aria-label="Next">
                                     <img

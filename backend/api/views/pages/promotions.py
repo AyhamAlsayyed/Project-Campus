@@ -168,11 +168,12 @@ def get_page_promotions(request):
         elif event_type and promo.content_type_obj_id == event_type.id:
             events_promotions.append(promo)
 
+    ctx = {"request": request}
     return Response(
         {
-            "posts": PromotionSerializer(posts_promotions, many=True).data,
-            "communities": PromotionSerializer(communities_promotions, many=True).data,
-            "events": PromotionSerializer(events_promotions, many=True).data,
+            "posts": PromotionSerializer(posts_promotions, many=True, context=ctx).data,
+            "communities": PromotionSerializer(communities_promotions, many=True, context=ctx).data,
+            "events": PromotionSerializer(events_promotions, many=True, context=ctx).data,
         },
         status=status.HTTP_200_OK,
     )

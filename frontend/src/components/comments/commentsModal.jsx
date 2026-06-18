@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 import postStyles from '../posts/posts.module.css';
 import Share from '../../Assets/icons/share.png';
 import API from '../../config';
+import defaultPfp from '../../Assets/icons/default-pfp.png';
 
 export default function CommentModal({ post, onClose, currentUser }) {
     const highlightCommentId = post.highlightCommentId || {};
@@ -35,6 +36,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
     const [isSharing, setIsSharing] = useState(false);
     const shareMenuRef = useRef(null);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [deleteConfirmId, setDeleteConfirmId] = useState(null);
     const CHAR_LIMIT = 150;
 
     // Fetch share targets — deduplicated to one entry per person
@@ -156,8 +158,10 @@ export default function CommentModal({ post, onClose, currentUser }) {
                     text: c.text || c.content,
                     user: c.user || c.author?.username,
                     user_id: c.user_id || c.author?.id,
-                    user_avatar: c.user_avatar || c.author?.avatar,
+                    user_avatar: c.user_avatar || c.author?.profile_image || c.author?.avatar || null,
                     author: c.author || null,
+                    isLiked: c.has_reacted || false,
+                    likes: c.reactions_count || 0,
                 }));
 
                 setComments(normalized);
@@ -286,16 +290,50 @@ export default function CommentModal({ post, onClose, currentUser }) {
     const nextSlide = (e) => { e.stopPropagation(); setCurrentSlide((prev) => (prev + 1) % visualMedia.length); };
     const prevSlide = (e) => { e.stopPropagation(); setCurrentSlide((prev) => (prev === 0 ? visualMedia.length - 1 : prev - 1)); };
 
-    const toggleLike = (id) => {
-        setComments((prev) =>
-            prev.map((c) =>
-                c.id === id ? { ...c, likes: c.isLiked ? c.likes - 1 : c.likes + 1, isLiked: !c.isLiked } : c
-            )
-        );
+    const toggleLike = async (id) => {
+        const token = localStorage.getItem("access");
+        if (!token) return;
+        // Optimistic update
+        setComments(prev => prev.map(c =>
+            c.id === id ? { ...c, isLiked: !c.isLiked, likes: c.isLiked ? c.likes - 1 : c.likes + 1 } : c
+        ));
+        try {
+            const res = await fetch(`${API}/api/comments/${id}/like/`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setComments(prev => prev.map(c =>
+                    c.id === id ? { ...c, isLiked: data.liked, likes: data.reactions_count } : c
+                ));
+            } else {
+                // Revert on failure
+                setComments(prev => prev.map(c =>
+                    c.id === id ? { ...c, isLiked: !c.isLiked, likes: c.isLiked ? c.likes - 1 : c.likes + 1 } : c
+                ));
+            }
+        } catch {
+            setComments(prev => prev.map(c =>
+                c.id === id ? { ...c, isLiked: !c.isLiked, likes: c.isLiked ? c.likes - 1 : c.likes + 1 } : c
+            ));
+        }
     };
 
     return (
         <div className={styles.overlay} onClick={onClose}>
+            {deleteConfirmId && (
+                <div className={styles.confirmOverlay} onClick={() => setDeleteConfirmId(null)}>
+                    <div className={styles.confirmBox} onClick={e => e.stopPropagation()}>
+                        <p className={styles.confirmText}>Delete this comment?</p>
+                        <p className={styles.confirmSub}>This can't be undone.</p>
+                        <div className={styles.confirmActions}>
+                            <button className={styles.confirmCancel} onClick={() => setDeleteConfirmId(null)}>Cancel</button>
+                            <button className={styles.confirmDelete} onClick={() => { deleteComment(deleteConfirmId); setDeleteConfirmId(null); }}>Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
 
                 <div className={styles.header}>
@@ -307,14 +345,19 @@ export default function CommentModal({ post, onClose, currentUser }) {
                     <div className={styles.postHeader}>
                         <Link to={post.author?.type === 'page' ? `/page/${post.author?.id}` : `/profile/${post.author?.id}`}>
                             <img
-                                src={post.author?.avatar || post.author_avatar || "/default-avatar.png"}
+                                src={post.author?.avatar || post.author_avatar || defaultPfp}
                                 className={styles.avatar}
                                 alt=""
                             />
                         </Link>
                         <div className={styles.authorInfo}>
                             <span className={styles.authorName}>{post.author?.username || post.author_username}</span>
-                            <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>
+                            <span className={styles.time}>
+                                {formatTimeAgo(post.created_at)}
+                                {post.post_type && post.post_type !== 'post' && (
+                                    <span className={styles.postTypeBadge}>{post.post_type}</span>
+                                )}
+                            </span>
                         </div>
                     </div>
 
@@ -465,7 +508,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                 <div key={c.id} className={styles.commentBlock} ref={el => commentRefs.current[c.id] = el}>
                                     <div className={styles.commentRow}>
                                         <Link to={c.author?.user_type === 'page' ? `/page/${c.user_id}` : `/profile/${c.user_id}`}>
-                                            <img src={c.user_avatar || "/default-avatar.png"} className={styles.commentAvatar} alt="" />
+                                            <img src={c.user_avatar || defaultPfp} className={styles.commentAvatar} alt="" />
                                         </Link>
                                         <div className={styles.commentContent}>
                                             <div className={`${styles.commentBubble} ${highlightedId === c.id ? styles.highlighted : ''}`}>
@@ -480,12 +523,17 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                                 </p>
                                             </div>
                                             <div className={styles.commentActions}>
-                                                <span onClick={() => toggleLike(c.id)}>Like</span>
+                                                <span
+                                                    className={c.isLiked ? styles.liked : ""}
+                                                    onClick={() => toggleLike(c.id)}
+                                                >
+                                                    {c.isLiked ? "Liked" : "Like"}{c.likes > 0 ? ` · ${c.likes}` : ""}
+                                                </span>
                                                 <span onClick={() => { setParentComment(c); setEditingComment(null); setNewComment(""); }}>Reply</span>
                                                 {c.user === currentUser?.username && (
                                                     <>
                                                         <span className={styles.editBtn} onClick={() => { setEditingComment(c); setNewComment(c.text); setParentComment(null); }}>Edit</span>
-                                                        <span className={styles.deleteBtn} onClick={() => deleteComment(c.id)}>Delete</span>
+                                                        <span className={styles.deleteBtn} onClick={() => setDeleteConfirmId(c.id)}>Delete</span>
                                                     </>
                                                 )}
                                             </div>
@@ -501,7 +549,8 @@ export default function CommentModal({ post, onClose, currentUser }) {
 
                                     {isExpanded && replies.map((reply) => (
                                         <div key={reply.id} className={styles.replyRow} ref={el => commentRefs.current[reply.id] = el}>
-                                            <Link to={reply.author?.user_type === 'page' ? `/page/${reply.user_id}` : `/profile/${reply.user_id}`}>                                             <img src={reply.user_avatar || "/default-avatar.png"} className={styles.replyAvatar} alt="" />
+                                            <Link to={reply.author?.user_type === 'page' ? `/page/${reply.user_id}` : `/profile/${reply.user_id}`}>
+                                                <img src={reply.user_avatar || defaultPfp} className={styles.replyAvatar} alt="" />
                                             </Link>
                                             <div className={styles.replyContent}>
                                                 <div className={`${styles.replyBubble} ${highlightedId === reply.id ? styles.highlighted : ''}`}>
@@ -517,12 +566,17 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                                     </p>
                                                 </div>
                                                 <div className={styles.commentActions}>
-                                                    <span onClick={() => toggleLike(reply.id)}>Like</span>
+                                                    <span
+                                                        className={reply.isLiked ? styles.liked : ""}
+                                                        onClick={() => toggleLike(reply.id)}
+                                                    >
+                                                        {reply.isLiked ? "Liked" : "Like"}{reply.likes > 0 ? ` · ${reply.likes}` : ""}
+                                                    </span>
                                                     <span onClick={() => { setParentComment(reply || c); setEditingComment(null); setNewComment(""); }}>Reply</span>
                                                     {reply.user === currentUser?.username && (
                                                         <>
                                                             <span className={styles.editBtn} onClick={() => { setEditingComment(reply); setNewComment(reply.text); setParentComment(null); }}>Edit</span>
-                                                            <span className={styles.deleteBtn} onClick={() => deleteComment(reply.id)}>Delete</span>
+                                                            <span className={styles.deleteBtn} onClick={() => setDeleteConfirmId(reply.id)}>Delete</span>
                                                         </>
                                                     )}
                                                 </div>

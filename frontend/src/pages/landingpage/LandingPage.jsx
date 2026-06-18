@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import useTheme from '../../hooks/useTheme';
 
 export default function LandingPage() {
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [currentIndex] = useState(() => Math.floor(Math.random() * (TEXT['en'].landing.slides?.length || 4)));
    
     const [language, setLanguage] = useState('en');
     const t = (TEXT[language] || TEXT.en).landing;
@@ -20,12 +20,6 @@ export default function LandingPage() {
     const { theme, toggleTheme } = useTheme();
     
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length);
-        }, 4000);
-        return () => clearInterval(interval);
-    }, [slides.length]);
     const currentSlide = slides[currentIndex];
 
     return (

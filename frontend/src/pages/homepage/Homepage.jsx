@@ -7,6 +7,7 @@ import DesktopCreatePost from '../../components/createPost/DesktopCreatePost/des
 import CommentModal from '../../components/comments/commentsModal';
 import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
     X, Cloud, Menu, Search,
     Check, MoreHorizontal, Volume2, Calendar, UserPlus, Heart,
@@ -65,6 +66,15 @@ export default function Homepage() {
     const [promoteContent, setPromoteContent] = useState('');
     const [promoteDesc, setPromoteDesc] = useState('');
     const [promoteDuration, setPromoteDuration] = useState(0);
+    const [isPromoteCheckoutOpen, setIsPromoteCheckoutOpen] = useState(false);
+
+    const promoteDurationOptions = [
+        { label: '1 week', cost: 4.99 },
+        { label: '1 month', cost: 9.99 },
+        { label: '3 months', cost: 14.99 },
+        { label: '6 months', cost: 24.99 },
+        { label: '1 year', cost: 49.99 },
+    ];
 
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
@@ -80,7 +90,7 @@ export default function Homepage() {
     const resetPostState = () => {
         setContent(""); setImages([]); setFiles([]); setPollOptions(["", ""]); setIsPollOpen(false);
         setIsAnnouncement(false); setAnnouncementTitle(''); setAnnouncementDesc(''); setAnnouncementDuration(0);
-        setIsPromote(false); setPromoteTitle(''); setPromoteContent(''); setPromoteDesc(''); setPromoteDuration(0);
+        setIsPromote(false); setPromoteTitle(''); setPromoteContent(''); setPromoteDesc(''); setPromoteDuration(0); setIsPromoteCheckoutOpen(false);
         setAnnImageError(false);
     };
 
@@ -547,7 +557,7 @@ export default function Homepage() {
                             ) : (
                                 <div className={styles.feed}>
                                     {posts.map(post => (
-                                        <PostCard key={post.id} post={post} openComments={openComments} />
+                                        <PostCard key={post.id} post={post} openComments={openComments} currentUser={user} />
                                     ))}
                                     <div ref={sentinelRef} style={{ height: 1 }} />
                                     {loadingMore && (
@@ -584,7 +594,7 @@ export default function Homepage() {
                             ) : (
                                 <div className={styles.feed}>
                                     {posts.map(post => (
-                                        <PostCard key={post.id} post={post} openComments={openComments} />
+                                        <PostCard key={post.id} post={post} openComments={openComments} currentUser={user} />
                                     ))}
                                     <div ref={sentinelRef} style={{ height: 1 }} />
                                     {loadingMore && (
@@ -765,14 +775,31 @@ export default function Homepage() {
                                         <div className={styles.annTrackBase} />
                                         <div className={styles.annTrackFill} style={{ width: `${(promoteDuration / 4) * 100}%` }} />
                                         <div className={styles.annNodesRow}>
-                                            {["1 week", "1 month", "3 months", "6 months", "1 year"].map((label, i) => (
+                                            {promoteDurationOptions.map((opt, i) => (
                                                 <div key={i} className={styles.annNode} onClick={() => setPromoteDuration(i)}>
                                                     <div className={`${styles.annNodeDot} ${i === promoteDuration ? styles.annNodeDotActive : i < promoteDuration ? styles.annNodeDotPassed : ''}`} />
-                                                    <span className={`${styles.annNodeLabel} ${i === promoteDuration ? styles.annNodeLabelActive : ''}`}>{label}</span>
+                                                    <span className={`${styles.annNodeLabel} ${i === promoteDuration ? styles.annNodeLabelActive : ''}`}>{opt.label}</span>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
+                                </div>
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    background: 'linear-gradient(-90deg, rgba(166,39,156,0.15), rgba(49,32,169,0.15))',
+                                    border: '1px solid rgba(166,39,156,0.25)',
+                                    borderRadius: 14, padding: '10px 18px', marginTop: 8,
+                                }}>
+                                    <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
+                                        {promoteDurationOptions[promoteDuration].label} promotion
+                                    </span>
+                                    <span style={{
+                                        fontSize: '1.1rem', fontWeight: 700,
+                                        background: 'linear-gradient(30deg, #c72cff, #8b2dff)',
+                                        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+                                    }}>
+                                        ${promoteDurationOptions[promoteDuration].cost.toFixed(2)}
+                                    </span>
                                 </div>
                             </div>
                         ) : (
@@ -932,6 +959,8 @@ export default function Homepage() {
                                 if (isPromote && (localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page")) {
                                     if (images.length === 0) { setAnnImageError(true); return; }
                                     if (!promoteTitle.trim() || !promoteContent.trim() || !promoteDesc.trim()) return;
+                                    setIsPromoteCheckoutOpen(true);
+                                    return;
                                 }
                                 handleCreatePost();
                             }}
@@ -951,6 +980,114 @@ export default function Homepage() {
 
             {selectedPost && (
                 <CommentModal post={selectedPost} onClose={closeComments} currentUser={user} />
+            )}
+
+            {isPromoteCheckoutOpen && createPortal(
+                <div className={styles.checkoutModalOverlay} onClick={() => setIsPromoteCheckoutOpen(false)}>
+                    <div className={styles.checkoutModalContent} onClick={e => e.stopPropagation()}>
+                        <h2 style={{ color: 'white', marginTop: 0, marginBottom: '8px', fontSize: '1.5rem' }}>Checkout</h2>
+                        <div style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            background: 'linear-gradient(-90deg, rgba(166,39,156,0.15), rgba(49,32,169,0.15))',
+                            border: '1px solid rgba(166,39,156,0.25)',
+                            borderRadius: 12, padding: '10px 16px', marginBottom: 20,
+                        }}>
+                            <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
+                                {promoteDurationOptions[promoteDuration].label} promotion
+                            </span>
+                            <span style={{
+                                fontSize: '1.1rem', fontWeight: 700,
+                                background: 'linear-gradient(30deg, #c72cff, #8b2dff)',
+                                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+                            }}>
+                                ${promoteDurationOptions[promoteDuration].cost.toFixed(2)}
+                            </span>
+                        </div>
+                        <div className={styles.checkoutInputGroup}>
+                            <label className={styles.checkoutLabel}>Name on Card</label>
+                            <input type="text" className={styles.checkoutInput} placeholder="John Doe" />
+                        </div>
+                        <div className={styles.checkoutInputGroup}>
+                            <label className={styles.checkoutLabel}>Card Number</label>
+                            <input type="text" className={styles.checkoutInput} placeholder="0000 0000 0000 0000" />
+                        </div>
+                        <div style={{ display: 'flex', gap: '16px' }}>
+                            <div className={styles.checkoutInputGroup} style={{ flex: 1 }}>
+                                <label className={styles.checkoutLabel}>Expiry Date</label>
+                                <input type="text" className={styles.checkoutInput} placeholder="MM/YY" />
+                            </div>
+                            <div className={styles.checkoutInputGroup} style={{ flex: 1 }}>
+                                <label className={styles.checkoutLabel}>CVC</label>
+                                <input type="text" className={styles.checkoutInput} placeholder="123" />
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+                            <button className={styles.checkoutCancelBtn} onClick={() => setIsPromoteCheckoutOpen(false)}>Cancel</button>
+                            <button className={styles.checkoutSubmitBtn} onClick={async () => {
+                                // Capture values before state resets
+                                const capturedTitle = promoteTitle;
+                                const capturedContent = promoteContent;
+                                const capturedDesc = promoteDesc;
+                                const capturedDuration = promoteDurationOptions[promoteDuration].label;
+                                const capturedDurationIdx = promoteDuration;
+                                const capturedCost = promoteDurationOptions[promoteDuration].cost;
+                                const capturedImages = [...images];
+
+                                // Optimistic UI + close modals
+                                const optimisticPost = {
+                                    id: `temp-${Date.now()}`,
+                                    content_text: capturedContent,
+                                    created_at: new Date().toISOString(),
+                                    is_promote: true,
+                                    author: { id: user?.id, username: user?.username, avatar: avatarSrc },
+                                    likes_count: 0, comments_count: 0, is_liked: false, is_saved: false,
+                                    media: capturedImages.map(img => ({ url: URL.createObjectURL(img), type: img.type.startsWith('video/') ? 'video' : 'image' })),
+                                };
+                                setPosts(prev => [optimisticPost, ...prev]);
+                                setIsPromoteCheckoutOpen(false);
+                                setIsModalOpen(false);
+                                resetPostState();
+
+                                try {
+                                    // Step 1: Create the post
+                                    const formData = new FormData();
+                                    formData.append('content', capturedContent);
+                                    formData.append('title', capturedTitle);
+                                    formData.append('description', capturedDesc);
+                                    formData.append('post_type', 'advertisement');
+                                    formData.append('duration', capturedDuration);
+                                    capturedImages.forEach(img => formData.append('images', img));
+
+                                    const postRes = await fetch(`${API}/api/posts/create/`, {
+                                        method: 'POST',
+                                        headers: { Authorization: `Bearer ${token}` },
+                                        body: formData,
+                                    });
+                                    if (!postRes.ok) { setPosts(prev => prev.filter(p => p.id !== optimisticPost.id)); return; }
+                                    const savedPost = await postRes.json();
+                                    setPosts(prev => prev.map(p => p.id === optimisticPost.id ? savedPost : p));
+
+                                    const postId = savedPost.post_id || savedPost.id;
+
+                                    // Step 2: Create ONHOLD promotion
+                                    await fetch(`${API}/api/posts/promotions/`, {
+                                        method: 'POST',
+                                        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ post_id: postId, duration: capturedDuration, duration_idx: capturedDurationIdx, cost: capturedCost }),
+                                    });
+
+                                    // Step 3: Checkout to activate
+                                    await fetch(`${API}/api/posts/promotions/checkout/`, {
+                                        method: 'POST',
+                                        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ items: [{ post_id: postId, duration: capturedDuration, cost: capturedCost }] }),
+                                    });
+                                } catch (err) { console.error('Promote checkout error:', err); }
+                            }}>Pay Now</button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
     )

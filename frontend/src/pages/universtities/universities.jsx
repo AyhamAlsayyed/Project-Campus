@@ -537,14 +537,10 @@ export default function Universities() {
                                                     </div>
                                                     <div className={styles.timeRemainingRow}>
                                                         <Clock size={16} />
-                                                        {(() => {
-                                                            const remaining = getDaysRemaining(item.end_date);
-                                                            return (
-                                                                <span style={{ color: remaining?.expired ? '#e05252' : 'inherit' }}>
-                                                                    {remaining?.label ?? 'No end date set'}
-                                                                </span>
-                                                            );
-                                                        })()}
+                                                        <span style={{ color: item.status_message === 'Expired' ? '#e05252' : 'inherit' }}>
+                                                            {item.date ? `Ending ${item.date}` : ''}
+                                                            {item.status_message ? ` · ${item.status_message}` : ''}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -700,14 +696,10 @@ export default function Universities() {
                                                         </div>
                                                         <div className={styles.timeRemainingRow}>
                                                             <Clock size={16} />
-                                                            {(() => {
-                                                                const remaining = getDaysRemaining(item.end_date);
-                                                                return (
-                                                                    <span style={{ color: remaining?.expired ? '#e05252' : 'inherit' }}>
-                                                                        {remaining?.label ?? 'No end date set'}
-                                                                    </span>
-                                                                );
-                                                            })()}
+                                                            <span style={{ color: item.status_message === 'Expired' ? '#e05252' : 'inherit' }}>
+                                                                {item.date ? `Ending ${item.date}` : ''}
+                                                                {item.status_message ? ` · ${item.status_message}` : ''}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -742,7 +734,7 @@ export default function Universities() {
                         </div>
 
                         {(!isUniversity && news.length > 1) && (
-                            <div className={styles.sliderControls} style={{ marginTop: "-50px" }}>
+                            <div className={styles.sliderControls} style={{ marginTop: 12 }}>
                                 <button className={styles.arrowBtn} onClick={() => setNewsIndex(p => p === 0 ? news.length - 1 : p - 1)}>
                                     <img src={ArrowLeft} alt="prev" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} />
                                 </button>

@@ -1089,3 +1089,127 @@
 [data-theme="light"] .emptyStateSubtitle {
   color: rgba(0, 0, 0, 0.38);
 }
+/* ════════════════════════════════════════
+   PROMOTE CHECKOUT MODAL
+   ════════════════════════════════════════ */
+.checkoutModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(2px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkoutModalContent {
+  background-color: #333333;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 450px;
+  padding: 30px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  font-family: "Aktiv Grotesk", sans-serif;
+}
+
+.checkoutInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.checkoutLabel {
+  color: #CCCCCC;
+  font-size: 0.85rem;
+  font-weight: 500;
+  list-style: none;
+  display: block;
+}
+
+.checkoutInput {
+  background-color: #262626;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 25px;
+  padding: 12px 14px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.checkoutInput:focus {
+  border-color: #93278F;
+  box-shadow: 0 0 0 1px rgba(147, 39, 143, 0.3);
+}
+
+.checkoutInput::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.checkoutSubmitBtn {
+  background: linear-gradient(to right, #622598, #942892);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.checkoutSubmitBtn:hover {
+  opacity: 0.85;
+}
+
+.checkoutCancelBtn {
+  background: transparent;
+  color: #CCCCCC;
+  border: none;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.checkoutCancelBtn:hover {
+  color: #ffffff;
+}
+
+[data-theme="light"] .checkoutModalContent {
+  background-color: #ffffff;
+  border-color: rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .checkoutLabel {
+  color: #444;
+}
+
+[data-theme="light"] .checkoutInput {
+  background-color: #f5f5f5;
+  border-color: rgba(0,0,0,0.1);
+  color: #111;
+}
+
+[data-theme="light"] .checkoutInput::placeholder {
+  color: rgba(0,0,0,0.3);
+}
+
+[data-theme="light"] .checkoutCancelBtn {
+  color: #555;
+}
+
+[data-theme="light"] .checkoutCancelBtn:hover {
+  color: #111;
+}
+
+[data-theme="light"] .checkoutModalContent h2 {
+  color: #111 !important;
+}

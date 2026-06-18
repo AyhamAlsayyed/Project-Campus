@@ -20,6 +20,9 @@ import Subscriptions from "./pages/subscriptions/subscriptions";
 import Settings from "./pages/settingsPage/Settings.jsx";
 import PageEventsPage from "./pages/pageEventsProfilePage/PageEvents.jsx";
 import NotificationsPage from "./pages/notificationsPage/notificationsPage.jsx";
+import AboutUs from "./pages/staticPages/AboutUs.jsx";
+import PrivacyPolicy from "./pages/staticPages/PrivacyPolicy.jsx";
+import HelpPage from "./pages/staticPages/HelpPage.jsx";
 import { PresenceProvider } from "./context/presenceContext.jsx";
 import { NotificationProvider } from "./context/NotificationContext.jsx";
 function App() {
@@ -173,6 +176,10 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            <Route path="/about" element={<ProtectedRoute><AboutUs /></ProtectedRoute>} />
+            <Route path="/privacy" element={<ProtectedRoute><PrivacyPolicy /></ProtectedRoute>} />
+            <Route path="/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

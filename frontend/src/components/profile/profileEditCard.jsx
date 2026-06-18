@@ -15,7 +15,50 @@ import BirthdayIcon from '../../Assets/icons/cake.png'
 import PhoneIcon from '../../Assets/icons/phone.png'
 import EducationIcon from '../../Assets/icons/education.png'
 import ProfilePicture from '../../Assets/icons/default-pfp.png';
+import BinIcon from '../../Assets/icons/bin.png';
+import DefaultBanner from '../../Assets/Pictures/default-community-banner.png';
 
+
+const DEGREE_OPTIONS = ['High School Diploma', "Bachelor's", "Master's", 'PhD'];
+
+const DegreeSelect = ({ value, onChange, styles }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const ref = useRef(null);
+    const displayed = value || 'Degree type';
+    useEffect(() => {
+        const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setIsOpen(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+    return (
+        <div className={styles.degreeDropdownContainer} ref={ref}>
+            <div className={styles.degreeDropdownOuter}>
+                <div className={styles.degreeDropdownValueBox} onClick={() => setIsOpen(o => !o)}>
+                    {displayed}
+                </div>
+                <div
+                    className={`${styles.degreeDropdownArrow} ${isOpen ? styles.degreeDropdownArrowOpen : ''}`}
+                    onClick={() => setIsOpen(o => !o)}
+                />
+            </div>
+            {isOpen && (
+                <div className={styles.degreeDropdownMenu}>
+                    {DEGREE_OPTIONS.map((opt, i) => (
+                        <div key={opt}>
+                            <div
+                                className={styles.degreeDropdownOption}
+                                onClick={() => { onChange(opt); setIsOpen(false); }}
+                            >
+                                {opt}
+                            </div>
+                            {i < DEGREE_OPTIONS.length - 1 && <div className={styles.degreeDropdownDivider} />}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
 
 const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS_SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -79,7 +122,6 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    username: user?.username,
                     personalEmail: formData.secondaryEmail.trim(),
                 })
             });
@@ -235,10 +277,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                         background: "#2a2a2a", borderRadius: 16,
                         overflow: "hidden", position: "relative"
                     }}>
-                        {coverPreview && (
-                            <img src={coverPreview} alt="cover"
-                                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                        )}
+                        <img src={coverPreview || DefaultBanner} alt="cover"
+                            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                         <button
                             ref={cameraButtonRef}
                             className={styles.centeredCameraBtn}
@@ -744,17 +784,11 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                         <div key={i}>
                                             {editingDegreeIdx === i ? (
                                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', flexWrap: 'wrap' }}>
-                                                    <select
+                                                    <DegreeSelect
                                                         value={editingDegree.title}
-                                                        onChange={e => setEditingDegree(p => ({ ...p, title: e.target.value }))}
-                                                        className={styles.editFormInlineInput} style={{ flex: 1 }}
-                                                    >
-                                                        <option value="">Degree type</option>
-                                                        <option value="High School Diploma">Diploma</option>
-                                                        <option value="Bachelor's">Bachelor's</option>
-                                                        <option value="Master's">Master's</option>
-                                                        <option value="PhD">PhD</option>
-                                                    </select>
+                                                        onChange={val => setEditingDegree(p => ({ ...p, title: val }))}
+                                                        styles={styles}
+                                                    />
                                                     <input
                                                         placeholder="Field e.g. Computer Science"
                                                         value={editingDegree.field}
@@ -795,16 +829,16 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                                     </span>
                                                     <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
                                                         <button
-                                                            style={{ background: 'transparent', border: 'none', color: '#c084fc', cursor: 'pointer', padding: 4 }}
+                                                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}
                                                             onClick={() => { setEditingDegreeIdx(i); setEditingDegree(deg); }}
                                                         >
-                                                            <Edit2 size={14} />
+                                                            <img src={EditIcon} alt="edit" style={{ width: 14, height: 14, filter: 'brightness(0) invert(0.7)' }} />
                                                         </button>
                                                         <button
-                                                            className={styles.editFormTrashBtn}
+                                                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}
                                                             onClick={() => setFormData(p => ({ ...p, degrees: p.degrees.filter((_, idx) => idx !== i) }))}
                                                         >
-                                                            <Trash2 size={14} />
+                                                            <img src={BinIcon} alt="delete" style={{ width: 14, height: 14, filter: 'brightness(0) invert(0.6) sepia(1) saturate(5) hue-rotate(300deg)' }} />
                                                         </button>
                                                     </div>
                                                 </div>
@@ -814,18 +848,11 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
 
                                     {showAddDegree ? (
                                         <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0', flexWrap: 'wrap' }}>
-                                            <select
+                                            <DegreeSelect
                                                 value={newDegree.title}
-                                                onChange={e => setNewDegree(p => ({ ...p, title: e.target.value }))}
-                                                className={styles.editFormInlineInput} style={{ flex: 1 }}
-
-                                            >
-                                                <option value="">Degree type</option>
-                                                <option value="High School Diploma">Diploma</option>
-                                                <option value="Bachelor's">Bachelor's</option>
-                                                <option value="Master's">Master's</option>
-                                                <option value="PhD">PhD</option>
-                                            </select>
+                                                onChange={val => setNewDegree(p => ({ ...p, title: val }))}
+                                                styles={styles}
+                                            />
                                             <input
                                                 placeholder="Field e.g. Computer Science"
                                                 value={newDegree.field}
@@ -847,13 +874,13 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
 
                                             />
                                             <button
-                                                className={styles.editFormAddBtn}
                                                 onClick={() => {
                                                     if (!newDegree.title.trim()) return;
                                                     setFormData(p => ({ ...p, degrees: [...(p.degrees || []), newDegree] }));
                                                     setNewDegree({ title: '', field: '', institution: '' });
                                                     setShowAddDegree(false);
                                                 }}
+                                                style={{ background: "#4D4D4D", color: "#D1D1D1", border: "none", borderRadius: 25, padding: "10px 16px", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap" }}
                                             >
                                                 Add
                                             </button>
@@ -1060,7 +1087,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     onClick={() => handleSendOtp(formData.secondaryPhone)}
                                     style={{ background: "#4D4D4D", color: "#D1D1D1", border: "none", borderRadius: 25, padding: "10px 16px", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap" }}
                                 >
-                                    Verify
+                                    Update
                                 </button>
                                 {formData.secondaryPhone && (
                                     <button

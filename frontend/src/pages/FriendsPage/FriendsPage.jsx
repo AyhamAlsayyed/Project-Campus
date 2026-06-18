@@ -14,6 +14,7 @@ import RemoveFriendIcon from '../../Assets/icons/remove-person.png'
 import Block from '../../Assets/icons/block.png'
 import InfoIcon from '../../Assets/icons/info.png'
 import API from '../../config';
+import NeutralReview from '../../Assets/icons/neutral-review.png';
 import useTheme from '../../hooks/useTheme'
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
@@ -110,8 +111,7 @@ export default function FriendsPage() {
                         const friendsData = await friendsRes.json();
                         const postsData = await postsRes.json();
 
-                        // 1. Access the 'all' array from your response object
-                        // 2. The objects are already "flattened" friend profiles, not "friendship" bridge objects
+                      
                         const formattedFriends = (friendsData.all || []).map(f => {
                             return {
                                 id: f.id,
@@ -236,7 +236,7 @@ export default function FriendsPage() {
             ) : (
                 <div className={styles.emptyState}>
                     <div className={styles.emptyIconWrapper}>
-                        <span className={styles.emptyIcon}>🤝</span>
+                        <img src={NeutralReview} alt="" className={styles.emptyIcon} />
                     </div>
                     <h2 className={styles.emptyTitle}>No posts yet</h2>
                     <p className={styles.emptySubtitle}>Your friends haven't posted anything yet.</p>

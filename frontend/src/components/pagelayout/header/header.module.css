@@ -57,10 +57,11 @@
   background: transparent;
   font-size: 1rem;
   color: var(--text-accent);
+  padding-left: 24px;
 }
 
 .searchInput::placeholder {
-  color: rgba(255, 255, 255, 0.55);
+  color: #838383;
 }
 
 .headerRight {
@@ -811,46 +812,49 @@
   transform: translateX(-50%);
   width: min(850px, 100vw);
   background: #333333;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
   z-index: 99999;
-  overflow: hidden;
   max-height: 70vh;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 /* ── See-all row ── */
 .seeAllRow {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 18px;
+  gap: 14px;
+  padding: 16px 20px;
   cursor: pointer;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(139, 45, 255, 0.08);
+  background: rgba(139, 45, 255, 0.07);
   transition: background 0.15s;
+  border-radius: 24px 24px 0 0;
 }
 
 .seeAllRow:hover {
-  background: rgba(139, 45, 255, 0.18);
+  background: rgba(139, 45, 255, 0.15);
 }
 
 .seeAllIcon {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.8), rgba(49, 32, 169, 0.8));
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.9), rgba(49, 32, 169, 0.9));
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(139, 45, 255, 0.35);
 }
 
 .seeAllTitle {
   color: #fff;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .seeAllHighlight {
@@ -858,16 +862,16 @@
 }
 
 .seeAllCount {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.35);
   font-size: 0.75rem;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 /* ── Search status (loading / empty) ── */
 .searchStatusMsg {
-  padding: 20px 18px;
+  padding: 28px 20px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.35);
   font-size: 0.875rem;
 }
 
@@ -877,26 +881,48 @@
 
 /* ── Section label ── */
 .sectionLabel {
-  padding: 10px 18px 4px;
-  color: rgba(255, 255, 255, 0.35);
-  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px 6px;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.sectionLabel::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
 }
 
 /* ── Result rows ── */
 .resultRow {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 18px;
+  gap: 14px;
+  padding: 10px 20px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, box-shadow 0.15s;
+  position: relative;
 }
 
 .resultRow:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.resultRow:hover::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, #c72cff, #8b2dff);
 }
 
 .resultAvatarWrap {
@@ -905,16 +931,16 @@
 }
 
 .resultAvatar {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .resultAvatarSquare {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   object-fit: cover;
 }
 
@@ -960,15 +986,16 @@
 .resultName {
   color: #fff;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .resultSub {
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 0.76rem;
+  margin-top: 2px;
 }
 
 /* avatar placeholders */

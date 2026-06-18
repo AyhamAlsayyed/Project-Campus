@@ -122,12 +122,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 if not content and not shared_post_id:
                     return
 
+                # Build base URL from scope for absolute media URLs
+                headers = dict(self.scope.get("headers", []))
+                host = headers.get(b"host", b"localhost:8000").decode()
+                scheme = "https" if self.scope.get("type") == "wss" else "http"
+                base_url = f"{scheme}://{host}"
+
                 message_data = await self.save_message(
                     conversation_id=self.conversation_id,
                     sender=self.user,
                     content=content,
                     parent_id=parent_message_id,
                     post_id=shared_post_id,
+                    base_url=base_url,
                 )
 
                 # Broadcast to everyone in the chat room
@@ -217,7 +224,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         ConversationMember.objects.filter(conversation_id=conversation_id, user=user).update(last_read_at=now())
 
     @database_sync_to_async
-    def save_message(self, conversation_id, sender, content, parent_id, post_id):
+    def save_message(self, conversation_id, sender, content, parent_id, post_id, base_url=""):
+        from .serializers import PostSerializer
+
         Message = apps.get_model("api", "Message")
 
         msg = Message.objects.create(
@@ -228,15 +237,46 @@ class ChatConsumer(AsyncWebsocketConsumer):
             shared_post_id=post_id,
         )
 
+        # Build absolute avatar URL for the sender
         avatar_url = None
         try:
             avatar = sender.profile.profile_image
-            avatar_url = avatar.url if avatar else None
+            if avatar:
+                avatar_url = base_url + avatar.url if base_url else avatar.url
         except Exception:
             pass
 
         ConversationMember = apps.get_model("api", "ConversationMember")
         ConversationMember.objects.filter(conversation_id=conversation_id, user=sender).update(last_read_at=msg.sent_at)
+
+        # Serialize shared post with a fake request so image/avatar URLs are absolute.
+        # Run through DjangoJSONEncoder to convert datetimes → strings so the
+        # channel layer (which uses plain json.dumps) can serialize the event dict.
+        shared_post_data = None
+        if post_id:
+            try:
+                from django.core.serializers.json import DjangoJSONEncoder
+                Post = apps.get_model("api", "Post")
+                post_obj = Post.objects.select_related(
+                    "author__profile", "author__page"
+                ).prefetch_related("media").get(post_id=post_id)
+
+                class _FakeRequest:
+                    def __init__(self, base):
+                        self._base = base
+                        self.user = sender
+
+                    def build_absolute_uri(self, path):
+                        if not path or path.startswith("http"):
+                            return path
+                        return self._base + path
+
+                fake_req = _FakeRequest(base_url)
+                raw = PostSerializer(post_obj, context={"request": fake_req}).data
+                # Convert to plain JSON-safe dict (handles datetime, Decimal, etc.)
+                shared_post_data = json.loads(json.dumps(raw, cls=DjangoJSONEncoder))
+            except Exception as e:
+                print(f"[WS] Failed to serialize shared post {post_id}: {e}")
 
         return {
             "message_id": msg.message_id,
@@ -247,6 +287,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "content": msg.content,
             "parent_message_id": msg.parent_message_id,
             "shared_post_id": msg.shared_post_id,
+            "shared_post": shared_post_data,
             "sent_at": msg.sent_at.isoformat(),
         }
 

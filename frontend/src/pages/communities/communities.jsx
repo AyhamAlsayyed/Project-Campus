@@ -116,7 +116,9 @@ export default function Community() {
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    setPromoCart(data.map(item => ({
+                    setPromoCart(data
+                        .filter(item => item.status === 'ONHOLD')
+                        .map(item => ({
                         id: item.promotion_id,
                         communityId: item.object_id,
                         community: {

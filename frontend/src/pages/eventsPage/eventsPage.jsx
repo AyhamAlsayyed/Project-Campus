@@ -208,7 +208,9 @@ export default function EventsPage() {
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    setPromoCart(data.map(item => {
+                    setPromoCart(data
+                        .filter(item => item.status === 'ONHOLD')
+                        .map(item => {
                         const details = item.target_details || {};
                         return {
                             id: item.promotion_id,
@@ -467,12 +469,20 @@ export default function EventsPage() {
                                                             />
                                                         </button>
                                                     )}
-                                                    <button
-                                                        className={event.isFollowed ? styles.followedBtn : styles.followBtn}
-                                                        onClick={() => handleFollow(event.id, event.pageId)}
-                                                    >
-                                                        {event.isFollowed ? 'Followed' : 'Follow'}
-                                                    </button>
+                                                    {(() => {
+                                                        const isOwnUni = event.orgName === user?.university_full_name;
+                                                        const locked = isOwnUni && event.isFollowed;
+                                                        return (
+                                                            <button
+                                                                className={event.isFollowed ? styles.followedBtn : styles.followBtn}
+                                                                onClick={() => !locked && handleFollow(event.id, event.pageId)}
+                                                                style={locked ? { cursor: 'default', opacity: 0.7 } : {}}
+                                                                title={locked ? 'You cannot unfollow your university' : undefined}
+                                                            >
+                                                                {event.isFollowed ? 'Followed' : 'Follow'}
+                                                            </button>
+                                                        );
+                                                    })()}
                                                 </div>
                                             </div>
 
@@ -630,12 +640,20 @@ export default function EventsPage() {
                                                                                 />
                                                                             </button>
                                                                         )}
-                                                                        <button
-                                                                            className={rec.isFollowed ? styles.followBtnSmall : styles.followBtnSmall}
-                                                                            onClick={() => handleFollow(rec.id, rec.pageId)}
-                                                                        >
-                                                                            {rec.isFollowed ? 'Followed' : 'Follow'}
-                                                                        </button>
+                                                                        {(() => {
+                                                                            const isOwnUni = rec.orgName === user?.university_full_name;
+                                                                            const locked = isOwnUni && rec.isFollowed;
+                                                                            return (
+                                                                                <button
+                                                                                    className={rec.isFollowed ? styles.followedBtnSmall : styles.followBtnSmall}
+                                                                                    onClick={() => !locked && handleFollow(rec.id, rec.pageId)}
+                                                                                    style={locked ? { cursor: 'default', opacity: 0.7 } : {}}
+                                                                                    title={locked ? 'You cannot unfollow your university' : undefined}
+                                                                                >
+                                                                                    {rec.isFollowed ? 'Followed' : 'Follow'}
+                                                                                </button>
+                                                                            );
+                                                                        })()}
                                                                     </div>
                                                                 </div>
                                                                 <div className={styles.recBody}>
@@ -927,25 +945,31 @@ export default function EventsPage() {
                                                                 />
                                                             </button>
                                                         )}
-                                                        <button
-                                                            onClick={() => handleFollow(event.id, event.pageId)}
-                                                            style={{
-                                                                padding: "8px 20px",
-                                                                background: event.isFollowed ? "rgba(255,255,255,0.15)" : "linear-gradient(135deg, #5B2598, #962892)",
-                                                                border: "none",
-                                                                borderRadius: 20,
-                                                                color: "white",
-                                                                fontSize: "0.85rem",
-                                                                fontWeight: 500,
-                                                                cursor: "pointer",
-                                                                whiteSpace: "nowrap",
-                                                                transition: "opacity 0.2s"
-                                                            }}
-                                                            onMouseEnter={(e) => e.target.style.opacity = "0.85"}
-                                                            onMouseLeave={(e) => e.target.style.opacity = "1"}
-                                                        >
-                                                            {event.isFollowed ? 'Followed' : 'Follow'}
-                                                        </button>
+                                                        {(() => {
+                                                            const isOwnUni = event.orgName === user?.university_full_name;
+                                                            const locked = isOwnUni && event.isFollowed;
+                                                            return (
+                                                                <button
+                                                                    onClick={() => !locked && handleFollow(event.id, event.pageId)}
+                                                                    style={{
+                                                                        padding: "8px 20px",
+                                                                        background: event.isFollowed ? "rgba(255,255,255,0.15)" : "linear-gradient(135deg, #5B2598, #962892)",
+                                                                        border: "none",
+                                                                        borderRadius: 20,
+                                                                        color: "white",
+                                                                        fontSize: "0.85rem",
+                                                                        fontWeight: 500,
+                                                                        cursor: locked ? "default" : "pointer",
+                                                                        whiteSpace: "nowrap",
+                                                                        transition: "opacity 0.2s",
+                                                                        opacity: locked ? 0.7 : 1
+                                                                    }}
+                                                                    title={locked ? 'You cannot unfollow your university' : undefined}
+                                                                >
+                                                                    {event.isFollowed ? 'Followed' : 'Follow'}
+                                                                </button>
+                                                            );
+                                                        })()}
                                                     </div>
                                                 </div>
 
@@ -1422,7 +1446,7 @@ export default function EventsPage() {
                             </div>
                             <div className={styles.checkoutInputGroup} style={{ flex: 1 }}>
                                 <label className={styles.checkoutLabel}>CVC</label>
-                                *   <input type="text" className={styles.checkoutInput} placeholder="123" />
+                                <input type="text" className={styles.checkoutInput} placeholder="123" />
                             </div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>

@@ -18,7 +18,7 @@ export default function Signup() {
     const { theme, toggleTheme } = useTheme();
     const [step, setStep] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [currentIndex] = useState(1);
     
 
     const slides = [
@@ -29,12 +29,6 @@ export default function Signup() {
     ];
     const currentSlide = slides[currentIndex];
     
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length);
-        }, 4000);
-        return () => clearInterval(interval);
-    }, [slides.length]);
 
     const [form, setForm] = useState({
         username: '',

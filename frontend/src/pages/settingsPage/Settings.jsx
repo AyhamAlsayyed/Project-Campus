@@ -1,4 +1,4 @@
-import styles from './settings.module.css';
+import styles from './Settings.module.css';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import Header from '../../components/pagelayout/header/header';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
@@ -9,7 +9,7 @@ import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import useTheme from '../../hooks/useTheme';
 import API from '../../config';
 import { X as XIcon } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const authHeaders = () => ({
     'Content-Type': 'application/json',
@@ -63,10 +63,11 @@ const Toast = ({ message, type, onClose }) => {
 // ── Main Component ───────────────────────────────────────────────────────────
 export default function Settings() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { theme, toggleTheme } = useTheme();
     const [appearanceTheme, setAppearanceTheme] = useState(theme);
     const [currentUser, setCurrentUser] = useState(null);
-    const [activeTab, setActiveTab] = useState('Account');
+    const [activeTab, setActiveTab] = useState(location.state?.tab || 'Account');
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState(null);
     const token = localStorage.getItem("access");
@@ -116,6 +117,7 @@ export default function Settings() {
     const [bugForm, setBugForm] = useState({ subject: 'Bug Report', message: '', actionTrack: '', screenshot: null });
     const [bugSubmitted, setBugSubmitted] = useState(false);
     const [cacheSize, setCacheSize] = useState('...');
+    const [showCacheConfirm, setShowCacheConfirm] = useState(false);
     const [autoplayMedia, setAutoplayMedia] = useState('Always');
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -377,7 +379,6 @@ export default function Settings() {
     };
 
     const handleClearCache = async () => {
-        if (!window.confirm('Clear locally cached media and data?')) return;
         const keysToKeep = ['access', 'refresh', 'login_user', 'user_type', 'theme'];
         const saved = {};
         keysToKeep.forEach(k => { const v = localStorage.getItem(k); if (v) saved[k] = v; });
@@ -389,6 +390,7 @@ export default function Settings() {
             await Promise.all(keys.map(k => caches.delete(k)));
         }
         await estimateCacheSize();
+        setShowCacheConfirm(false);
         showToast('Cache cleared successfully.');
     };
 
@@ -472,7 +474,7 @@ export default function Settings() {
     );
 
     const SaveBar = ({ onSave }) => (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '28px' }}>
+        <div style={{ position: 'absolute', top: '24px', right: '32px', zIndex: 10 }}>
             <button className={styles.primaryBtn} onClick={onSave} disabled={loading}>
                 {loading ? 'Saving...' : 'Save Changes'}
             </button>
@@ -482,6 +484,40 @@ export default function Settings() {
     return (
         <div className={styles.darkContainer} data-theme={theme}>
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+            {showCacheConfirm && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 9999,
+                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }} onClick={() => setShowCacheConfirm(false)}>
+                    <div style={{
+                        background: '#2a2a2a', borderRadius: 20, padding: '32px 28px',
+                        width: '90%', maxWidth: 400, border: '1px solid rgba(255,255,255,0.08)',
+                        boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+                    }} onClick={e => e.stopPropagation()}>
+                        <div style={{ fontSize: '2rem', marginBottom: 12, textAlign: 'center' }}>🗑️</div>
+                        <h3 style={{ color: '#fff', margin: '0 0 8px', fontSize: '1.1rem', fontWeight: 700, textAlign: 'center' }}>
+                            Clear Cache?
+                        </h3>
+                        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', textAlign: 'center', margin: '0 0 24px', lineHeight: 1.5 }}>
+                            This will clear locally cached media and data ({cacheSize}). Your account and settings will not be affected.
+                        </p>
+                        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                            <button onClick={() => setShowCacheConfirm(false)} style={{
+                                background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: 12,
+                                color: 'rgba(255,255,255,0.7)', padding: '10px 24px', fontSize: '0.9rem',
+                                fontWeight: 600, cursor: 'pointer',
+                            }}>Cancel</button>
+                            <button onClick={handleClearCache} style={{
+                                background: 'linear-gradient(to right, #622598, #942892)', border: 'none',
+                                borderRadius: 12, color: '#fff', padding: '10px 24px', fontSize: '0.9rem',
+                                fontWeight: 600, cursor: 'pointer',
+                            }}>Clear Cache</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ── Mobile Header ── */}
             {isMobile && (
@@ -613,7 +649,11 @@ export default function Settings() {
                                     <label className={styles.settingLabel}>Account Privacy</label>
                                     <div className={styles.segmentedSelector}>
                                         <button className={accountPrivacy === 'Public' ? styles.segmentedOptionActive : styles.segmentedOption} onClick={() => setAccountPrivacy('Public')}>Public</button>
-                                        <button className={accountPrivacy === 'Private' ? styles.segmentedOptionActive : styles.segmentedOption} onClick={() => setAccountPrivacy('Private')}>Private</button>
+                                        <button className={accountPrivacy === 'Private' ? styles.segmentedOptionActive : styles.segmentedOption} onClick={() => {
+                                            setAccountPrivacy('Private');
+                                            if (whoCanMessage === 'Everyone') setWhoCanMessage('Friends Only');
+                                            if (whoCanSeeFriends === 'Everyone') setWhoCanSeeFriends('Friends Only');
+                                        }}>Private</button>
                                     </div>
                                     <p className={styles.contextualNote}>
                                         {accountPrivacy === 'Public'
@@ -624,16 +664,21 @@ export default function Settings() {
                                 <div className={styles.settingRowColumn}>
                                     <label className={styles.settingLabel}>Who Can Message You</label>
                                     <CustomSelect
-                                        options={['Everyone', 'Friends Only', 'Nobody']}
-                                        value={accountPrivacy === 'Private' ? 'Friends Only' : whoCanMessage}
+                                        options={accountPrivacy === 'Private' ? ['Friends Only', 'Nobody'] : ['Everyone', 'Friends Only', 'Nobody']}
+                                        value={whoCanMessage}
                                         onChange={setWhoCanMessage}
-                                        disabled={accountPrivacy === 'Private'}
                                     />
-                                    {accountPrivacy === 'Private' && <p className={styles.fieldNote}>In private mode, only friends can message you.</p>}
                                 </div>
                                 <div className={styles.settingRowColumn}>
                                     <label className={styles.settingLabel}>Who Can See Your Friends List</label>
-                                    <CustomSelect options={['Everyone', 'Friends Only', 'Only Me']} value={whoCanSeeFriends} onChange={setWhoCanSeeFriends} />
+                                    <CustomSelect
+                                        options={accountPrivacy === 'Private' ? ['Friends Only', 'Only Me'] : ['Everyone', 'Friends Only', 'Only Me']}
+                                        value={accountPrivacy === 'Private' && whoCanSeeFriends === 'Everyone' ? 'Friends Only' : whoCanSeeFriends}
+                                        onChange={(val) => {
+                                            if (accountPrivacy === 'Private' && val === 'Everyone') return;
+                                            setWhoCanSeeFriends(val);
+                                        }}
+                                    />
                                 </div>
                                 <div className={styles.settingRow}>
                                     <div>
@@ -829,7 +874,7 @@ export default function Settings() {
                             <div className={styles.settingsFormGroup}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                                     <label className={styles.settingLabel}>Frequently Asked Questions</label>
-                                    <button className={styles.settingActionBtn} onClick={() => window.open('/help', '_blank')}>Go to Help Page</button>
+                                    <button className={styles.settingActionBtn} onClick={() => navigate('/help')}>Go to Help Page</button>
                                 </div>
                                 {[
                                     ['How do I join a community?', 'Navigate to the Communities tab and click "Join" on your preferred group.'],
@@ -915,7 +960,7 @@ export default function Settings() {
                                         <label className={styles.settingLabel}>Clear Cache</label>
                                         <p className={styles.settingDescription}>Estimated storage size: <strong>{cacheSize}</strong></p>
                                     </div>
-                                    <button className={styles.settingActionBtn} onClick={handleClearCache}>Clear Cache</button>
+                                    <button className={styles.settingActionBtn} onClick={() => setShowCacheConfirm(true)}>Clear Cache</button>
                                 </div>
                                 <div className={styles.settingRowColumn}>
                                     <label className={styles.settingLabel}>Auto-Play Media</label>
@@ -1082,21 +1127,8 @@ export default function Settings() {
                                     Choose a verification method to secure your account.
                                 </p>
 
-                                <div className={styles.segmentedSelector} style={{ marginBottom: '16px' }}>
-                                    <button
-                                        className={twoFAMethod === 'email' ? styles.segmentedOptionActive : styles.segmentedOption}
-                                        onClick={() => { setTwoFAMethod('email'); setTwoFAInput(currentUser?.personal_email || ''); }}>
-                                        Secondary Email
-                                    </button>
-                                    <button
-                                        className={twoFAMethod === 'phone' ? styles.segmentedOptionActive : styles.segmentedOption}
-                                        onClick={() => { setTwoFAMethod('phone'); setTwoFAInput(currentUser?.profile?.secondary_phone || ''); }}>
-                                        Phone Number
-                                    </button>
-                                </div>
-
                                 {/* Linked status banner */}
-                                {twoFAMethod === 'email' && currentUser?.personal_email && (
+                                {currentUser?.personal_email && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1a2e1a', border: '1px solid #2e7d32', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
                                         <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#4caf50', flexShrink: 0 }} />
                                         <span style={{ fontSize: '0.83rem', color: '#a5d6a7' }}>
@@ -1104,35 +1136,17 @@ export default function Settings() {
                                         </span>
                                     </div>
                                 )}
-                                {twoFAMethod === 'phone' && currentUser?.profile?.secondary_phone && (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1a2e1a', border: '1px solid #2e7d32', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
-                                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#4caf50', flexShrink: 0 }} />
-                                        <span style={{ fontSize: '0.83rem', color: '#a5d6a7' }}>
-                                            Linked: <strong>{currentUser.profile.secondary_phone.replace(/.(?=.{2})/g, '*')}</strong> — you can use this or enter a new one below.
-                                        </span>
-                                    </div>
-                                )}
-
-                                {/* Not linked warning */}
-                                {twoFAMethod === 'email' && !currentUser?.personal_email && (
+                                {!currentUser?.personal_email && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#2a1f1f', border: '1px solid #5a3030', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
                                         <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef5350', flexShrink: 0 }} />
                                         <span style={{ fontSize: '0.83rem', color: '#ef9a9a' }}>No secondary email linked. Enter one below.</span>
                                     </div>
                                 )}
-                                {twoFAMethod === 'phone' && !currentUser?.profile?.secondary_phone && (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#2a1f1f', border: '1px solid #5a3030', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
-                                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef5350', flexShrink: 0 }} />
-                                        <span style={{ fontSize: '0.83rem', color: '#ef9a9a' }}>No phone number linked. Enter one below.</span>
-                                    </div>
-                                )}
 
-                                <label className={styles.modalLabel}>
-                                    {twoFAMethod === 'email' ? 'Secondary Email Address' : 'Phone Number'}
-                                </label>
+                                <label className={styles.modalLabel}>Secondary Email Address</label>
                                 <input
-                                    type={twoFAMethod === 'email' ? 'email' : 'tel'}
-                                    placeholder={twoFAMethod === 'email' ? 'e.g. yourname@gmail.com' : 'e.g. +970591234567'}
+                                    type="email"
+                                    placeholder="e.g. yourname@gmail.com"
                                     className={styles.modalInput}
                                     value={twoFAInput}
                                     onChange={(e) => setTwoFAInput(e.target.value)}

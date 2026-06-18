@@ -24,6 +24,8 @@ export default function FollowedPages() {
     const { theme, toggleTheme } = useTheme();
     const [currentUser, setCurrentUser] = useState(null);
     const ownPageId = currentUser?.page_id || currentUser?.id;
+    const uniPageName = currentUser?.university;
+    const isUniPage = (page) => uniPageName && page.page_name === uniPageName;
     const [selectedPostId, setSelectedPostId] = useState(null)
     const [showAllPopup, setShowAllPopup] = useState(false);
     const [popupSearchTerm, setPopupSearchTerm] = useState("");
@@ -240,7 +242,7 @@ export default function FollowedPages() {
         setCurrentSlide((prev) => (prev === 0 ? recommendedPages.length - 1 : prev - 1));
     };
 
-    const recommendedSection = (
+    const recommendedSection = recommendedPages.length === 0 ? null : (
         <>
             <div className={styles.recommendedHeaderRow}>
                 <div className={styles.recommendedTitle}>
@@ -271,12 +273,12 @@ export default function FollowedPages() {
 
     const postsSection = (
         <>
-            <div className={styles.sectionDivider}></div>
+            {recommendedPages.length > 0 && <div className={styles.sectionDivider}></div>}
             {posts.length > 0 ? (
                 <div className={styles.postContainer} style={isMobile ? { minWidth: 0 } : {}}>
                     <div className={styles.innerContainer}>
                         {posts.map(post => (
-                            <PostCard key={post.id} post={post} isOwnProfile={false} openComments={() => handleOpenComments(post)} />
+                            <PostCard key={post.id} post={post} isOwnProfile={false} openComments={() => handleOpenComments(post)} currentUser={currentUser} />
                         ))}
                     </div>
                 </div>
@@ -331,11 +333,13 @@ export default function FollowedPages() {
                                             <div className={styles.pageCategory}>{page.category || "Page"}</div>
                                         </div>
                                     </div>
-                                    <div className={styles.pageActions}>
-                                        <div className={styles.dropdownContainer}>
-                                            <button className={styles.actionBtn} onClick={(e) => handleToggleMenu(e, page.id)}>•••</button>
+                                    {!isUniPage(page) && (
+                                        <div className={styles.pageActions}>
+                                            <div className={styles.dropdownContainer}>
+                                                <button className={styles.actionBtn} onClick={(e) => handleToggleMenu(e, page.id)}>•••</button>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                                 {index !== pages.length - 1 && <div className={styles.divider}></div>}
                             </div>
@@ -505,16 +509,18 @@ export default function FollowedPages() {
                                                 </div>
                                             </div>
 
-                                            <div className={styles.pageActions}>
-                                                <div className={styles.dropdownContainer}>
-                                                    <button
-                                                        className={styles.actionBtn}
-                                                        onClick={(e) => handleToggleMenu(e, `popup-${page.id}`)}
-                                                    >
-                                                        •••
-                                                    </button>
+                                            {!isUniPage(page) && (
+                                                <div className={styles.pageActions}>
+                                                    <div className={styles.dropdownContainer}>
+                                                        <button
+                                                            className={styles.actionBtn}
+                                                            onClick={(e) => handleToggleMenu(e, `popup-${page.id}`)}
+                                                        >
+                                                            •••
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -530,15 +536,19 @@ export default function FollowedPages() {
                     style={{ top: `${menuCoords.top}px`, left: `${menuCoords.left}px` }}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <button onClick={() => {
-                        const id = Number(String(activeMenuId).replace('popup-', ''));
-                        handleUnfollow(id);
-                    }}>
-                        <img src={X} alt="Unfollow" style={{
-                            filter: "invert(87%) sepia(5%) saturate(297%) hue-rotate(185deg) brightness(96%) contrast(85%)"
-                        }} className={styles.dropdownIcon} />
-                        Unfollow
-                    </button>
+                    {(() => {
+                        const activeId = Number(String(activeMenuId).replace('popup-', ''));
+                        const activePage = pages.find(p => p.id === activeId);
+                        if (!activePage || !isUniPage(activePage)) return (
+                            <button onClick={() => { handleUnfollow(activeId); }}>
+                                <img src={X} alt="Unfollow" style={{
+                                    filter: "invert(87%) sepia(5%) saturate(297%) hue-rotate(185deg) brightness(96%) contrast(85%)"
+                                }} className={styles.dropdownIcon} />
+                                Unfollow
+                            </button>
+                        );
+                        return null;
+                    })()}
 
                     <div className={styles.dropdownDivider} />
 

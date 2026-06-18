@@ -1,4 +1,4 @@
-html {
+﻿html {
   height: auto;
   min-height: auto;
   display: flow-root;
@@ -9,7 +9,7 @@ body {
   padding: 0;
   min-height: 100vh;
   background: transparent;
-  background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
+  background: linear-gradient(315deg, var(--bg-main), var(--bg-secondary));
   background-attachment: fixed;
   background-size: cover;
 }
@@ -69,13 +69,15 @@ body {
   z-index: 1;
   overflow: hidden;
   flex: 1;
-  min-height: 102vh;
+  min-height: calc(100vh - 80px);
   height: auto;
 }
 
 .notice {
   color: rgba(255, 255, 255, 0.7);
-  padding: 10px 0;
+  padding: 60px 0;
+  text-align: center;
+  width: 100%;
 }
 
 .noticeError {
@@ -515,7 +517,7 @@ body {
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   padding: 20px;
-  width: 85%;
+  width: 95%;
   box-sizing: border-box;
   grid-auto-flow: dense;
 }
@@ -818,7 +820,7 @@ body {
   height: 100%;
   width: 100vw;
   max-width: 435px;
-  background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
+  background: linear-gradient(315deg, var(--bg-main), var(--bg-secondary));
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
@@ -864,7 +866,7 @@ body {
 
 /* ── Reminders widget (instructor) ── */
 .remindersWidgetInstructor {
-  background: rgba(61, 60, 60, 0.45);
+  background: #333333;
   border-radius: 20px;
   padding: 20px 20px 16px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -980,7 +982,7 @@ body {
 
 /* ── Your Picks widget (instructor) ── */
 .picksWidgetWrap {
-  background: rgba(61, 60, 60, 0.45);
+  background: #333333;
   border-radius: 25px;
   padding: 23px 20px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1040,7 +1042,7 @@ body {
 
 /* ── Calendar widget (non-instructor own profile) ── */
 .calendarWidget {
-  background: rgba(61, 60, 60, 0.45);
+  background: #333333;
   border-radius: 20px;
   padding: 14px 16px 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -5743,4 +5745,118 @@ body {
 
 [data-theme="light"] .iconBell {
     filter: brightness(0) saturate(100%) invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+/* ── Degree Custom Dropdown ── */
+.degreeDropdownContainer {
+    position: relative;
+    flex: 1;
+    min-width: 130px;
+}
+
+.degreeDropdownOuter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.degreeDropdownValueBox {
+    flex: 1;
+    background: #262626;
+    border: 1px solid #444;
+    color: rgba(255, 255, 255, 0.85);
+    padding: 9px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.degreeDropdownArrow {
+    width: 16px;
+    height: 16px;
+    background-color: #B3B3B3;
+    mask-image: url('../../Assets/icons/arrow-left.png');
+    -webkit-mask-image: url('../../Assets/icons/arrow-left.png');
+    mask-size: contain;
+    -webkit-mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-position: center;
+    transform: rotate(-90deg);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.degreeDropdownArrowOpen {
+    transform: rotate(90deg);
+}
+
+.degreeDropdownMenu {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #333333;
+    border-radius: 12px;
+    min-width: 160px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #4D4D4D;
+    overflow: hidden;
+}
+
+.degreeDropdownOption {
+    padding: 10px 16px;
+    color: #E6E6E6;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s ease;
+    text-align: center;
+}
+
+.degreeDropdownOption:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.degreeDropdownDivider {
+    width: 50%;
+    height: 1px;
+    background: #4D4D4D;
+    margin: 0 auto;
+}
+
+[data-theme="light"] .degreeDropdownValueBox {
+    background: #f3e8ff;
+    border-color: rgba(102, 45, 145, 0.2);
+    color: #333333;
+}
+
+[data-theme="light"] .degreeDropdownMenu {
+    background: #ffffff;
+    border-color: #e0e0e0;
+}
+
+[data-theme="light"] .degreeDropdownOption {
+    color: #333333;
+}
+
+[data-theme="light"] .degreeDropdownOption:hover {
+    background: #f3e8ff;
+}
+
+[data-theme="light"] .degreeDropdownDivider {
+    background: #e0e0e0;
+}
+
+[data-theme="light"] .degreeDropdownArrow {
+    filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
 }

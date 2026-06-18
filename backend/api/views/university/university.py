@@ -146,7 +146,7 @@ def university_news(request):
                 "id": post.post_id,
                 "title": getattr(post, "title", "") or "",
                 "desc": post.content_text[:200] if getattr(post, "content_text", None) else "",
-                "date": post.created_at.strftime("%B %d, %Y"),
+                "date": post.end_at.strftime("%B %d, %Y") if post.end_at else post.created_at.strftime("%B %d, %Y"),
                 "img": image or "/default-news.jpg",
                 "days_left": days_left_value,
                 "status_message": status_message,

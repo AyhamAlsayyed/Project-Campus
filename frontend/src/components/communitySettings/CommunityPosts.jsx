@@ -20,6 +20,8 @@ const CommunityPosts = ({ onBack, communityId }) => {
     // ── MODAL STATE ──
     const [showManageModal, setShowManageModal] = useState(false);
     const [showReportedModal, setShowReportedModal] = useState(false);
+    const [reportDeleteConfirmId, setReportDeleteConfirmId] = useState(null);
+    const [removeHighlightConfirmId, setRemoveHighlightConfirmId] = useState(null);
 
     // ── DATA STATE ──
     const [highlights, setHighlights] = useState([]);
@@ -140,6 +142,12 @@ const CommunityPosts = ({ onBack, communityId }) => {
     };
 
     const handleReportDelete = async (postId) => {
+        setReportDeleteConfirmId(postId);
+    };
+
+    const confirmReportDelete = async () => {
+        const postId = reportDeleteConfirmId;
+        setReportDeleteConfirmId(null);
         try {
             await fetch(`${API}/api/posts/${postId}/admin_delete/`, {
                 method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
@@ -171,7 +179,13 @@ const CommunityPosts = ({ onBack, communityId }) => {
     };
 
     // ── HIGHLIGHT REMOVE ──
-    const handleRemoveHighlight = async (postId) => {
+    const handleRemoveHighlight = (postId) => {
+        setRemoveHighlightConfirmId(postId);
+    };
+
+    const confirmRemoveHighlight = async () => {
+        const postId = removeHighlightConfirmId;
+        setRemoveHighlightConfirmId(null);
         try {
             await fetch(`${API}/api/communities/${communityId}/highlights/${postId}/remove/`, {
                 method: 'POST', headers: { Authorization: `Bearer ${token}` }
@@ -180,7 +194,42 @@ const CommunityPosts = ({ onBack, communityId }) => {
         } catch (err) { console.error('Remove highlight failed:', err); }
     };
 
+    const confirmDialogStyle = {
+        overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 },
+        box: { background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '24px 28px', width: 300, textAlign: 'center', boxShadow: '0 12px 32px rgba(0,0,0,0.5)' },
+        title: { fontSize: '1rem', fontWeight: 700, color: 'rgba(255,255,255,0.92)', margin: '0 0 6px' },
+        sub: { fontSize: '0.82rem', color: 'rgba(255,255,255,0.45)', margin: '0 0 20px' },
+        actions: { display: 'flex', gap: 10 },
+        cancel: { flex: 1, padding: '9px 0', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: 'rgba(255,255,255,0.75)', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' },
+        del: { flex: 1, padding: '9px 0', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#c0392b,#e74c3c)', color: '#fff', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' },
+    };
+
     return (
+        <>
+        {reportDeleteConfirmId && (
+            <div style={confirmDialogStyle.overlay} onClick={() => setReportDeleteConfirmId(null)}>
+                <div style={confirmDialogStyle.box} onClick={e => e.stopPropagation()}>
+                    <p style={confirmDialogStyle.title}>Delete this post?</p>
+                    <p style={confirmDialogStyle.sub}>This will permanently delete the reported post.</p>
+                    <div style={confirmDialogStyle.actions}>
+                        <button style={confirmDialogStyle.cancel} onClick={() => setReportDeleteConfirmId(null)}>Cancel</button>
+                        <button style={confirmDialogStyle.del} onClick={confirmReportDelete}>Delete</button>
+                    </div>
+                </div>
+            </div>
+        )}
+        {removeHighlightConfirmId && (
+            <div style={confirmDialogStyle.overlay} onClick={() => setRemoveHighlightConfirmId(null)}>
+                <div style={confirmDialogStyle.box} onClick={e => e.stopPropagation()}>
+                    <p style={confirmDialogStyle.title}>Remove from highlights?</p>
+                    <p style={confirmDialogStyle.sub}>This post will no longer be featured.</p>
+                    <div style={confirmDialogStyle.actions}>
+                        <button style={confirmDialogStyle.cancel} onClick={() => setRemoveHighlightConfirmId(null)}>Cancel</button>
+                        <button style={confirmDialogStyle.del} onClick={confirmRemoveHighlight}>Remove</button>
+                    </div>
+                </div>
+            </div>
+        )}
         <div className={`${styles.postsContainer} w-full max-w-full px-4 sm:px-6`}>
             {/* ── HEADER ── */}
             <div className={`${styles.headerRow} flex items-center justify-between`}>
@@ -362,6 +411,7 @@ const CommunityPosts = ({ onBack, communityId }) => {
                 </div>
             )}
         </div>
+        </>
     );
 };
 

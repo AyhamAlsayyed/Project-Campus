@@ -380,6 +380,12 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
     setShowNotifications(false);
     const type = (n.type || "").toLowerCase();
 
+    const communityId = n.link?.community_id || n.link?.community?.id;
+    if (communityId) {
+      navigate(`/communities/${communityId}`);
+      return;
+    }
+
     if (type.includes("friend") || type.includes("request")) {
       const profileId = typeof n.link === "number" ? n.link : n.link?.id || n.actor_id;
       if (profileId) navigate(`/profile/${profileId}`);
@@ -395,7 +401,8 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
       else navigate("/home", { state: { openPost: { post, postId: post_id, commentId: comment_id } } });
       return;
     }
-    if (n.event_id) { navigate(`/events/${n.event_id}`); return; }
+    const eventId = n.event_id || n.link?.event_id;
+    if (eventId) { navigate(`/events`, { state: { highlightId: eventId } }); return; }
     if (n.link?.id) navigate(`/profile/${n.link.id}`);
     else if (n.actor_id) navigate(`/profile/${n.actor_id}`);
   }, [navigate, onOpenPost]);
@@ -476,7 +483,7 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
   }, []);
 
   const handleManage = useCallback(() => {
-    navigate("/settings/notifications");
+    navigate("/settings", { state: { tab: 'Notifications' } });
     setOpenMenuId(null);
     setMenuRect(null);
   }, [navigate]);

@@ -310,7 +310,7 @@ export default function MobileProfileView({
                         ? <div className={styles.notice}>Loading...</div>
                         : posts.length === 0
                             ? <div className={styles.notice}>No posts yet.</div>
-                            : posts.map(post => <PostCard key={post.id} post={post} openComments={openComments} />)
+                            : posts.map(post => <PostCard key={post.id} post={post} openComments={openComments} currentUser={currentUser} />)
                 )}
 
                 {/* Photos */}
