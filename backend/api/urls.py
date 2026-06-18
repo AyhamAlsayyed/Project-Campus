@@ -136,6 +136,7 @@ from .views.user.friends import (
     unfriend,
     user_friends_list,
 )
+from .views.user.help_support import submit_bug_report, submit_contact_ticket
 from .views.user.recently_contacted import recently_contacted
 from .views.user.user import (
     check_username,
@@ -328,4 +329,7 @@ urlpatterns += [
     path("notifications/<int:notification_id>/", notification_delete_mark),
     # news
     path("news/", news_list),
+    # help and support
+    path("support/contact/", submit_contact_ticket),
+    path("support/bug/", submit_bug_report),
 ]

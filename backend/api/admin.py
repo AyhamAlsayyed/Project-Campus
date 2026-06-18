@@ -2,11 +2,13 @@ from django.contrib import admin
 
 from .models import (
     Admin,
+    BugReport,
     Comment,
     CommentReaction,
     Community,
     CommunityMember,
     CommunityRequest,
+    ContactTicket,
     Conversation,
     ConversationMember,
     EmailVerification,
@@ -37,6 +39,8 @@ from .models import (
     UserProfile,
 )
 
+admin.site.register(ContactTicket)
+admin.site.register(BugReport)
 admin.site.register(UserProfile)
 admin.site.register(PostAdReaction)
 admin.site.register(EmailVerification)

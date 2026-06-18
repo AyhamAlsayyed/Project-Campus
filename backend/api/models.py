@@ -1502,3 +1502,45 @@ class NewsItem(models.Model):
 
     def __str__(self):
         return f"[News] {self.title}"
+
+
+class ContactTicket(models.Model):
+    ticket_id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="contact_tickets",
+        db_column="user_id",
+    )
+    subject = models.CharField(max_length=255)
+    message = models.TextField()
+    screenshot = models.ImageField(upload_to="support/tickets/", blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "contact_ticket"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Ticket {self.user.username}: {self.subject[:30]}"
+
+
+class BugReport(models.Model):
+    bug_id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="bug_reports",
+        db_column="user_id",
+    )
+    message = models.TextField()
+    action_track = models.TextField()
+    screenshot = models.ImageField(upload_to="support/bugs/", blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "bug_report"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Bug {self.user.username}"
