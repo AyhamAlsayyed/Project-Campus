@@ -785,7 +785,7 @@ export default function PostCard({
                       onClick={() => handleAdReaction(key)}
                       style={{
                         transform: adReaction === key ? 'scale(1.3)' : 'scale(1)',
-                        background: '#4D4D4D',
+                        background: 'transparent',
                         boxShadow: 'none',
                         transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
                       }}
@@ -800,7 +800,7 @@ export default function PostCard({
                             ? 'brightness(0) invert(1) opacity(0.55)'
                             : adReaction && adReaction !== key
                               ? 'grayscale(1) opacity(0.3)'
-                              : 'none',
+                              : 'brightness(0) saturate(100%) invert(32%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(96%)',
                           transition: 'filter 0.2s ease',
                         }}
                       />

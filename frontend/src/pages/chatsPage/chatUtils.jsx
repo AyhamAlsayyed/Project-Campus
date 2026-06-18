@@ -13,7 +13,9 @@ export const normalizeMessages = (data) =>
             ? new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             : msg.time,
         date: msg.sent_at || msg.date,
-        reply_to_details: msg.parent_message || msg.reply_to_details,
+        reply_to_details: (typeof msg.reply_to_details === 'object' && msg.reply_to_details !== null)
+            ? msg.reply_to_details
+            : msg.parent_message ?? null,
         post: msg.shared_post || msg.post || null,
         type: (msg.media?.length > 0) ? 'media' : (msg.type || 'text'),
         media: (msg.media || []).map(m => ({

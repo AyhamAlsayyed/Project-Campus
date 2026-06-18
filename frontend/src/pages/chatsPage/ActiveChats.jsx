@@ -55,6 +55,8 @@ export default function ActiveChat({
     const [isMuted, setIsMuted] = useState(selectedChat?.is_muted || false);
     const [selectionMode, setSelectionMode] = useState(false);
     const [selectedMessages, setSelectedMessages] = useState(new Set());
+    const [msgMenuOpen, setMsgMenuOpen] = useState(null); // { id, rect }
+    const [msgReactionOpen, setMsgReactionOpen] = useState(null); // { id, rect }
 
     const messagesScrollRef = useRef(null);
     const messagesEndRef = useRef(null);
@@ -81,24 +83,34 @@ export default function ActiveChat({
         clearTimeout(typingClearTimer.current);
         setTypingInfo(null);
 
-        const newMsg = {
-            id: data.message_id,
-            text: data.content,
-            content: data.content,
-            senderId: data.sender_id,
-            sender: data.username,
-            avatar: data.avatar || null,
-            time: new Date(data.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            date: data.sent_at,
-            reply_to_details: null,
-            post: data.shared_post || null,
-            type: 'text',
-            media: [],
-        };
-
         setMessages(prev => {
-            const exists = prev.some(m => m.id === newMsg.id);
-            return exists ? prev : [...prev, newMsg];
+            const exists = prev.some(m => m.id === data.message_id);
+            if (exists) return prev;
+
+            let reply_to_details = null;
+            if (data.parent_message_id) {
+                const parent = prev.find(m => m.id === data.parent_message_id);
+                if (parent) {
+                    reply_to_details = { id: parent.id, text: parent.text, sender_name: parent.sender };
+                }
+            }
+
+            const newMsg = {
+                id: data.message_id,
+                text: data.content,
+                content: data.content,
+                senderId: data.sender_id,
+                sender: data.username,
+                avatar: data.avatar || null,
+                time: new Date(data.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                date: data.sent_at,
+                reply_to_details,
+                post: data.shared_post || null,
+                type: 'text',
+                media: [],
+            };
+
+            return [...prev, newMsg];
         });
         scrollToBottom();
     }, [scrollToBottom, token]);
@@ -137,7 +149,23 @@ export default function ActiveChat({
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const data = await res.json();
-                setMessages(normalizeMessages(data));
+                const normalized = normalizeMessages(data);
+                // Build ID → message map so we can resolve bare parent_message IDs
+                const byId = {};
+                normalized.forEach(m => { byId[m.id] = m; });
+                const resolved = normalized.map(m => {
+                    if (m.reply_to_details && typeof m.reply_to_details === 'number') {
+                        const parent = byId[m.reply_to_details];
+                        return {
+                            ...m,
+                            reply_to_details: parent
+                                ? { id: parent.id, text: parent.text, sender_name: parent.sender }
+                                : null,
+                        };
+                    }
+                    return m;
+                });
+                setMessages(resolved);
             } catch (err) {
                 console.error('Failed to load messages:', err);
             }
@@ -185,10 +213,12 @@ export default function ActiveChat({
                 setActiveChatMenuOpen(false);
                 setActiveChatMenuRect(null);
             }
+            if (msgMenuOpen) setMsgMenuOpen(null);
+            if (msgReactionOpen) setMsgReactionOpen(null);
         };
         document.addEventListener('mousedown', handle);
         return () => document.removeEventListener('mousedown', handle);
-    }, [attachmentMenuOpen, activeChatMenuOpen]);
+    }, [attachmentMenuOpen, activeChatMenuOpen, msgMenuOpen, msgReactionOpen]);
 
     // ── Scroll to bottom on chat change ──
     useEffect(() => {
@@ -243,7 +273,14 @@ export default function ActiveChat({
                 });
                 if (res.ok) {
                     const newMsg = await res.json();
-                    setMessages(prev => [...prev, ...normalizeMessages([newMsg])]);
+                    setMessages(prev => {
+                        const [nm] = normalizeMessages([newMsg]);
+                        if (nm.reply_to_details && typeof nm.reply_to_details === 'number') {
+                            const parent = prev.find(m => m.id === nm.reply_to_details);
+                            nm.reply_to_details = parent ? { id: parent.id, text: parent.text, sender_name: parent.sender } : null;
+                        }
+                        return [...prev, nm];
+                    });
                     setInputText(''); setPendingFiles([]); setReplyingTo(null);
                 }
             } catch (err) { console.error('Error sending attachments:', err); }
@@ -263,7 +300,14 @@ export default function ActiveChat({
                     });
                     if (res.ok) {
                         const newMessage = await res.json();
-                        setMessages(prev => [...prev, ...normalizeMessages([newMessage])]);
+                        setMessages(prev => {
+                            const [nm] = normalizeMessages([newMessage]);
+                            if (nm.reply_to_details && typeof nm.reply_to_details === 'number') {
+                                const parent = prev.find(m => m.id === nm.reply_to_details);
+                                nm.reply_to_details = parent ? { id: parent.id, text: parent.text, sender_name: parent.sender } : null;
+                            }
+                            return [...prev, nm];
+                        });
                         setInputText('');
                         setReplyingTo(null);
                         onMarkRead(selectedChat.id);
@@ -745,25 +789,31 @@ export default function ActiveChat({
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'center' }}>
-                                                                {isLastInGroup && (
-                                                                    <button className={styles.replyIconButton} onClick={() => setReplyingTo(msg)}>
-                                                                        <Reply size={16} />
-                                                                    </button>
-                                                                )}
-                                                                {isMine && msg.type !== 'media' && !msg.post && (
-                                                                    <button 
-                                                                        className={styles.replyIconButton} 
-                                                                        onClick={() => { 
-                                                                            setEditingMessage(msg); 
-                                                                            setInputText(msg.text || msg.content); 
-                                                                            setReplyingTo(null); 
-                                                                        }} 
-                                                                        title="Edit message"
-                                                                    >
-                                                                        <Pencil size={15} />
-                                                                    </button>
-                                                                )}
+                                                            <div className={styles.msgActionGroup} style={{ display: 'flex', flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                                                                {/* Emoji reaction button */}
+                                                                <button
+                                                                    className={styles.replyIconButton}
+                                                                    title="React"
+                                                                    onClick={e => {
+                                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                                        setMsgReactionOpen(prev => prev?.id === msg.id ? null : { id: msg.id, rect });
+                                                                        setMsgMenuOpen(null);
+                                                                    }}
+                                                                >
+                                                                    <span style={{ fontSize: 14 }}>😊</span>
+                                                                </button>
+                                                                {/* More options button */}
+                                                                <button
+                                                                    className={styles.replyIconButton}
+                                                                    title="More"
+                                                                    onClick={e => {
+                                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                                        setMsgMenuOpen(prev => prev?.id === msg.id ? null : { id: msg.id, rect, isMine, msg });
+                                                                        setMsgReactionOpen(null);
+                                                                    }}
+                                                                >
+                                                                    <MoreHorizontal size={16} />
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -774,6 +824,85 @@ export default function ActiveChat({
                                 })()}
                                 <div ref={messagesEndRef} />
                             </div>
+
+                            {/* ── Message action menu portal ── */}
+                            {msgMenuOpen && createPortal(
+                                (() => {
+                                    const { msg: m, rect, isMine: mine } = msgMenuOpen;
+                                    return (
+                                        <div
+                                            style={{
+                                                position: 'fixed',
+                                                top: rect.bottom + 4,
+                                                left: rect.left,
+                                                zIndex: 99999,
+                                                background: '#2a2a2a',
+                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                borderRadius: 12,
+                                                padding: '4px 0',
+                                                minWidth: 140,
+                                                boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                                            }}
+                                            onMouseDown={e => e.stopPropagation()}
+                                            onClick={e => e.stopPropagation()}
+                                        >
+                                            <button
+                                                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '0.88rem' }}
+                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                onClick={() => { setReplyingTo(m); setMsgMenuOpen(null); }}
+                                            >
+                                                <Reply size={15} /> Reply
+                                            </button>
+                                            {mine && m.type !== 'media' && !m.post && (
+                                                <button
+                                                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '0.88rem' }}
+                                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                    onClick={() => { setEditingMessage(m); setInputText(m.text || m.content || ''); setReplyingTo(null); setMsgMenuOpen(null); }}
+                                                >
+                                                    <Pencil size={15} /> Edit
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })(),
+                                document.body
+                            )}
+
+                            {/* ── Emoji reaction picker portal ── */}
+                            {msgReactionOpen && createPortal(
+                                <div
+                                    style={{
+                                        position: 'fixed',
+                                        top: msgReactionOpen.rect.bottom + 4,
+                                        left: msgReactionOpen.rect.left - 60,
+                                        zIndex: 99999,
+                                        background: '#2a2a2a',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: 999,
+                                        padding: '6px 10px',
+                                        display: 'flex',
+                                        gap: 6,
+                                        boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                                    }}
+                                    onMouseDown={e => e.stopPropagation()}
+                                    onClick={e => e.stopPropagation()}
+                                >
+                                    {['👍','❤️','😂','😮','😢','🔥'].map(emoji => (
+                                        <button
+                                            key={emoji}
+                                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 20, padding: '2px 4px', borderRadius: 8, transition: 'transform 0.15s' }}
+                                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.3)'}
+                                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                                            onClick={() => setMsgReactionOpen(null)}
+                                        >
+                                            {emoji}
+                                        </button>
+                                    ))}
+                                </div>,
+                                document.body
+                            )}
 
                             {/* ── Typing indicator ── */}
                             {typingInfo && (
