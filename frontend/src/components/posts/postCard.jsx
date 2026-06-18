@@ -486,7 +486,7 @@ export default function PostCard({
                   >{post.author?.username || "User"}</Link>
                   <span className={styles.time}>·</span>
                   <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>
-                  {post.post_type === "academic" && <><span className={styles.time}>·</span><span className={styles.time}>Educational</span></>}
+                  {post.post_type === "academy" && <><span className={styles.time}>·</span><span className={styles.time}>Educational</span></>}
                   {post.post_type === "announcement" && <><span className={styles.time}>·</span><span className={styles.time}>Announcement</span></>}
                 </div>
 

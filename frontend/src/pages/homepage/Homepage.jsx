@@ -268,6 +268,7 @@ export default function Homepage() {
             is_announcement: isAnnouncement && localStorage.getItem("user_type") === "university",
             is_promote: isPromote && (localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page"),
             is_academic: isAnnouncement && user?.role === "instructor",
+            post_type: isAnnouncement && user?.role === "instructor" ? "academy" : isAnnouncement && localStorage.getItem("user_type") === "university" ? "announcement" : isPromote ? "advertisement" : "regular",
             author: {
                 id: user?.id,
                 username: user?.username,
