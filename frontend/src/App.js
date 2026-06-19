@@ -25,6 +25,11 @@ import PrivacyPolicy from "./pages/staticPages/PrivacyPolicy.jsx";
 import HelpPage from "./pages/staticPages/HelpPage.jsx";
 import { PresenceProvider } from "./context/presenceContext.jsx";
 import { NotificationProvider } from "./context/NotificationContext.jsx";
+
+// Clear auth if user didn't check "Remember Me" and the browser session ended
+if (localStorage.getItem("remember_me") === "false" && !sessionStorage.getItem("session_active")) {
+    ["access", "refresh", "user_type", "user_id", "login_user", "is_premium", "remember_me"].forEach(k => localStorage.removeItem(k));
+}
 function App() {
   return (
     <PresenceProvider>

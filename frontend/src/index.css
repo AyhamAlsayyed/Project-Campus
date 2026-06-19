@@ -73,9 +73,15 @@ code {
     --border-color: rgba(0,0,0,0.1);
 }
 
+@media (min-width: 2300px) {
+  html { zoom: 1.25; }
+}
 @media (min-width: 2560px) {
   html { zoom: 1.4; }
 }
 @media (min-width: 3440px) {
   html { zoom: 1.8; }
+}
+@media (min-width: 3840px) {
+  html { zoom: 2.0; }
 }

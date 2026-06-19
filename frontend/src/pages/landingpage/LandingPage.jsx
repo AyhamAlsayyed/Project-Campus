@@ -17,6 +17,12 @@ export default function LandingPage() {
     useEffect(() => {
         document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
     }, [language]);
+
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, []);
+
     const { theme, toggleTheme } = useTheme();
     
 
@@ -34,9 +40,9 @@ export default function LandingPage() {
                 </div>
 
                 <div className={`${styles.headerRight} max-lg:!gap-4`}>
-                    <button className="hidden lg:block">{t.qAndA}</button>
-                    <button className="hidden lg:block">{t.about}</button>
-                    <button className={`${styles.contactUs} max-lg:!text-base max-lg:!py-2 max-lg:!px-5`}>
+                    <button className={`hidden lg:block ${styles.navLink}`} onClick={() => navigate('/help')}>{t.qAndA}</button>
+                    <button className={`hidden lg:block ${styles.navLink}`} onClick={() => navigate('/about')}>{t.about}</button>
+                    <button className={`${styles.contactUs} max-lg:!text-base max-lg:!py-2 max-lg:!px-5`} onClick={() => navigate('/help')}>
                         {t.contactUs}
                     </button>
                 </div>

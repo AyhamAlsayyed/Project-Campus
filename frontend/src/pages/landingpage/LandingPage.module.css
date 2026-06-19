@@ -19,8 +19,8 @@
 
 .darkContainer,
 .lightContainer {
-    min-height: 100vh;
-    max-height: 100vh;
+    position: fixed;
+    inset: 0;
     padding: 32px 80px 0;
     box-sizing: border-box;
     background: linear-gradient(315deg, var(--bg-main), var(--bg-secondary));
@@ -28,7 +28,6 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    position: relative;
 }
 
 .headerSection {
@@ -100,10 +99,12 @@
     right: 2%;
     bottom: 0;
     width: 48%;
+    height: 100%;
     display: flex;
     align-items: flex-end;
     justify-content: center;
     z-index: 2;
+    overflow: hidden;
 }
 
 .slideImage {
@@ -112,6 +113,16 @@
     max-width: 100%;
     display: block;
     animation: slideFade 0.6s ease;
+}
+
+@media (min-width: 2300px) {
+    .slideImage { height: 70vh; }
+}
+@media (min-width: 2560px) {
+    .slideImage { height: 60vh; }
+}
+@media (min-width: 3840px) {
+    .slideImage { height: 44vh; }
 }
 
 .bodyFirstTitle {

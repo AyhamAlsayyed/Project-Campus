@@ -180,6 +180,11 @@ export default function Signup() {
         document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
     }, [language]);
 
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, []);
+
     return (
         <div className={`${theme === 'dark' ? styles.darkContainer : styles.lightContainer} max-lg:!overflow-auto`}>
             <div className={`${styles.header} max-lg:!px-6 max-lg:!py-4 max-lg:!gap-4`}>
@@ -200,28 +205,56 @@ export default function Signup() {
             <div className={`${styles.content} max-lg:!justify-center max-lg:!items-start max-lg:!py-8 max-lg:!flex-1`}>
                 <div className="hidden max-lg:!flex flex-col w-full max-w-[430px] mx-4">
 
-                    <div className="flex w-[85%] mx-auto rounded-t-[20px] overflow-hidden !mb-0 relative z-20">
+                    <div style={{
+                        display: 'flex',
+                        width: '85%',
+                        margin: '0 auto',
+                        gap: 8,
+                        position: 'relative',
+                        zIndex: 20,
+                    }}>
                         <button
-                            className="flex-1 py-3 text-sm font-bold text-white
-                                border-0 cursor-pointer opacity-90 transition-all duration-150
-                                hover:opacity-100 active:scale-95"
                             style={{
-                                fontFamily: '"Aktiv Grotesk", sans-serif',
+                                flex: 1,
+                                padding: '12px 0',
+                                fontWeight: 700,
+                                fontSize: '1rem',
+                                border: 'none',
+                                borderRadius: '14px 14px 0 0',
+                                cursor: 'pointer',
                                 background: 'linear-gradient(-90deg, rgba(166,39,156,1), rgba(49,32,169,1))',
-                                letterSpacing: '0.02em',
+                                color: 'rgba(255,255,255,0.85)',
+                                fontFamily: '"Aktiv Grotesk", sans-serif',
+                                letterSpacing: '0.05em',
+                                textTransform: 'uppercase',
+                                transition: 'transform 0.15s ease',
                             }}
+                            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+                            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
                             onClick={() => navigate('/login')}>
                             {t.login}
                         </button>
 
                         <button
-                            className="flex-1 py-3 text-base font-bold bg-white text-purple-700 
-                                border-0 cursor-pointer transition-all duration-150 active:scale-95"
                             style={{
+                                flex: 1,
+                                padding: '12px 0',
+                                fontWeight: 800,
+                                fontSize: '1rem',
+                                border: 'none',
+                                borderRadius: '14px 14px 0 0',
+                                cursor: 'pointer',
+                                background: 'white',
+                                color: '#662D91',
                                 fontFamily: '"Aktiv Grotesk", sans-serif',
-                                boxShadow: '0 -4px 12px rgba(0,0,0,0.05)',
-                                letterSpacing: '0.02em'
-                            }}>
+                                letterSpacing: '0.05em',
+                                boxShadow: '0 -4px 16px rgba(0,0,0,0.12)',
+                                textTransform: 'uppercase',
+                                transition: 'transform 0.15s ease',
+                            }}
+                            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+                            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                        >
                             {t.signup}
                         </button>
                     </div>

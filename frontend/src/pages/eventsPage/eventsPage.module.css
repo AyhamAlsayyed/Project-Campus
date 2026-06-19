@@ -2487,3 +2487,9 @@
     padding-right: 72px;
   }
 }
+@media (min-width: 3840px) {
+  .darkContainer {
+    padding-left: 96px;
+    padding-right: 96px;
+  }
+}

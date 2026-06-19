@@ -21,6 +21,7 @@ export default function Login() {
     const t = (TEXT[language] || TEXT.en).auth.Login;
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState('');
     const [showExpiredPopup, setShowExpiredPopup] = useState(false);
     const [subscribing, setSubscribing] = useState(false);
@@ -34,6 +35,11 @@ export default function Login() {
     const [resetToken, setResetToken] = useState('');
     const [resetLoading, setResetLoading] = useState(false);
 
+
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, []);
 
     const closeForgotPasswordPopup = () => {
         setShowForgotPassword(false);
@@ -171,8 +177,10 @@ export default function Login() {
                 localStorage.setItem("user_type", data.user.user_type ?? '');
                 localStorage.setItem("user_id", data.user.id);
                 localStorage.setItem("login_user", JSON.stringify(data.user));
-                localStorage.setItem("is_premium", data.user.is_premium ? 'true' : 'false'); 
-                window.dispatchEvent(new Event('auth:login')); 
+                localStorage.setItem("is_premium", data.user.is_premium ? 'true' : 'false');
+                localStorage.setItem("remember_me", rememberMe ? "true" : "false");
+                sessionStorage.setItem("session_active", "true");
+                window.dispatchEvent(new Event('auth:login'));
             } else {
                 setError("No tokens returned from server");
                 return;
@@ -226,27 +234,55 @@ export default function Login() {
             <div className={`${styles.content} max-lg:!justify-center max-lg:!items-start max-lg:!py-8 max-lg:!flex-1`}>
 
                 <div className="hidden max-lg:!flex flex-col w-full max-w-[430px] mx-4">
-                    <div className="flex w-[85%] mx-auto rounded-t-[20px] overflow-hidden !mb-0 relative z-20">
+                    <div style={{
+                        display: 'flex',
+                        width: '85%',
+                        margin: '0 auto',
+                        gap: 8,
+                        position: 'relative',
+                        zIndex: 20,
+                    }}>
                         <button
-                            className="flex-1 py-3 text-base font-bold bg-white text-purple-700 
-                            border-0 cursor-pointer transition-all duration-150 active:scale-95 "
                             style={{
+                                flex: 1,
+                                padding: '12px 0',
+                                fontWeight: 800,
+                                fontSize: '1rem',
+                                border: 'none',
+                                borderRadius: '14px 14px 0 0',
+                                cursor: 'pointer',
+                                background: 'white',
+                                color: '#662D91',
                                 fontFamily: '"Aktiv Grotesk", sans-serif',
-                                boxShadow: '0 -4px 12px rgba(0,0,0,0.05)',
-                                letterSpacing: '0.02em'
-                            }}>
+                                letterSpacing: '0.05em',
+                                boxShadow: '0 -4px 16px rgba(0,0,0,0.12)',
+                                textTransform: 'uppercase',
+                                transition: 'transform 0.15s ease',
+                            }}
+                            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+                            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                        >
                             {t.login}
                         </button>
 
                         <button
-                            className="flex-1 py-3 text-sm font-bold text-white
-                            border-0 cursor-pointer opacity-90 transition-all duration-150
-                            hover:opacity-100 active:scale-90 "
                             style={{
-                                fontFamily: '"Aktiv Grotesk", sans-serif',
+                                flex: 1,
+                                padding: '12px 0',
+                                fontWeight: 700,
+                                fontSize: '1rem',
+                                border: 'none',
+                                borderRadius: '14px 14px 0 0',
+                                cursor: 'pointer',
                                 background: 'linear-gradient(-90deg, rgba(166,39,156,1), rgba(49,32,169,1))',
-                                letterSpacing: '0.02em',
+                                color: 'rgba(255,255,255,0.85)',
+                                fontFamily: '"Aktiv Grotesk", sans-serif',
+                                letterSpacing: '0.05em',
+                                textTransform: 'uppercase',
+                                transition: 'transform 0.15s ease',
                             }}
+                            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+                            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
                             onClick={() => navigate('/signup')}>
                             {t.signup}
                         </button>
@@ -264,7 +300,7 @@ export default function Login() {
                             value={password} onChange={(e) => setPassword(e.target.value)} />
                         <div className={styles.rememberMe}>
                             <div className={styles.checkbox}>
-                                <input type="checkbox" id="rememberMe" />
+                                <input type="checkbox" id="rememberMe" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />
                                 <label htmlFor="rememberMe" className={styles.rememberMeLabel}>{t.rememberMe}</label>
                             </div>
                             <p className={styles.helpTextOne}>
@@ -303,7 +339,7 @@ export default function Login() {
                             value={password} onChange={(e) => setPassword(e.target.value)} />
                         <div className={styles.rememberMe}>
                             <div className={styles.checkbox}>
-                                <input type="checkbox" id="rememberMeDesktop" />
+                                <input type="checkbox" id="rememberMeDesktop" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />
                                 <label htmlFor="rememberMeDesktop" className={styles.rememberMeLabel}>{t.rememberMe}</label>
                             </div>
                             <p className={styles.helpTextOne}>
