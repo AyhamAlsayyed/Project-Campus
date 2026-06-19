@@ -172,6 +172,7 @@ export default function Login() {
                 localStorage.setItem("user_id", data.user.id);
                 localStorage.setItem("login_user", JSON.stringify(data.user));
                 localStorage.setItem("is_premium", data.user.is_premium ? 'true' : 'false'); 
+                window.dispatchEvent(new Event('auth:login')); 
             } else {
                 setError("No tokens returned from server");
                 return;

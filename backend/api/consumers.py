@@ -24,15 +24,25 @@ class StatusConsumer(AsyncWebsocketConsumer):
         await self.update_user_status("online")
         await self.broadcast_status_change("online")
 
+        # Send the current online roster to this newly connected client
+        online_users = await self.get_online_users()
+        for user_id, username, status in online_users:
+            if user_id == self.user.id:
+                continue  # skip self, already broadcast above
+            await self.send(text_data=json.dumps({
+                "user_id": user_id,
+                "username": username,
+                "status": status,
+            }))
+
     async def disconnect(self, close_code):
         if not self.user.is_anonymous:
             await self.channel_layer.group_discard(self.status_group, self.channel_name)
-
             await self.update_user_status("offline")
             await self.broadcast_status_change("offline")
 
     async def receive(self, text_data):
-        """Handles manual visibility toggles sent by the Frontend client"""
+        """Handles manual visibility toggles sent by the frontend client"""
         try:
             data = json.loads(text_data)
             requested_status = data.get("status")
@@ -60,6 +70,17 @@ class StatusConsumer(AsyncWebsocketConsumer):
             profile.save(update_fields=["status"])
         except UserProfile.DoesNotExist:
             UserProfile.objects.create(user=self.user, status=new_status)
+
+    @database_sync_to_async
+    def get_online_users(self):
+        """Fetches all non-offline users from the DB to push to a newly connected client"""
+        UserProfile = apps.get_model("api", "UserProfile")
+        return list(
+            UserProfile.objects
+            .exclude(status="offline")
+            .select_related("user")
+            .values_list("user__id", "user__username", "status")
+        )
 
     async def broadcast_status_change(self, current_status):
         """Dispatches an inter-process message bundle into the redis channel layer"""
@@ -206,7 +227,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(event))
 
     async def chat_typing(self, event):
-        # Don't send typing back to the person who is typing
         if event["user_id"] == self.user.id:
             return
         await self.send(text_data=json.dumps({
@@ -239,7 +259,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_user_avatar(self, user):
         try:
-
             avatar = user.profile.profile_image
             return avatar.url if avatar else None
         except Exception as e:
@@ -282,7 +301,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             shared_post_id=post_id,
         )
 
-        # Build absolute avatar URL for the sender
         avatar_url = None
         try:
             avatar = sender.profile.profile_image
@@ -294,9 +312,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         ConversationMember = apps.get_model("api", "ConversationMember")
         ConversationMember.objects.filter(conversation_id=conversation_id, user=sender).update(last_read_at=msg.sent_at)
 
-        # Serialize shared post with a fake request so image/avatar URLs are absolute.
-        # Run through DjangoJSONEncoder to convert datetimes → strings so the
-        # channel layer (which uses plain json.dumps) can serialize the event dict.
         shared_post_data = None
         if post_id:
             try:
@@ -318,7 +333,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
                 fake_req = _FakeRequest(base_url)
                 raw = PostSerializer(post_obj, context={"request": fake_req}).data
-                # Convert to plain JSON-safe dict (handles datetime, Decimal, etc.)
                 shared_post_data = json.loads(json.dumps(raw, cls=DjangoJSONEncoder))
             except Exception as e:
                 print(f"[WS] Failed to serialize shared post {post_id}: {e}")
@@ -400,7 +414,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         """Handles general app notifications (likes, comments, follows, etc.)"""
         await self.send(
             text_data=json.dumps({
-                "type": event.get("notification_type"), 
+                "type": event.get("notification_type"),
                 "id": event.get("id"),
                 "notification_type": event.get("notification_type"),
                 "message": event.get("description"),
@@ -408,10 +422,10 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                 "description": event.get("description"),
                 "created_at": event.get("created_at"),
                 "extra_data": event.get("extra_data", {}),
-                "actor_avatar": event.get("actor_avatar"),   
-                "actor_id": event.get("actor_id"),           
-                "is_read": event.get("is_read", False),      
-                "link": event.get("link", {}),          
+                "actor_avatar": event.get("actor_avatar"),
+                "actor_id": event.get("actor_id"),
+                "is_read": event.get("is_read", False),
+                "link": event.get("link", {}),
             })
         )
 

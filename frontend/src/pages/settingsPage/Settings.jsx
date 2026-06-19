@@ -260,12 +260,14 @@ export default function Settings() {
         } catch (err) {
             console.error('Logout error:', err);
         }
+        
+        window.dispatchEvent(new Event('auth:logout')); 
 
-        // Clear all local storage items (tokens, user data, etc.)
+      
         localStorage.clear();
         showToast('Logged out successfully.');
 
-        // Redirect to the login/landing page
+     
         setTimeout(() => {
             window.location.href = '/';
         }, 1500);

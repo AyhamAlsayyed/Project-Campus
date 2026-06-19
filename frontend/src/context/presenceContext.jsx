@@ -21,15 +21,14 @@ import React, {
 
 const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws/status/';
 const TOKEN_KEY = 'access';
-const INITIAL_BACKOFF = 1_000;            // 1 s
-const MAX_BACKOFF = 30_000;           // 30 s
+const INITIAL_BACKOFF = 1_000;
+const MAX_BACKOFF = 30_000;
 const MAX_RETRY_COUNT = 10;
 
-// WS close codes we should NOT retry after
 const FATAL_CLOSE_CODES = new Set([
-  4001, // Auth error (our custom backend code)
-  4003, // Forbidden
-  1008, // Policy violation
+  4001,
+  4003,
+  1008,
 ]);
 
 // ─── Context ─────────────────────────────────────────────────────────────────
@@ -38,27 +37,15 @@ const PresenceContext = createContext(null);
 
 // ─── Provider ────────────────────────────────────────────────────────────────
 
-/**
- * @typedef {'connecting' | 'connected' | 'disconnected' | 'error'} ConnectionStatus
- * @typedef {'online' | 'away' | 'dnd' | 'offline'} UserStatus
- * @typedef {Record<number|string, UserStatus>} OnlineUsersMap  userId → status
- */
-
 export function PresenceProvider({ children }) {
-  /** @type {[OnlineUsersMap, Function]} */
   const [onlineUsers, setOnlineUsers] = useState({});
-
-  /** @type {[ConnectionStatus, Function]} */
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
-  // ── Refs (don't trigger re-renders) ──────────────────────────────────────
-  const wsRef = useRef(null);   // live WebSocket instance
+  const wsRef = useRef(null);
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef(null);
-  const intentionalClose = useRef(false);  // true when WE closed the socket
-  const myStatusRef = useRef('online'); // tracks last status sent by this user
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  const intentionalClose = useRef(false);
+  const myStatusRef = useRef('online');
 
   const getToken = () => localStorage.getItem(TOKEN_KEY);
 
@@ -80,7 +67,6 @@ export function PresenceProvider({ children }) {
       return;
     }
 
-    // Already open or mid-handshake? bail.
     if (
       wsRef.current &&
       (wsRef.current.readyState === WebSocket.OPEN ||
@@ -95,14 +81,12 @@ export function PresenceProvider({ children }) {
     const ws = new WebSocket(`${WS_URL}?token=${encodeURIComponent(token)}`);
     wsRef.current = ws;
 
-    // ── onopen ──────────────────────────────────────────────────────────────
     ws.onopen = () => {
       console.info('[Presence] WebSocket connected.');
       setConnectionStatus('connected');
-      retryCountRef.current = 0; // reset backoff on success
+      retryCountRef.current = 0;
     };
 
-    // ── onmessage ───────────────────────────────────────────────────────────
     ws.onmessage = (event) => {
       let data;
       try {
@@ -120,7 +104,7 @@ export function PresenceProvider({ children }) {
       }
 
       setOnlineUsers((prev) => {
-        const key = String(user_id); 
+        const key = String(user_id);
         if (status === 'offline') {
           const next = { ...prev };
           delete next[key];
@@ -131,13 +115,11 @@ export function PresenceProvider({ children }) {
       });
     };
 
-    // ── onclose ─────────────────────────────────────────────────────────────
     ws.onclose = (event) => {
       console.info(`[Presence] WebSocket closed (code=${event.code}, reason="${event.reason}").`);
       wsRef.current = null;
       setConnectionStatus('disconnected');
 
-      // Don't retry if we closed on purpose, or if the server sent a fatal code
       if (intentionalClose.current) return;
       if (FATAL_CLOSE_CODES.has(event.code)) {
         console.error('[Presence] Fatal close code — not retrying.');
@@ -148,13 +130,11 @@ export function PresenceProvider({ children }) {
       scheduleReconnect();
     };
 
-    // ── onerror ─────────────────────────────────────────────────────────────
     ws.onerror = (err) => {
-      // onerror always precedes onclose — log here, handle retry in onclose
       console.error('[Presence] WebSocket error:', err);
       setConnectionStatus('error');
     };
-  }, []); // no deps — uses refs + localStorage, stable forever
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Reconnect with exponential backoff ───────────────────────────────────
 
@@ -171,9 +151,7 @@ export function PresenceProvider({ children }) {
     );
     retryCountRef.current += 1;
 
-    console.info(
-      `[Presence] Scheduling reconnect #${retryCountRef.current} in ${delay}ms…`
-    );
+    console.info(`[Presence] Scheduling reconnect #${retryCountRef.current} in ${delay}ms…`);
 
     retryTimerRef.current = setTimeout(() => {
       if (!intentionalClose.current && getToken()) {
@@ -182,7 +160,7 @@ export function PresenceProvider({ children }) {
     }, delay);
   }, [connect]);
 
-  // ── Core: disconnect (clean logout / unmount) ────────────────────────────
+  // ── Core: disconnect ─────────────────────────────────────────────────────
 
   const disconnect = useCallback(() => {
     intentionalClose.current = true;
@@ -199,10 +177,6 @@ export function PresenceProvider({ children }) {
 
   // ── Outbound: change my status ───────────────────────────────────────────
 
-  /**
-   * Send a manual status change to the backend.
-   * @param {UserStatus} newStatus
-   */
   const changeMyStatus = useCallback((newStatus) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       console.warn('[Presence] Cannot send status update — socket is not open.');
@@ -224,7 +198,7 @@ export function PresenceProvider({ children }) {
       disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // runs once on mount
+  }, []);
 
   // ── Lifecycle: tab visibility (auto away) ────────────────────────────────
 
@@ -235,7 +209,6 @@ export function PresenceProvider({ children }) {
       if (document.hidden) {
         changeMyStatus('away');
       } else {
-        // Restore to whatever the user had set before, not always 'online'
         const restored = myStatusRef.current === 'away' ? 'online' : myStatusRef.current;
         changeMyStatus(restored);
       }
@@ -245,40 +218,55 @@ export function PresenceProvider({ children }) {
     return () => document.removeEventListener('visibilitychange', onVisibilityChange);
   }, [changeMyStatus]);
 
-  // ── Lifecycle: allow re-connect if token appears later ───────────────────
-  // (e.g. user logs in mid-session without a full page reload)
+  // ── Lifecycle: auth event listeners ──────────────────────────────────────
+  //
+  // window.storage only fires in OTHER tabs, so we use custom DOM events
+  // for same-tab login/logout:
+  //
+  //   Login handler:   localStorage.setItem('access', token);
+  //                    window.dispatchEvent(new Event('auth:login'));
+  //
+  //   Logout handler:  window.dispatchEvent(new Event('auth:logout'));
+  //                    localStorage.removeItem('access');
 
   useEffect(() => {
-    const onStorage = (e) => {
-      if (e.key !== TOKEN_KEY) return;
-
-      if (e.newValue) {
-        // Token was added → connect
-        intentionalClose.current = false;
-        retryCountRef.current = 0;
-        connect();
-      } else {
-        // Token was removed → treat as logout
-        disconnect();
-      }
+    const onLogin = () => {
+      if (!getToken()) return;
+      intentionalClose.current = false;
+      retryCountRef.current = 0;
+      connect();
     };
 
+    const onLogout = () => {
+      disconnect();
+    };
+
+    // Same-tab login/logout
+    window.addEventListener('auth:login', onLogin);
+    window.addEventListener('auth:logout', onLogout);
+
+    // Cross-tab sync (storage event works correctly across tabs)
+    const onStorage = (e) => {
+      if (e.key !== TOKEN_KEY) return;
+      if (e.newValue) onLogin();
+      else onLogout();
+    };
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+
+    return () => {
+      window.removeEventListener('auth:login', onLogin);
+      window.removeEventListener('auth:logout', onLogout);
+      window.removeEventListener('storage', onStorage);
+    };
   }, [connect, disconnect]);
 
   // ── Context value ─────────────────────────────────────────────────────────
 
   const value = {
-    /** Live map of userId → status for all users currently known to be non-offline */
     onlineUsers,
-    /** Current WebSocket connection state */
     connectionStatus,
-    /** Send a manual status toggle to the server */
     changeMyStatus,
-    /** Manually trigger (re-)connection, e.g. after login */
     connect,
-    /** Cleanly close the socket, e.g. on logout */
     disconnect,
   };
 
@@ -291,18 +279,6 @@ export function PresenceProvider({ children }) {
 
 // ─── Consumer Hook ────────────────────────────────────────────────────────────
 
-/**
- * Access real-time presence state and controls from any component
- * inside <PresenceProvider />.
- *
- * @returns {{
- *   onlineUsers: OnlineUsersMap,
- *   connectionStatus: ConnectionStatus,
- *   changeMyStatus: (status: UserStatus) => void,
- *   connect: () => void,
- *   disconnect: () => void,
- * }}
- */
 export function usePresence() {
   const ctx = useContext(PresenceContext);
   if (!ctx) {
