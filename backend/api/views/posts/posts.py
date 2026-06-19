@@ -203,7 +203,7 @@ def feed(request, community_id=None):
         else:
             qs = qs.order_by("-created_at")
 
-    qs = qs.select_related("author__profile", "author__page", "community").prefetch_related("media")[:limit]
+    qs = qs.select_related("author__profile", "author__page", "community").prefetch_related("media", "poll_options__votes__user__profile")[:limit]
 
     serializer = PostSerializer(qs, many=True, context={"request": request})
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -227,7 +227,7 @@ def get_saved_posts(request):
     if all_blocked_users:
         posts_qs = posts_qs.exclude(Q(community__isnull=True) & Q(author_id__in=all_blocked_users))
 
-    posts_qs = posts_qs.select_related("author__profile", "author__page").prefetch_related("media")
+    posts_qs = posts_qs.select_related("author__profile", "author__page").prefetch_related("media", "poll_options__votes__user__profile")
 
     serializer = PostSerializer(posts_qs, many=True, context={"request": request})
     return Response(serializer.data)
@@ -249,7 +249,7 @@ def get_activity_posts(request):
         Post.objects.filter(Q(post_id__in=liked_ids) | Q(post_id__in=commented_ids))
         .annotate(**base_annotations(user))
         .select_related("author__profile", "author__page")
-        .prefetch_related("media")
+        .prefetch_related("media", "poll_options__votes__user__profile")
         .order_by("-created_at")
         .distinct()
     )

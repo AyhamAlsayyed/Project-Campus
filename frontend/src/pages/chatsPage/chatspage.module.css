@@ -29,6 +29,8 @@
     margin: 20px auto 0 auto;
     gap: var(--col-gap);
     margin-top: 20px;
+    flex: 1;
+    align-items: stretch;
 }
 
 .mainContent {
@@ -475,6 +477,7 @@
 .chatList {
     background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
     width: 100%;
+    flex: 1;
     padding-top: 6px;
     display: flex;
     flex-direction: column;
@@ -493,6 +496,7 @@
     flex-direction: column;
     align-items: stretch;
     width: 100%;
+    flex: 1;
     top: 10px;
     z-index: 10;
 }
@@ -2545,4 +2549,19 @@
     .searchContainer {
         margin: 8px 12px 0 !important;
     }
+}
+
+
+@media (min-width: 2560px) {
+  .darkContainer {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+}
+
+@media (min-width: 3440px) {
+  .darkContainer {
+    padding-left: 72px;
+    padding-right: 72px;
+  }
 }

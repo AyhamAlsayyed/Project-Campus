@@ -400,3 +400,18 @@ body {
 [data-theme="light"] .progressBarFill {
     background: linear-gradient(90deg, #8625A0 0%, #C43BB8 100%);
 }
+
+
+@media (min-width: 2560px) {
+  .darkContainer {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+}
+
+@media (min-width: 3440px) {
+  .darkContainer {
+    padding-left: 72px;
+    padding-right: 72px;
+  }
+}

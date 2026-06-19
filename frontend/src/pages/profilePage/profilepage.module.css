@@ -28,7 +28,7 @@ body {
   width: min(1800px, 95%);
   margin: 0 auto;
   --left-col: 300px;
-  --right-col: 380px;
+  --right-col: 420px;
   --col-gap: 65px;
 }
 
@@ -41,6 +41,7 @@ body {
 
 .content {
   display: flex;
+  width: min(1800px, 100%);
   margin: 20px auto 0 auto;
   gap: var(--col-gap);
   margin-top: 20px;
@@ -56,7 +57,7 @@ body {
   border-radius: 30px;
   min-height: 60vh;
   z-index: 1;
-  min-width: 850px;
+  max-width: 850px;
   position: relative;
   margin: 2% 0 0 0;
   padding-top: 5px;
@@ -5859,4 +5860,20 @@ body {
 
 [data-theme="light"] .degreeDropdownArrow {
     filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+
+@media (min-width: 2560px) {
+  .darkContainer {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+ 
+}
+
+@media (min-width: 3440px) {
+  .darkContainer {
+    padding-left: 72px;
+    padding-right: 72px;
+  }
 }

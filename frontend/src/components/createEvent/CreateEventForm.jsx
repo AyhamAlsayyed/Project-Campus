@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './createEvent.module.css';
 import ArrowLeft from '../../Assets/icons/arrow-left.png';
 import HelpIcon from '../../Assets/icons/help.png';
@@ -13,6 +14,7 @@ export default function CreateEventForm({
     isFormValid, onBack,
     onSubmit, isSubmitting, submitError
 }) {
+    const navigate = useNavigate();
     const descLimit = 150;
     const fileInputRef = useRef(null);
 
@@ -68,7 +70,7 @@ export default function CreateEventForm({
                         >
                             {isSubmitting ? 'Creating...' : 'Create'}
                         </button>
-                        <button className={styles.formHelpBtn}>
+                        <button className={styles.formHelpBtn} onClick={() => navigate('/help')}>
                             <img src={HelpIcon} alt="help" className={styles.helpIconImg} />
                         </button>
                     </div>

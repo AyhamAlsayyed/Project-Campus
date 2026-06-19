@@ -6,6 +6,7 @@ import {
     Upload, Trash2, Mail, Phone, Edit2, Globe, MapPin
 } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import BackBtn from '../../Assets/icons/arrow-left.png'
 import { useRef, useEffect } from "react";
 import Camera from '../../Assets/icons/camera.png'
@@ -76,6 +77,7 @@ const SubLabel = ({ children, topPad = true }) => (
 );
 
 export default function ProfileEditCard({ styles, edit, setIsEditing, user, API, token, theme }) {
+    const navigate = useNavigate();
     const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, target: null });
 
     // Degrees
@@ -230,6 +232,13 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                     <h1 className={styles.whiteHeaderText}>Edit Your Profile</h1>
                 </div>
                 <div className={styles.editActions}>
+                    <button
+                        onClick={() => navigate('/help')}
+                        title="Help"
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", padding: "4px" }}
+                    >
+                        <HelpCircle size={20} />
+                    </button>
                     <button className={styles.cancelLink} onClick={handleEditCancel}>Cancel</button>
                     <button className={styles.savePill} onClick={handleEditSave} disabled={!!usernameError || editSaving}>
                         {editSaving ? 'Saving…' : 'Save'}

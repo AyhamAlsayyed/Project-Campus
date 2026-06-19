@@ -840,6 +840,38 @@ class PostMedia(models.Model):
         return f"Media #{self.media_id} ({self.get_media_type_display()}) for Post #{self.post_id}"
 
 
+class PollOption(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="poll_options", db_column="post_id")
+    text = models.CharField(max_length=255)
+    order_index = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = "poll_option"
+        ordering = ["order_index"]
+
+    def __str__(self):
+        return f"Option '{self.text}' for Post #{self.post_id}"
+
+
+class PollVote(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    option = models.ForeignKey(PollOption, on_delete=models.CASCADE, related_name="votes", db_column="option_id")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="poll_votes", db_column="user_id"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "poll_vote"
+        constraints = [
+            models.UniqueConstraint(fields=["user", "option"], name="uniq_user_poll_option"),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} voted for option #{self.option_id}"
+
+
 class Comment(models.Model):
     comment_id = models.BigAutoField(primary_key=True, db_column="comment_id")
 

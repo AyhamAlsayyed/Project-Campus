@@ -28,7 +28,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-
+    position: relative;
 }
 
 .headerSection {
@@ -85,12 +85,9 @@
 .bodySection {
     display: flex;
     flex: 1;
-    
     align-items: center;
-    position: relative;
     margin-top: 2%;
     min-height: 0;
-    /* Important for flex child scrolling/sizing */
 }
 
 .firstHalf {
@@ -102,9 +99,7 @@
     position: absolute;
     right: 2%;
     bottom: 0;
-    top: -47px;
     width: 48%;
-    height: 90vh;
     display: flex;
     align-items: flex-end;
     justify-content: center;
@@ -112,10 +107,10 @@
 }
 
 .slideImage {
-    height: clamp(650px, 100vh, 750px);
+    height: 82vh;
     width: auto;
-    object-fit: contain;
-    transform: translateY(20px);
+    max-width: 100%;
+    display: block;
     animation: slideFade 0.6s ease;
 }
 
@@ -189,11 +184,6 @@
     }
 }
 
-.secondHalf {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-}
 
 /*Bottom Section*/
 .bottomSection {

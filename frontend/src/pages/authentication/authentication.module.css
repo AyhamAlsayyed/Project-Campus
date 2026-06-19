@@ -61,6 +61,8 @@
     z-index: 2;
     flex: 1;
     justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 25vh;
 }
 
 :root[dir="rtl"] .content {
@@ -376,11 +378,14 @@
 
 .absoluteSlider {
     position: absolute;
-    top: 18%;
-    left: 5%;
-    width: 45%;
+    bottom: 0;
+    left: 2%;
+    width: 55%;
     z-index: 1;
     pointer-events: none;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
 }
 
 .sliderImageHalf {
@@ -390,9 +395,11 @@
 }
 
 .sliderImage {
-    height: clamp(600px, 80vh, 750px);
+    height: 82vh;
     width: auto;
-    object-fit: contain;
+    max-width: 100%;
+    display: block;
+    animation: slideFade 0.6s ease;
 }
 
 .sliderDescription {

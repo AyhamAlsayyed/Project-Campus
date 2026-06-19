@@ -110,7 +110,7 @@ export default function SidebarNav({ variant = "default", currentUser }) {
     { label: "Settings", path: "/settings", icon: Settings },
     isPage
       ? { label: "Subscriptions", path: "/subscriptions", icon: Verified }
-      : { label: "Privacy Policy", path: "/language", icon: PrivacyPolicy },
+      : { label: "Privacy Policy", path: "/privacy", icon: PrivacyPolicy },
     { label: "Help", path: "/help", icon: Help },
   ];
 

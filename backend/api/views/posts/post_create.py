@@ -17,6 +17,7 @@ from ...models import (
     Notification,
     NotificationSetting,
     Page,
+    PollOption,
     Post,
     PostMedia,
     Student,
@@ -176,6 +177,19 @@ def create_post(request):
         )
         media_index += 1
 
+    # Frontend sends poll_options[0], poll_options[1], ... as individual keys
+    poll_options_raw = []
+    for key in request.data.keys():
+        if key.startswith("poll_options"):
+            poll_options_raw.append((key, request.data.get(key)))
+    poll_options_raw.sort(key=lambda x: x[0])
+    idx = 0
+    for _, option_text in poll_options_raw:
+        text = option_text.strip() if option_text else ""
+        if text:
+            PollOption.objects.create(post=post, text=text, order_index=idx)
+            idx += 1
+
     # notification
     recipient_users = set()
     notification_content_text = f"{user.username} posted something new"
@@ -322,7 +336,7 @@ def create_post(request):
         Post.objects.filter(post_id=post.post_id)
         .annotate(**base_annotations(user))
         .select_related("author__profile")
-        .prefetch_related("media")
+        .prefetch_related("media", "poll_options__votes__user__profile")
         .first()
     )
 

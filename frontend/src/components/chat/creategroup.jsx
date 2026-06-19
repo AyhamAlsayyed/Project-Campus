@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './creategroup.module.css';
 import {
     Camera,
@@ -14,6 +15,7 @@ import Education from '../../Assets/icons/education.png';
 import SettingsIcon from '../../Assets/icons/setting.png';
 
 export default function CreateGroup({ onBack, onProceedToMembers, isInstructor, API, token }) {
+    const navigate = useNavigate();
     const [groupName, setGroupName] = useState('');
     const [groupDescription, setGroupDescription] = useState('');
     const [isAcademic, setIsAcademic] = useState(false);
@@ -69,7 +71,9 @@ export default function CreateGroup({ onBack, onProceedToMembers, isInstructor, 
                         >
                             {isLoading ? 'Creating...' : 'Create'}
                         </button>
-                        <img src={Help} alt="Help" className={styles.helpIconAsset} />
+                        <button onClick={() => navigate('/help')} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center" }}>
+                            <img src={Help} alt="Help" className={styles.helpIconAsset} />
+                        </button>
                     </div>
                 </div>
 
@@ -226,7 +230,7 @@ export default function CreateGroup({ onBack, onProceedToMembers, isInstructor, 
                                 </div>
                                 <p className={styles.approvalDescriptionText}>
                                     When turned on, admins must approve anyone who wants to join the group.{' '}
-                                    <a href="#learn-more" className={styles.learnMoreLink}>Learn more</a>
+                                    <a onClick={() => navigate('/help')} className={styles.learnMoreLink} style={{ cursor: 'pointer' }}>Learn more</a>
                                 </p>
                             </div>
                             <div

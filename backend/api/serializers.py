@@ -18,6 +18,8 @@ from .models import (
     NotificationSetting,
     Page,
     PageRating,
+    PollOption,
+    PollVote,
     Post,
     PostAdReaction,
     PostMedia,
@@ -809,7 +811,8 @@ class PostSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
     top_3comments_avatar = serializers.SerializerMethodField()
-    ad_reaction = serializers.SerializerMethodField()  # 🛠️ Add the new field method reference
+    ad_reaction = serializers.SerializerMethodField()
+    poll_options = serializers.SerializerMethodField()
 
     def get_ad_reaction(self, obj):
         if obj.post_type != Post.PostType.ADVERTISEMENT:
@@ -820,6 +823,45 @@ class PostSerializer(serializers.ModelSerializer):
             reaction = PostAdReaction.objects.filter(post=obj, user=request.user).first()
             return reaction.reaction_type if reaction else None
         return None
+
+    def get_poll_options(self, obj):
+        options = list(obj.poll_options.all())
+        if not options:
+            return []
+
+        request = self.context.get("request")
+        user = request.user if request and request.user.is_authenticated else None
+
+        voted_option_id = None
+        if user:
+            user_vote = PollVote.objects.filter(user=user, option__post=obj).first()
+            if user_vote:
+                voted_option_id = user_vote.option_id
+
+        total_votes = sum(opt.votes.count() for opt in options)
+
+        result = []
+        for opt in options:
+            count = opt.votes.count()
+            voter_avatars = []
+            for vote in list(opt.votes.all())[:4]:
+                avatar = None
+                try:
+                    profile_pic = vote.user.profile.profile_image
+                    if profile_pic:
+                        avatar = request.build_absolute_uri(profile_pic.url) if request else profile_pic.url
+                except Exception:
+                    pass
+                voter_avatars.append(avatar)
+            result.append({
+                "id": opt.id,
+                "text": opt.text,
+                "votes_count": count,
+                "percentage": round((count / total_votes * 100) if total_votes else 0, 1),
+                "is_voted": opt.id == voted_option_id,
+                "voter_avatars": voter_avatars,
+            })
+        return result
 
     def get_is_saved(self, obj):
         return getattr(obj, "is_saved", False)
@@ -968,6 +1010,7 @@ class PostSerializer(serializers.ModelSerializer):
             "is_pinned",
             "top_3comments_avatar",
             "ad_reaction",
+            "poll_options",
         ]
 
 

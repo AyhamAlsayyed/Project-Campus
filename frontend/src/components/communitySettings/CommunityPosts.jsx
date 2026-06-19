@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './CommunityPosts.module.css';
 import arrowLeft from '../../Assets/icons/arrow-left.png';
 import helpIcon from '../../Assets/icons/help.png';
@@ -7,6 +8,7 @@ import PostCard from '../posts/postCard';
 import API from '../../config';
 
 const CommunityPosts = ({ onBack, communityId }) => {
+    const navigate = useNavigate();
     const token = localStorage.getItem('access');
 
     // ── SETTINGS STATE ──
@@ -239,7 +241,9 @@ const CommunityPosts = ({ onBack, communityId }) => {
                     </button>
                     <h2 className={styles.headerTitle}>Posts</h2>
                 </div>
-                <img src={helpIcon} alt="Help" className={styles.helpIcon} />
+                <button onClick={() => navigate('/help')} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center" }}>
+                    <img src={helpIcon} alt="Help" className={styles.helpIcon} />
+                </button>
             </div>
 
             <div className={styles.centeredDivider} />

@@ -62,6 +62,7 @@ body {
 
 .content {
     display: flex;
+    width: min(1800px, 100%);
     margin: 20px auto 0 auto;
     gap: var(--col-gap);
     margin-top: 20px;
@@ -76,7 +77,7 @@ body {
     border-radius: 30px;
     height: auto;
     z-index: 1;
-    min-width: 850px;
+    max-width: 850px;
     position: relative;
     margin: 2% 0 0 0;
 }
@@ -1123,4 +1124,22 @@ body {
         max-width: none;
         padding: 24px 18px;
     }
+}
+
+
+@media (min-width: 2560px) {
+  .darkContainer {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+  .rightSection {
+    flex: 0 0 400px;
+  }
+}
+
+@media (min-width: 3440px) {
+  .darkContainer {
+    padding-left: 72px;
+    padding-right: 72px;
+  }
 }

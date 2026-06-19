@@ -119,6 +119,7 @@ from .views.posts.post_action import (
     toggle_pin_post,
     toggle_react,
 )
+from .views.posts.poll_vote import vote_poll
 from .views.posts.post_create import create_post
 from .views.posts.posts import feed, get_activity_posts, get_saved_posts
 from .views.report.report import create_report
@@ -211,6 +212,7 @@ urlpatterns += [
     path("posts/<int:post_id>/", delete_post),
     path("posts/<int:post_id>/block/", toggle_block_user),
     path("posts/<int:post_id>/highlight/", toggle_community_highlight),
+    path("posts/<int:post_id>/vote/", vote_poll),
 ]
 # community
 urlpatterns += [

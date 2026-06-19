@@ -5,12 +5,14 @@ import {
     Volume2, Calendar, Heart, ChevronLeft,
     Upload, Trash2, Mail, Phone, Edit2, Camera
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS_SHORT = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
 const firstDay = (y, m) => new Date(y, m, 1).getDay();
 
 export default function MobileEditView({  styles, edit}) {
+    const navigate = useNavigate();
     const {
         formData, setFormData, usernameError,
         avatarPreview, setAvatarFile, setAvatarPreview,
@@ -46,6 +48,9 @@ export default function MobileEditView({  styles, edit}) {
                     <h2 style={{ margin: 0, color: "white", fontWeight: 700, fontSize: "1rem" }}>Edit Your Profile</h2>
                 </div>
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                    <button onClick={() => navigate('/help')} title="Help" style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", padding: "4px" }}>
+                        <HelpCircle size={18} />
+                    </button>
                     <button onClick={handleEditCancel} style={{ background: "none", border: "none", color: "#e91e63", fontWeight: 600, cursor: "pointer", fontSize: "0.88rem" }}>Cancel</button>
                     <button onClick={handleEditSave} disabled={!!usernameError || editSaving}
                         style={{ background: "transparent", border: "1.5px solid rgba(255,255,255,0.25)", color: "white", borderRadius: 999, padding: "7px 20px", fontWeight: 600, cursor: "pointer", fontSize: "0.88rem", opacity: (!!usernameError || editSaving) ? 0.5 : 1 }}>

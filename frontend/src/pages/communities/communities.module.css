@@ -297,9 +297,27 @@
   opacity: 0.9;
 }
 
+
 .applyButton:active {
   transform: scale(0.96);
   /* Nice click animation */
+}
+
+@media (min-width: 2560px) {
+  .darkContainer {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+  .communitiesContainer {
+    min-width: 0;
+  }
+}
+
+@media (min-width: 3440px) {
+  .darkContainer {
+    padding-left: 72px;
+    padding-right: 72px;
+  }
 }
 
 @keyframes tabFadeIn {

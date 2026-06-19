@@ -170,7 +170,9 @@ export default function RequestsTab({ communityId, token, onBack, isPublic = fal
                     </button>
                     <h2 className={styles.headerTitle}>Requests</h2>
                 </div>
-                <img src={HelpIcon} className={styles.iconHelp} alt="Help" />
+                <button onClick={() => navigate('/help')} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center" }}>
+                    <img src={HelpIcon} className={styles.iconHelp} alt="Help" />
+                </button>
             </div>
 
             <div className={styles.centeredDivider} />

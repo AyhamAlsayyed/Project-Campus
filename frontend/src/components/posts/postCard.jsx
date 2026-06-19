@@ -58,6 +58,11 @@ export default function PostCard({
   const [isNotified, setIsNotified] = useState(post?.author?.is_notified || false);
   const [isHighlighted, setIsHighlighted] = useState(!!post?.is_highlighted);
   const [lightboxUrl, setLightboxUrl] = useState(null);
+  const [pollOptions, setPollOptions] = useState(post?.poll_options || []);
+  const [pollVotedId, setPollVotedId] = useState(
+    (post?.poll_options || []).find(o => o.is_voted)?.id ?? null
+  );
+  const [isVoting, setIsVoting] = useState(false);
 
   const shareMenuRef = useRef(null);
   const menuRef = useRef(null);
@@ -715,11 +720,71 @@ export default function PostCard({
       )}
 
       {/* Poll Options */}
-      {post.poll_options && post.poll_options.length > 0 && (
+      {pollOptions && pollOptions.length > 0 && (
         <div className={styles.pollBox}>
-          {post.poll_options.map((opt, i) => (
-            <button key={i} className={styles.pollOption}>{opt}</button>
-          ))}
+          {pollOptions.map((opt) => {
+            const isVoted = opt.id === pollVotedId;
+            const hasVoted = pollVotedId !== null;
+            const avatars = opt.voter_avatars || [];
+            const extraCount = (opt.votes_count || 0) - avatars.length;
+            const handleVote = async () => {
+              if (isVoting) return;
+              setIsVoting(true);
+              try {
+                const token = localStorage.getItem("access");
+                const res = await fetch(`${API}/api/posts/${post.post_id}/vote/`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ option_id: opt.id }),
+                });
+                if (res.ok) {
+                  const data = await res.json();
+                  setPollOptions(data.poll_options.map(o => ({ ...o, is_voted: o.id === data.voted_option_id })));
+                  setPollVotedId(data.voted_option_id);
+                }
+              } catch (_) {}
+              setIsVoting(false);
+            };
+            return (
+              <div key={opt.id} className={styles.pollOptionRow}>
+                {/* Label + count + avatars row */}
+                <div className={styles.pollLabelRow}>
+                  <span className={styles.pollOptionLabel}>{opt.text}</span>
+                  {hasVoted && (
+                    <div className={styles.pollVoterGroup}>
+                      {avatars.length > 0 && <span className={styles.pollVoterPlus}>+</span>}
+                      {avatars.map((av, i) => (
+                        av
+                          ? <img key={i} src={av} className={styles.pollVoterAvatar} alt="" />
+                          : <div key={i} className={styles.pollVoterAvatarFallback} />
+                      ))}
+                      <span className={styles.pollVoteCount}>{opt.votes_count || 0}</span>
+                    </div>
+                  )}
+                </div>
+                {/* Radio + bar on same line */}
+                <div className={styles.pollBarRow}>
+                  <button
+                    className={`${styles.pollRadio} ${isVoted ? styles.pollRadioVoted : ''}`}
+                    disabled={isVoting}
+                    onClick={handleVote}
+                  />
+                  <div className={styles.pollTrack} onClick={handleVote} style={{ cursor: 'pointer' }}>
+                    <div
+                      className={`${styles.pollBar} ${isVoted ? styles.pollBarVoted : ''}`}
+                      style={{ width: hasVoted ? `${opt.percentage || 0}%` : '0%' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          <div className={styles.pollFooter}>
+            <span className={styles.pollTotalVotes}>
+              {pollOptions.reduce((s, o) => s + (o.votes_count || 0), 0)} votes
+            </span>
+            <span className={styles.pollViewVotes}>View votes</span>
+          </div>
         </div>
       )}
 

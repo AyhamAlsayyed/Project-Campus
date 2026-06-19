@@ -354,18 +354,148 @@ video.mediaItem {
   margin-top: 12px;
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+
+.pollOptionRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pollLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 
-.pollOption {
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  background: #2a2a2a;
-  color: white;
+.pollOptionLabel {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.pollVoterGroup {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.pollVoterPlus {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 600;
+}
+
+.pollBarRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pollRadio {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
   cursor: pointer;
-  text-align: left;
-  transition: 0.2s;
+  padding: 0;
+  transition: border-color 0.2s, background 0.2s;
+  flex-shrink: 0;
+}
+
+.pollRadio:hover:not(:disabled) {
+  border-color: #BD60C7;
+}
+
+.pollRadioVoted {
+  background: #BD60C7;
+  border-color: #BD60C7;
+}
+
+.pollTrack {
+  flex: 1;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pollBar {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.pollBarVoted {
+  background: #BD60C7;
+}
+
+.pollVoterAvatars {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.pollVoterAvatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #2a2a2a;
+  object-fit: cover;
+  margin-left: -8px;
+}
+
+.pollVoterAvatarFallback {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #2a2a2a;
+  background: rgba(255, 255, 255, 0.15);
+  margin-left: -8px;
+}
+
+.pollVoterExtra {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  margin-right: 2px;
+}
+
+.pollVoteCount {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  min-width: 16px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.pollFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.pollTotalVotes {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.pollViewVotes {
+  font-size: 0.78rem;
+  color: #c72cff;
+  cursor: pointer;
+}
+
+.pollViewVotes:hover {
+  text-decoration: underline;
 }
 
 .commentInputPill {
@@ -396,10 +526,6 @@ video.mediaItem {
   font-size: 13px;
   font-weight: 400;
   user-select: none;
-}
-
-.pollOption:hover {
-  background: #3a3a3a;
 }
 
 /* Like Button Styles */

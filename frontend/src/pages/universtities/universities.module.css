@@ -210,13 +210,9 @@
 }
 
 .sliderControls {
-    position: absolute;
-    bottom: 2px;
-    left: 48%;
-    bottom: 7%;
-    transform: translateX(-50%);
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 15px;
 }
 
@@ -1466,4 +1462,18 @@
 
 [data-theme="light"] .viewBtn:hover {
   background-color: #f3e8ff;
+}
+
+@media (min-width: 2560px) {
+  .darkContainer {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+}
+
+@media (min-width: 3440px) {
+  .darkContainer {
+    padding-left: 72px;
+    padding-right: 72px;
+  }
 }

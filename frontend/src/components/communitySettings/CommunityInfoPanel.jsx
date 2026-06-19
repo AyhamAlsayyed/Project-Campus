@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './communityInfoPanel.module.css';
 import Help from '../../Assets/icons/help.png';
 import VerifiedBadge from '../../Assets/icons/verified-mark.png';
@@ -9,6 +10,7 @@ import CameraIcon from '../../Assets/icons/camera.png';
 import API from '../../config';
 
 export default function CommunityInfoPanel({ community, onBack }) {
+    const navigate = useNavigate();
     const token = localStorage.getItem('access');
     const [originalDescription, setOriginalDescription] = useState(community?.description || "");
     const [originalPrivacy, setOriginalPrivacy] = useState(community?.is_private ? 'Private' : 'Public');
@@ -118,7 +120,9 @@ export default function CommunityInfoPanel({ community, onBack }) {
                     >
                         {isSaving ? 'Saving...' : 'Save'}
                     </button>
-                    <img src={Help} className={styles.iconHelp} alt="Help" />
+                    <button onClick={() => navigate('/help')} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center" }}>
+                        <img src={Help} className={styles.iconHelp} alt="Help" />
+                    </button>
                 </div>
             </div>
 

@@ -43,6 +43,7 @@ body {
 
 .content {
     display: flex;
+    width: min(1800px, 100%);
     margin: 20px auto 0 auto;
     gap: var(--col-gap);
     margin-top: 20px;
@@ -293,4 +294,25 @@ body {
     .followedCommunitiesPosts {
         margin-top: 0;
     }
+}
+
+
+@media (min-width: 2560px) {
+  .darkContainer {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+  .postContainer {
+    min-width: 0;
+  }
+  .rightSection {
+    flex: 0 0 400px;
+  }
+}
+
+@media (min-width: 3440px) {
+  .darkContainer {
+    padding-left: 72px;
+    padding-right: 72px;
+  }
 }
