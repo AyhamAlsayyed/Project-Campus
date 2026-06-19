@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, Menu, Volume2, Calendar, UserPlus, Heart, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useNotificationContext } from '../../context/NotificationContext';
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
 import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
 import MessageSquareIcon from '../../Assets/icons/messages.png';
 import BellIcon from '../../Assets/icons/notifications.png';
@@ -13,6 +15,7 @@ import { Users, User, BookOpen, X } from 'lucide-react';
 export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token, API, homeMode = false }) {
     const navigate = useNavigate();
     const avatarDropdownRef = useRef(null);
+    const { registerChatListener, liveNotifications, clearLiveNotifCount } = useNotificationContext();
 
     // ── UI state ──
     const [showAvatarDropdown, setShowAvatarDropdown] = useState(false);
@@ -139,18 +142,36 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                     id: chat.id,
                     name: chat.name || chat.user_name || 'Unknown User',
                      userId: chat.other_member_id || chat.user_id || null,
-                    avatar: chat.avatar?.startsWith('http') ? chat.avatar : `${API}${chat.avatar}` || '/default-avatar.png',
+                    avatar: chat.avatar ? (chat.avatar.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`) : DefaultPfp,
                     message: chat.preview || chat.last_message || 'No messages yet',
                     status: chat.is_online ? 'online' : 'offline',
                     dotStyle: chat.is_online ? 'online' : 'offline',
                     isGroup: chat.is_group || false,
                     unread: chat.unread_count || 0,
                     time: timeAgo(chat.last_message_time),
+                    left_at: chat.left_at || null,
                 })));
             }
         } catch (e) { console.error('Chat fetch failed', e); }
         finally { setDrawerChatsLoading(false); }
     };
+
+    // ── Real-time chat updates via WebSocket ──
+    useEffect(() => {
+        const unregister = registerChatListener((data) => {
+            const { conversation_id, preview, sender_username } = data;
+            setDrawerChats(prev => prev.map(chat => {
+                if (chat.id !== conversation_id) return chat;
+                if (chat.left_at) return chat;
+                return {
+                    ...chat,
+                    unread: (chat.unread || 0) + 1,
+                    message: preview ? `${sender_username}: ${preview}` : chat.message,
+                };
+            }));
+        });
+        return unregister;
+    }, [registerChatListener]);
 
     // ── Handlers ──
     const handleMarkAsRead = async (id) => {
@@ -200,8 +221,33 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
     }, [showDrawerChats]);
 
     useEffect(() => {
-        if (showDrawerNotifs) { fetchNotifications(); }
+        if (showDrawerNotifs) { fetchNotifications(); clearLiveNotifCount(); }
     }, [showDrawerNotifs]);
+
+    // Sync real-time WebSocket notifications into drawer list
+    useEffect(() => {
+        if (!liveNotifications || liveNotifications.length === 0) return;
+        setDrawerNotifications(prev => {
+            const existingIds = new Set(prev.map(n => n.id));
+            const newNotifs = liveNotifications
+                .filter(n => !existingIds.has(n.notification_id || n.id))
+                .map(item => ({
+                    id: item.notification_id || item.id,
+                    is_read: false,
+                    avatar: (item.actor_avatar || item.avatar)?.startsWith('http')
+                        ? (item.actor_avatar || item.avatar)
+                        : `${API}${item.actor_avatar || item.avatar}`,
+                    type: item.type || 'Notification',
+                    text: item.message || item.content,
+                    actor_id: item.actor_id,
+                    post_id: item.post_id,
+                    event_id: item.event_id,
+                    time: timeAgo(item.time) || item.time,
+                }));
+            if (newNotifs.length === 0) return prev;
+            return [...newNotifs, ...prev];
+        });
+    }, [liveNotifications]);
 
     // Outside-click: only close avatar dropdown when no sub-panel is open
     useEffect(() => {
@@ -419,6 +465,7 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                     drawerChatsLoading={drawerChatsLoading}
                     filteredDrawerChats={filteredDrawerChats}
                     navigate={navigate}
+                    onChatClick={(id) => setDrawerChats(prev => prev.map(c => c.id === id ? { ...c, unread: 0 } : c))}
                 />
             )}
             {showDrawerNotifs && (

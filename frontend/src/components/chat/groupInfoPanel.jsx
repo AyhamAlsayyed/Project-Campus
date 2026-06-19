@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import styles from './groupInfoPanel.module.css';
 import {
     Camera, MoreHorizontal, MinusCircle, Edit2, FileText, Check, X, Ban, AlertCircle
@@ -40,6 +40,8 @@ export default function GroupInfoPanel({
     onUpdateAvatar,
     onClearChat,
     onDeleteGroup,
+    onExitGroup,
+    onScrollToMessage,
 
     // View Panel Navigation Handlers
     onViewAllMedia,
@@ -92,6 +94,17 @@ export default function GroupInfoPanel({
     const [memberSearch, setMemberSearch] = useState('');
     const [shareSearch, setShareSearch] = useState('');
     const [lightboxUrl, setLightboxUrl] = useState(null);
+
+    // Message search
+    const [msgSearch, setMsgSearch] = useState('');
+    const [showMsgSearch, setShowMsgSearch] = useState(false);
+    const filteredMessages = useMemo(() => {
+        if (!msgSearch.trim()) return [];
+        return messages.filter(m =>
+            m.text?.toLowerCase().includes(msgSearch.toLowerCase()) ||
+            m.content?.toLowerCase().includes(msgSearch.toLowerCase())
+        );
+    }, [msgSearch, messages]);
 
     // Clipboard State Indicator
     const [copied, setCopied] = useState(false);
@@ -634,7 +647,7 @@ export default function GroupInfoPanel({
                         </button>
                         <span className={styles.headerTitle}>{isGroup ? 'Group Info' : 'Chat Info'}</span>
                         <div className={styles.headerIcons}>
-                            <button className={styles.iconBtn} onClick={onSearchClick} aria-label="Search">
+                            <button className={styles.iconBtn} onClick={() => { setShowMsgSearch(s => !s); setMsgSearch(''); }} aria-label="Search">
                                 <img src={SearchIconAsset} alt="Search" style={headerPngStyle} />
                             </button>
                             <button className={styles.iconBtn} onClick={handleNotificationToggle} aria-label="Notifications">
@@ -660,6 +673,45 @@ export default function GroupInfoPanel({
                     </div>
 
                     <div className={styles.headerDivider} />
+
+                    {/* ── Message Search Bar ── */}
+                    {showMsgSearch && (
+                        <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 20, padding: '8px 14px' }}>
+                                <img src={SearchIconAsset} alt="" style={{ width: 14, height: 14, opacity: 0.5, filter: 'brightness(0) invert(1)' }} />
+                                <input
+                                    autoFocus
+                                    value={msgSearch}
+                                    onChange={e => setMsgSearch(e.target.value)}
+                                    placeholder="Search messages…"
+                                    style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#fff', fontSize: '0.88rem' }}
+                                />
+                                {msgSearch && (
+                                    <button onClick={() => setMsgSearch('')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 0, fontSize: 14 }}>✕</button>
+                                )}
+                            </div>
+                            {msgSearch.trim() && (
+                                <div style={{ marginTop: 8, maxHeight: 220, overflowY: 'auto' }}>
+                                    {filteredMessages.length === 0 ? (
+                                        <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.82rem', textAlign: 'center', padding: '12px 0' }}>No messages found</p>
+                                    ) : filteredMessages.map(m => (
+                                        <div
+                                            key={m.id}
+                                            onClick={() => { onScrollToMessage?.(m.id); setShowMsgSearch(false); setMsgSearch(''); }}
+                                            style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 10px', borderRadius: 10, cursor: 'pointer', transition: 'background 0.15s' }}
+                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                        >
+                                            <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)' }}>{m.sender || m.username}</span>
+                                            <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.85)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {m.text || m.content}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* ── Scrollable Body ── */}
                     <div className={styles.body}>
@@ -1317,7 +1369,19 @@ export default function GroupInfoPanel({
 
                             <button
                                 className={styles.exitSolidBtn}
-                                onClick={() => { setShowExitConfirm(false); handleDeleteGroup(); }}
+                                onClick={async () => {
+                                    setShowExitConfirm(false);
+                                    try {
+                                        const res = await fetch(`${API}/api/chats/${group.id}/soft-leave/`, {
+                                            method: 'POST',
+                                            headers: { Authorization: `Bearer ${token}` },
+                                        });
+                                        if (res.ok) {
+                                            const data = await res.json();
+                                            if (onExitGroup) onExitGroup(data.left_at);
+                                        }
+                                    } catch (err) { console.error('Soft leave failed', err); }
+                                }}
                             >
                                 Exit group
                             </button>

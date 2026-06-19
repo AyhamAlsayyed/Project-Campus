@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import styles from '../../pages/chatsPage/chatspage.module.css';
 import { getSenderName, timeAgo, API } from '../../pages/chatsPage/chatUtils';
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
 
 // ── MarqueeText ───────────────────────────────────────────────────────────────
 // Simple overflow-ellipsis span; memoised to avoid re-renders from parent.
@@ -35,7 +36,9 @@ const AcademicGroupItem = React.memo(({ chat, user, onSelect, isLast }) => {
             ? `You: ${chat.preview || ''}`
             : `${lastSender ? lastSender + ': ' : ''}${chat.preview || ''}`;
 
-    const avatarSrc = chat.avatar?.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`;
+    const avatarSrc = chat.avatar
+        ? (chat.avatar.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`)
+        : DefaultPfp;
 
     return (
         <>
@@ -44,7 +47,7 @@ const AcademicGroupItem = React.memo(({ chat, user, onSelect, isLast }) => {
                 onClick={() => onSelect(chat)}
             >
                 <div className={styles.academicAvatarWrapper}>
-                    <img src={avatarSrc} className={styles.academicAvatar} alt="" />
+                    <img src={avatarSrc} className={styles.academicAvatar} alt="" onError={e => { e.currentTarget.src = DefaultPfp; }} />
                 </div>
                 <div className={styles.academicChatInfo}>
                     <div className={styles.academicTopRow}>

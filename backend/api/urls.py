@@ -63,6 +63,7 @@ from .views.conversation.conversation_action import (
     delete_or_leave_chat,
     mark_read,
     mark_unread,
+    soft_leave_group,
     toggle_mute,
     toggle_pin,
 )
@@ -266,6 +267,7 @@ urlpatterns += [
     path("chats/<int:conversation_id>/mark-read/", mark_read),
     path("chats/<int:conversation_id>/mark-unread/", mark_unread),
     path("chats/<int:conversation_id>/", delete_or_leave_chat),
+    path("chats/<int:conversation_id>/soft-leave/", soft_leave_group),
     path("chats/<int:conversation_id>/clear/", clear_chat),
     path("chats/<int:conversation_id>/block/", toggle_block_user),
     # chat_dm_requests

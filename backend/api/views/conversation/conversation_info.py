@@ -1,3 +1,5 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Case, IntegerField, Q, Value, When
@@ -21,9 +23,9 @@ def get_friends_to_invite(request, conv_id=None):
     user = request.user
 
     if conv_id:
-        existing_member_ids = ConversationMember.objects.filter(conversation_id=conv_id).values_list(
-            "user_id", flat=True
-        )
+        existing_member_ids = ConversationMember.objects.filter(
+            conversation_id=conv_id, left_at__isnull=True
+        ).values_list("user_id", flat=True)
     else:
         existing_member_ids = []
 
@@ -76,26 +78,50 @@ def add_member_to_group(request, conv_id):
 
     target_user = get_object_or_404(User, id=target_user_id)
 
-    if ConversationMember.objects.filter(conversation=conv, user=target_user).exists():
-        raise ValidationError({"detail": f"{target_user.username} is already a member of this group."})
+    existing = ConversationMember.objects.filter(conversation=conv, user=target_user).first()
+    if existing:
+        if existing.left_at:
+            existing.left_at = None
+            existing.role = ConversationMember.Role.MEMBER
+            existing.save(update_fields=["left_at", "role"])
+        else:
+            raise ValidationError({"detail": f"{target_user.username} is already a member of this group."})
+    else:
+        try:
+            ConversationMember.objects.create(conversation=conv, user=target_user, role=ConversationMember.Role.MEMBER)
+        except DjangoValidationError as e:
+            raise ValidationError({"detail": e.messages})
 
-    try:
-        ConversationMember.objects.create(conversation=conv, user=target_user, role=ConversationMember.Role.MEMBER)
-    except DjangoValidationError as e:
-        raise ValidationError({"detail": e.messages})
-
+    _broadcast_member_event(conv_id, "member_added", target_user.id, target_user.username, user.username)
     return Response(
         {"detail": f"{target_user.username} successfully added to the group."}, status=status.HTTP_201_CREATED
     )
 
 
+def _broadcast_member_event(conv_id, event_type, target_user_id, target_username, actor_username):
+    try:
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{conv_id}",
+            {
+                "type": event_type,
+                "user_id": target_user_id,
+                "username": target_username,
+                "actor_username": actor_username,
+                "conversation_id": conv_id,
+            }
+        )
+    except Exception:
+        pass
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_group_members(request, conv_id):
-    if not ConversationMember.objects.filter(conversation_id=conv_id, user=request.user).exists():
+    if not ConversationMember.objects.filter(conversation_id=conv_id, user=request.user, left_at__isnull=True).exists():
         raise PermissionDenied("You cannot view members of a group you aren't part of.")
 
-    members = ConversationMember.objects.filter(conversation_id=conv_id).select_related(
+    members = ConversationMember.objects.filter(conversation_id=conv_id, left_at__isnull=True).select_related(
         "user",
         "user__profile",
         "user__student_profile",

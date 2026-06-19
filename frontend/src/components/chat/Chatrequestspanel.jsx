@@ -23,21 +23,22 @@ const ChatRequestsPanel = React.memo(({
     deleteRequest,
 }) => (
     <>
-        <h1 className={styles.title}>
-            <span className={styles.highlight}>Chat</span> Requests
-        </h1>
-
-        <button
-            onClick={() => { setShowRequests(false); setSelectedRequest(null); }}
-            className={styles.iconBtn}
-            style={{ marginBottom: 12 }}
-        >
-            <img
-                src={BackButton}
-                alt=""
-                style={{ width: 22, height: 22, filter: 'brightness(0) invert(1) opacity(0.9)' }}
-            />
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: 12 }}>
+            <h1 className={styles.title} style={{ margin: 0 }}>
+                <span className={styles.highlight}>Chat</span> Requests
+            </h1>
+            <button
+                onClick={() => { setShowRequests(false); setSelectedRequest(null); }}
+                className={styles.iconBtn}
+                style={{ width: 'fit-content', padding: '6px 10px', marginTop: 6 }}
+            >
+                <img
+                    src={BackButton}
+                    alt=""
+                    style={{ width: 20, height: 20, filter: 'brightness(0) invert(1) opacity(0.9)' }}
+                />
+            </button>
+        </div>
 
         {selectedRequest ? (
             <SelectedRequestView

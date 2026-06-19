@@ -85,6 +85,11 @@ export function useChatSocket({ conversationId, token, onMessage, onTyping }) {
         return true;
     }, []);
 
+    const sendLeaveGroup = useCallback(() => {
+        if (wsRef.current?.readyState !== WebSocket.OPEN) return;
+        wsRef.current.send(JSON.stringify({ action: 'leave_group' }));
+    }, []);
+
     useEffect(() => {
         intentionalClose.current = false;
         connect();
@@ -97,5 +102,5 @@ export function useChatSocket({ conversationId, token, onMessage, onTyping }) {
         };
     }, [connect]);
 
-    return { sendMessage, sendTyping, sendReaction };
+    return { sendMessage, sendTyping, sendReaction, sendLeaveGroup };
 }

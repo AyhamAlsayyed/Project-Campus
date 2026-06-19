@@ -4,10 +4,14 @@ import styles from './chatspage.module.css';
 import {
     Search, MoreHorizontal, BellOff, MinusCircle,
     Ban, Reply, AlertCircle, Info, CheckSquare,
-    Paperclip, Send, FileText, Pencil
+    Paperclip, Send, FileText, Pencil, Trash2
 } from 'lucide-react';
 import { Download } from 'lucide-react';
 import BackButton from '../../Assets/icons/arrow-left.png';
+import InfoIcon from '../../Assets/icons/info.png';
+import MuteIcon from '../../Assets/icons/mute.png';
+import SelectIcon from '../../Assets/icons/read.png';
+import ReportIcon from '../../Assets/icons/bad-review.png';
 import CommentModal from '../../components/comments/commentsModal';
 import GroupInfoPanel from '../../components/chat/groupInfoPanel';
 import { API, normalizeMessages, getSenderName } from './chatUtils';
@@ -21,7 +25,7 @@ function dotStyle(i) {
         display: 'inline-block',
         width: 7, height: 7,
         borderRadius: '50%',
-        background: 'rgba(255,255,255,0.5)',
+        background: 'rgba(0,0,0,0.35)',
         animation: `typingBounce 1.2s ease-in-out ${i * 0.2}s infinite`,
     };
 }
@@ -41,6 +45,7 @@ export default function ActiveChat({
     const [pollOptions, setPollOptions] = useState(['', '']);
     const [showGroupInfo, setShowGroupInfo] = useState(false);
     const [fullGroupData, setFullGroupData] = useState(null);
+    const [leftAt, setLeftAt] = useState(selectedChat?.left_at ? new Date(selectedChat.left_at) : null);
     const [lightboxUrl, setLightboxUrl] = useState(null);
     const [openPost, setOpenPost] = useState(null);
     const [openAdPost, setOpenAdPost] = useState(null);
@@ -80,7 +85,7 @@ export default function ActiveChat({
         }, 50);
     }, [chatSearchOpen]);
     
-    const handleWsMessage = useCallback((data) => {
+    const handleWsMessage = useCallback(async (data) => {
         if (data.type === 'chat_reaction') {
             setMessages(prev => prev.map(m => {
                 if (m.id !== data.message_id) return m;
@@ -120,6 +125,38 @@ export default function ActiveChat({
                     };
                 }
             }));
+            return;
+        }
+
+        if (data.type === 'user_left') {
+            setMessages(prev => [...prev, {
+                id: `sys_left_${data.user_id}_${Date.now()}`,
+                type: 'system',
+                text: `${data.username} left the group`,
+                date: new Date().toISOString(),
+            }]);
+            scrollToBottom();
+            return;
+        }
+
+        if (data.type === 'member_added') {
+            setMessages(prev => [...prev, {
+                id: `sys_add_${data.user_id}_${Date.now()}`,
+                type: 'system',
+                text: `${data.actor_username} added ${data.username} to the group`,
+                date: new Date().toISOString(),
+            }]);
+            // Refetch group details so the members list updates in GroupInfoPanel
+            try {
+                const res = await fetch(`${API}/api/groups/${data.conversation_id}/members/`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) {
+                    const updatedMembers = await res.json();
+                    setFullGroupData(prev => prev ? { ...prev, members: updatedMembers } : prev);
+                }
+            } catch (_) {}
+            scrollToBottom();
             return;
         }
 
@@ -183,7 +220,7 @@ export default function ActiveChat({
         }
     }, []);
 
-    const { sendMessage, sendTyping, sendReaction } = useChatSocket({
+    const { sendMessage, sendTyping, sendReaction, sendLeaveGroup } = useChatSocket({
         conversationId: selectedChat?.id,
         token,
         onMessage: handleWsMessage,
@@ -199,6 +236,7 @@ export default function ActiveChat({
         setInputText('');
         setPendingFiles([]);
         setShowGroupInfo(false);
+        setLeftAt(selectedChat?.left_at ? new Date(selectedChat.left_at) : null);
 
         const fetchMessages = async () => {
             try {
@@ -300,8 +338,10 @@ export default function ActiveChat({
         const el = messageRefs.current[id];
         if (el && messagesScrollRef.current) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add(styles.highlightMessage);
-            setTimeout(() => el.classList.remove(styles.highlightMessage), 1500);
+            const bubble = el.querySelector(`.${styles.messageBubble}`);
+            const target = bubble || el;
+            target.classList.add(styles.highlightMessage);
+            setTimeout(() => target.classList.remove(styles.highlightMessage), 1800);
         }
     };
 
@@ -569,6 +609,15 @@ export default function ActiveChat({
                     }}
                     onClearChat={() => onClearChat(selectedChat.id)}
                     onDeleteGroup={() => onDeleteChat(selectedChat.id)}
+                    onExitGroup={(leftAtTs) => {
+                        sendLeaveGroup();
+                        setLeftAt(new Date(leftAtTs));
+                        setShowGroupInfo(false);
+                    }}
+                    onScrollToMessage={(msgId) => {
+                        setShowGroupInfo(false);
+                        setTimeout(() => scrollToMessage(msgId), 100);
+                    }}
                 />
             ) : (
                 <div className={styles.innerChatContainer}>
@@ -699,13 +748,18 @@ export default function ActiveChat({
                                             style={{ position: 'fixed', top: activeChatMenuRect.bottom + 8, right: window.innerWidth - activeChatMenuRect.right, zIndex: 999999 }}
                                             onMouseDown={e => e.stopPropagation()}>
                                             <button className={styles.menuItem} onClick={() => { setActiveChatMenuOpen(false); setActiveChatMenuRect(null); setShowGroupInfo(true); }}>
-                                                <Info size={14} /> {selectedChat.is_group ? 'Group Info' : 'Chat Info'}
+                                                <img src={InfoIcon} alt="" style={{ width: 15, height: 15, filter: 'brightness(0) invert(1)' }} />
+                                                {selectedChat.is_group ? 'Group Info' : 'Chat Info'}
                                             </button>
+                                            <div className={styles.menuDivider} />
                                             <button className={styles.menuItem} onClick={() => { handleToggleMute(); setActiveChatMenuOpen(false); setActiveChatMenuRect(null); }}>
-                                                <BellOff size={14} /> {isMuted ? 'Unmute notifications' : 'Mute notifications'}
+                                                <img src={MuteIcon} alt="" style={{ width: 15, height: 15, filter: 'brightness(0) invert(1)' }} />
+                                                {isMuted ? 'Unmute notifications' : 'Mute notifications'}
                                             </button>
+                                            <div className={styles.menuDivider} />
                                             <button className={styles.menuItem} onClick={() => { setSelectionMode(true); setActiveChatMenuOpen(false); setActiveChatMenuRect(null); }}>
-                                                <CheckSquare size={14} /> Select messages
+                                                <img src={SelectIcon} alt="" style={{ width: 15, height: 15, filter: 'brightness(0) invert(1)' }} />
+                                                Select messages
                                             </button>
                                             <div className={styles.menuDivider} />
                                             <button className={`${styles.menuItem} ${styles.destructive}`} onClick={() => {
@@ -713,7 +767,8 @@ export default function ActiveChat({
                                                 setActiveChatMenuOpen(false);
                                                 setActiveChatMenuRect(null);
                                             }}>
-                                                <AlertCircle size={14} /> {selectedChat.is_group ? 'Report group' : 'Report user'}
+                                                <img src={InfoIcon} alt="" style={{ width: 15, height: 15, filter: 'brightness(0) saturate(100%) invert(27%) sepia(90%) saturate(700%) hue-rotate(330deg) brightness(110%)' }} />
+                                                {selectedChat.is_group ? 'Report group' : 'Report user'}
                                             </button>
                                         </div>,
                                         document.body
@@ -753,6 +808,14 @@ export default function ActiveChat({
                                         const currentMsgDate = msg.date ? new Date(msg.date) : null;
                                         const nextHasDateSeparator = nextMsgDate && currentMsgDate && nextMsgDate.toDateString() !== currentMsgDate.toDateString();
                                         const isLastInGroup = !nextMsg || nextMsg.senderId !== msg.senderId || nextHasDateSeparator;
+
+                                        if (msg.type === 'system') {
+                                            return (
+                                                <div key={msg.id} className={styles.systemMessage}>
+                                                    <span>{msg.text}</span>
+                                                </div>
+                                            );
+                                        }
 
                                         return (
                                             <div key={msg.id} ref={el => (messageRefs.current[msg.id] = el)}
@@ -1028,6 +1091,27 @@ export default function ActiveChat({
                                                     <Pencil size={15} /> Edit
                                                 </button>
                                             )}
+                                            {mine && (
+                                                <button
+                                                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', fontSize: '0.88rem' }}
+                                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,77,77,0.1)'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                    onClick={async () => {
+                                                        setMsgMenuOpen(null);
+                                                        try {
+                                                            const res = await fetch(`${API}/api/messages/${m.id}/delete/`, {
+                                                                method: 'DELETE',
+                                                                headers: { Authorization: `Bearer ${token}` },
+                                                            });
+                                                            if (res.ok) {
+                                                                setMessages(prev => prev.filter(msg => msg.id !== m.id));
+                                                            }
+                                                        } catch (err) { console.error('Delete failed', err); }
+                                                    }}
+                                                >
+                                                    <Trash2 size={15} /> Delete
+                                                </button>
+                                            )}
                                         </div>
                                     );
                                 })(),
@@ -1146,6 +1230,7 @@ export default function ActiveChat({
                                 <div style={{
                                     display: 'flex', alignItems: 'flex-end', gap: 8,
                                     padding: '4px 16px 8px',
+                                    backgroundColor: '#262626',
                                 }}>
                                     <img
                                         src={typingInfo.avatar
@@ -1166,7 +1251,7 @@ export default function ActiveChat({
                                     />
                                     <div style={{
                                         display: 'flex', alignItems: 'center', gap: 5,
-                                        background: 'rgba(255,255,255,0.08)',
+                                        background: 'white',
                                         borderRadius: '18px 18px 18px 4px',
                                         padding: '12px 16px',
                                     }}>
@@ -1278,6 +1363,12 @@ export default function ActiveChat({
                                     </div>
                                 </div>
                             ) : (() => {
+                                if (leftAt) return (
+                                    <div className={styles.adminsOnlyBar}>
+                                        <span>You are no longer part of this group</span>
+                                    </div>
+                                );
+
                                 const canSend = !selectedChat?.is_group || !fullGroupData ||
                                     fullGroupData.allow_members_to_send_messages ||
                                     fullGroupData.members?.find(m => m.id === user?.id)?.is_admin ||
@@ -1313,6 +1404,7 @@ export default function ActiveChat({
                                         <Ban size={16} className={styles.adminsOnlyIcon} />
                                         <span>Only admins can send messages in this group</span>
                                     </div>
+
                                 );
                             })()}
                         </div>

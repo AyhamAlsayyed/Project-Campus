@@ -75,6 +75,26 @@ def delete_or_leave_chat(request, conversation_id):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def soft_leave_group(request, conversation_id):
+    """Leave a group but keep the chat visible (read-only, messages up to left_at)."""
+    member = get_object_or_404(
+        ConversationMember.objects.select_related("conversation"),
+        conversation_id=conversation_id,
+        user=request.user,
+    )
+    conversation = member.conversation
+    if not conversation.is_group:
+        return Response({"error": "Not a group."}, status=status.HTTP_400_BAD_REQUEST)
+    if conversation.is_academic and conversation.created_by_id == request.user.id:
+        return Response({"error": "Owner cannot leave."}, status=status.HTTP_403_FORBIDDEN)
+
+    member.left_at = timezone.now()
+    member.save(update_fields=["left_at"])
+    return Response({"left_at": member.left_at.isoformat()}, status=status.HTTP_200_OK)
+
+
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def clear_chat(request, conversation_id):

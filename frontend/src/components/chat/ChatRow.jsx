@@ -8,6 +8,7 @@ import Mute from '../../Assets/icons/mute.png';
 import Unread from '../../Assets/icons/unread-message.png';
 import Clear from '../../Assets/icons/clear.png';
 import BinIcon from '../../Assets/icons/bin.png';
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
 import Block from '../../Assets/icons/block.png';
 import Report from '../../Assets/icons/info.png';
 import { API } from '../../pages/chatsPage/chatUtils';
@@ -96,7 +97,9 @@ const ChatRow = React.memo(({
 
     const close = useCallback(() => setMenuOpen(false), []);
 
-    const avatarSrc = chat.avatar?.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`;
+    const avatarSrc = chat.avatar
+        ? (chat.avatar.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`)
+        : DefaultPfp;
 
 
 
@@ -130,7 +133,7 @@ const ChatRow = React.memo(({
                 {/* ── Left ── */}
                 <div className={styles.chatItemLeft}>
                     <div className={styles.avatarWrapper}>
-                        <img src={avatarSrc} alt={chat.name} className={styles.chatAvatar} loading="lazy" />
+                        <img src={avatarSrc} alt={chat.name} className={styles.chatAvatar} loading="lazy" onError={e => { e.currentTarget.src = DefaultPfp; }} />
                         {!chat.is_group && !chat.is_page && (
                             <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
                                 <StatusDot userId={chat.userId} size="sm" />

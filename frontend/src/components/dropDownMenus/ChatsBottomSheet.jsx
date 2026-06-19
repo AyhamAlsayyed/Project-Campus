@@ -3,6 +3,7 @@ import { Search, Check } from "lucide-react";
 import styles from './DrawerStyles.module.css';
 import StatusDot from '../presence/StatusDot';
 import { usePresence } from '../../context/presenceContext';
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
 
 function ChatStatusLabel({ userId }) {
     const { onlineUsers } = usePresence();
@@ -21,7 +22,8 @@ export default function ChatsBottomSheet({
     setDrawerSearchQuery,
     drawerChatsLoading,
     filteredDrawerChats,
-    navigate
+    navigate,
+    onChatClick,
 }) {
     const dropdownRef = useRef(null);
 
@@ -90,12 +92,13 @@ export default function ChatsBottomSheet({
                         className={styles.chatItem}
                         onClick={(e) => {
                             e.stopPropagation();
+                            onChatClick?.(chat.id);
                             navigate(`/chats/${chat.id}`);
                             setShowDrawerChats(false);
                         }}
                     >
                         <div className={styles.chatAvatarWrap} style={{ position: 'relative', flexShrink: 0 }}>
-                            <img src={chat.avatar} alt="" className={styles.chatAvatar} />
+                            <img src={chat.avatar || DefaultPfp} alt="" className={styles.chatAvatar} onError={e => { e.currentTarget.src = DefaultPfp; }} />
                             {!chat.isGroup && chat.userId && (
                                 <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
                                     <StatusDot userId={chat.userId} size="sm" />

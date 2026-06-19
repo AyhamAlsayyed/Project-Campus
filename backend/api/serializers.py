@@ -430,6 +430,8 @@ class ConversationSerializer(serializers.ModelSerializer):
         source="conversation.allow_members_to_add_others", read_only=True
     )
 
+    left_at = serializers.DateTimeField(read_only=True)
+
     class Meta:
         model = ConversationMember
         fields = [
@@ -455,6 +457,7 @@ class ConversationSerializer(serializers.ModelSerializer):
             "allow_members_to_edit_settings",
             "allow_members_to_send_messages",
             "allow_members_to_add_others",
+            "left_at",
         ]
 
     def _get_other_member(self, obj):

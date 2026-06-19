@@ -3,6 +3,54 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback } f
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 const WS_BASE = API_URL.replace('https://', 'wss://').replace('http://', 'ws://');
 
+const SOUND_COOLDOWN_MS = 3000;
+
+function getAudioContext() {
+    if (!window._sharedAudioCtx || window._sharedAudioCtx.state === 'closed') {
+        window._sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return window._sharedAudioCtx;
+}
+
+// Bell-like two-tone chime for app notifications
+function playNotifSound() {
+    try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        [[880, 0, 0.15], [1100, 0.15, 0.15]].forEach(([freq, delay, dur]) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + delay);
+            gain.gain.setValueAtTime(0.18, now + delay);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + delay + dur);
+            osc.start(now + delay);
+            osc.stop(now + delay + dur + 0.05);
+        });
+    } catch (_) {}
+}
+
+// Soft "pop" for chat messages
+function playChatSound() {
+    try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(700, now);
+        osc.frequency.exponentialRampToValueAtTime(400, now + 0.12);
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.start(now);
+        osc.stop(now + 0.2);
+    } catch (_) {}
+}
+
 const NotificationContext = createContext({});
 
 export function NotificationProvider({ children }) {
@@ -18,6 +66,8 @@ export function NotificationProvider({ children }) {
     const wsRef = useRef(null);
     const reconnectTimer = useRef(null);
     const intentionalClose = useRef(false);
+    const lastNotifSound = useRef(0);
+    const lastChatSound = useRef(0);
 
     const connect = useCallback(() => {
         if (!token) return;
@@ -36,14 +86,21 @@ export function NotificationProvider({ children }) {
         ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
+                const now = Date.now();
 
                 if (data.type === 'new_message') {
-                    // Route to all registered chat listeners (Usechats)
                     chatListenersRef.current.forEach(cb => cb(data));
+                    if (now - lastChatSound.current > SOUND_COOLDOWN_MS) {
+                        lastChatSound.current = now;
+                        playChatSound();
+                    }
                 } else {
-                    // Regular app notification → update bell
                     setLiveNotifications(prev => [data, ...prev]);
                     setLiveNotifCount(prev => prev + 1);
+                    if (now - lastNotifSound.current > SOUND_COOLDOWN_MS) {
+                        lastNotifSound.current = now;
+                        playNotifSound();
+                    }
                 }
             } catch (e) {
                 console.error('[NotifWS] Bad payload', e);

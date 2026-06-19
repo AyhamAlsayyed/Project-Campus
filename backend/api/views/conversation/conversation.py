@@ -66,6 +66,9 @@ def get_messages(request, conversation_id):
     if member.cleared_at:
         query = query.filter(sent_at__gt=member.cleared_at)
 
+    if member.left_at:
+        query = query.filter(sent_at__lte=member.left_at)
+
     messages = (
         query.select_related(
             "sender__profile",

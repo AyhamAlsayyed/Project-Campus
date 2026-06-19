@@ -1113,6 +1113,7 @@ class ConversationMember(models.Model):
     last_read_at = models.DateTimeField(null=True, blank=True)
     cleared_at = models.DateTimeField(null=True, blank=True)
     joined_at = models.DateTimeField(auto_now_add=True)
+    left_at = models.DateTimeField(null=True, blank=True)
 
     def clean(self):
         if self.conversation.is_group and hasattr(self.user, "page"):

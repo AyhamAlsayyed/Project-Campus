@@ -169,6 +169,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
                             self.room_group_name, {"type": "chat_reaction", **reaction_data}
                         )
 
+            elif action_type == "leave_group":
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "user_left",
+                        "user_id": self.user.id,
+                        "username": self.user.username,
+                        "conversation_id": int(self.conversation_id),
+                    }
+                )
+                await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+                await self.close()
+                return
+
             elif action_type == "typing":
                 is_typing = data.get("is_typing", False)
                 await self.channel_layer.group_send(
@@ -203,6 +217,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "is_typing": event["is_typing"],
         }))
 
+    async def user_left(self, event):
+        if event["user_id"] == self.user.id:
+            return
+        await self.send(text_data=json.dumps({
+            "type": "user_left",
+            "user_id": event["user_id"],
+            "username": event["username"],
+            "conversation_id": event["conversation_id"],
+        }))
+
+    async def member_added(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "member_added",
+            "user_id": event["user_id"],
+            "username": event["username"],
+            "actor_username": event["actor_username"],
+            "conversation_id": event["conversation_id"],
+        }))
+
     @database_sync_to_async
     def get_user_avatar(self, user):
         try:
@@ -226,7 +259,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def check_membership(self, conversation_id, user):
         ConversationMember = apps.get_model("api", "ConversationMember")
-        return ConversationMember.objects.filter(conversation_id=conversation_id, user=user).exists()
+        return ConversationMember.objects.filter(
+            conversation_id=conversation_id, user=user, left_at__isnull=True
+        ).exists()
 
     @database_sync_to_async
     def update_last_read(self, conversation_id, user):

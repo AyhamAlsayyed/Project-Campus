@@ -116,6 +116,7 @@ function formatChat(chat) {
     isGroup: chat.is_group || false,
     unread: chat.unread_count || 0,
     time: timeAgo(chat.last_message_time),
+    left_at: chat.left_at || null,
   };
 }
 
@@ -309,13 +310,15 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
   useEffect(() => {
     const unregister = registerChatListener((data) => {
       const { conversation_id, preview, sender_username } = data;
-      setChats(prev => prev.map(chat =>
-        chat.id !== conversation_id ? chat : {
+      setChats(prev => prev.map(chat => {
+        if (chat.id !== conversation_id) return chat;
+        if (chat.left_at) return chat;
+        return {
           ...chat,
           unread: (chat.unread || 0) + 1,
           message: preview ? `${sender_username}: ${preview}` : chat.message,
-        }
-      ));
+        };
+      }));
     });
     return unregister;
   }, [registerChatListener]);
@@ -785,7 +788,11 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                     <div
                       key={chat.id}
                       className={styles.chatItem}
-                      onClick={() => { setShowChats(false); navigate(`/chats/${chat.id}`); }}
+                      onClick={() => {
+                        setShowChats(false);
+                        setChats(prev => prev.map(c => c.id === chat.id ? { ...c, unread: 0 } : c));
+                        navigate(`/chats/${chat.id}`);
+                      }}
                     >
                       <div className={styles.chatAvatarWrap} style={{ position: 'relative', flexShrink: 0 }}>
                         <img

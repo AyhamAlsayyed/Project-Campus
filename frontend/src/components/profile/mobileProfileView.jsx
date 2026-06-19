@@ -1,8 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PostCard from "../posts/postCard";
 import UserDetails from "../rightPanel/userDetails/userDetails";
 import FriendsTab from "../rightPanel/FriendsTab/FriendsTab";
 import MessagesIcon from '../../Assets/icons/messages.png';
+import ArrowLeft from '../../Assets/icons/arrow-left.png';
+import ArrowRight from '../../Assets/icons/arrow-right.png';
+import CommunityIcon from '../../Assets/icons/community.png';
 import { User, UserPlus, Users } from "lucide-react";
 import SaveIcon from '../../Assets/icons/save-icon.png';
 import CommentIcon from '../../Assets/icons/comment.png';
@@ -65,6 +69,8 @@ export default function MobileProfileView({
     onManagePicks,
     ...rest
 }) {
+    const navigate = useNavigate();
+    const [picksPopup, setPicksPopup] = useState(null);
     const [showCalendarMonthPicker, setShowCalendarMonthPicker] = useState(false);
     // Issue 4: cover menu state
     const [coverMenuOpen, setCoverMenuOpen] = useState(false);
@@ -337,47 +343,60 @@ export default function MobileProfileView({
                     <>
                         <UserDetails user={user} hidePill />
                         {user?.role === 'instructor' && communityPicks.length > 0 && (
-                            <div className={styles.picksCard} style={{ marginTop: 16 }}>
-                                <div className={styles.picksHeader}>
-                                    <Users size={18} />
-                                    <span className={styles.picksTitle}>{user?.username?.split(' ')[0]}'s Community Picks</span>
-                                </div>
-                                <div className={styles.picksSliderWrapper}>
-                                    <button className={styles.picksArrow}
-                                        onClick={() => setPicksSlide(p => Math.max(0, p - 1))}
-                                        disabled={picksSlide === 0}>‹</button>
-                                    <div className={styles.picksSlide}>
+                            <>
+                                <div className={styles.picksCard} style={{ marginTop: 16 }}>
+                                    <div className={styles.picksHeader}>
+                                        <img src={CommunityIcon} alt="" style={{ width: 22, height: 22, filter: 'invert(30%) sepia(80%) saturate(600%) hue-rotate(270deg) brightness(90%)' }} />
+                                        <span className={styles.picksTitle}>{user?.username?.split(' ')[0]}'s Picks</span>
+                                    </div>
+                                    <div className={styles.picksSlideWrapper}>
                                         {communityPicks[picksSlide] && (() => {
                                             const pick = communityPicks[picksSlide];
                                             return (
-                                                <div className={styles.pickItem}>
-                                                    {pick.cover_image && (
-                                                        <img src={pick.cover_image} alt={pick.name} className={styles.pickCoverImage} />
-                                                    )}
-                                                    <div className={styles.pickInfo}>
-                                                        <div className={styles.pickNameRow}>
-                                                            <span className={styles.pickName}>{pick.name}</span>
-                                                            <button className={styles.pickViewBtn}>View</button>
+                                                <div className={styles.pickItemCard}>
+                                                    <img src={pick.image} alt={pick.name} className={styles.pickItemImageBg} style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
+                                                    <div className={styles.pickOverlay}>
+                                                        <div className={styles.pickContentTop}>
+                                                            <div className={styles.pickTitleGroup}>
+                                                                <h2 className={styles.pickName}>{pick.name}</h2>
+                                                                {pick.is_verified && <img src={VerifiedBadge} alt="Verified" width={18} height={18} className={styles.verifiedBadgeIcon} />}
+                                                            </div>
+                                                            <button className={styles.pickViewBtn} onClick={() => navigate(`/communities/${pick.id}`)}>view</button>
                                                         </div>
-                                                        <p className={styles.pickDescription}>{pick.description}</p>
+                                                        <div className={styles.pickContentBottom}>
+                                                            <p className={styles.pickDescription}>{pick.description}</p>
+                                                            {pick.description?.length > 80 && <button className={styles.readMore} onClick={() => setPicksPopup(pick)}>read more</button>}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             );
                                         })()}
                                     </div>
-                                    <button className={styles.picksArrow}
-                                        onClick={() => setPicksSlide(p => Math.min(communityPicks.length - 1, p + 1))}
-                                        disabled={picksSlide === communityPicks.length - 1}>›</button>
                                 </div>
-                                {communityPicks.length > 1 && (
+                                <div className={styles.paginationRow}>
+                                    <button className={styles.navArrow} onClick={() => setPicksSlide(p => Math.max(0, p - 1))} disabled={picksSlide === 0}>
+                                        <img src={ArrowLeft} alt="prev" style={{ width: 18, height: 18, opacity: picksSlide === 0 ? 0.3 : 1, filter: 'invert(1)' }} />
+                                    </button>
                                     <div className={styles.picksDots}>
                                         {communityPicks.map((_, i) => (
-                                            <button key={i}
-                                                className={`${styles.picksDot} ${i === picksSlide ? styles.picksDotActive : ''}`}
-                                                onClick={() => setPicksSlide(i)} />
+                                            <button key={i} className={`${styles.picksDot} ${i === picksSlide ? styles.picksDotActive : ''}`} onClick={() => setPicksSlide(i)} />
                                         ))}
                                     </div>
-                                )}
+                                    <button className={styles.navArrow} onClick={() => setPicksSlide(p => Math.min(communityPicks.length - 1, p + 1))} disabled={picksSlide === communityPicks.length - 1}>
+                                        <img src={ArrowRight} alt="next" style={{ width: 18, height: 18, opacity: picksSlide === communityPicks.length - 1 ? 0.3 : 1, filter: 'invert(1)' }} />
+                                    </button>
+                                </div>
+                            </>
+                        )}
+
+                        {/* Read more popup */}
+                        {picksPopup && (
+                            <div onClick={() => setPicksPopup(null)} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                                <div onClick={e => e.stopPropagation()} style={{ background: '#2a2a2a', borderRadius: 16, padding: 20, maxWidth: 340, width: '100%' }}>
+                                    <h3 style={{ margin: '0 0 10px', color: '#fff', fontSize: '1rem' }}>{picksPopup.name}</h3>
+                                    <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.88rem', lineHeight: 1.5 }}>{picksPopup.description}</p>
+                                    <button onClick={() => setPicksPopup(null)} style={{ marginTop: 14, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 8, padding: '8px 16px', color: '#fff', cursor: 'pointer' }}>Close</button>
+                                </div>
                             </div>
                         )}
                     </>
