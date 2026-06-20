@@ -159,8 +159,6 @@ class Page(models.Model):
         on_delete=models.CASCADE,
         related_name="page",
         db_column="user_id",
-        null=True,
-        blank=True,
     )
 
     page_full_name = models.CharField(max_length=255)

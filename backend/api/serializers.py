@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Case, F, IntegerField, Max, Q, When
+from django.utils import timezone
 from rest_framework import serializers
 
 from .models import (
@@ -18,7 +19,6 @@ from .models import (
     NotificationSetting,
     Page,
     PageRating,
-    PollOption,
     PollVote,
     Post,
     PostAdReaction,
@@ -831,7 +831,27 @@ class PostSerializer(serializers.ModelSerializer):
     top_3comments_avatar = serializers.SerializerMethodField()
     ad_reaction = serializers.SerializerMethodField()
     poll_options = serializers.SerializerMethodField()
-    community_name = serializers.SerializerMethodField()
+    is_promoted = serializers.SerializerMethodField()
+    is_premium_author = serializers.SerializerMethodField()
+
+    def get_is_promoted(self, obj):
+        from django.contrib.contenttypes.models import ContentType
+
+        post_ct = ContentType.objects.get_for_model(Post)
+        return Promotion.objects.filter(
+            content_type_obj=post_ct,
+            object_id=obj.post_id,
+            status=Promotion.Status.ACTIVE,
+            start_date__lte=timezone.now(),
+            end_date__gte=timezone.now(),
+        ).exists()
+
+    def get_is_premium_author(self, obj):
+        if not obj.author:
+            return False
+        return Subscription.objects.filter(
+            page__user=obj.author, is_active=True, tier__in=[Subscription.Tier.PREMIUM, Subscription.Tier.UNIVERSITY]
+        ).exists()
 
     def get_ad_reaction(self, obj):
         if obj.post_type != Post.PostType.ADVERTISEMENT:
@@ -1034,6 +1054,8 @@ class PostSerializer(serializers.ModelSerializer):
             "top_3comments_avatar",
             "ad_reaction",
             "poll_options",
+            "is_promoted",
+            "is_premium_author",
         ]
 
 
@@ -1510,17 +1532,21 @@ class MessageSerializer(serializers.ModelSerializer):
                             avatar = request.build_absolute_uri(r.user.profile.profile_image.url)
                     except Exception:
                         pass
-                    reactors.append({
-                        "username": r.user.username,
-                        "avatar": avatar,
-                        "isMe": r.user_id == current_user_id,
-                    })
-            result.append({
-                "emoji": emoji,
-                "count": len(reaction_list),
-                "isMe": is_me,
-                "reactors": reactors,
-            })
+                    reactors.append(
+                        {
+                            "username": r.user.username,
+                            "avatar": avatar,
+                            "isMe": r.user_id == current_user_id,
+                        }
+                    )
+            result.append(
+                {
+                    "emoji": emoji,
+                    "count": len(reaction_list),
+                    "isMe": is_me,
+                    "reactors": reactors,
+                }
+            )
 
         return result
 
