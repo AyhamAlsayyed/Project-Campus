@@ -7,7 +7,9 @@ import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { X, Menu } from "lucide-react";
+import { X, Menu, BarChart2 } from "lucide-react";
+import MediaIcon from '../../Assets/icons/media.png';
+import DocumentIcon from '../../Assets/icons/document.png';
 import { Navigate } from 'react-router-dom';
 import CommentModal from '../../components/comments/commentsModal';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
@@ -49,6 +51,7 @@ export default function CommunityPage() {
     const [weather, setWeather] = useState(null);
     const [isPollOpen, setIsPollOpen] = useState(false);
     const [pollOptions, setPollOptions] = useState(["", ""]);
+    const [isAcademic, setIsAcademic] = useState(false);
     const [selectedCommunity, setSelectedCommunity] = useState(null);
     const [communityDropdownOpen, setCommunityDropdownOpen] = useState(false);
     const [joinedCommunities, setJoinedCommunities] = useState([]);
@@ -109,6 +112,7 @@ export default function CommunityPage() {
 
     const resetPostState = () => {
         setContent(""); setImages([]); setFiles([]); setPollOptions(["", ""]); setIsPollOpen(false);
+        setIsAcademic(false);
     };
 
     const fetchWeather = async () => {
@@ -177,6 +181,10 @@ export default function CommunityPage() {
         const formData = new FormData();
         formData.append("content", content);
         formData.append("community", communityId);
+        if (isAcademic && user?.role === "instructor") {
+            formData.append("is_academic", "true");
+            formData.append("post_type", "academy");
+        }
         images.forEach(img => formData.append("images", img));
         files.forEach(file => formData.append("files", file));
         if (isPollOpen) {
@@ -592,11 +600,33 @@ export default function CommunityPage() {
                             <h3>Create post</h3>
                             <button className={styles.closeButton} onClick={() => { setIsModalOpen(false); resetPostState(); }}>✕</button>
                         </div>
+
                         <div className={styles.leftSide}>
                             <img src={avatarSrc} alt="" className={styles.userProfilePicture} />
                             <strong>{user?.full_name || user?.username}</strong>
+
+                            {user?.role === "instructor" && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+                                    <span style={{ color: '#ADADAD', fontSize: '0.85rem' }}>Academic?</span>
+                                    <label className={styles.switch}>
+                                        <input
+                                            type="checkbox"
+                                            checked={isAcademic}
+                                            onChange={() => setIsAcademic(prev => !prev)}
+                                        />
+                                        <span className={styles.switchSlider}></span>
+                                    </label>
+                                </div>
+                            )}
                         </div>
-                        <textarea value={content} onChange={e => setContent(e.target.value)} placeholder={`What's on your mind, ${user?.username || "User"}?`} className={styles.modalInput} />
+
+                        <textarea
+                            value={content}
+                            onChange={e => setContent(e.target.value)}
+                            placeholder={`What's on your mind, ${user?.username || "User"}?`}
+                            className={styles.modalInput}
+                        />
+
                         {images.length > 0 && (
                             <div className={styles.previewContainer}>
                                 {images.map((img, i) => (
@@ -607,6 +637,7 @@ export default function CommunityPage() {
                                 ))}
                             </div>
                         )}
+
                         {files.length > 0 && (
                             <div className={styles.filePreviewContainer}>
                                 {files.map((f, i) => (
@@ -617,11 +648,24 @@ export default function CommunityPage() {
                                 ))}
                             </div>
                         )}
+
                         <div className={styles.actionsRow}>
-                            <label className={styles.actionButton}>📷 Media<input hidden type="file" onChange={handleMediaUpload} /></label>
-                            <label className={styles.actionButton}>📁 File<input hidden type="file" multiple onChange={handleFileUpload} /></label>
-                            <button type="button" className={styles.actionButton} onClick={() => { if (isPollOpen) { setIsPollOpen(false); setPollOptions(["", ""]); } else setIsPollOpen(true); }}>📊 Poll</button>
+                            <label className={styles.actionButton}>
+                                <img src={MediaIcon} alt="" className={styles.actionIcon} />
+                                Media
+                                <input hidden type="file" accept="image/*,video/*" multiple onChange={handleMediaUpload} />
+                            </label>
+                            <label className={styles.actionButton}>
+                                <img src={DocumentIcon} alt="" className={styles.actionIcon} />
+                                File
+                                <input hidden type="file" multiple onChange={handleFileUpload} />
+                            </label>
+                            <button type="button" className={styles.actionButton} onClick={() => { if (isPollOpen) { setIsPollOpen(false); setPollOptions(["", ""]); } else setIsPollOpen(true); }}>
+                                <BarChart2 size={16} className={styles.actionIconSvg} />
+                                Poll
+                            </button>
                         </div>
+
                         {isPollOpen && (
                             <div className={styles.pollContainer}>
                                 {pollOptions.map((option, i) => (
@@ -633,7 +677,14 @@ export default function CommunityPage() {
                                 <button type="button" onClick={() => setPollOptions([...pollOptions, ""])} className={styles.addOption}>+ Add Option</button>
                             </div>
                         )}
-                        <button className={styles.postButton} onClick={handleCreatePost} disabled={!content && !images.length && !files.length && !isPollOpen}>Post</button>
+
+                        <button
+                            className={styles.postButton}
+                            onClick={handleCreatePost}
+                            disabled={!content && !images.length && !files.length && !isPollOpen}
+                        >
+                            Post
+                        </button>
                     </div>
                 </div>
             )}

@@ -833,6 +833,7 @@ class PostSerializer(serializers.ModelSerializer):
     poll_options = serializers.SerializerMethodField()
     is_promoted = serializers.SerializerMethodField()
     is_premium_author = serializers.SerializerMethodField()
+    community_name = serializers.SerializerMethodField()
 
     def get_is_promoted(self, obj):
         from django.contrib.contenttypes.models import ContentType

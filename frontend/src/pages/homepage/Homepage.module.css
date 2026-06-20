@@ -320,6 +320,16 @@
   transform: translateY(-1px);
 }
 
+.actionIcon {
+  width: 16px;
+  height: 16px;
+  filter: brightness(0) invert(0.55);
+}
+
+.actionIconSvg {
+  color: rgba(255, 255, 255, 0.55);
+}
+
 
 .pollContainer {
   display: flex;
@@ -837,6 +847,14 @@
 
 [data-theme="light"] .actionButton {
   color: rgba(0,0,0,0.6);
+}
+
+[data-theme="light"] .actionIcon {
+  filter: brightness(0) saturate(100%) invert(18%) sepia(60%) saturate(1200%) hue-rotate(265deg) brightness(85%) contrast(95%);
+}
+
+[data-theme="light"] .actionIconSvg {
+  color: #662D91;
 }
 
 [data-theme="light"] .actionButton + .actionButton::before {

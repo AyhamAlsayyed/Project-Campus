@@ -46,7 +46,7 @@ body {
   margin: 20px auto 0 auto;
   gap: var(--col-gap);
   margin-top: 20px;
-  align-items: stretch;
+  align-items: flex-start;
 }
 
 .profileContent {
@@ -581,7 +581,7 @@ body {
 
 .rightSection {
   position: sticky;
-  top: 120px;
+  top: 100px;
   flex: 0 0 420px;
   margin: 5% 0 0 0;
   gap: 70px;

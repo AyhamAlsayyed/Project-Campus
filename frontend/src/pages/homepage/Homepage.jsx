@@ -11,8 +11,10 @@ import { createPortal } from 'react-dom';
 import {
     X, Cloud, Menu, Search,
     Check, MoreHorizontal, Volume2, Calendar, UserPlus, Heart,
-    User, MessageSquare as MessageSquareIcon2, Bell as BellIcon2, ChevronDown
+    User, MessageSquare as MessageSquareIcon2, Bell as BellIcon2, ChevronDown, BarChart2
 } from "lucide-react";
+import MediaIcon from '../../Assets/icons/media.png';
+import DocumentIcon from '../../Assets/icons/document.png';
 import PostCard from '../../components/posts/postCard'
 import WeeklyNews from '../../components/rightPanel/weeklynews/weeklynews';
 import ThemeToggler from '../../components/pagelayout/themeToggle';
@@ -806,11 +808,20 @@ export default function Homepage() {
                         )}
 
                         <div className={styles.actionsRow}>
-                            <label className={styles.actionButton}>📷 Media<input hidden type="file" onChange={handleMediaUpload} /></label>
-                            <label className={styles.actionButton}>📁 File<input hidden type="file" multiple onChange={handleFileUpload} /></label>
+                            <label className={styles.actionButton}>
+                                <img src={MediaIcon} alt="" className={styles.actionIcon} />
+                                Media
+                                <input hidden type="file" accept="image/*,video/*" multiple onChange={handleMediaUpload} />
+                            </label>
+                            <label className={styles.actionButton}>
+                                <img src={DocumentIcon} alt="" className={styles.actionIcon} />
+                                File
+                                <input hidden type="file" multiple onChange={handleFileUpload} />
+                            </label>
                             <button type="button" className={styles.actionButton}
                                 onClick={() => { if (isPollOpen) { setIsPollOpen(false); setPollOptions(["", ""]); } else setIsPollOpen(true); }}>
-                                📊 Poll
+                                <BarChart2 size={16} className={styles.actionIconSvg} />
+                                Poll
                             </button>
                             <div style={{ position: "relative", display: "flex", justifyContent: "flex-end" }} onClick={e => e.stopPropagation()}>
                                 <button
