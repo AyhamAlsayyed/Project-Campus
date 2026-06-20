@@ -83,6 +83,10 @@ CORS_ALLOWED_ORIGINS = [
     "https://mv8f3wcb-3000.euw.devtunnels.ms",
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://9j7q7x4h-3000.uks1.devtunnels.ms",
+]
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(minutes=1),

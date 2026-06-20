@@ -1,4 +1,6 @@
-from django.db.models import Case, F, IntegerField, Q, Value, When
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Case, Exists, F, IntegerField, OuterRef, Q, Value, When
+from django.utils.timezone import now
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -11,7 +13,9 @@ from ...models import (
     Friendship,
     Post,
     PostReaction,
+    Promotion,
     SavedPost,
+    Subscription,
 )
 from ...serializers import PostSerializer
 from ...utils.blocked_users import get_blocked_user_sets
@@ -167,10 +171,25 @@ def feed(request, community_id=None):
         if filter_type != "latest":
             qs = qs.annotate(**engagement_annotations())
 
+            post_content_type = ContentType.objects.get_for_model(Post)
+            active_promotions = Promotion.objects.filter(
+                content_type_obj=post_content_type,
+                object_id=OuterRef("pk"),
+                status=Promotion.Status.ACTIVE,
+                start_date__lte=now(),
+                end_date__gte=now(),
+            )
+
+            premium_subscriptions = Subscription.objects.filter(
+                page__user_id=OuterRef("author_id"),
+                is_active=True,
+                tier__in=[Subscription.Tier.PREMIUM, Subscription.Tier.UNIVERSITY],
+            )
+
             qs = (
                 qs.annotate(
                     p_university=Case(
-                        When(author_id=uni_page_user_id, then=Value(50)),
+                        When(author_id=uni_page_user_id, then=Value(60)),
                         default=Value(0),
                         output_field=IntegerField(),
                     ),
@@ -180,12 +199,27 @@ def feed(request, community_id=None):
                         output_field=IntegerField(),
                     ),
                     p_following=Case(
-                        When(author_id__in=followed_user_ids, then=Value(20)),
+                        When(author_id__in=followed_user_ids, then=Value(35)),
                         default=Value(0),
                         output_field=IntegerField(),
                     ),
                     p_friendship=Case(
-                        When(author_id__in=accepted_users, then=Value(30)),
+                        When(author_id__in=accepted_users, then=Value(35)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    ),
+                    p_ad=Case(
+                        When(post_type=Post.PostType.ADVERTISEMENT, then=Value(35)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    ),
+                    p_promoted=Case(
+                        When(Exists(active_promotions), then=Value(45)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    ),
+                    p_premium=Case(
+                        When(Exists(premium_subscriptions), then=Value(25)),
                         default=Value(0),
                         output_field=IntegerField(),
                     ),
@@ -195,6 +229,9 @@ def feed(request, community_id=None):
                     + F("p_community")
                     + F("p_following")
                     + F("p_friendship")
+                    + F("p_ad")
+                    + F("p_promoted")
+                    + F("p_premium")
                     + F("p_engagement_capped")
                     + F("p_fresh")
                 )
@@ -203,7 +240,9 @@ def feed(request, community_id=None):
         else:
             qs = qs.order_by("-created_at")
 
-    qs = qs.select_related("author__profile", "author__page", "community").prefetch_related("media", "poll_options__votes__user__profile")[:limit]
+    qs = qs.select_related("author__profile", "author__page", "community").prefetch_related(
+        "media", "poll_options__votes__user__profile"
+    )[:limit]
 
     serializer = PostSerializer(qs, many=True, context={"request": request})
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -227,7 +266,9 @@ def get_saved_posts(request):
     if all_blocked_users:
         posts_qs = posts_qs.exclude(Q(community__isnull=True) & Q(author_id__in=all_blocked_users))
 
-    posts_qs = posts_qs.select_related("author__profile", "author__page").prefetch_related("media", "poll_options__votes__user__profile")
+    posts_qs = posts_qs.select_related("author__profile", "author__page").prefetch_related(
+        "media", "poll_options__votes__user__profile"
+    )
 
     serializer = PostSerializer(posts_qs, many=True, context={"request": request})
     return Response(serializer.data)
