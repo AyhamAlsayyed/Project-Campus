@@ -19,8 +19,9 @@
 .user {
   display: flex;
   align-items: center;
-  
   gap: 10px;
+  min-width: 0;
+  flex: 1;
 }
 
 .avatar {
@@ -53,16 +54,32 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 .pageType {
   font-size: 11px;
   color: var(--text-secondary);
 }
+
+.communityBadge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3A2287, #7F267F);
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
 .name {
   color: rgba(255, 255, 255, 0.92);
   font-weight: 700;
   font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
 }
 
 .tag {
@@ -1536,4 +1553,137 @@ css.acceptIcon {
 
 [data-theme="light"] .postMenuItemDestructive:hover {
     background: rgba(232, 77, 112, 0.08);
+}
+
+/* ── Light mode: polls ── */
+[data-theme="light"] .pollOptionLabel {
+    color: rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="light"] .pollRadio {
+    border-color: rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="light"] .pollRadio:hover:not(:disabled) {
+    border-color: #74419B;
+}
+
+[data-theme="light"] .pollRadioVoted {
+    background: #74419B;
+    border-color: #74419B;
+}
+
+[data-theme="light"] .pollTrack {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .pollBar {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .pollBarVoted {
+    background: #74419B;
+}
+
+[data-theme="light"] .pollVoterAvatar {
+    border-color: #F2F2F2;
+}
+
+[data-theme="light"] .pollVoterAvatarFallback {
+    border-color: #F2F2F2;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .pollVoterPlus {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .pollVoteCount {
+    color: rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="light"] .pollTotalVotes {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+/* ── Mobile responsive (small screens ≤ 480px) ── */
+@media (max-width: 480px) {
+  .card {
+    width: 95%;
+    padding: 12px 12px 14px;
+    border-radius: 16px;
+  }
+
+  .topRow {
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  .name {
+    font-size: 13px;
+    max-width: 130px;
+  }
+
+  .time {
+    font-size: 9px;
+  }
+
+  .headerActions {
+    gap: 6px;
+  }
+
+  .followBtn,
+  .followedBtn {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
+
+  .bellBtn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .actions {
+    gap: 4px;
+  }
+
+  .commentInputPill {
+    max-width: 100%;
+    height: 30px;
+  }
+
+  .placeholderText {
+    font-size: 11px;
+  }
+
+  .prompt {
+    font-size: 10px;
+  }
+
+  .shareText {
+    display: none;
+  }
+
+  .shareBtn {
+    padding: 0 10px;
+  }
+
+  .text {
+    max-width: 100%;
+    font-size: 0.9rem;
+  }
+
+  .adTitle {
+    font-size: 18px;
+  }
+
+  .adDesc {
+    font-size: 12px;
+  }
 }

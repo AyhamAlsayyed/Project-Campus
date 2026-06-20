@@ -25,7 +25,7 @@ function ChatStatusLabel({ userId, isGroup, isBlocked, isPage }) {
 
     return (
         <span className={styles.chatStatusText}>
-            {status === 'online' ? 'Online' : status === 'away' ? 'Away' : status === 'offline' ? 'offline' : 'Do Not Disturb'}
+            {status === 'online' ? 'Online' : status === 'away' ? 'Away' : status === 'dnd' ? 'Do Not Disturb' : 'Offline'}
         </span>
     );
 }
@@ -66,7 +66,7 @@ const ChatRow = React.memo(({
     isLast,
 }) => {
     const [menuOpen, setMenuOpen] = useState(false);
-    const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
     const menuWrapRef = useRef(null);
     const [reportTargetId, setReportTargetId] = useState(null);
     const maskColor = document.documentElement.getAttribute('data-theme') === 'light' ? '#662D91' : '#CCCCCC';
@@ -85,12 +85,13 @@ const ChatRow = React.memo(({
 
     const openMenu = useCallback((e) => {
         e.stopPropagation();
+        const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
         const rect = e.currentTarget.getBoundingClientRect();
         const dropdownH = 290;
         const spaceBelow = window.innerHeight - rect.bottom;
         setMenuPos({
-            top: spaceBelow < dropdownH ? rect.top - dropdownH + 35 : rect.bottom + 8,
-            right: window.innerWidth - rect.right,
+            top: (spaceBelow < dropdownH ? rect.top - dropdownH + 35 : rect.bottom + 8) / z,
+            left: rect.right / z,
         });
         setMenuOpen(v => !v);
     }, []);
@@ -133,7 +134,7 @@ const ChatRow = React.memo(({
                 {/* ── Left ── */}
                 <div className={styles.chatItemLeft}>
                     <div className={styles.avatarWrapper}>
-                        <img src={avatarSrc} alt={chat.name} className={styles.chatAvatar} loading="lazy" onError={e => { e.currentTarget.src = DefaultPfp; }} />
+                        <img src={avatarSrc} alt={chat.name} className={`${styles.chatAvatar}${!chat.avatar ? ' defaultPfp' : ''}`} loading="lazy" onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp'); }} />
                         {!chat.is_group && !chat.is_page && (
                             <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
                                 <StatusDot userId={chat.userId} size="sm" />
@@ -175,8 +176,8 @@ const ChatRow = React.memo(({
                                     style={{
                                         position: 'fixed',
                                         top: menuPos.top,
-                                        right: menuPos.right,
-
+                                        left: menuPos.left,
+                                        transform: 'translateX(-100%)',
                                         zIndex: 999999,
                                     }}
                                     onMouseDown={e => e.stopPropagation()}

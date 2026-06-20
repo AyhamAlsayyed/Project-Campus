@@ -2,9 +2,42 @@ import React, { useDeferredValue, useMemo, useTransition, useCallback } from 're
 import { Search } from 'lucide-react';
 import styles from '../../pages/chatsPage/chatspage.module.css';
 import CreateGroupIcon from '../../Assets/icons/create-group.png';
+import MessagesIcon from '../../Assets/icons/messages.png';
+import ReadIcon from '../../Assets/icons/read.png';
+import PinIcon from '../../Assets/icons/pin.png';
+import SearchIcon from '../../Assets/icons/search.png';
 import ChatRow from './ChatRow';
 
 const FILTERS = ['all', 'unread', 'pinned', 'groups'];
+
+const EMPTY_CONFIG = {
+    all:    { icon: MessagesIcon,   title: 'No chats yet',    sub: 'Start a conversation or join a group.' },
+    unread: { icon: ReadIcon,       title: 'All caught up!',  sub: 'You have no unread messages.' },
+    pinned: { icon: PinIcon,        title: 'No pinned chats', sub: 'Pin a chat to find it quickly later.' },
+    groups: { icon: CreateGroupIcon, title: 'No group chats', sub: 'Create a group to chat with multiple people.' },
+};
+
+const EmptyChatsState = React.memo(({ filter, searchQuery }) => {
+    if (searchQuery.trim()) {
+        return (
+            <div className={styles.emptyState}>
+                <img src={SearchIcon} alt="" className={styles.emptyStateIcon} />
+                <div style={{ fontWeight: 600, marginBottom: 4 }}>No results found</div>
+                <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>
+                    No chats matching &ldquo;{searchQuery.trim()}&rdquo;
+                </div>
+            </div>
+        );
+    }
+    const { icon, title, sub } = EMPTY_CONFIG[filter] || EMPTY_CONFIG.all;
+    return (
+        <div className={styles.emptyState}>
+            <img src={icon} alt="" className={styles.emptyStateIcon} />
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>{title}</div>
+            <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>{sub}</div>
+        </div>
+    );
+});
 
 const ChatListPanel = React.memo(({
     sortedChats,
@@ -105,12 +138,7 @@ const ChatListPanel = React.memo(({
                         }}
                     >
                         {visibleChats.length === 0 ? (
-                            <div style={{
-                                padding: '40px 20px', textAlign: 'center',
-                                color: 'rgba(255,255,255,0.35)', fontSize: '0.9rem',
-                            }}>
-                                No chats found
-                            </div>
+                            <EmptyChatsState filter={filter} searchQuery={searchQuery} />
                         ) : visibleChats.map((chat, index) => (
                             <ChatRow
                                 key={chat.id}

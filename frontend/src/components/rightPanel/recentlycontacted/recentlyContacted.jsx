@@ -6,13 +6,14 @@ import Messages from '../../../Assets/icons/messages.png'
 import StatusDot from '../../presence/StatusDot';
 import { usePresence } from '../../../context/presenceContext';
 import API from '../../../config';
+import DefaultPfp from '../../../Assets/icons/default-pfp.png';
 function ChatStatusLabel({ userId }) {
     const { onlineUsers } = usePresence();
     const status = onlineUsers[String(userId)] ?? 'offline';
-    if (status === 'offline') return null;
+    const label = status === 'online' ? 'Online' : status === 'away' ? 'Away' : status === 'dnd' ? 'Do Not Disturb' : 'Offline';
     return (
         <span className={styles.contactStatus}>
-            {status === 'online' ? 'Online' : 'Away'}
+            {label}
         </span>
     );
 }
@@ -55,7 +56,11 @@ export default function FriendsSuggestion() {
                 }, []);
             setContacts(unique.map(contact => ({
                 ...contact,
-                name: contact.is_group ? contact.group_name || contact.name : contact.name
+                name: contact.is_group ? contact.group_name || contact.name : contact.name,
+                avatar: contact.avatar
+                    ? (contact.avatar.startsWith('http') ? contact.avatar : `${API}${contact.avatar}`)
+                    : null,
+                is_page: contact.is_page || false,
             })));
         } catch (err) {
             setError("Failed to load contacts");
@@ -117,11 +122,12 @@ export default function FriendsSuggestion() {
                                     <div className={styles.contactLeft}>
                                         <div className={styles.contactAvatarWrap} style={{ position: 'relative' }}>
                                             <img
-                                                src={contact.avatar}
+                                                src={contact.avatar || DefaultPfp}
                                                 alt={contact.name}
-                                                className={styles.contactAvatar}
+                                                className={`${styles.contactAvatar}${!contact.avatar ? ' defaultPfp' : ''}`}
+                                                onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp'); }}
                                             />
-                                            {!contact.is_group && (
+                                            {!contact.is_group && !contact.is_page && (
                                                 <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
                                                     <StatusDot userId={contact.other_member_id} size="sm" />
                                                 </span>
@@ -130,7 +136,7 @@ export default function FriendsSuggestion() {
 
                                         <div className={styles.contactInfo}>
                                             <div className={styles.contactTopLine}>
-                                                <ChatStatusLabel userId={contact.other_member_id} />
+                                                {!contact.is_page && <ChatStatusLabel userId={contact.other_member_id} />}
                                             </div>
                                             <p className={styles.contactName}>{contact.name}</p>
                                         </div>

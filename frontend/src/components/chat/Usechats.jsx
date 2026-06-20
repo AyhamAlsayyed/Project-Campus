@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { API, normalizeMessages } from '../../pages/chatsPage/chatUtils';
 import { useNotificationContext } from '../../context/NotificationContext';
 
@@ -7,16 +7,33 @@ export function useChats() {
     const token = localStorage.getItem('access');
     const navigate = useNavigate();
     const { chatId } = useParams();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const [user, setUser] = useState(null);
     const [userLoading, setUserLoading] = useState(true);
     const [chats, setChats] = useState([]);
     const [loadingChats, setLoadingChats] = useState(true);
-    const [filter, setFilter] = useState('all');
+    const [filter, _setFilter] = useState(searchParams.get('filter') || 'all');
+    const setFilter = useCallback((f) => {
+        _setFilter(f);
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            if (f === 'all') next.delete('filter'); else next.set('filter', f);
+            return next;
+        }, { replace: true });
+    }, [setSearchParams]);
     const [searchQuery, setSearchQuery] = useState('');
     const [requestsCount, setRequestsCount] = useState(0);
     const [selectedChat, setSelectedChat] = useState(null);
-    const [showRequests, setShowRequests] = useState(false);
+    const [showRequests, _setShowRequests] = useState(searchParams.get('view') === 'requests');
+    const setShowRequests = useCallback((val) => {
+        _setShowRequests(val);
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            if (val) next.set('view', 'requests'); else next.delete('view');
+            return next;
+        }, { replace: true });
+    }, [setSearchParams]);
     const [chatRequests, setChatRequests] = useState([]);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [requestMessages, setRequestMessages] = useState([]);

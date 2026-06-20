@@ -1,0 +1,133 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+}
+
+.backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.panel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 75vw;
+    max-width: 350px;
+    background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.6);
+}
+
+.closeBtn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+.closeBtn:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.logo {
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.brandName {
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    flex: 1;
+    user-select: none;
+}
+
+.themeToggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+.themeToggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.themeIcon {
+    filter: brightness(0) invert(1);
+    display: block;
+}
+
+.nav {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* ── Light mode ── */
+[data-theme="light"] .panel {
+    background: linear-gradient(135deg, #ffffff, #f3e8ff);
+    border-right-color: rgba(102, 45, 145, 0.12);
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .closeBtn {
+    background: rgba(102, 45, 145, 0.08);
+    color: #662D91;
+}
+
+[data-theme="light"] .closeBtn:hover {
+    background: rgba(102, 45, 145, 0.16);
+}
+
+[data-theme="light"] .header {
+    border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .brandName {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .themeToggle {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .themeToggle:hover {
+    background: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .themeIcon {
+    filter: brightness(0) saturate(100%) invert(28%) sepia(50%) saturate(800%) hue-rotate(255deg) brightness(90%) contrast(90%);
+}

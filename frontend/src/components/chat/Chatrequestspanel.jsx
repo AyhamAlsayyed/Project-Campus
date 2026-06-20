@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from '../../pages/chatsPage/chatspage.module.css';
 import BackButton from '../../Assets/icons/arrow-left.png';
+import MailIcon from '../../Assets/icons/mail.png';
 import ChatRequestRow from './ChatrequestRow';
 import { getSenderName } from '../../pages/chatsPage/chatUtils';
 
@@ -35,7 +36,7 @@ const ChatRequestsPanel = React.memo(({
                 <img
                     src={BackButton}
                     alt=""
-                    style={{ width: 20, height: 20, filter: 'brightness(0) invert(1) opacity(0.9)' }}
+                    className={styles.activeChatBackIcon}
                 />
             </button>
         </div>
@@ -54,11 +55,10 @@ const ChatRequestsPanel = React.memo(({
                 <div className={styles.innerContainer}>
                     <div className={styles.chatItemsContainer}>
                         {chatRequests.length === 0 ? (
-                            <div style={{
-                                padding: '40px 20px', textAlign: 'center',
-                                color: 'rgba(255,255,255,0.35)', fontSize: '0.9rem',
-                            }}>
-                                No message requests
+                            <div className={styles.emptyState}>
+                                <img src={MailIcon} alt="" className={styles.emptyStateIcon} />
+                                <div style={{ fontWeight: 600, marginBottom: 4 }}>No message requests</div>
+                                <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>When someone new messages you, it&apos;ll show up here.</div>
                             </div>
                         ) : chatRequests.map((req, index) => (
                             <ChatRequestRow
@@ -91,7 +91,7 @@ const SelectedRequestView = React.memo(({
                         <img
                             src={BackButton}
                             alt=""
-                            style={{ width: 22, height: 22, filter: 'brightness(0) invert(1) opacity(0.9)' }}
+                            className={styles.activeChatBackIcon}
                         />
                     </button>
                     <div className={styles.headerTitleInfo}>
@@ -142,9 +142,8 @@ const SelectedRequestView = React.memo(({
                         borderTop: '1px solid rgba(0,0,0,0.08)',
                         background: 'transparent',
                     }}>
-                        <p style={{
-                            flex: 1, margin: 0,
-                            color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', alignSelf: 'center',
+                        <p className={styles.emptyState} style={{
+                            flex: 1, margin: 0, padding: 0, fontSize: '0.85rem', alignSelf: 'center', textAlign: 'left',
                         }}>
                             Do you want to accept this message request?
                         </p>

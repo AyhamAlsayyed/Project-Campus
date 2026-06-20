@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
 import styles from './groupInfoPanel.module.css';
 import {
     Camera, MoreHorizontal, MinusCircle, Edit2, FileText, Check, X, Ban, AlertCircle
@@ -54,6 +56,26 @@ export default function GroupInfoPanel({
     onRemoveMember
 }) {
 
+    // Theme tracking for inline-styled elements
+    const [isLight, setIsLight] = useState(document.documentElement.getAttribute('data-theme') === 'light');
+    useEffect(() => {
+        const observer = new MutationObserver(() => {
+            setIsLight(document.documentElement.getAttribute('data-theme') === 'light');
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        return () => observer.disconnect();
+    }, []);
+
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const setSection = useCallback((section) => {
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            if (section) next.set('section', section); else { next.delete('section'); next.delete('tab'); }
+            return next;
+        }, { replace: true });
+    }, [setSearchParams]);
+
     // UI Local Modals States
     const [openMemberId, setOpenMemberId] = useState(null);
     const [otherMemberBio, setOtherMemberBio] = useState('');
@@ -65,8 +87,11 @@ export default function GroupInfoPanel({
 
 
     // Group Permissions View Toggle States
-    const [showPermissions, setShowPermissions] = useState(false);
-    const [showAdmins, setShowAdmins] = useState(false);
+    const section = searchParams.get('section');
+    const showPermissions = section === 'permissions';
+    const showAdmins = section === 'admins';
+    const setShowPermissions = useCallback((val) => setSection(val ? 'permissions' : null), [setSection]);
+    const setShowAdmins = useCallback((val) => setSection(val ? 'admins' : null), [setSection]);
     // Add these with your other modal states
     const [showViewAllModal, setShowViewAllModal] = useState(false);
     const [viewAllSearch, setViewAllSearch] = useState('');
@@ -85,10 +110,19 @@ export default function GroupInfoPanel({
         addMembers: group.allow_members_to_add_others ?? true,
         approveMembers: group.is_private ?? false
     });
-    const [showMediaGallery, setShowMediaGallery] = useState(false);
+    const showMediaGallery = section === 'media';
+    const setShowMediaGallery = useCallback((val) => setSection(val ? 'media' : null), [setSection]);
     const [showExitConfirm, setShowExitConfirm] = useState(false);
 
-    const [activeTab, setActiveTab] = useState('media');
+    const [activeTab, _setActiveTab] = useState(searchParams.get('tab') || 'media');
+    const setActiveTab = useCallback((tab) => {
+        _setActiveTab(tab);
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            if (tab === 'media') next.delete('tab'); else next.set('tab', tab);
+            return next;
+        }, { replace: true });
+    }, [setSearchParams]);
 
     // Search Query Strings State
     const [memberSearch, setMemberSearch] = useState('');
@@ -518,8 +552,9 @@ export default function GroupInfoPanel({
         }
     };
 
-    const headerPngStyle = { width: '20px', height: '20px', objectFit: 'contain', filter: 'brightness(0) invert(0.9)' };
-    const inlineButtonPngStyle = { width: '16px', height: '16px', objectFit: 'contain', filter: 'brightness(0) invert(0.9)', marginRight: '8px' };
+    const purpleFilter = 'brightness(0) saturate(100%) invert(30%) sepia(55%) saturate(650%) hue-rotate(258deg) brightness(95%)';
+    const headerPngStyle = { width: '20px', height: '20px', objectFit: 'contain', filter: isLight ? purpleFilter : 'brightness(0) invert(0.9)' };
+    const inlineButtonPngStyle = { width: '16px', height: '16px', objectFit: 'contain', filter: isLight ? purpleFilter : 'brightness(0) invert(0.9)', marginRight: '8px' };
 
     return (
         <div className={styles.container}>
@@ -721,10 +756,12 @@ export default function GroupInfoPanel({
                             <div className={styles.infoAndPictureWrapper}>
                                 <div className={styles.avatarRing}>
                                     <div className={styles.avatar}>
-                                        {avatarSrc
-                                            ? <img src={avatarSrc} alt={group.name} className={styles.avatarImg} />
-                                            : <span className={styles.avatarInitials}>{group.name?.slice(0, 2).toUpperCase() || ''}</span>
-                                        }
+                                        <img
+                                            src={avatarSrc || DefaultPfp}
+                                            alt={group.name}
+                                            className={`${styles.avatarImg}${!avatarSrc ? ` defaultPfp ${styles.defaultAvatarImg}` : ''}`}
+                                            onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp', styles.defaultAvatarImg); }}
+                                        />
                                     </div>
                                     {isGroup && isGroupAdmin && (
                                         <button
@@ -1057,11 +1094,13 @@ export default function GroupInfoPanel({
                                         <div key={friend.id} className={styles.popupItemRow}>
                                             <div className={styles.popupItemLeft}>
                                                 <div className={styles.popupItemAvatar}>
-                                                    {friendAvatar ? (
-                                                        <img src={friendAvatar} alt={friend.name} />
-                                                    ) : (
-                                                        <span>{friend.name?.slice(0, 2).toUpperCase() || friend.username?.slice(0, 2).toUpperCase()}</span>
-                                                    )}
+                                                    <img
+                                                        src={friendAvatar || DefaultPfp}
+                                                        alt={friend.name || friend.username}
+                                                        className={!friendAvatar ? `${styles.defaultAvatarImg} defaultPfp` : ''}
+                                                        onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add(styles.defaultAvatarImg, 'defaultPfp'); }}
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    />
                                                 </div>
                                                 <span className={styles.popupItemName}>{friend.name || friend.username}</span>
                                             </div>
@@ -1130,11 +1169,13 @@ export default function GroupInfoPanel({
                                         <div key={friend.id} className={styles.popupItemRow}>
                                             <div className={styles.popupItemLeft}>
                                                 <div className={styles.popupItemAvatar}>
-                                                    {friendAvatar ? (
-                                                        <img src={friendAvatar} alt={friend.name} />
-                                                    ) : (
-                                                        <span>{friend.name?.slice(0, 2).toUpperCase() || friend.username?.slice(0, 2).toUpperCase()}</span>
-                                                    )}
+                                                    <img
+                                                        src={friendAvatar || DefaultPfp}
+                                                        alt={friend.name || friend.username}
+                                                        className={!friendAvatar ? `${styles.defaultAvatarImg} defaultPfp` : ''}
+                                                        onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add(styles.defaultAvatarImg, 'defaultPfp'); }}
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    />
                                                 </div>
                                                 <span className={styles.popupItemName}>{friend.name || friend.username}</span>
                                             </div>
@@ -1214,36 +1255,49 @@ export default function GroupInfoPanel({
                 </div>
             )}
             {showMediaGallery && (() => {
+                const galleryBg = isLight ? '#f5f5f5' : 'rgba(0,0,0,0.95)';
+                const galleryHeaderBg = isLight ? '#ffffff' : '#1a1a1a';
+                const galleryBorderColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
+                const galleryTitleColor = isLight ? '#1a1a1a' : '#fff';
+                const gallerySubColor = isLight ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)';
+                const galleryTabActive = '#662D91';
+                const galleryTabInactive = isLight ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)';
+                const galleryEmptyColor = isLight ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)';
+                const galleryDocBg = isLight ? '#ffffff' : 'rgba(255,255,255,0.03)';
+                const galleryDocBorder = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
+                const galleryDocNameColor = isLight ? '#1a1a1a' : '#fff';
+                const galleryDocMetaColor = isLight ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.35)';
+                const galleryGridItemBg = isLight ? '#e0e0e0' : '#111';
 
                 return (
                     <div style={{
                         position: 'fixed', inset: 0, zIndex: 9998,
-                        background: 'rgba(0,0,0,0.95)',
+                        background: galleryBg,
                         display: 'flex', flexDirection: 'column',
                     }}>
                         {/* Header */}
                         <div style={{
                             display: 'flex', alignItems: 'center', gap: 12,
                             padding: '14px 16px',
-                            borderBottom: '1px solid rgba(255,255,255,0.08)',
-                            background: '#1a1a1a', flexShrink: 0,
+                            borderBottom: `1px solid ${galleryBorderColor}`,
+                            background: galleryHeaderBg, flexShrink: 0,
                         }}>
                             <button
                                 onClick={() => setShowMediaGallery(false)}
                                 style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}
                             >
-                                <img src={BackArrow} alt="Back" style={{ width: 20, height: 20, filter: 'brightness(0) invert(1)' }} />
+                                <img src={BackArrow} alt="Back" style={{ width: 20, height: 20, filter: isLight ? 'brightness(0)' : 'brightness(0) invert(1)' }} />
                             </button>
                             <div>
-                                <div style={{ color: '#fff', fontWeight: 600, fontSize: '1rem' }}>{group.name}</div>
-                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem' }}>{extractedMedia.length} items</div>
+                                <div style={{ color: galleryTitleColor, fontWeight: 600, fontSize: '1rem' }}>{group.name}</div>
+                                <div style={{ color: gallerySubColor, fontSize: '0.75rem' }}>{extractedMedia.length} items</div>
                             </div>
                         </div>
 
                         {/* Tabs */}
                         <div style={{
-                            display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)',
-                            background: '#1a1a1a', flexShrink: 0,
+                            display: 'flex', borderBottom: `1px solid ${galleryBorderColor}`,
+                            background: galleryHeaderBg, flexShrink: 0,
                         }}>
                             {['media', 'docs'].map(tab => (
                                 <button
@@ -1251,15 +1305,14 @@ export default function GroupInfoPanel({
                                     onClick={() => setActiveTab(tab)}
                                     style={{
                                         flex: 1, padding: '12px 0', background: 'none', border: 'none',
-                                        color: activeTab === tab ? '#c084fc' : 'rgba(255,255,255,0.4)',
+                                        color: activeTab === tab ? galleryTabActive : galleryTabInactive,
                                         fontWeight: activeTab === tab ? 700 : 400,
                                         fontSize: '0.875rem', cursor: 'pointer',
-                                        borderBottom: activeTab === tab ? '2px solid #c084fc' : '2px solid transparent',
+                                        borderBottom: activeTab === tab ? `2px solid ${galleryTabActive}` : '2px solid transparent',
                                         transition: 'all 0.15s',
                                     }}
                                 >
                                     {tab === 'media' ? `Media (${galleryImages.length})` : `Docs (${galleryDocs.length})`}
-
                                 </button>
                             ))}
                         </div>
@@ -1268,14 +1321,14 @@ export default function GroupInfoPanel({
                         <div style={{ flex: 1, overflowY: 'auto', padding: 2 }}>
                             {activeTab === 'media' ? (
                                 galleryImages.length === 0 ? (
-                                    <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: 40 }}>No media shared yet</div>
+                                    <div style={{ textAlign: 'center', color: galleryEmptyColor, padding: 40 }}>No media shared yet</div>
                                 ) : (
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, contentVisibility: 'auto', }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, contentVisibility: 'auto' }}>
                                         {galleryImages.map(item => (
                                             <div
                                                 key={item.id}
                                                 onClick={() => setLightboxUrl(item.url)}
-                                                style={{ aspectRatio: '1', cursor: 'pointer', overflow: 'hidden', background: '#111' }}
+                                                style={{ aspectRatio: '1', cursor: 'pointer', overflow: 'hidden', background: galleryGridItemBg }}
                                             >
                                                 {item.type === 'video' ? (
                                                     <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -1295,12 +1348,11 @@ export default function GroupInfoPanel({
                                 )
                             ) : (
                                 galleryDocs.length === 0 ? (
-                                    <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: 40 }}>No documents shared yet</div>
+                                    <div style={{ textAlign: 'center', color: galleryEmptyColor, padding: 40 }}>No documents shared yet</div>
                                 ) : (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                         {galleryDocs.map(item => (
                                             <a
-
                                                 key={item.id}
                                                 href={item.url}
                                                 target="_blank"
@@ -1308,8 +1360,8 @@ export default function GroupInfoPanel({
                                                 style={{
                                                     display: 'flex', alignItems: 'center', gap: 12,
                                                     padding: '14px 16px', textDecoration: 'none',
-                                                    borderBottom: '1px solid rgba(255,255,255,0.06)',
-                                                    background: 'rgba(255,255,255,0.03)',
+                                                    borderBottom: `1px solid ${galleryDocBorder}`,
+                                                    background: galleryDocBg,
                                                 }}
                                             >
                                                 <div style={{
@@ -1320,10 +1372,10 @@ export default function GroupInfoPanel({
                                                     <FileText size={22} color="#E53935" />
                                                 </div>
                                                 <div style={{ minWidth: 0 }}>
-                                                    <div style={{ color: '#fff', fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    <div style={{ color: galleryDocNameColor, fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                         {item.name}
                                                     </div>
-                                                    <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', marginTop: 2 }}>
+                                                    <div style={{ color: galleryDocMetaColor, fontSize: '0.75rem', marginTop: 2 }}>
                                                         {item.file_type?.toUpperCase() || 'FILE'}
                                                     </div>
                                                 </div>
@@ -1465,11 +1517,11 @@ function MemberRow({
     const dropdownRef = useRef(null);
     const toggleDropdown = () => {
         if (!isOpen) {
+            const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
             const rect = btnRef.current.getBoundingClientRect();
-
             setDropdownPos({
-                top: rect.bottom + 8,
-                left: rect.left - 120
+                top: rect.bottom / z + 8,
+                left: rect.left / z - 120
             });
         }
         setIsOpen(!isOpen);
@@ -1492,10 +1544,12 @@ function MemberRow({
         <>
             <div className={styles.memberRow}>
                 <div className={styles.memberAvatar}>
-                    {avatarSrc
-                        ? <img src={avatarSrc} alt={member.name} className={styles.memberAvatarImg} />
-                        : <span className={styles.memberInitials}>{member.initials || member.name?.slice(0, 2).toUpperCase()}</span>
-                    }
+                    <img
+                        src={avatarSrc || DefaultPfp}
+                        alt={member.name || member.username}
+                        className={`${styles.memberAvatarImg} ${!avatarSrc ? styles.defaultAvatarImg + ' defaultPfp' : ''}`}
+                        onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.className = `${styles.memberAvatarImg} ${styles.defaultAvatarImg} defaultPfp`; }}
+                    />
                 </div>
                 <div className={styles.memberInfo}>
                     <span className={

@@ -401,15 +401,27 @@
    MOBILE RESPONSIVE
    ════════════════════════════════════════ */
 @media (max-width: 1023px) {
+    .page { width: 100%; padding: 0 12px; box-sizing: border-box; }
+    .content { gap: 0; flex-direction: column; margin-top: 8px; padding-bottom: 40px; }
+
     .innerContainer {
         min-width: 0;
         width: 100%;
     }
 
+    .results {
+        min-width: 0;
+        width: 100%;
+        margin: 8px 0 0;
+    }
+
     .resultsContainer {
         min-width: 0;
         width: 100%;
+        flex: 1;
     }
+
+    .title { font-size: 1.8rem; }
 
     .cardGrid {
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));

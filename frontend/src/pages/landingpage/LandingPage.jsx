@@ -35,7 +35,6 @@ export default function LandingPage() {
             <div className={`${styles.headerSection} max-lg:!flex-col max-lg:!items-start max-lg:!gap-3`}>
                 <div className={`${styles.leftHeader} !flex-wrap !gap-x-4 !gap-y-2`}>
                     <p className={styles.headerText}>{t.seeColleges}</p>
-                    <LanguageDropDown language={language} onChange={setLanguage} />
                     <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
                 </div>
 

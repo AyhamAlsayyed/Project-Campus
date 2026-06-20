@@ -360,9 +360,11 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                                         className={styles.avatar}
                                         onError={e => { e.target.src = DefaultPfp; }}
                                     />
-                                    <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
-                                        <StatusDot userId={member.id} size="sm" />
-                                    </span>
+                                    {!member.is_page && (
+                                        <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
+                                            <StatusDot userId={member.id} size="sm" />
+                                        </span>
+                                    )}
                                 </div>
                                 <div className={styles.memberDetails}>
                                     <span className={`${styles.roleBadge} ${(memberIsOwner || memberIsAdmin) ? styles.roleAdmin : styles.roleMember}`}>

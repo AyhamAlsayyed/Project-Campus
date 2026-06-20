@@ -379,7 +379,7 @@
 }
 
 [data-theme="light"] .dropdownIcon {
-    filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+    filter: brightness(0) saturate(100%) invert(30%) sepia(55%) saturate(650%) hue-rotate(258deg) brightness(95%);
 }
 
 [data-theme="light"] .searchPortal {
@@ -402,7 +402,7 @@
 }
 
 [data-theme="light"] .seeAllHighlight {
-    color: #662D91;
+    color: #74419B;
 }
 
 [data-theme="light"] .searchStatus {
@@ -432,8 +432,12 @@
 [data-theme="light"] .resultAvatarPlaceholderGray {
     background: rgba(0, 0, 0, 0.05);
 }
-[data-theme="light"] .hamburgerBtn svg {
-    stroke: #662D91;
+.hamburgerIcon {
+    color: white;
+}
+
+[data-theme="light"] .hamburgerIcon {
+    color: #74419B;
 }
 
 /* Dropdown icons (messages, bell) → purple */
@@ -450,11 +454,11 @@
 
 /* Light mode → purple */
 [data-theme="light"] .searchBar svg {
-    color: #662D91;
+    color: #74419B;
 }
 
 [data-theme="light"] .avatarBtnHome {
-    color: #662D91;
+    color: #74419B;
     border-color: rgba(102, 45, 145, 0.3);
     background: rgba(102, 45, 145, 0.06);
 }

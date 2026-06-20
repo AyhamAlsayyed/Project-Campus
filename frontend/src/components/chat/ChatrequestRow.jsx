@@ -4,11 +4,12 @@ import { MoreHorizontal, CheckSquare } from 'lucide-react';
 import styles from '../../pages/chatsPage/chatspage.module.css';
 import MaskIcon from './MaskIcon';
 import BinIcon from '../../Assets/icons/bin.png';
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
 import Block  from '../../Assets/icons/block.png';
 import { API } from '../../pages/chatsPage/chatUtils';
 
 const Divider = () => (
-    <div style={{ width: '65%', height: 1, background: '#4D4D4D', margin: '0 auto' }} />
+    <div className={styles.chatDividerInline} />
 );
 
 const ChatRequestRow = React.memo(({
@@ -20,7 +21,7 @@ const ChatRequestRow = React.memo(({
     isLast,
 }) => {
     const [menuOpen, setMenuOpen] = useState(false);
-    const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
     const menuWrapRef = useRef(null);
 
     useEffect(() => {
@@ -35,12 +36,13 @@ const ChatRequestRow = React.memo(({
 
     const openMenu = useCallback((e) => {
         e.stopPropagation();
+        const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
         const rect = e.currentTarget.getBoundingClientRect();
         const dropdownH = 120;
         const spaceBelow = window.innerHeight - rect.bottom;
         setMenuPos({
-            top: spaceBelow < dropdownH ? rect.top - dropdownH + 35 : rect.bottom + 8,
-            right: window.innerWidth - rect.right,
+            top: (spaceBelow < dropdownH ? rect.top - dropdownH + 35 : rect.bottom + 8) / z,
+            left: rect.right / z,
         });
         setMenuOpen(v => !v);
     }, []);
@@ -61,21 +63,12 @@ const ChatRequestRow = React.memo(({
             >
                 <div className={styles.chatItemLeft}>
                     <div className={styles.avatarWrapper}>
-                        {avatarSrc
-                            ? <img src={avatarSrc} alt={req.sender_username} className={styles.chatAvatar} />
-                            : (
-                                <div
-                                    className={styles.chatAvatar}
-                                    style={{
-                                        background: 'rgba(255,255,255,0.08)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        color: 'rgba(255,255,255,0.5)', fontSize: '1.1rem', fontWeight: 700,
-                                    }}
-                                >
-                                    {req.sender_username?.[0]?.toUpperCase() || '?'}
-                                </div>
-                            )
-                        }
+                        <img
+                            src={avatarSrc || DefaultPfp}
+                            alt={req.sender_username}
+                            className={`${styles.chatAvatar} ${!avatarSrc ? styles.defaultAvatar : ''} ${!avatarSrc ? 'defaultPfp' : ''}`}
+                            onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add(styles.defaultAvatar); e.currentTarget.classList.add('defaultPfp'); }}
+                        />
                         <span className={`${styles.statusDot} ${styles.offline}`} />
                     </div>
                     <div className={styles.chatIdentity}>
@@ -104,7 +97,8 @@ const ChatRequestRow = React.memo(({
                                     style={{
                                         position: 'fixed',
                                         top: menuPos.top,
-                                        right: menuPos.right,
+                                        left: menuPos.left,
+                                        transform: 'translateX(-100%)',
                                         zIndex: 999999,
                                     }}
                                     onMouseDown={e => e.stopPropagation()}

@@ -42,9 +42,15 @@ class StatusConsumer(AsyncWebsocketConsumer):
             await self.broadcast_status_change("offline")
 
     async def receive(self, text_data):
-        """Handles manual visibility toggles sent by the frontend client"""
+        """Handles manual visibility toggles and heartbeat pings from the frontend client"""
         try:
             data = json.loads(text_data)
+
+            # Heartbeat ping — reply with pong immediately
+            if data.get("type") == "ping":
+                await self.send(text_data=json.dumps({"type": "pong"}))
+                return
+
             requested_status = data.get("status")
 
             UserProfile = apps.get_model("api", "UserProfile")
@@ -136,6 +142,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 content = data.get("content", "").strip()
                 parent_message_id = data.get("parent_message_id", None)
                 shared_post_id = data.get("shared_post_id", None)
+                is_forwarded = data.get("is_forwarded", False)
 
                 if shared_post_id and not content:
                     content = "Shared a post"
@@ -156,6 +163,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     parent_id=parent_message_id,
                     post_id=shared_post_id,
                     base_url=base_url,
+                    is_forwarded=is_forwarded,
                 )
 
                 # Broadcast to everyone in the chat room
@@ -288,7 +296,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         ConversationMember.objects.filter(conversation_id=conversation_id, user=user).update(last_read_at=now())
 
     @database_sync_to_async
-    def save_message(self, conversation_id, sender, content, parent_id, post_id, base_url=""):
+    def save_message(self, conversation_id, sender, content, parent_id, post_id, base_url="", is_forwarded=False):
         from .serializers import PostSerializer
 
         Message = apps.get_model("api", "Message")
@@ -299,6 +307,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             content=content,
             parent_message_id=parent_id,
             shared_post_id=post_id,
+            is_forwarded=is_forwarded,
         )
 
         avatar_url = None
@@ -344,6 +353,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "username": sender.username,
             "avatar": avatar_url,
             "content": msg.content,
+            "is_forwarded": msg.is_forwarded,
             "parent_message_id": msg.parent_message_id,
             "shared_post_id": msg.shared_post_id,
             "shared_post": shared_post_data,

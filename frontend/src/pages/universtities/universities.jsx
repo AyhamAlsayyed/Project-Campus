@@ -3,7 +3,8 @@ import Header from '../../components/pagelayout/header/header'
 import SidebarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
 import MobileHeader from '../../components/mobileHeader/mobileHeader'
 
-import { Search, ChevronRight, ChevronLeft, Calendar, MoreHorizontal, Clock, X, Menu } from 'lucide-react'
+import { Search, ChevronRight, ChevronLeft, Calendar, MoreHorizontal, Clock, Menu } from 'lucide-react'
+import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 import PtukLogo from '../../Assets/icons/Ptuk.jpg'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
@@ -16,7 +17,8 @@ import BinIcon from '../../Assets/icons/bin.png'
 import AddFriendIcon from '../../Assets/icons/add-friend.png';
 import RemovePersonIcon from '../../Assets/icons/remove-person.png';
 import MessagesIcon from '../../Assets/icons/messages.png';
-import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
+import InfoIcon from '../../Assets/icons/info.png';
+import EducationIcon from '../../Assets/icons/education.png';
 import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import API from '../../config';
 import useTheme from '../../hooks/useTheme'
@@ -46,7 +48,6 @@ export default function Universities() {
     const [removingDoctorId, setRemovingDoctorId] = useState(null);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const mobileMenuRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const dropdownRef = useRef(null);
 
@@ -256,6 +257,17 @@ export default function Universities() {
     // ── Shared doctors list (reused in both mobile and desktop) ──
     const DoctorsList = () => (
         <div className={styles.scrollableList}>
+            {filteredDoctors.length === 0 && (
+                <div className={styles.emptyState}>
+                    <img src={EducationIcon} alt="" className={styles.emptyStateIcon} />
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                        {searchTerm.trim() ? 'No results found' : 'No doctors or teachers'}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>
+                        {searchTerm.trim() ? `No match for "${searchTerm.trim()}"` : 'None have been added yet.'}
+                    </div>
+                </div>
+            )}
             {filteredDoctors.map((doc, index) => (
                 <div key={doc.id} className={styles.doctorItemWrapper}>
                     <div className={styles.doctorItem} onClick={() => navigate(`/profile/${doc.id}`)}>
@@ -313,49 +325,7 @@ export default function Universities() {
             )}
 
             {/* ── MOBILE DRAWER ── */}
-            {isMobile && mobileMenuOpen && (
-                <div style={{ position: "fixed", inset: 0, zIndex: 9998 }}>
-                    <div
-                        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
-                        onClick={() => setMobileMenuOpen(false)}
-                    />
-                    <div
-                        ref={mobileMenuRef}
-                        style={{
-                            position: "absolute", left: 0, top: 0,
-                            height: "100%", width: "100vw", maxWidth: 350,
-                            background: "linear-gradient(135deg, var(--bg-main), var(--bg-secondary))",
-                            borderRight: "1px solid rgba(255,255,255,0.1)",
-                            display: "flex", flexDirection: "column", overflow: "hidden",
-                            boxShadow: "4px 0 30px rgba(0,0,0,0.6)"
-                        }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <button
-                            style={{
-                                position: "absolute", top: 14, right: 14, zIndex: 10,
-                                width: 32, height: 32, borderRadius: "50%",
-                                background: "rgba(255,255,255,0.1)", border: "none",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                cursor: "pointer"
-                            }}
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            <X size={16} color="white" />
-                        </button>
-                        <div style={{
-                            display: "flex", alignItems: "center", gap: 10,
-                            padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)"
-                        }}>
-                            <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
-                        </div>
-                        <div style={{ flex: 1, overflowY: "auto" }}>
-                            <SidebarNav onClose={() => setMobileMenuOpen(false)} />
-                        </div>
-                    </div>
-                </div>
-            )}
+            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} />
 
             {/* ── DESKTOP HEADER ── */}
             {!isMobile && (
@@ -395,8 +365,8 @@ export default function Universities() {
                     {/* ── Doctors & Teachers (mobile only, above uni name but rendered after header) ── */}
                     <div style={{
                         width: "100%", maxWidth: 480, margin: "0 auto 16px",
-                        background: "#333333",
-                        border: "1px solid rgba(255,255,255,0.08)",
+                        background: "var(--bg-card)",
+                        border: "1px solid var(--border-color)",
                         borderRadius: 20, overflow: "hidden",
                         boxSizing: "border-box",
                     }}>
@@ -404,9 +374,9 @@ export default function Universities() {
                         <div style={{
                             display: "flex", alignItems: "center", justifyContent: "space-between",
                             padding: "14px 16px 10px",
-                            borderBottom: "1px solid rgba(255,255,255,0.07)"
+                            borderBottom: "1px solid var(--border-color)"
                         }}>
-                            <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: "0.9rem" }}>
+                            <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "0.9rem" }}>
                                 Doctors &amp; Teachers
                             </span>
                             {isUniversity && (
@@ -456,7 +426,7 @@ export default function Universities() {
                         paddingTop: 6, borderRadius: "20px 20px 0 0"
                     }}>
                         <div style={{
-                            background: "#333333", borderRadius: "20px 20px 0 0",
+                            background: "var(--bg-card)", borderRadius: "20px 20px 0 0",
                             padding: "20px 12px 30px"
                         }}>
                             <h2 className={styles.sectionTitle} style={{ marginBottom: 16 }}>LATEST NEWS</h2>
@@ -464,6 +434,13 @@ export default function Universities() {
                             {isUniversity ? (
                                 /* University POV: full announcement list stacked vertically for mobile */
                                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                                    {news.length === 0 && (
+                                        <div className={styles.emptyState}>
+                                            <img src={InfoIcon} alt="" className={styles.emptyStateIcon} />
+                                            <div style={{ fontWeight: 600, marginBottom: 4 }}>No news posted yet</div>
+                                            <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Announcements you post will appear here.</div>
+                                        </div>
+                                    )}
                                     {news.map((item, index) => (
                                         <div key={index} className={styles.announcementWrapper}>
                                             <div
@@ -548,6 +525,12 @@ export default function Universities() {
                                         </div>
                                     ))}
                                 </div>
+                            ) : news.length === 0 ? (
+                                <div className={styles.emptyState}>
+                                    <img src={InfoIcon} alt="" className={styles.emptyStateIcon} />
+                                    <div style={{ fontWeight: 600, marginBottom: 4 }}>No news yet</div>
+                                    <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Your university hasn&apos;t posted any announcements yet.</div>
+                                </div>
                             ) : (
                                 /* Student POV: image carousel */
                                 <>
@@ -630,6 +613,13 @@ export default function Universities() {
 
                                 {isUniversity ? (
                                     <div className={styles.announcementsContainer} style={{ minHeight: "460px" }}>
+                                        {news.length === 0 && (
+                                            <div className={styles.emptyState}>
+                                                <img src={InfoIcon} alt="" className={styles.emptyStateIcon} />
+                                                <div style={{ fontWeight: 600, marginBottom: 4 }}>No news posted yet</div>
+                                                <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Announcements you post will appear here.</div>
+                                            </div>
+                                        )}
                                         {news.map((item, index) => (
                                             <div key={index} className={styles.announcementWrapper}>
                                                 <div className={styles.announcementItem}>
@@ -707,6 +697,12 @@ export default function Universities() {
                                             </div>
                                         ))}
                                     </div>
+                                ) : news.length === 0 ? (
+                                    <div className={styles.emptyState} style={{ minHeight: 200, justifyContent: 'center' }}>
+                                        <img src={InfoIcon} alt="" className={styles.emptyStateIcon} />
+                                        <div style={{ fontWeight: 600, marginBottom: 4 }}>No news yet</div>
+                                        <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Your university hasn&apos;t posted any announcements yet.</div>
+                                    </div>
                                 ) : (
                                     <div className={styles.newsImageWrapper}>
                                         <img
@@ -779,6 +775,13 @@ export default function Universities() {
                                         <img src={Events} alt="events" style={{ width: 30, height: 30 }} />
                                         <span className={styles.relatedEventsTitle}>Related events</span>
                                     </div>
+                                    {events.length === 0 ? (
+                                        <div className={styles.emptyState}>
+                                            <img src={Events} alt="" className={styles.emptyStateIcon} />
+                                            <div style={{ fontWeight: 600, marginBottom: 4 }}>No events yet</div>
+                                            <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Related events will appear here.</div>
+                                        </div>
+                                    ) : (
                                     <div className={styles.eventCard}>
                                         {currentEvent?.img && (
                                             <img
@@ -814,6 +817,7 @@ export default function Universities() {
                                             )}
                                         </div>
                                     </div>
+                                    )}
                                 </div>
                             </div>
                         )}

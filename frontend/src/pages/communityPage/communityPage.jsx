@@ -4,14 +4,14 @@ import WeeklyNews from '../../components/rightPanel/weeklynews/weeklynews';
 import DesktopCreatePost from '../../components/createPost/DesktopCreatePost/desktopCreatePost'
 import MobileCreatePost from '../../components/createPost/MobileCreatePost/mobileCreatePost'
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
-import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useParams } from "react-router-dom";
+import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { X, Menu } from "lucide-react";
 import { Navigate } from 'react-router-dom';
 import CommentModal from '../../components/comments/commentsModal';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
 import PostCard from '../../components/posts/postCard'
-import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
 import NotificationInactive from '../../Assets/icons/mute.png'
 import NotificationActive from '../../Assets/icons/notifications-active.png'
 import Leave from '../../Assets/icons/leave.png'
@@ -30,7 +30,12 @@ export default function CommunityPage() {
     const [user, setUser] = useState(null)
     const { theme, toggleTheme } = useTheme();
     const [posts, setPosts] = useState([]);
-    const [filter, setFilter] = useState("recent");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [filter, _setFilter] = useState(searchParams.get('filter') || "recent");
+    const setFilter = useCallback((f) => {
+        _setFilter(f);
+        setSearchParams(f !== 'recent' ? { filter: f } : {}, { replace: true });
+    }, [setSearchParams]);
     const [community, setCommunity] = useState(null);
     const { id } = useParams();
     const navigate = useNavigate();
@@ -51,7 +56,6 @@ export default function CommunityPage() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [isNotified, setIsNotified] = useState(false);
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
-    const mobileMenuRef = useRef(null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [activeSettingsTab, setActiveSettingsTab] = useState('Settings');
     const [prevSettingsTab, setPrevSettingsTab] = useState('Settings');
@@ -253,23 +257,7 @@ export default function CommunityPage() {
             )}
 
             {/* ── MOBILE DRAWER ── */}
-            {isMobile && mobileMenuOpen && (
-                <div style={{ position: "fixed", inset: 0, zIndex: 9998 }}>
-                    <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} onClick={() => setMobileMenuOpen(false)} />
-                    <div ref={mobileMenuRef} style={{ position: "absolute", left: 0, top: 0, height: "100%", width: "75vw", maxWidth: 350, background: "linear-gradient(135deg, var(--bg-main), var(--bg-secondary))", borderRight: "1px solid rgba(255,255,255,0.1)", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "4px 0 30px rgba(0,0,0,0.6)" }} onClick={e => e.stopPropagation()}>
-                        <button style={{ position: "absolute", top: 14, right: 14, zIndex: 10, width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }} onClick={() => setMobileMenuOpen(false)}>
-                            <X size={16} color="white" />
-                        </button>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                            <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
-                        </div>
-                        <div style={{ flex: 1, overflowY: "auto" }}>
-                            <SideBarNav onClose={() => setMobileMenuOpen(false)} />
-                        </div>
-                    </div>
-                </div>
-            )}
+            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} />
 
             {/* ── DESKTOP HEADER ── */}
             {!isMobile && (
@@ -343,7 +331,7 @@ export default function CommunityPage() {
                                         style={{
                                             fontSize: "1.1rem",
                                             fontWeight: 500,
-                                            color: "rgba(255,255,255,0.5)"
+                                            color: "var(--text-muted)"
                                         }}
                                     >
                                         community
@@ -418,7 +406,12 @@ export default function CommunityPage() {
                             <div style={{ padding: "10px 14px 0" }}>
                                 <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none", msOverflowStyle: "none" }}>
                                     {mobileFilters.map(f => (
-                                        <button key={f.key} onClick={() => setFilter(f.key)} style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 999, border: "none", fontSize: "0.82rem", cursor: "pointer", fontWeight: filter === f.key ? 600 : 400, background: filter === f.key ? "#4a4a4a" : "#2a2a2a", color: filter === f.key ? "#fff" : "#aaa", boxShadow: filter === f.key ? "0 0 0 1px rgba(255,255,255,0.1)" : "none", transition: "all 0.2s ease" }}>
+                                        <button
+                                            key={f.key}
+                                            onClick={() => setFilter(f.key)}
+                                            className={`${styles.filterBtn} ${filter === f.key ? styles.active : ''}`}
+                                            style={{ flexShrink: 0, fontSize: "0.82rem" }}
+                                        >
                                             {f.label}
                                         </button>
                                     ))}
@@ -428,7 +421,7 @@ export default function CommunityPage() {
                     )}
 
                     <div style={{ width: "100%", boxSizing: "border-box", margin: "12px 0 0 0", borderRadius: "20px 20px 0 0", background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))", paddingTop: 6 }}>
-                        <div style={{ background: "#333333", borderRadius: "20px 20px 0 0", padding: "20px 10px 40px", display: "flex", flexDirection: "column", gap: 16 }}>
+                        <div style={{ background: "var(--bg-card)", borderRadius: "20px 20px 0 0", padding: "20px 10px 40px", display: "flex", flexDirection: "column", gap: 16 }}>
                             {isSettingsOpen ? (
                                 <>
                                     {(displayedTab === 'Settings' || displayedTab === 'Community info') && (
@@ -465,7 +458,7 @@ export default function CommunityPage() {
                             ) : (
                                 <>
                                     {posts.length === 0 ? (
-                                        <p style={{ color: "rgba(255,255,255,0.4)", padding: "0 10px" }}>
+                                        <p style={{ color: "var(--text-muted)", padding: "0 10px" }}>
                                             No posts yet.
                                         </p>
                                     ) : (

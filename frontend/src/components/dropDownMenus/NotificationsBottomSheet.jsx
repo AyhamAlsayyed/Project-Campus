@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { MoreHorizontal, Volume2, Calendar, UserPlus, Heart, Users, Check } from "lucide-react";
 import styles from './DrawerStyles.module.css';
 import API from '../../config';
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
 import { useNotificationContext } from '../../context/NotificationContext';
 
 function timeAgo(dateString) {
@@ -27,21 +28,28 @@ function timeAgo(dateString) {
 }
 
 function resolveAvatar(url) {
-    if (!url) return '/default-avatar.png';
+    if (!url) return DefaultPfp;
     return url.startsWith('http') ? url : `${API}${url}`;
 }
 
 function formatNotif(item) {
+    const link = item.link ?? null;
+    const isLinkNum = typeof link === 'number';
+    const linkObj = !isLinkNum && link ? link : {};
+
     return {
         id: item.notification_id || item.id,
         is_read: item.is_read,
         avatar: resolveAvatar(item.actor_avatar || item.avatar),
         type: item.type || item.iconType || 'Notification',
         text: item.message || item.content,
-        link: item.link || {},
-        post_id: item.post_id || null,
-        actor_id: item.actor_id || null,
-        event_id: item.event_id || null,
+        link,
+        // Extract navigation IDs from the link object
+        actor_id:    isLinkNum ? link : null,
+        post_id:     isLinkNum ? link : (linkObj.post?.post_id || linkObj.post_id || null),
+        comment_id:  linkObj.comment_id || null,
+        event_id:    linkObj.event_id || null,
+        community_id: linkObj.community_id || null,
         time: timeAgo(item.time || item.created_at),
     };
 }
@@ -124,17 +132,30 @@ export default function NotifsBottomSheet({
     const handleNotifClick = useCallback((n) => {
         setShowDrawerNotifs(false);
         const type = (n.type || '').toLowerCase();
-        if (type.includes('friend') || type.includes('request')) {
-            const profileId = typeof n.link === 'number' ? n.link : n.link?.id || n.actor_id;
+
+        // Community notifications
+        if (n.community_id) { navigate(`/communities/${n.community_id}`); return; }
+
+        // Friend request / accepted → go to their profile
+        if (type.includes('friend')) {
+            const profileId = n.actor_id;
             if (profileId) navigate(`/profile/${profileId}`);
             return;
         }
-        const post_id = n.post_id || (typeof n.link === 'number' ? n.link : n.link?.post_id);
-        if (post_id) {
-            navigate('/home', { state: { openPost: { postId: post_id } } });
+
+        // DM request → go to chats
+        if (type.includes('dm')) { navigate('/chats'); return; }
+
+        // Post reaction / comment → open the post
+        if (n.post_id) {
+            navigate('/home', { state: { openPost: { postId: n.post_id, commentId: n.comment_id } } });
             return;
         }
+
+        // Event notification
         if (n.event_id) { navigate(`/events/${n.event_id}`); return; }
+
+        // Fallback → actor profile
         if (n.actor_id) navigate(`/profile/${n.actor_id}`);
     }, [navigate, setShowDrawerNotifs]);
 
@@ -237,7 +258,7 @@ export default function NotifsBottomSheet({
                                 src={n.avatar}
                                 alt=""
                                 className={styles.notifAvatar}
-                                onError={e => { e.currentTarget.src = '/default-avatar.png'; }}
+                                onError={e => { e.currentTarget.src = DefaultPfp; }}
                             />
                             <div className={styles.notifIconBadge}>{getNotificationIcon(n.type)}</div>
                         </div>

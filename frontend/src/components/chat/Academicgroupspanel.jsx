@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import styles from '../../pages/chatsPage/chatspage.module.css';
 import { getSenderName, timeAgo, API } from '../../pages/chatsPage/chatUtils';
 import DefaultPfp from '../../Assets/icons/default-pfp.png';
+import EducationIcon from '../../Assets/icons/education.png';
 
 // ── MarqueeText ───────────────────────────────────────────────────────────────
 // Simple overflow-ellipsis span; memoised to avoid re-renders from parent.
@@ -47,7 +48,7 @@ const AcademicGroupItem = React.memo(({ chat, user, onSelect, isLast }) => {
                 onClick={() => onSelect(chat)}
             >
                 <div className={styles.academicAvatarWrapper}>
-                    <img src={avatarSrc} className={styles.academicAvatar} alt="" onError={e => { e.currentTarget.src = DefaultPfp; }} />
+                    <img src={avatarSrc} className={`${styles.academicAvatar}${!chat.avatar ? ' defaultPfp' : ''}`} alt="" onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp'); }} />
                 </div>
                 <div className={styles.academicChatInfo}>
                     <div className={styles.academicTopRow}>
@@ -75,7 +76,13 @@ const AcademicGroupsPanel = React.memo(({ academicGroups, user, onSelect }) => (
         <div className={styles.pill}>ACADEMIC GROUP CHATS</div>
         <div className={styles.rightCard}>
             <div className={styles.rightList}>
-                {academicGroups.map((chat, index) => (
+                {academicGroups.length === 0 ? (
+                    <div className={styles.emptyState}>
+                        <img src={EducationIcon} alt="" className={styles.emptyStateIcon} />
+                        <div style={{ fontWeight: 600, marginBottom: 4 }}>No academic groups</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>You haven&apos;t been added to any academic group chats yet.</div>
+                    </div>
+                ) : academicGroups.map((chat, index) => (
                     <AcademicGroupItem
                         key={chat.id}
                         chat={chat}

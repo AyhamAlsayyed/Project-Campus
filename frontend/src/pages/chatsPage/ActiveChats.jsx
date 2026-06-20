@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import styles from './chatspage.module.css';
 import {
@@ -8,6 +9,9 @@ import {
 } from 'lucide-react';
 import { Download } from 'lucide-react';
 import BackButton from '../../Assets/icons/arrow-left.png';
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
+import BinIcon from '../../Assets/icons/bin.png';
+import ShareIcon from '../../Assets/icons/share.png';
 import InfoIcon from '../../Assets/icons/info.png';
 import MuteIcon from '../../Assets/icons/mute.png';
 import SelectIcon from '../../Assets/icons/read.png';
@@ -43,7 +47,16 @@ export default function ActiveChat({
     const [pollOpen, setPollOpen] = useState(false);
     const [pollQuestion, setPollQuestion] = useState('');
     const [pollOptions, setPollOptions] = useState(['', '']);
-    const [showGroupInfo, setShowGroupInfo] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [showGroupInfo, _setShowGroupInfo] = useState(searchParams.get('panel') === 'info');
+    const setShowGroupInfo = useCallback((val) => {
+        _setShowGroupInfo(val);
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            if (val) next.set('panel', 'info'); else { next.delete('panel'); next.delete('section'); next.delete('tab'); }
+            return next;
+        }, { replace: true });
+    }, [setSearchParams]);
     const [fullGroupData, setFullGroupData] = useState(null);
     const [leftAt, setLeftAt] = useState(selectedChat?.left_at ? new Date(selectedChat.left_at) : null);
     const [lightboxUrl, setLightboxUrl] = useState(null);
@@ -60,6 +73,11 @@ export default function ActiveChat({
     const [isMuted, setIsMuted] = useState(selectedChat?.is_muted || false);
     const [selectionMode, setSelectionMode] = useState(false);
     const [selectedMessages, setSelectedMessages] = useState(new Set());
+    const [showForwardModal, setShowForwardModal] = useState(false);
+    const [forwardSearch, setForwardSearch] = useState('');
+    const [forwardChats, setForwardChats] = useState([]);
+    const [forwardLoading, setForwardLoading] = useState(false);
+    const [forwardingIds, setForwardingIds] = useState(new Set());
     const [msgMenuOpen, setMsgMenuOpen] = useState(null); // { id, rect }
     const [msgReactionOpen, setMsgReactionOpen] = useState(null); // { id, rect }
     const [reactionDetail, setReactionDetail] = useState(null); // { reactions: [] }
@@ -183,6 +201,7 @@ export default function ActiveChat({
                 senderId: data.sender_id,
                 sender: data.username,
                 avatar: data.avatar || null,
+                is_forwarded: data.is_forwarded || false,
                 time: new Date(data.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 date: data.sent_at,
                 reply_to_details,
@@ -235,7 +254,12 @@ export default function ActiveChat({
         setEditingMessage(null);
         setInputText('');
         setPendingFiles([]);
-        setShowGroupInfo(false);
+        _setShowGroupInfo(false);
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.delete('panel'); next.delete('section'); next.delete('tab');
+            return next;
+        }, { replace: true });
         setLeftAt(selectedChat?.left_at ? new Date(selectedChat.left_at) : null);
 
         const fetchMessages = async () => {
@@ -571,11 +595,41 @@ export default function ActiveChat({
         exitSelectionMode();
     };
 
+    const openForwardModal = async () => {
+        setShowForwardModal(true);
+        setForwardLoading(true);
+        try {
+            const res = await fetch(`${API}/api/chats/`, { headers: { Authorization: `Bearer ${token}` } });
+            if (res.ok) setForwardChats(await res.json());
+        } catch { }
+        setForwardLoading(false);
+    };
+
+    const forwardToChat = async (chatId) => {
+        if (forwardingIds.has(chatId)) return;
+        setForwardingIds(prev => new Set([...prev, chatId]));
+        const texts = messages.filter(m => selectedMessages.has(m.id)).map(m => m.text || m.content).filter(Boolean);
+        try {
+            for (const text of texts) {
+                await fetch(`${API}/api/chats/${chatId}/send/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ text, is_forwarded: true }),
+                });
+            }
+        } catch (err) { console.error('Forward failed', err); }
+        setForwardingIds(prev => { const n = new Set(prev); n.delete(chatId); return n; });
+    };
+
     const visibleMessages = messages.slice(-visibleCount);
-    const resolveUrl = (url) => url?.startsWith('http') ? url : `${API}${url}`;
+    const getCssZoom = () => parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+    const resolveUrl = (url) => {
+        if (!url) return DefaultPfp;
+        return url.startsWith('http') ? url : `${API}${url}`;
+    };
 
     return (
-        <div className={`${styles.chatList} ${styles.activeChatOuter}`}>
+        <div className={`${styles.activeChatPill} ${styles.activeChatOuter}`}>
             <style>{`
                 @keyframes typingBounce {
                     0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
@@ -622,51 +676,25 @@ export default function ActiveChat({
             ) : (
                 <div className={styles.innerChatContainer}>
                     {/* ── Header ── */}
-                    {selectionMode ? (
-                        <div className={styles.activeChatHeader} style={{ background: 'linear-gradient(-90deg, rgba(166,39,156,0.2), rgba(49,32,169,0.2))' }}>
-                            <div className={styles.headerLeftWrapper}>
-                                <button className={styles.iconBtn} onClick={exitSelectionMode}>
-                                    <MinusCircle size={22} />
-                                </button>
-                                <span style={{ color: '#fff', fontWeight: 600, fontSize: '1.1rem' }}>
-                                    {selectedMessages.size} selected
-                                </span>
-                            </div>
-                            <div className={styles.headerRightWrapper}>
-                                {selectedMessages.size > 0 && (
-                                    <>
-                                        <button className={styles.iconBtn} onClick={copySelectedMessages} title="Copy">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                                            </svg>
-                                        </button>
-                                        <button className={`${styles.iconBtn}`} onClick={deleteSelectedMessages} title="Delete" style={{ color: '#ff4d4d' }}>
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                                            </svg>
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    ) : (
+                    {(
                         <div className={styles.activeChatHeader}>
                             <div className={styles.headerLeftWrapper}>
                                 <button className={styles.iconBtn} onClick={onBack}>
-                                    <img src={BackButton} alt="" style={{ width: 22, height: 22, filter: 'brightness(0) invert(1) opacity(0.9)' }} />
+                                    <img src={BackButton} alt="" className={styles.activeChatBackIcon} />
                                 </button>
                                 <div className={styles.avatarStatusWrapper}>
                                     <img
                                         src={resolveUrl(selectedChat.avatar)}
                                         alt={selectedChat.name}
-                                        className={styles.activeChatAvatar}
+                                        className={`${styles.activeChatAvatar}${!selectedChat.avatar ? ' defaultPfp' : ''}`}
+                                        onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp'); }}
                                         onClick={() => {
                                             if (!selectedChat.is_group && selectedChat.other_member_id)
                                                 window.location.href = `/profile/${selectedChat.other_member_id}`;
                                         }}
                                         style={!selectedChat.is_group ? { cursor: 'pointer' } : {}}
                                     />
-                                    {!selectedChat.is_group && selectedChat.other_member_id && (
+                                    {!selectedChat.is_group && !selectedChat.is_page && selectedChat.other_member_id && (
                                         <span className={styles.headerStatusDot}>
                                             <StatusDot userId={selectedChat.other_member_id} size="lg" />
                                         </span>
@@ -739,13 +767,13 @@ export default function ActiveChat({
                                     <button ref={activeChatMenuBtnRef} className={styles.iconBtn}
                                         onClick={(e) => {
                                             if (activeChatMenuOpen) { setActiveChatMenuOpen(false); setActiveChatMenuRect(null); }
-                                            else { setActiveChatMenuOpen(true); setActiveChatMenuRect(e.currentTarget.getBoundingClientRect()); }
+                                            else { const z = getCssZoom(); const r = e.currentTarget.getBoundingClientRect(); setActiveChatMenuOpen(true); setActiveChatMenuRect({ bottom: r.bottom / z, right: r.right / z }); }
                                         }}>
                                         <MoreHorizontal size={30} />
                                     </button>
                                     {activeChatMenuOpen && activeChatMenuRect && createPortal(
                                         <div className={styles.dropdownMenu}
-                                            style={{ position: 'fixed', top: activeChatMenuRect.bottom + 8, right: window.innerWidth - activeChatMenuRect.right, zIndex: 999999 }}
+                                            style={{ position: 'fixed', top: activeChatMenuRect.bottom + 8, left: activeChatMenuRect.right, transform: 'translateX(-100%)', zIndex: 999999, minWidth: 160 }}
                                             onMouseDown={e => e.stopPropagation()}>
                                             <button className={styles.menuItem} onClick={() => { setActiveChatMenuOpen(false); setActiveChatMenuRect(null); setShowGroupInfo(true); }}>
                                                 <img src={InfoIcon} alt="" style={{ width: 15, height: 15, filter: 'brightness(0) invert(1)' }} />
@@ -776,7 +804,7 @@ export default function ActiveChat({
                                 </div>
                             </div>
                         </div>
-                    )} {/* end selectionMode conditional header */}
+                    ) /* header always visible */}
 
                     {/* ── Messages ── */}
                     <div className={styles.activeChatInnerContainer}>
@@ -853,7 +881,7 @@ export default function ActiveChat({
                                                     )}
                                                     {!isMine && (
                                                         isLastInGroup
-                                                            ? <img src={resolveUrl(msg.avatar)} alt="Sender" className={styles.messageAvatar} />
+                                                            ? <img src={resolveUrl(msg.avatar)} alt="Sender" className={`${styles.messageAvatar} ${!msg.avatar ? styles.defaultAvatar : ''} ${!msg.avatar ? 'defaultPfp' : ''}`} onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add(styles.defaultAvatar); e.currentTarget.classList.add('defaultPfp'); }} />
                                                             : <div className={styles.messageAvatarSpacer} />
                                                     )}
                                                     <div className={styles.messageContentBlock}>
@@ -929,7 +957,7 @@ export default function ActiveChat({
                                                                             )}
                                                                             <div style={{ padding: '10px 12px' }}>
                                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                                                                                    <img src={msg.post.author?.avatar || '/default-avatar.png'} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
+                                                                                    <img src={msg.post.author?.avatar || DefaultPfp} alt="" className={!msg.post.author?.avatar ? 'defaultPfp' : ''} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp'); }} />
                                                                                     <div>
                                                                                         <span style={{ color: 'white', fontWeight: 600, fontSize: '0.82rem', display: 'block' }}>{msg.post.author?.username || 'Page'}</span>
                                                                                         <span style={{ color: 'rgba(199,44,255,0.9)', fontSize: '0.68rem', fontWeight: 600 }}>Ad · Shared with you</span>
@@ -954,7 +982,7 @@ export default function ActiveChat({
                                                                         )}
                                                                         <div style={{ padding: '10px 12px' }}>
                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                                                                                <img src={msg.post.author?.avatar || '/default-avatar.png'} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
+                                                                                <img src={msg.post.author?.avatar || DefaultPfp} alt="" className={!msg.post.author?.avatar ? 'defaultPfp' : ''} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp'); }} />
                                                                                 <span style={{ color: 'white', fontWeight: 600, fontSize: '0.82rem' }}>{msg.post.author?.username || 'User'}</span>
                                                                             </div>
                                                                             {msg.post.content_text && (
@@ -967,6 +995,13 @@ export default function ActiveChat({
                                                                     </div>
                                                                     )
                                                                 ) : (
+                                                                    <>
+                                                                    {msg.is_forwarded && (
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4, opacity: 0.7, whiteSpace: 'nowrap' }}>
+                                                                            <img src={ShareIcon} alt="" width={12} height={12} style={{ filter: isMine ? 'brightness(0) invert(1)' : 'brightness(0) saturate(100%) invert(28%) sepia(60%) saturate(600%) hue-rotate(255deg) brightness(90%)', flexShrink: 0 }} />
+                                                                            <span style={{ fontSize: '0.7rem', fontStyle: 'italic', letterSpacing: '0.02em' }}>Forwarded</span>
+                                                                        </div>
+                                                                    )}
                                                                     <span style={{ whiteSpace: 'pre-wrap' }}>
                                                                         {msg.text}
                                                                         {msg.is_edited && (
@@ -975,6 +1010,7 @@ export default function ActiveChat({
                                                                             </span>
                                                                         )}
                                                                     </span>
+                                                                    </>
                                                                 )}
                                                             </div>
                                                             <div className={styles.msgActionGroup}>
@@ -983,7 +1019,8 @@ export default function ActiveChat({
                                                                     className={styles.replyIconButton}
                                                                     title="React"
                                                                     onClick={e => {
-                                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                                        const z = getCssZoom(); const r = e.currentTarget.getBoundingClientRect();
+                                                                        const rect = { bottom: r.bottom / z, left: r.left / z, right: r.right / z, top: r.top / z };
                                                                         setMsgReactionOpen(prev => prev?.id === msg.id ? null : { id: msg.id, rect });
                                                                         setMsgMenuOpen(null);
                                                                     }}
@@ -995,7 +1032,8 @@ export default function ActiveChat({
                                                                     className={styles.replyIconButton}
                                                                     title="More"
                                                                     onClick={e => {
-                                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                                        const z = getCssZoom(); const r = e.currentTarget.getBoundingClientRect();
+                                                                        const rect = { bottom: r.bottom / z, left: r.left / z, right: r.right / z, top: r.top / z };
                                                                         setMsgMenuOpen(prev => prev?.id === msg.id ? null : { id: msg.id, rect, isMine, msg });
                                                                         setMsgReactionOpen(null);
                                                                     }}
@@ -1198,9 +1236,11 @@ export default function ActiveChat({
                                                         ) : displayed.map((u, i) => (
                                                             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px' }}>
                                                                 <img
-                                                                    src={u.avatar ? (u.avatar.startsWith('http') ? u.avatar : `${API}${u.avatar}`) : `${API}/media/default-pfp.png`}
+                                                                    src={u.avatar ? (u.avatar.startsWith('http') ? u.avatar : `${API}${u.avatar}`) : DefaultPfp}
                                                                     alt={u.username}
+                                                                    className={!u.avatar ? 'defaultPfp' : ''}
                                                                     style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                                                                    onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp'); }}
                                                                 />
                                                                 <span style={{ color: 'white', fontSize: 14, fontWeight: 500, flex: 1 }}>{u.isMe ? 'You' : u.username}</span>
                                                                 <span style={{ fontSize: 20 }}>{u.emoji}</span>
@@ -1237,8 +1277,10 @@ export default function ActiveChat({
                                             ? (typingInfo.avatar.startsWith('http')
                                                 ? typingInfo.avatar
                                                 : `${API}${typingInfo.avatar}`)
-                                            : `${API}/media/default-pfp.png`
+                                            : DefaultPfp
                                         }
+                                        className={!typingInfo.avatar ? 'defaultPfp' : ''}
+                                        onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp'); }}
                                         alt={typingInfo.username}
                                         style={{
                                             width: 36, height: 36,
@@ -1329,37 +1371,38 @@ export default function ActiveChat({
                             {selectionMode ? (
                                 <div style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                    padding: '12px 20px 16px',
-                                    background: 'rgba(30,30,30,0.8)',
+                                    padding: '14px 24px 18px',
+                                    background: 'rgba(30,30,30,0.9)',
                                     borderTop: '1px solid rgba(255,255,255,0.06)',
                                 }}>
-                                    <button onClick={exitSelectionMode} style={{
-                                        background: 'rgba(255,255,255,0.08)', border: 'none', color: '#ccc',
-                                        padding: '10px 20px', borderRadius: 22, cursor: 'pointer', fontSize: '0.9rem',
-                                    }}>
-                                        Cancel
-                                    </button>
-                                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>
-                                        {selectedMessages.size === 0 ? 'Tap messages to select' : `${selectedMessages.size} selected`}
-                                    </span>
-                                    <div style={{ display: 'flex', gap: 10 }}>
-                                        {selectedMessages.size > 0 && (
-                                            <>
-                                                <button onClick={copySelectedMessages} style={{
-                                                    background: 'rgba(255,255,255,0.08)', border: 'none', color: '#ccc',
-                                                    padding: '10px 18px', borderRadius: 22, cursor: 'pointer', fontSize: '0.9rem',
-                                                }}>
-                                                    Copy
-                                                </button>
-                                                <button onClick={deleteSelectedMessages} style={{
-                                                    background: 'rgba(255,77,77,0.15)', border: '1px solid rgba(255,77,77,0.3)',
-                                                    color: '#ff4d4d', padding: '10px 18px', borderRadius: 22,
-                                                    cursor: 'pointer', fontSize: '0.9rem',
-                                                }}>
-                                                    Delete
-                                                </button>
-                                            </>
-                                        )}
+                                    {/* Left: X + counter */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                        <button onClick={exitSelectionMode} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                            </svg>
+                                        </button>
+                                        <span style={{ color: '#fff', fontWeight: 600, fontSize: '1rem' }}>
+                                            {selectedMessages.size} selected
+                                        </span>
+                                    </div>
+
+                                    {/* Right: Bin + Share */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <button
+                                            onClick={selectedMessages.size > 0 ? deleteSelectedMessages : undefined}
+                                            disabled={selectedMessages.size === 0}
+                                            style={{ background: 'none', border: 'none', cursor: selectedMessages.size > 0 ? 'pointer' : 'default', padding: 8, opacity: selectedMessages.size > 0 ? 1 : 0.3 }}
+                                        >
+                                            <img src={BinIcon} alt="delete" width={24} height={24} style={{ filter: 'brightness(0) saturate(100%) invert(35%) sepia(80%) saturate(500%) hue-rotate(310deg)' }} />
+                                        </button>
+                                        <button
+                                            onClick={selectedMessages.size > 0 ? openForwardModal : undefined}
+                                            disabled={selectedMessages.size === 0}
+                                            style={{ background: 'none', border: 'none', cursor: selectedMessages.size > 0 ? 'pointer' : 'default', padding: 8, opacity: selectedMessages.size > 0 ? 1 : 0.3 }}
+                                        >
+                                            <img src={ShareIcon} alt="forward" width={24} height={24} style={{ filter: 'brightness(0) invert(1)' }} />
+                                        </button>
                                     </div>
                                 </div>
                             ) : (() => {
@@ -1410,6 +1453,76 @@ export default function ActiveChat({
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* ── Forward modal ── */}
+            {showForwardModal && createPortal(
+                <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    onClick={() => { setShowForwardModal(false); setForwardSearch(''); setForwardingIds(new Set()); }}>
+                    <div style={{ background: '#2a2a2a', borderRadius: 24, width: 'min(460px, 92vw)', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.7)' }}
+                        onClick={e => e.stopPropagation()}>
+                        {/* Header */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 20px 12px' }}>
+                            <h3 style={{ margin: 0, color: '#fff', fontWeight: 700, fontSize: '1.1rem' }}>Forward to</h3>
+                            <button onClick={() => { setShowForwardModal(false); setForwardSearch(''); setForwardingIds(new Set()); }}
+                                style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                ✕
+                            </button>
+                        </div>
+                        {/* Search */}
+                        <div style={{ padding: '0 16px 12px' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 999, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                <input value={forwardSearch} onChange={e => setForwardSearch(e.target.value)} placeholder="Search chats..."
+                                    style={{ background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: '0.9rem', flex: 1 }} />
+                            </div>
+                        </div>
+                        {/* List */}
+                        <div style={{ overflowY: 'auto', flex: 1 }}>
+                            {forwardLoading ? (
+                                <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>Loading...</div>
+                            ) : forwardChats.filter(c => c.name?.toLowerCase().includes(forwardSearch.toLowerCase()) && c.id !== selectedChat.id).length === 0 ? (
+                                <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>No chats found</div>
+                            ) : forwardChats
+                                .filter(c => c.name?.toLowerCase().includes(forwardSearch.toLowerCase()) && c.id !== selectedChat.id)
+                                .map(chat => {
+                                    const sent = !forwardingIds.has(chat.id) && forwardChats.find(c => c.id === chat.id)?._forwarded;
+                                    return (
+                                        <div key={chat.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 20px', cursor: 'pointer', transition: 'background 0.15s' }}
+                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                            onClick={async () => {
+                                                await forwardToChat(chat.id);
+                                                setForwardChats(prev => prev.map(c => c.id === chat.id ? { ...c, _forwarded: true } : c));
+                                            }}>
+                                            <img src={chat.avatar ? (chat.avatar.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`) : DefaultPfp}
+                                                alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                                                onError={e => { e.currentTarget.src = DefaultPfp; }} />
+                                            <span style={{ color: '#fff', fontWeight: 500, flex: 1, fontSize: '0.95rem' }}>{chat.name}</span>
+                                            {forwardingIds.has(chat.id) ? (
+                                                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>Sending…</span>
+                                            ) : chat._forwarded ? (
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4caf50" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                            ) : (
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/>
+                                                </svg>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            }
+                        </div>
+                        {/* Footer */}
+                        <div style={{ padding: '12px 20px 20px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'flex-end' }}>
+                            <button onClick={() => { setShowForwardModal(false); setForwardSearch(''); setForwardingIds(new Set()); exitSelectionMode(); }}
+                                style={{ background: 'linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))', border: 'none', color: '#fff', borderRadius: 20, padding: '10px 28px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}>
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
 
             {/* ── Comment modal ── */}

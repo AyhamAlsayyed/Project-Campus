@@ -196,6 +196,17 @@
     margin-top: 4px;
 }
 
+.emptyText {
+    padding: 20px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.9rem;
+}
+
+[data-theme="light"] .emptyText {
+    color: rgba(0, 0, 0, 0.35);
+}
+
 /* ── Chat specifics ── */
 .chatSearchContainer {
     display: flex;
@@ -325,11 +336,17 @@
     overflow: hidden;
 }
 
-.chatStatus {
+.chatStatus,
+.chatStatusText {
     font-size: 0.75rem;
     color: rgba(255, 255, 255, 0.4);
     grid-column: 1;
     grid-row: 1;
+}
+
+[data-theme="light"] .chatStatus,
+[data-theme="light"] .chatStatusText {
+    color: rgba(0, 0, 0, 0.35);
 }
 
 .chatTimeContainer {

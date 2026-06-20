@@ -16,7 +16,7 @@ import {
 import PostCard from '../../components/posts/postCard'
 import WeeklyNews from '../../components/rightPanel/weeklynews/weeklynews';
 import ThemeToggler from '../../components/pagelayout/themeToggle';
-import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
+import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 import { useNavigate, useLocation } from 'react-router-dom';
 import MobileCreatePost from '../../components/createPost/MobileCreatePost/mobileCreatePost';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
@@ -50,7 +50,6 @@ export default function Homepage() {
     const [isPollOpen, setIsPollOpen] = useState(false)
     const [pollOptions, setPollOptions] = useState(["", ""])
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-    const mobileMenuRef = useRef(null)
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024)
 
     // Announcement States
@@ -434,55 +433,7 @@ export default function Homepage() {
             {/* ══════════════════════════════════════
                     MOBILE DRAWER (SideBarNav only)
                 ══════════════════════════════════════ */}
-            {isMobile && mobileMenuOpen && (
-                <div style={{ position: "fixed", inset: 0, zIndex: 9998 }}>
-                    <div
-                        style={{
-                            position: "absolute", inset: 0,
-                            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)"
-                        }}
-                        onClick={() => setMobileMenuOpen(false)}
-                    />
-                    <div
-                        ref={mobileMenuRef}
-                        style={{
-                            position: "absolute", left: 0, top: 0,
-                            height: "100%", width: "75vw", maxWidth: 350,
-                            background: " linear-gradient(135deg, var(--bg-main), var(--bg-secondary))",
-                            borderRight: "1px solid rgba(255,255,255,0.1)",
-                            display: "flex", flexDirection: "column", overflow: "hidden",
-                            boxShadow: "4px 0 30px rgba(0,0,0,0.6)"
-                        }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <button
-                            style={{
-                                position: "absolute", top: 14, right: 14, zIndex: 10,
-                                width: 32, height: 32, borderRadius: "50%",
-                                background: "rgba(255,255,255,0.1)", border: "none",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                cursor: "pointer"
-                            }}
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            <X size={16} color="white" />
-                        </button>
-
-                        <div style={{
-                            display: "flex", alignItems: "center", gap: 10,
-                            padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)"
-                        }}>
-                            <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>
-                                CAMPUS
-                            </span>
-                        </div>
-                        <div style={{ flex: 1, overflowY: "auto" }}>
-                            <SideBarNav onClose={() => setMobileMenuOpen(false)} />
-                        </div>
-                    </div>
-                </div>
-            )}
+            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} />
 
             {/* ══════════════════════════════════════
                     DESKTOP HEADER
@@ -549,7 +500,7 @@ export default function Homepage() {
                             {error ? (
                                 <div className={styles.errorBox}><p>{error}</p></div>
                             ) : loading ? (
-                                <p style={{ padding: 20, color: "rgba(255,255,255,0.5)" }}>Loading...</p>
+                                <p style={{ padding: 20, color: "var(--text-muted)" }}>Loading...</p>
                             ) : posts.length === 0 ? (
                                 <div className={styles.emptyState}>
                                     <div className={styles.emptyStateIcon}>📭</div>
@@ -563,7 +514,7 @@ export default function Homepage() {
                                     ))}
                                     <div ref={sentinelRef} style={{ height: 1 }} />
                                     {loadingMore && (
-                                        <p style={{ textAlign: "center", padding: "16px 0", color: "rgba(255,255,255,0.4)", fontSize: "0.875rem" }}>
+                                        <p style={{ textAlign: "center", padding: "16px 0", color: "var(--text-muted)", fontSize: "0.875rem" }}>
                                             Loading more posts...
                                         </p>
                                     )}

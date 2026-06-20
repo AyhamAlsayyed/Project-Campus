@@ -4,8 +4,8 @@ import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import CommunityCard from '../../components/communityCard/communityCard'
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import { useState, useEffect, useRef } from 'react';
-import { X, Menu } from 'lucide-react';
-import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
+import { Menu } from 'lucide-react';
+import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 import Palette from '../../Assets/icons/palette.png'
 import Arrow from '../../Assets/icons/arrow-right.png'
 import RequestModal from '../../components/CommunityRequest/RequestModal'
@@ -37,7 +37,6 @@ export default function Community() {
     const [friendsCommunities, setFriendsCommunities] = useState([]);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const mobileMenuRef = useRef(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [ownedCommunities, setOwnedCommunities] = useState([]);
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -498,49 +497,7 @@ export default function Community() {
             )}
 
             {/* ── MOBILE DRAWER ── */}
-            {isMobile && mobileMenuOpen && (
-                <div style={{ position: "fixed", inset: 0, zIndex: 9998 }}>
-                    <div
-                        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
-                        onClick={() => setMobileMenuOpen(false)}
-                    />
-                    <div
-                        ref={mobileMenuRef}
-                        style={{
-                            position: "absolute", left: 0, top: 0,
-                            height: "100%", width: "75vw", maxWidth: 350,
-                            background: "linear-gradient(135deg, var(--bg-main), var(--bg-secondary))",
-                            borderRight: "1px solid rgba(255,255,255,0.1)",
-                            display: "flex", flexDirection: "column", overflow: "hidden",
-                            boxShadow: "4px 0 30px rgba(0,0,0,0.6)"
-                        }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <button
-                            style={{
-                                position: "absolute", top: 14, right: 14, zIndex: 10,
-                                width: 32, height: 32, borderRadius: "50%",
-                                background: "rgba(255,255,255,0.1)", border: "none",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                cursor: "pointer"
-                            }}
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            <X size={16} color="white" />
-                        </button>
-                        <div style={{
-                            display: "flex", alignItems: "center", gap: 10,
-                            padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)"
-                        }}>
-                            <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
-                        </div>
-                        <div style={{ flex: 1, overflowY: "auto" }}>
-                            <SideBarNav onClose={() => setMobileMenuOpen(false)} />
-                        </div>
-                    </div>
-                </div>
-            )}
+            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} />
 
             {/* ── DESKTOP HEADER ── */}
             {!isMobile && (
@@ -636,8 +593,8 @@ export default function Community() {
                         <>
                             <div style={{
                                 width: "100%", maxWidth: 480, margin: "0 auto 12px",
-                                background: "#333333",
-                                border: "1px solid rgba(255,255,255,0.08)",
+                                background: "var(--bg-card)",
+                                border: "1px solid var(--border-color)",
                                 borderRadius: 16, overflow: "hidden",
                                 boxSizing: "border-box",
                             }}>
@@ -645,9 +602,9 @@ export default function Community() {
                                 <div style={{
                                     display: "flex", alignItems: "center", justifyContent: "space-between",
                                     padding: "14px 16px 10px",
-                                    borderBottom: "1px solid rgba(255,255,255,0.07)"
+                                    borderBottom: "1px solid var(--border-color)"
                                 }}>
-                                    <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: "0.9rem" }}>
+                                    <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "0.9rem" }}>
                                         Pending checkout
                                     </span>
                                     <span style={{
@@ -730,9 +687,9 @@ export default function Community() {
                                 <div style={{
                                     display: "flex", alignItems: "center", justifyContent: "space-between",
                                     padding: "10px 16px 14px",
-                                    borderTop: "1px solid rgba(255,255,255,0.07)"
+                                    borderTop: "1px solid var(--border-color)"
                                 }}>
-                                    <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.85rem", fontWeight: 600 }}>
+                                    <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem", fontWeight: 600 }}>
                                         Total: <span style={{ color: "#fff" }}>${promoCart.reduce((s, i) => s + i.cost, 0).toFixed(2)}</span>
                                     </span>
                                     <button
@@ -756,8 +713,8 @@ export default function Community() {
                             {/* ── COMMUNITY PROMOTION ── */}
                             <div style={{
                                 width: "100%", maxWidth: 480, margin: "0 auto 20px",
-                                background: "#333333",
-                                border: "1px solid rgba(255,255,255,0.08)",
+                                background: "var(--bg-card)",
+                                border: "1px solid var(--border-color)",
                                 borderRadius: 16, padding: "14px 16px",
                                 boxSizing: "border-box",
                                 display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12
@@ -795,7 +752,7 @@ export default function Community() {
                             {ownedCommunities.length > 0 && (
                                 <>
                                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                                        <h1 style={{ fontSize: "1.3rem", fontWeight: 700, color: "rgba(255,255,255,0.85)", margin: 0 }}>
+                                        <h1 style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>
                                             Your <span style={{
                                                 background: "linear-gradient(30deg, #c72cff, #8b2dff)",
                                                 WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
@@ -835,7 +792,7 @@ export default function Community() {
 
                             {/* ── LOOKING FOR COMMUNITIES ── */}
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                                <h1 style={{ fontSize: "1.3rem", fontWeight: 700, color: "rgba(255,255,255,0.85)", margin: 0 }}>
+                                <h1 style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>
                                     Looking for <span style={{
                                         background: "linear-gradient(30deg, #c72cff, #8b2dff)",
                                         WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
@@ -867,15 +824,8 @@ export default function Community() {
                                     <button
                                         key={f.key}
                                         onClick={() => setFilter(f.key)}
-                                        style={{
-                                            flexShrink: 0, padding: "8px 16px", borderRadius: 999,
-                                            border: "none", fontSize: "0.82rem", cursor: "pointer",
-                                            fontWeight: filter === f.key ? 600 : 400,
-                                            background: filter === f.key ? "#4a4a4a" : "#2a2a2a",
-                                            color: filter === f.key ? "#fff" : "#aaa",
-                                            boxShadow: filter === f.key ? "0 0 0 1px rgba(255,255,255,0.1)" : "none",
-                                            transition: "all 0.2s ease",
-                                        }}
+                                        className={`${styles.filterBtn} ${filter === f.key ? styles.active : ''}`}
+                                        style={{ flexShrink: 0, fontSize: "0.82rem" }}
                                     >
                                         {f.label}
                                     </button>
@@ -888,13 +838,13 @@ export default function Community() {
                                 paddingTop: 6, borderRadius: "20px 20px 0 0"
                             }}>
                                 <div style={{
-                                    background: "#333333", borderRadius: "20px 20px 0 0",
+                                    background: "var(--bg-card)", borderRadius: "20px 20px 0 0",
                                     padding: "20px 10px 30px", display: "flex", flexDirection: "column", gap: 16
                                 }}>
                                     {loading ? (
-                                        <p style={{ color: "rgba(255,255,255,0.5)", padding: "0 10px" }}>Loading...</p>
+                                        <p style={{ color: "var(--text-muted)", padding: "0 10px" }}>Loading...</p>
                                     ) : displayedCommunities.length === 0 ? (
-                                        <p style={{ color: "rgba(255,255,255,0.4)", padding: "0 10px" }}>No communities found.</p>
+                                        <p style={{ color: "var(--text-muted)", padding: "0 10px" }}>No communities found.</p>
                                     ) : displayedCommunities.map((community, index) => (
                                         <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
                                             <CommunityCard
@@ -914,7 +864,7 @@ export default function Community() {
                         </>
                     ) : (
                         <>
-                            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "rgba(255,255,255,0.85)", margin: "0 0 12px" }}>
+                            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text-primary)", margin: "0 0 12px" }}>
                                 Looking for <span style={{
                                     background: "linear-gradient(30deg, #c72cff, #8b2dff)",
                                     WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
@@ -929,15 +879,8 @@ export default function Community() {
                                     <button
                                         key={f.key}
                                         onClick={() => setFilter(f.key)}
-                                        style={{
-                                            flexShrink: 0, padding: "8px 16px", borderRadius: 999,
-                                            border: "none", fontSize: "0.82rem", cursor: "pointer",
-                                            fontWeight: filter === f.key ? 600 : 400,
-                                            background: filter === f.key ? "#4a4a4a" : "#2a2a2a",
-                                            color: filter === f.key ? "#fff" : "#aaa",
-                                            boxShadow: filter === f.key ? "0 0 0 1px rgba(255,255,255,0.1)" : "none",
-                                            transition: "all 0.2s ease",
-                                        }}
+                                        className={`${styles.filterBtn} ${filter === f.key ? styles.active : ''}`}
+                                        style={{ flexShrink: 0, fontSize: "0.82rem" }}
                                     >
                                         {f.label}
                                     </button>
@@ -949,13 +892,13 @@ export default function Community() {
                                 paddingTop: 6, borderRadius: "20px 20px 0 0", marginTop: 12
                             }}>
                                 <div style={{
-                                    background: "#333333", borderRadius: "20px 20px 0 0",
+                                    background: "var(--bg-card)", borderRadius: "20px 20px 0 0",
                                     padding: "20px 10px 30px", display: "flex", flexDirection: "column", gap: 16
                                 }}>
                                     {loading ? (
-                                        <p style={{ color: "rgba(255,255,255,0.5)", padding: "0 10px" }}>Loading...</p>
+                                        <p style={{ color: "var(--text-muted)", padding: "0 10px" }}>Loading...</p>
                                     ) : displayedCommunities.length === 0 ? (
-                                        <p style={{ color: "rgba(255,255,255,0.4)", padding: "0 10px" }}>No communities found.</p>
+                                        <p style={{ color: "var(--text-muted)", padding: "0 10px" }}>No communities found.</p>
                                     ) : displayedCommunities.map((community, index) => (
                                         <div key={index} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
                                             <CommunityCard

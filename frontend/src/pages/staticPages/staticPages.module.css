@@ -237,10 +237,126 @@
 [data-theme="light"] .subtitle { color: rgba(0, 0, 0, 0.45); }
 [data-theme="light"] .ctaSecondary { color: rgba(0, 0, 0, 0.45); }
 
+[data-theme="light"] .innerContainer {
+    background-color: #ffffff;
+}
+
+[data-theme="light"] .section {
+    border-bottom-color: rgba(0, 0, 0, 0.07);
+}
+
+[data-theme="light"] .sectionTitle {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .sectionTitle::after {
+    background: rgba(0, 0, 0, 0.07);
+}
+
+[data-theme="light"] .sectionText {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="light"] .listItem {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="light"] .accordionItem {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .accordionHeader {
+    color: rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="light"] .accordionHeader:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .accordionBody {
+    color: rgba(0, 0, 0, 0.55);
+}
+
 /* ── Mobile ── */
 @media (max-width: 1023px) {
-    .innerContainer { padding: 24px 20px 36px; }
-    .pageTitle { font-size: 2rem; }
+    .page {
+        width: 100%;
+        padding: 0 16px;
+        box-sizing: border-box;
+    }
+
+    .content {
+        gap: 0;
+        margin-top: 12px;
+        flex-direction: column;
+        padding-bottom: 48px;
+    }
+
+    .mainColumn {
+        padding-right: 0;
+        margin-top: 0;
+        width: 100%;
+    }
+
+    .pageTitle {
+        font-size: 1.9rem;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 14px;
+    }
+
+    .outerContainer {
+        border-radius: 20px;
+        padding-top: 5px;
+    }
+
+    .innerContainer {
+        border-radius: 20px 20px 0 0;
+        padding: 22px 18px 36px;
+    }
+
+    .section {
+        padding: 20px 0;
+    }
+
+    .sectionText {
+        font-size: 0.88rem;
+    }
+
+    .listItem {
+        font-size: 0.88rem;
+    }
+
+    .accordionHeader {
+        font-size: 0.88rem;
+        padding: 13px 14px;
+    }
+
+    .accordionBody {
+        padding: 0 14px 12px;
+        font-size: 0.84rem;
+    }
+
+    .ctaRow {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .ctaBtn {
+        display: block;
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .ctaSecondary {
+        word-break: break-all;
+        font-size: 0.82rem;
+    }
 }
 
 

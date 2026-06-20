@@ -5,7 +5,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Messages from '../../Assets/icons/messages.png'
 import Posts from '../../components/posts/postCard';
-import { Search, MessageSquare, X as XIcon } from "lucide-react"
+import { Search, MessageSquare } from "lucide-react"
+import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 import CommentsModal from '../../components/comments/commentsModal'
 import DefaultProfileIcon from '../../Assets/icons/default-pfp.png'
 import { createPortal } from 'react-dom';
@@ -17,7 +18,6 @@ import API from '../../config';
 import NeutralReview from '../../Assets/icons/neutral-review.png';
 import useTheme from '../../hooks/useTheme'
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
-import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
 
 export default function FriendsPage() {
     const { theme, toggleTheme } = useTheme()
@@ -33,13 +33,12 @@ export default function FriendsPage() {
     const [isCommentsOpen, setIsCommentsOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
     const [activeMenu, setActiveMenu] = useState(null);
-    const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+    const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
     const token = localStorage.getItem("access");
     const navigate = useNavigate();
     const [reportTargetId, setReportTargetId] = useState(null);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const mobileMenuRef = useRef(null);
     const handleOpenComments = (postObject) => {
         setSelectedPost(postObject);
         setIsCommentsOpen(true);
@@ -289,7 +288,7 @@ export default function FriendsPage() {
                                                 if (activeMenuId === friend.id) { setActiveMenuId(null); }
                                                 else {
                                                     const rect = e.currentTarget.getBoundingClientRect();
-                                                    setMenuPosition({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+                                                    const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1; setMenuPosition({ top: rect.bottom / z + 6, left: rect.right / z });
                                                     setActiveMenuId(friend.id);
                                                 }
                                             }}>•••</button>
@@ -342,7 +341,7 @@ export default function FriendsPage() {
                                                         if (activeMenuId === `popup-${friend.id}`) { setActiveMenuId(null); }
                                                         else {
                                                             const rect = e.currentTarget.getBoundingClientRect();
-                                                            setMenuPosition({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+                                                            const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1; setMenuPosition({ top: rect.bottom / z + 6, left: rect.right / z });
                                                             setActiveMenuId(`popup-${friend.id}`);
                                                         }
                                                     }}>•••</button>
@@ -376,46 +375,7 @@ export default function FriendsPage() {
             {/* ══════════════════════════════════════
                     MOBILE DRAWER
                 ══════════════════════════════════════ */}
-            {isMobile && mobileMenuOpen && (
-                <div style={{ position: "fixed", inset: 0, zIndex: 9998 }}>
-                    <div
-                        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
-                        onClick={() => setMobileMenuOpen(false)}
-                    />
-                    <div
-                        ref={mobileMenuRef}
-                        style={{
-                            position: "absolute", left: 0, top: 0,
-                            height: "100%", width: "75vw", maxWidth: 350,
-                            background: "linear-gradient(135deg, var(--bg-main), var(--bg-secondary))",
-                            borderRight: "1px solid rgba(255,255,255,0.1)",
-                            display: "flex", flexDirection: "column", overflow: "hidden",
-                            boxShadow: "4px 0 30px rgba(0,0,0,0.6)"
-                        }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <button
-                            style={{
-                                position: "absolute", top: 14, right: 14, zIndex: 10,
-                                width: 32, height: 32, borderRadius: "50%",
-                                background: "rgba(255,255,255,0.1)", border: "none",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                cursor: "pointer"
-                            }}
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            <XIcon size={16} color="white" />
-                        </button>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                            <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
-                        </div>
-                        <div style={{ flex: 1, overflowY: "auto" }}>
-                            <SideBarNav variant="profile" currentUser={currentUser} onClose={() => setMobileMenuOpen(false)} />
-                        </div>
-                    </div>
-                </div>
-            )}
+            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} variant='profile' theme={theme} toggleTheme={toggleTheme} />
 
             {/* ══════════════════════════════════════
                     DESKTOP HEADER
@@ -451,7 +411,7 @@ export default function FriendsPage() {
             {activeMenuId && createPortal(
                 <div
                     className={styles.portalMenu}
-                    style={{ top: menuPosition.top, right: menuPosition.right }}
+                    style={{ position: 'fixed', top: menuPosition.top, left: menuPosition.left, transform: 'translateX(-100%)' }}
                     onClick={e => e.stopPropagation()}
                 >
                     <button className={styles.portalMenuItem} onClick={() => {

@@ -50,14 +50,12 @@ def vote_poll(request, post_id):
         count = opt.votes.count()
         voter_avatars = []
         for vote in list(opt.votes.all())[:4]:
-            avatar = None
             try:
-                profile_pic = vote.user.profile.profile_picture
+                profile_pic = vote.user.profile.profile_image
                 if profile_pic:
-                    avatar = request.build_absolute_uri(profile_pic.url)
+                    voter_avatars.append(request.build_absolute_uri(profile_pic.url))
             except Exception:
                 pass
-            voter_avatars.append(avatar)
         poll_data.append({
             "id": opt.id,
             "text": opt.text,

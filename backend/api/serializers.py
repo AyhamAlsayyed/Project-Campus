@@ -178,7 +178,7 @@ class UserSerializer(serializers.ModelSerializer):
         if privacy_setting == UserProfile.FriendsListPrivacy.EVERYONE:
             return True
 
-        if privacy_setting == UserProfile.FriendsListPrivacy.NOBODY:
+        if privacy_setting == UserProfile.FriendsListPrivacy.ONLY_ME:
             return False
 
         if privacy_setting == UserProfile.FriendsListPrivacy.FRIENDS_ONLY:
@@ -420,6 +420,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     conversations_owner = serializers.SerializerMethodField()
     other_member_id = serializers.SerializerMethodField()
     other_member = serializers.SerializerMethodField()
+    is_page = serializers.SerializerMethodField()
     allow_members_to_edit_settings = serializers.BooleanField(
         source="conversation.allow_members_to_edit_settings", read_only=True
     )
@@ -454,6 +455,7 @@ class ConversationSerializer(serializers.ModelSerializer):
             "conversations_owner",
             "other_member_id",
             "other_member",
+            "is_page",
             "allow_members_to_edit_settings",
             "allow_members_to_send_messages",
             "allow_members_to_add_others",
@@ -623,12 +625,21 @@ class ConversationSerializer(serializers.ModelSerializer):
             return other_member_obj.user.username
         return None
 
+    def get_is_page(self, obj):
+        if obj.conversation.is_group:
+            return False
+        other_member_obj = self._get_other_member(obj)
+        if other_member_obj and other_member_obj.user:
+            return hasattr(other_member_obj.user, "page")
+        return False
+
 
 class GroupMemberSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
     group_role = serializers.SerializerMethodField()
     conversation_id = serializers.SerializerMethodField()
+    is_page = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -639,6 +650,7 @@ class GroupMemberSerializer(serializers.ModelSerializer):
             "role",
             "group_role",
             "conversation_id",
+            "is_page",
         ]
 
     def get_avatar(self, obj):
@@ -658,6 +670,9 @@ class GroupMemberSerializer(serializers.ModelSerializer):
 
     def get_group_role(self, obj):
         return getattr(obj, "stashed_group_role", "member")
+
+    def get_is_page(self, obj):
+        return hasattr(obj, "page") and obj.page is not None
 
     def get_conversation_id(self, obj):
         request = self.context.get("request")
@@ -816,6 +831,7 @@ class PostSerializer(serializers.ModelSerializer):
     top_3comments_avatar = serializers.SerializerMethodField()
     ad_reaction = serializers.SerializerMethodField()
     poll_options = serializers.SerializerMethodField()
+    community_name = serializers.SerializerMethodField()
 
     def get_ad_reaction(self, obj):
         if obj.post_type != Post.PostType.ADVERTISEMENT:
@@ -848,14 +864,12 @@ class PostSerializer(serializers.ModelSerializer):
             count = opt.votes.count()
             voter_avatars = []
             for vote in list(opt.votes.all())[:4]:
-                avatar = None
                 try:
                     profile_pic = vote.user.profile.profile_image
                     if profile_pic:
-                        avatar = request.build_absolute_uri(profile_pic.url) if request else profile_pic.url
+                        voter_avatars.append(request.build_absolute_uri(profile_pic.url) if request else profile_pic.url)
                 except Exception:
                     pass
-                voter_avatars.append(avatar)
             result.append({
                 "id": opt.id,
                 "text": opt.text,
@@ -865,6 +879,11 @@ class PostSerializer(serializers.ModelSerializer):
                 "voter_avatars": voter_avatars,
             })
         return result
+
+    def get_community_name(self, obj):
+        if obj.community:
+            return obj.community.name
+        return None
 
     def get_is_saved(self, obj):
         return getattr(obj, "is_saved", False)
@@ -1003,6 +1022,7 @@ class PostSerializer(serializers.ModelSerializer):
             "post_type",
             "author",
             "community",
+            "community_name",
             "created_at",
             "media",
             "is_saved",
@@ -1455,6 +1475,7 @@ class MessageSerializer(serializers.ModelSerializer):
             "conversation",
             "sender",
             "content",
+            "is_forwarded",
             "shared_post",
             "parent_message",
             "sent_at",

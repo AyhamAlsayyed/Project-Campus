@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, useEffect, useRef } from 'react';
+import { useState, lazy, Suspense, useEffect, useRef, useCallback } from 'react';
 import styles from './chatspage.module.css';
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
@@ -12,19 +12,27 @@ import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import API from '../../config';
 import { X } from 'lucide-react';
-import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
-import { useNavigate } from 'react-router-dom';
+import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const ActiveChat = lazy(() => import('./ActiveChats'));
 
 export default function ChatsPage() {
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { theme, toggleTheme } = useTheme();
     const ctx = useChats();
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
-    const [mobileTab, setMobileTab] = useState('chats');
+    const [mobileTab, _setMobileTab] = useState(searchParams.get('tab') || 'chats');
+    const setMobileTab = useCallback((tab) => {
+        _setMobileTab(tab);
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            if (tab === 'chats') next.delete('tab'); else next.set('tab', tab);
+            return next;
+        }, { replace: true });
+    }, [setSearchParams]);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const mobileMenuRef = useRef(null);
 
     document.documentElement.setAttribute('data-theme', theme);
 
@@ -67,50 +75,7 @@ export default function ChatsPage() {
                 )}
 
                 {/* Mobile drawer */}
-                {mobileMenuOpen && (
-                    <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }}>
-                        <div
-                            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-                            onClick={() => setMobileMenuOpen(false)}
-                        />
-                        <div
-                            ref={mobileMenuRef}
-                            style={{
-                                position: 'absolute', left: 0, top: 0,
-                                height: '100%', width: '75vw', maxWidth: 350,
-                                background: 'linear-gradient(135deg, var(--bg-main), var(--bg-secondary))',
-                                borderRight: '1px solid rgba(255,255,255,0.1)',
-                                display: 'flex', flexDirection: 'column', overflow: 'hidden',
-                                boxShadow: '4px 0 30px rgba(0,0,0,0.6)'
-                            }}
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <button
-                                style={{
-                                    position: 'absolute', top: 14, right: 14, zIndex: 10,
-                                    width: 32, height: 32, borderRadius: '50%',
-                                    background: 'rgba(255,255,255,0.1)', border: 'none',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    cursor: 'pointer'
-                                }}
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                <X size={16} color="white" />
-                            </button>
-                            <div style={{
-                                display: 'flex', alignItems: 'center', gap: 10,
-                                padding: '20px 16px 16px',
-                                borderBottom: '1px solid rgba(255,255,255,0.08)'
-                            }}>
-                                <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                                <span style={{ color: '#fff', fontWeight: 800, fontSize: '1.3rem', letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
-                            </div>
-                            <div style={{ flex: 1, overflowY: 'auto' }}>
-                                <SideBarNav onClose={() => setMobileMenuOpen(false)} />
-                            </div>
-                        </div>
-                    </div>
-                )}
+                <MobileDrawer isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} />
 
                 {/* Mobile main content */}
                 <div className={styles.mobileContent}>

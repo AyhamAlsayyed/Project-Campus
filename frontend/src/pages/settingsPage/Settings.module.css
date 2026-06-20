@@ -935,7 +935,7 @@ body {
 
 [data-theme="light"] .segmentedOptionActive {
     background: #e9d5ff;
-    color: #662D91;
+    color: #74419B;
 }
 
 [data-theme="light"] .segmentedOption {
@@ -1063,7 +1063,7 @@ body {
     color: #1a1a1a;
 }
 [data-theme="light"] .customDropdownArrow {
-    background-color: #662D91;
+    background-color: #74419B;
 }
 
 /* ════════════════════════════════════════

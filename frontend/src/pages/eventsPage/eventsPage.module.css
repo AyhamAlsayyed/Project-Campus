@@ -2493,3 +2493,46 @@
     padding-right: 96px;
   }
 }
+
+/* ── Empty states ── */
+.emptyState {
+    padding: 40px 20px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+}
+
+[data-theme="light"] .emptyState {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+.emptyStateIcon {
+    width: 38px;
+    height: 38px;
+    margin-bottom: 10px;
+    opacity: 0.55;
+    filter: brightness(0) invert(1);
+}
+
+[data-theme="light"] .emptyStateIcon {
+    filter: brightness(0) saturate(100%) invert(28%) sepia(50%) saturate(800%) hue-rotate(255deg) brightness(90%) contrast(90%);
+    opacity: 1;
+}
+
+/* ── Mobile ── */
+@media (max-width: 1023px) {
+  .page { width: 100%; padding: 0 12px; box-sizing: border-box; }
+  .content { gap: 0; flex-direction: column; margin-top: 8px; padding-bottom: 40px; }
+  .mainContent { min-width: 0; width: 100%; }
+  .eventsContainer { margin-top: 16px; gap: 16px; }
+  .eventCard { padding: 16px; border-radius: 24px; }
+  .title { font-size: 1.8rem; }
+  .rightSection { display: none; }
+  .yourEventsCardsRow { flex-direction: column; gap: 12px; }
+  .yourEventCardWrapper { width: 100%; height: 160px; }
+  .createEventContent { flex-direction: column; }
+}

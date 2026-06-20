@@ -11,7 +11,7 @@ function ChatStatusLabel({ userId }) {
 
     return (
         <span className={styles.chatStatusText}>
-            {status === 'online' ? 'Online' : status === 'away' ? 'Away' : status === 'offline' ? 'offline' : 'Do Not Disturb'}
+            {status === 'online' ? 'Online' : status === 'away' ? 'Away' : status === 'dnd' ? 'Do Not Disturb' : 'Offline'}
         </span>
     );
 }
@@ -83,9 +83,9 @@ export default function ChatsBottomSheet({
 
             <div className={styles.chatListWrapper}>
                 {drawerChatsLoading ? (
-                    <div style={{ padding: "20px", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</div>
+                    <div className={styles.emptyText}>Loading...</div>
                 ) : filteredDrawerChats.length === 0 ? (
-                    <div style={{ padding: "20px", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No chats found</div>
+                    <div className={styles.emptyText}>No chats found</div>
                 ) : filteredDrawerChats.map(chat => (
                     <div
                         key={chat.id}
@@ -98,8 +98,8 @@ export default function ChatsBottomSheet({
                         }}
                     >
                         <div className={styles.chatAvatarWrap} style={{ position: 'relative', flexShrink: 0 }}>
-                            <img src={chat.avatar || DefaultPfp} alt="" className={styles.chatAvatar} onError={e => { e.currentTarget.src = DefaultPfp; }} />
-                            {!chat.isGroup && chat.userId && (
+                            <img src={chat.avatar || DefaultPfp} alt="" className={`${styles.chatAvatar}${!chat.avatar ? ' defaultPfp' : ''}`} onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp'); }} />
+                            {!chat.isGroup && !chat.isPage && chat.userId && (
                                 <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
                                     <StatusDot userId={chat.userId} size="sm" />
                                 </span>

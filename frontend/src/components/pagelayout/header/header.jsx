@@ -55,10 +55,10 @@ function timeAgo(dateString) {
 function ChatStatusLabel({ userId }) {
   const { onlineUsers } = usePresence();
   const status = onlineUsers[String(userId)] ?? 'offline';
-  if (status === 'offline') return null;
+  const label = status === 'online' ? 'Online' : status === 'away' ? 'Away' : status === 'dnd' ? 'Do Not Disturb' : 'Offline';
   return (
     <span className={styles.chatStatus}>
-      {status === 'online' ? 'Online' : 'Away'}
+      {label}
     </span>
   );
 }
@@ -114,6 +114,7 @@ function formatChat(chat) {
     status: chat.is_online ? "online" : "offline",
     dotStyle: chat.is_online ? "online" : "offline",
     isGroup: chat.is_group || false,
+    isPage: chat.is_page || false,
     unread: chat.unread_count || 0,
     time: timeAgo(chat.last_message_time),
     left_at: chat.left_at || null,
@@ -264,8 +265,11 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
   useEffect(() => {
     if (!openMenuId) return;
     const update = () => {
-      if (notifMenuBtnRef.current)
-        setMenuRect(notifMenuBtnRef.current.getBoundingClientRect());
+      if (notifMenuBtnRef.current) {
+        const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+        const r = notifMenuBtnRef.current.getBoundingClientRect();
+        setMenuRect({ bottom: r.bottom / z, left: r.left / z, width: r.width / z });
+      }
     };
     window.addEventListener("scroll", update, true);
     window.addEventListener("resize", update);
@@ -803,14 +807,14 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                           decoding="async"
                           onError={(e) => { e.currentTarget.src = ProfilePicture; }}
                         />
-                        {!chat.isGroup && (
+                        {!chat.isGroup && !chat.isPage && (
                           <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
                             <StatusDot userId={chat.userId} size="sm" />
                           </span>
                         )}
                       </div>
                       <div className={styles.chatGrid}>
-                        {!chat.isGroup && <ChatStatusLabel userId={chat.userId} />}
+                        {!chat.isGroup && !chat.isPage && <ChatStatusLabel userId={chat.userId} />}
                         <span className={styles.chatPreview}>{chat.message}</span>
                         <span className={styles.chatName}>{chat.name}</span>
                         <div className={styles.chatTimeContainer}>
@@ -915,7 +919,9 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                             } else {
                               notifMenuBtnRef.current = e.currentTarget;
                               setOpenMenuId(n.id);
-                              setMenuRect(e.currentTarget.getBoundingClientRect());
+                              const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+                              const r = e.currentTarget.getBoundingClientRect();
+                              setMenuRect({ bottom: r.bottom / z, left: r.left / z, width: r.width / z });
                             }
                           }}
                         >

@@ -20,7 +20,6 @@
     margin-top: 2%;
     height: 110px;
     width: 100%;
-
 }
 
 .content {
@@ -193,11 +192,8 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    height: 100svh;
-    position: sticky;
-    top: 0;
-    align-self: flex-start;
+   
+    min-height: 0;
 }
 
 .messageAvatar {
@@ -228,6 +224,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 0;
+    max-height: 65vh;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
     padding: 20px 0;
@@ -475,11 +472,27 @@
     margin: 4px auto;
 }
 
+/* ── Chat LIST outer container (gradient pill, chat list view only) ── */
 .chatList {
     background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
     width: 100%;
-    flex: 1;
+    align-self: flex-start;
     padding-top: 6px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 30px;
+    z-index: 1;
+    position: relative;
+    margin: 2% 0 0 0;
+}
+
+/* ── Active CHAT outer container (gradient pill, active chat view only) ── */
+.activeChatPill {
+    background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
+    width: 100%;
+    align-self: flex-start;
+    padding-top: 6px;
+    max-height: 100px;
     display: flex;
     flex-direction: column;
     border-radius: 30px;
@@ -500,6 +513,7 @@
     flex: 1;
     top: 10px;
     z-index: 10;
+    overflow-y: auto;
 }
 
 
@@ -507,7 +521,7 @@
 .rightSection {
     position: sticky;
     flex: 0 0 420px;
-    top: 100px;
+    top: 130px;
     width: 25%;
     margin: 5% 0 0 0;
     align-self: flex-start;
@@ -650,13 +664,13 @@
 .innerChatContainer {
     background-color: rgba(61, 60, 60);
     border-radius: 30px;
-    height: 100%;
     padding-top: 10px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    min-height: 700px;
+    max-height: 720px;
     width: 100%;
-    top: 10px;
     z-index: 10;
     overflow: hidden;
 }
@@ -1870,7 +1884,8 @@
 }
 
 /* ── Chat list wrapper ── */
-[data-theme="light"] .chatList {
+[data-theme="light"] .chatList,
+[data-theme="light"] .activeChatPill {
     background: linear-gradient(-90deg, #A0279C, #6923A2);
 }
 
@@ -1969,6 +1984,10 @@
     color: #888888;
 }
 
+[data-theme="light"] .headerFullName {
+    color: #888888;
+}
+
 [data-theme="light"] .memberSubtitle {
     color: #888888;
 }
@@ -1983,7 +2002,7 @@
 }
 
 [data-theme="light"] .msgSenderName {
-    color: #662D91;
+    color: #74419B;
 }
 
 [data-theme="light"] .msgTime {
@@ -2021,7 +2040,7 @@
 }
 
 [data-theme="light"] .bubbleOther .replySender {
-    color: #662D91;
+    color: #74419B;
 }
 
 [data-theme="light"] .bubbleOther .replyTextPreview {
@@ -2039,7 +2058,7 @@
 }
 
 [data-theme="light"] .replyPreviewContent span {
-    color: #662D91;
+    color: #74419B;
 }
 
 [data-theme="light"] .replyPreviewContent p {
@@ -2062,17 +2081,17 @@
 
 /* ── Icon buttons ── */
 [data-theme="light"] .iconBtn {
-    color: #666666;
+    color: #74419B;
 }
 
 [data-theme="light"] .iconBtn:hover {
-    color: #662D91;
-    background: rgba(102, 45, 145, 0.1);
-    box-shadow: 0 0 12px rgba(102, 45, 145, 0.2);
+    color: #74419B;
+    background: rgba(116, 65, 155, 0.1);
+    box-shadow: 0 0 12px rgba(116, 65, 155, 0.2);
 }
 
 [data-theme="light"] .iconBtnActive {
-    color: #662D91;
+    color: #74419B;
 }
 
 /* ── Attachment menu ── */
@@ -2169,7 +2188,7 @@
 }
 
 [data-theme="light"] .searchResultCount {
-    color: #662D91;
+    color: #74419B;
 }
 
 [data-theme="light"] .searchNavBtn {
@@ -2177,8 +2196,8 @@
 }
 
 [data-theme="light"] .searchNavBtn:hover {
-    color: #662D91;
-    background: rgba(102, 45, 145, 0.08);
+    color: #74419B;
+    background: rgba(116, 65, 155, 0.08);
 }
 
 /* ── Admins only bar ── */
@@ -2186,6 +2205,51 @@
     background: rgba(0, 0, 0, 0.03);
     border-color: rgba(0, 0, 0, 0.06);
     color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .systemMessage span {
+    background: rgba(0, 0, 0, 0.05);
+    color: rgba(0, 0, 0, 0.4);
+}
+
+.emptyState {
+    padding: 48px 24px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    user-select: none;
+}
+
+[data-theme="light"] .emptyState {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+.emptyStateIcon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 10px;
+    opacity: 0.55;
+    filter: brightness(0) invert(1);
+}
+
+[data-theme="light"] .emptyStateIcon {
+    filter: brightness(0) saturate(100%) invert(28%) sepia(50%) saturate(800%) hue-rotate(255deg) brightness(90%) contrast(90%);
+    opacity: 1;
+}
+
+.chatDividerInline {
+    width: 65%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 0 auto;
+}
+
+[data-theme="light"] .chatDividerInline {
+    background: rgba(0, 0, 0, 0.08);
 }
 
 /* ── Right section (academic groups) ── */
@@ -2273,7 +2337,7 @@
 }
 
 [data-theme="light"] .downloadWrapper {
-    color: #662D91;
+    color: #74419B;
 }
 
 /* ── Reply icon button ── */
@@ -2282,8 +2346,8 @@
 }
 
 [data-theme="light"] .replyIconButton:hover {
-    background-color: rgba(102, 45, 145, 0.08);
-    color: #662D91;
+    background-color: rgba(116, 65, 155, 0.08);
+    color: #74419B;
 }
 
 /* ── Cancel reply ── */
@@ -2297,22 +2361,23 @@
 }
 
 [data-theme="light"] .createGroupIcon {
-    filter: brightness(0) saturate(100%) invert(28%) sepia(50%) saturate(800%) hue-rotate(255deg) brightness(90%) contrast(90%);
+    filter: brightness(0) saturate(100%) invert(30%) sepia(55%) saturate(650%) hue-rotate(258deg) brightness(95%);
 }
 
 [data-theme="light"] .searchIcon {
-    color: #662D91;
-    stroke: #662D91;
+    color: #74419B;
+    stroke: #74419B;
 }
 
 .activeChatBackIcon {
     width: 22px;
     height: 22px;
     filter: brightness(0) invert(1) opacity(0.9);
+    display: block;
 }
 
 [data-theme="light"] .activeChatBackIcon {
-    filter: brightness(0) saturate(100%) invert(28%) sepia(50%) saturate(800%) hue-rotate(255deg) brightness(90%) contrast(90%);
+    filter: brightness(0) saturate(100%) invert(30%) sepia(55%) saturate(650%) hue-rotate(258deg) brightness(95%);
 }
 /* ══════════════════════════════════════
    CHATS PAGE — MOBILE
@@ -2460,10 +2525,13 @@
         border-radius: 0 !important;
         width: 100% !important;
         margin: 0 !important;
+        height: 100% !important;
+        min-height: 0 !important;
     }
 
     .messagesScrollArea {
         max-height: none !important;
+        flex: 1 !important;
     }
 
     .activeChatHeader {
@@ -2582,3 +2650,4 @@
     padding-right: 96px;
   }
 }
+

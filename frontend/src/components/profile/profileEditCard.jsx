@@ -17,6 +17,7 @@ import PhoneIcon from '../../Assets/icons/phone.png'
 import EducationIcon from '../../Assets/icons/education.png'
 import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import BinIcon from '../../Assets/icons/bin.png';
+import CollegeIcon from '../../Assets/icons/college.png';
 import DefaultBanner from '../../Assets/Pictures/default-community-banner.png';
 
 
@@ -161,6 +162,11 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
         finally { setSecondaryEmailOtpLoading(false); }
     };
     const isLight = theme === 'light';
+    const purpleFilter = 'brightness(0) saturate(100%) invert(30%) sepia(55%) saturate(650%) hue-rotate(258deg) brightness(95%)';
+    const iconFilter   = isLight ? purpleFilter : 'brightness(0) invert(0.9)';
+    const iconFilterMuted = isLight ? purpleFilter : 'brightness(0) invert(0.53)';
+    const iconFilterMid   = isLight ? purpleFilter : 'brightness(0) invert(0.7)';
+    const iconColorMuted  = isLight ? '#74419B' : 'rgba(255,255,255,0.53)';
     useEffect(() => {
         if (!showTitleDropdown) return;
         const close = () => setShowTitleDropdown(false);
@@ -226,7 +232,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                         <img
                             src={BackBtn}
                             alt="back"
-                            style={{ filter: 'brightness(0) invert(0.9)', width: 22, height: 22 }}
+                            style={{ filter: iconFilter, width: 22, height: 22 }}
                         />
                     </button>
                     <h1 className={styles.whiteHeaderText}>Edit Your Profile</h1>
@@ -305,7 +311,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                             <img
                                 src={Camera}
                                 alt="back"
-                                style={{ filter: 'brightness(0) invert(0.9)', width: 22, height: 22 }}
+                                style={{ filter: iconFilter, width: 22, height: 22 }}
                             />
                         </button>
 
@@ -469,7 +475,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                         }}
                                         style={{
                                             width: 14, height: 14,
-                                            filter: 'brightness(0) invert(0.6)',
+                                            filter: iconFilterMid,
                                             transform: 'rotate(-90deg)',
                                             cursor: 'pointer',
                                             flexShrink: 0,
@@ -639,7 +645,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                             {/* Phone */}
                             <div className={styles.detailFieldItem}>
                                 <span>
-                                    <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                                    <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: iconFilterMuted }} />
                                     Phone
                                 </span>
                                 <input
@@ -655,7 +661,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                             {/* Email */}
                             <div className={styles.detailFieldItem}>
                                 <span>
-                                    <img src={MailIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                                    <img src={MailIcon} alt="" style={{ width: 20, height: 20, filter: iconFilterMuted }} />
                                     Email
                                 </span>
                                 <input
@@ -671,7 +677,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                             {/* Address */}
                             <div className={styles.detailFieldItem}>
                                 <span>
-                                    <MapPin size={18} color="rgba(255,255,255,0.53)" />
+                                    <MapPin size={18} color={iconColorMuted} />
                                     Address
                                 </span>
                                 <input
@@ -687,7 +693,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                             {/* Website */}
                             <div className={styles.detailFieldItem}>
                                 <span>
-                                    <Globe size={18} color="rgba(255,255,255,0.53)" />
+                                    <Globe size={18} color={iconColorMuted} />
                                     Website
                                 </span>
                                 <input
@@ -709,39 +715,39 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
 
                             <div className={styles.detailFieldItem}>
                                 <span>
-                                    <img src={MailIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                                    <img src={MailIcon} alt="" style={{ width: 20, height: 20, filter: iconFilterMuted }} />
                                     Primary Email
                                 </span>
                                 <span className={styles.fieldValueText}>{formData.primaryEmail || 'username@gmail.com'}</span>
-                                <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("email")} />
+                                <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: iconFilterMid, cursor: 'pointer' }} onClick={() => setEditView("email")} />
                             </div>
 
                             <div className={styles.detailFieldItem}>
                                 <span>
-                                    <img src={MailIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                                    <img src={MailIcon} alt="" style={{ width: 20, height: 20, filter: iconFilterMuted }} />
                                     Personal Email
                                 </span>
                                 <span className={styles.fieldValueText}>{formData.secondaryEmail}</span>
-                                <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("email")} />
+                                <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: iconFilterMid, cursor: 'pointer' }} onClick={() => setEditView("email")} />
                             </div>
 
                             <div className={styles.detailFieldItem}>
                                 <span>
-                                    <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                                    <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: iconFilterMuted }} />
                                     Primary Phone
                                 </span>
                                 <span className={styles.fieldValueText}>{formData.primaryPhone || '—'}</span>
-                                <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("phone")} />
+                                <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: iconFilterMid, cursor: 'pointer' }} onClick={() => setEditView("phone")} />
                             </div>
 
                             {formData.secondaryPhone && (
                                 <div className={styles.detailFieldItem}>
                                     <span>
-                                        <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />
+                                        <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: iconFilterMuted }} />
                                         Secondary Phone
                                     </span>
                                     <span className={styles.fieldValueText}>{formData.secondaryPhone}</span>
-                                    <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)', cursor: 'pointer' }} onClick={() => setEditView("phone")} />
+                                    <img src={EditIcon} alt="edit" style={{ width: 20, height: 20, filter: iconFilterMid, cursor: 'pointer' }} onClick={() => setEditView("phone")} />
                                 </div>
                             )}
                             {/* ── Personal Details ── */}
@@ -753,7 +759,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                             {/* Birthday */}
                             <div className={styles.detailFieldItem}>
                                 <span>
-                                    <img src={BirthdayIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.7)' }} />
+                                    <img src={BirthdayIcon} alt="" style={{ width: 20, height: 20, filter: iconFilterMid }} />
                                     Birthday
                                 </span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: "40%" }}>
@@ -831,8 +837,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                             ) : (
                                                 <div key={i} className={styles.detailFieldItem}>
                                                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                        <span style={{ fontSize: 16 }}>🎓</span>
-                                                        <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
+                                                        <img src={CollegeIcon} alt="" style={{ width: 16, height: 16, filter: iconFilterMuted, flexShrink: 0 }} />
+                                                        <span style={{ color: isLight ? '#333333' : 'rgba(255,255,255,0.85)', fontSize: 14 }}>
                                                             {deg.title}{deg.field ? ` — ${deg.field}` : ''}{deg.institution ? ` · ${deg.institution}` : ''}
                                                         </span>
                                                     </span>
@@ -841,7 +847,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                                             style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}
                                                             onClick={() => { setEditingDegreeIdx(i); setEditingDegree(deg); }}
                                                         >
-                                                            <img src={EditIcon} alt="edit" style={{ width: 14, height: 14, filter: 'brightness(0) invert(0.7)' }} />
+                                                            <img src={EditIcon} alt="edit" style={{ width: 14, height: 14, filter: iconFilterMid }} />
                                                         </button>
                                                         <button
                                                             style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}
@@ -980,8 +986,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     {(formData.degrees || []).map((deg, i) => (
                                         <div key={i} className={styles.detailFieldItem}>
                                             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                <span style={{ fontSize: 16 }}><img src={EducationIcon} style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} /></span>
-                                                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
+                                                <img src={CollegeIcon} alt="" style={{ width: 16, height: 16, filter: iconFilterMuted, flexShrink: 0 }} />
+                                                <span style={{ color: isLight ? '#333333' : 'rgba(255,255,255,0.85)', fontSize: 14 }}>
                                                     {deg.institution}{deg.title ? ` — ${deg.title}` : ''}
                                                 </span>
                                             </span>
@@ -1057,7 +1063,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                     }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(0.53)' }} />                                <h3 style={{ margin: 0, color: "white", fontWeight: 700, fontSize: "1.1rem" }}>Phone</h3>
+                                <img src={PhoneIcon} alt="" style={{ width: 20, height: 20, filter: iconFilterMuted }} />                                <h3 style={{ margin: 0, color: "white", fontWeight: 700, fontSize: "1.1rem" }}>Phone</h3>
                             </div>
                             <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
                                 <button onClick={() => setEditView("main")} style={{ background: "none", border: "none", color: "#e91e63", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}>Discard</button>

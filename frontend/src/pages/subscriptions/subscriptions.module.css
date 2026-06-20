@@ -421,3 +421,23 @@ body {
     padding-right: 96px;
   }
 }
+
+/* ── Mobile ── */
+@media (max-width: 1023px) {
+  .page { width: 100%; padding: 0 12px; box-sizing: border-box; }
+  .content { gap: 0; flex-direction: column; margin-top: 8px; }
+  .subscriptionsContainer { padding: 0 4px; margin-top: 12px; }
+  .basicCard { padding: 24px 20px; max-width: 100%; margin-top: 24px; }
+  .premiumCard { padding: 24px 20px; max-width: 100%; }
+  .basicTitle { font-size: 1.4rem; }
+  .premiumTitleCard { font-size: 1.2rem; }
+  .premiumTitle { font-size: 1.5rem; }
+  .daysLeftText { font-size: 1.4rem; }
+  .featuresList { font-size: 0.88rem; }
+  .rightSection { display: none; }
+  .premiumFooter { flex-direction: column; align-items: stretch; gap: 10px; }
+  .basicFooter { flex-direction: column; align-items: stretch; gap: 10px; }
+  .priceBtn { text-align: center; width: 100%; }
+  .cancelBtn { text-align: center; width: 100%; }
+  .progressBarBackground { max-width: 100%; }
+}

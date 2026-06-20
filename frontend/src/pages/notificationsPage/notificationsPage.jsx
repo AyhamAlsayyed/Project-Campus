@@ -1,14 +1,14 @@
 import styles from './notificationsPage.module.css';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { MoreHorizontal, Volume2, Calendar, UserPlus, Heart, Users, X, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Volume2, Calendar, UserPlus, Heart, Users, Trash2 } from 'lucide-react';
+import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import Read from '../../Assets/icons/read.png';
 import ProfilePicture from '../../Assets/icons/default-pfp.png';
-import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
 import useTheme from '../../hooks/useTheme';
 import API from '../../config';
 import { useNotificationContext } from '../../context/NotificationContext';
@@ -69,12 +69,12 @@ function getNotificationIcon(type) {
 }
 
 function formatNotif(item) {
-    const notifLink = item.link || {};
+    const isLinkNum = typeof item.link === 'number';
+    const notifLink = !isLinkNum && item.link ? item.link : {};
     const linkPost = notifLink.post || null;
-    const resolvedPostId =
-        typeof item.link === 'number'
-            ? item.link
-            : linkPost?.post_id || notifLink.post_id || item.post_id || null;
+    const resolvedPostId = isLinkNum
+        ? item.link
+        : (linkPost?.post_id || notifLink.post_id || item.post_id || null);
 
     return {
         id: item.notification_id || item.id,
@@ -85,9 +85,10 @@ function formatNotif(item) {
         link: notifLink,
         post_id: resolvedPostId,
         post: linkPost,
-        comment_id: typeof item.link === 'object' ? notifLink.comment_id || item.comment_id || null : null,
-        actor_id: item.actor_id || null,
-        event_id: item.event_id || null,
+        comment_id: notifLink.comment_id || item.comment_id || null,
+        actor_id: isLinkNum ? item.link : (item.actor_id || null),
+        event_id: notifLink.event_id || item.event_id || null,
+        community_id: notifLink.community_id || null,
         time: item.time || item.created_at || null,
         timeLabel: timeAgo(item.time || item.created_at),
         bucket: getBucket(item.time || item.created_at),
@@ -98,18 +99,21 @@ function formatNotif(item) {
 export default function NotificationsPage() {
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { liveNotifications, liveNotifCount, clearLiveNotifCount } = useNotificationContext();
 
     const [currentUser, setCurrentUser] = useState(null);
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeFilter, setActiveFilter] = useState('All');
+    const [activeFilter, _setActiveFilter] = useState(searchParams.get('filter') || 'All');
+    const setActiveFilter = useCallback((f) => {
+        _setActiveFilter(f);
+        setSearchParams(f !== 'All' ? { filter: f } : {}, { replace: true });
+    }, [setSearchParams]);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [isDeletingAll, setIsDeletingAll] = useState(false);
     const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
-    const mobileMenuRef = useRef(null);
-
     const [openMenuId, setOpenMenuId] = useState(null);
     const [menuRect, setMenuRect] = useState(null);
     const menuBtnRef = useRef(null);
@@ -300,29 +304,29 @@ export default function NotificationsPage() {
         setOpenMenuId(null);
         const type = (n.type || '').toLowerCase();
 
-        const communityId = n.link?.community_id || n.link?.community?.id;
-        if (communityId) {
-            navigate(`/communities/${communityId}`);
+        // Community notifications
+        if (n.community_id) { navigate(`/communities/${n.community_id}`); return; }
+
+        // Friend request / accepted → their profile
+        if (type.includes('friend')) {
+            if (n.actor_id) navigate(`/profile/${n.actor_id}`);
             return;
         }
 
-        if (type.includes('friend') || type.includes('request')) {
-            const profileId = typeof n.link === 'number' ? n.link : n.link?.id || n.actor_id;
-            if (profileId) navigate(`/profile/${profileId}`);
+        // DM request → go to chats
+        if (type.includes('dm')) { navigate('/chats'); return; }
+
+        // Post reaction / comment → open the post
+        if (n.post_id) {
+            navigate('/home', { state: { openPost: { post: n.post, postId: n.post_id, commentId: n.comment_id } } });
             return;
         }
 
-        const post_id = n.post_id || (typeof n.link === 'number' ? n.link : n.link?.post_id);
-        const comment_id = n.comment_id || null;
-        const post = n.post || n.link?.post || null;
-
-        if (post_id) {
-            navigate('/home', { state: { openPost: { post, postId: post_id, commentId: comment_id } } });
-            return;
-        }
+        // Event notification
         if (n.event_id) { navigate(`/events/${n.event_id}`); return; }
-        if (n.link?.id) navigate(`/profile/${n.link.id}`);
-        else if (n.actor_id) navigate(`/profile/${n.actor_id}`);
+
+        // Fallback → actor profile
+        if (n.actor_id) navigate(`/profile/${n.actor_id}`);
     }, [navigate]);
 
     // ── Buckets ──
@@ -494,50 +498,7 @@ export default function NotificationsPage() {
                     API={API}
                 />
 
-                {mobileMenuOpen && (
-                    <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }}>
-                        <div
-                            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-                            onClick={() => setMobileMenuOpen(false)}
-                        />
-                        <div
-                            ref={mobileMenuRef}
-                            style={{
-                                position: 'absolute', left: 0, top: 0,
-                                height: '100%', width: '75vw', maxWidth: 350,
-                                background: 'linear-gradient(135deg, var(--bg-main), var(--bg-secondary))',
-                                borderRight: '1px solid rgba(255,255,255,0.1)',
-                                display: 'flex', flexDirection: 'column', overflow: 'hidden',
-                                boxShadow: '4px 0 30px rgba(0,0,0,0.6)'
-                            }}
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <button
-                                style={{
-                                    position: 'absolute', top: 14, right: 14, zIndex: 10,
-                                    width: 32, height: 32, borderRadius: '50%',
-                                    background: 'rgba(255,255,255,0.1)', border: 'none',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    cursor: 'pointer'
-                                }}
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                <X size={16} color="white" />
-                            </button>
-                            <div style={{
-                                display: 'flex', alignItems: 'center', gap: 10,
-                                padding: '20px 16px 16px',
-                                borderBottom: '1px solid rgba(255,255,255,0.08)'
-                            }}>
-                                <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                                <span style={{ color: '#fff', fontWeight: 800, fontSize: '1.3rem', letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
-                            </div>
-                            <div style={{ flex: 1, overflowY: 'auto' }}>
-                                <SideBarNav onClose={() => setMobileMenuOpen(false)} />
-                            </div>
-                        </div>
-                    </div>
-                )}
+                <MobileDrawer isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} />
 
                 <div className={styles.mobileBody}>
                     {mainContent}

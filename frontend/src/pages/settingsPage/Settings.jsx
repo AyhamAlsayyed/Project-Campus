@@ -2,14 +2,14 @@ import styles from './Settings.module.css';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import Header from '../../components/pagelayout/header/header';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Setting from '../../Assets/icons/setting.png';
-import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
+import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import useTheme from '../../hooks/useTheme';
 import API from '../../config';
 import { X as XIcon } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
 const authHeaders = () => ({
     'Content-Type': 'application/json',
@@ -64,10 +64,17 @@ const Toast = ({ message, type, onClose }) => {
 export default function Settings() {
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { theme, toggleTheme } = useTheme();
     const [appearanceTheme, setAppearanceTheme] = useState(theme);
     const [currentUser, setCurrentUser] = useState(null);
-    const [activeTab, setActiveTab] = useState(location.state?.tab || 'Account');
+    const [activeTab, _setActiveTab] = useState(
+        searchParams.get('tab') || location.state?.tab || 'Account'
+    );
+    const setActiveTab = useCallback((tab) => {
+        _setActiveTab(tab);
+        setSearchParams(tab !== 'Account' ? { tab } : {}, { replace: true });
+    }, [setSearchParams]);
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState(null);
     const token = localStorage.getItem("access");
@@ -122,7 +129,6 @@ export default function Settings() {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
-    const mobileMenuRef = useRef(null);
 
     // ── Fetch current user ───────────────────────────────────────────────────
     useEffect(() => {
@@ -533,37 +539,21 @@ export default function Settings() {
             )}
 
             {/* ── Mobile side-drawer (hamburger) ── */}
-            {isMobile && mobileMenuOpen && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }}>
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setMobileMenuOpen(false)} />
-                    <div ref={mobileMenuRef} style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: '75vw', maxWidth: 350, background: 'linear-gradient(135deg, var(--bg-main), var(--bg-secondary))', borderRight: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '4px 0 30px rgba(0,0,0,0.6)' }} onClick={e => e.stopPropagation()}>
-                        <button style={{ position: 'absolute', top: 14, right: 14, zIndex: 10, width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} onClick={() => setMobileMenuOpen(false)}>
-                            <XIcon size={16} color="white" />
-                        </button>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '20px 16px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                            <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                            <span style={{ color: '#fff', fontWeight: 800, fontSize: '1.3rem', letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
-                        </div>
-                        <div style={{ flex: 1, overflowY: 'auto' }}>
-                            <SideBarNav variant="profile" currentUser={currentUser} onClose={() => setMobileMenuOpen(false)} />
-                        </div>
-                    </div>
-                </div>
-            )}
+            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} />
 
             {/* ── Mobile settings-nav drawer ── */}
             {isMobile && mobileNavOpen && (
                 <div style={{ position: 'fixed', inset: 0, zIndex: 9997 }}>
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(3px)' }} onClick={() => setMobileNavOpen(false)} />
-                    <div style={{ position: 'absolute', right: 0, top: 0, height: '100%', width: '75vw', maxWidth: 300, background: '#1e1e1e', borderLeft: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', overflowY: 'auto', boxShadow: '-4px 0 30px rgba(0,0,0,0.6)', padding: '24px 20px' }} onClick={e => e.stopPropagation()}>
+                    <div style={{ position: 'absolute', right: 0, top: 0, height: '100%', width: '75vw', maxWidth: 300, background: theme === 'light' ? '#ffffff' : '#1e1e1e', borderLeft: `1px solid ${theme === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}`, display: 'flex', flexDirection: 'column', overflowY: 'auto', boxShadow: '-4px 0 30px rgba(0,0,0,0.3)', padding: '24px 20px' }} onClick={e => e.stopPropagation()}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-                            <span style={{ color: '#fff', fontWeight: 700, fontSize: '1.2rem' }}>Settings</span>
-                            <button style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => setMobileNavOpen(false)}><XIcon size={18} color="white" /></button>
+                            <span style={{ color: theme === 'light' ? '#1a1a1a' : '#fff', fontWeight: 700, fontSize: '1.2rem' }}>Settings</span>
+                            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme === 'light' ? '#74419B' : 'white' }} onClick={() => setMobileNavOpen(false)}><XIcon size={18} /></button>
                         </div>
                         {navItems.map(item => {
                             const active = activeTab === item.key;
                             return (
-                                <div key={item.key} onClick={() => { setActiveTab(item.key); setMobileNavOpen(false); }} style={{ padding: '14px 12px', borderRadius: 12, marginBottom: 4, background: active ? 'linear-gradient(90deg,rgba(134,37,160,0.25),rgba(160,39,157,0.1))' : 'transparent', borderLeft: active ? '3px solid #A6279C' : '3px solid transparent', cursor: 'pointer', color: active ? '#fff' : 'rgba(255,255,255,0.6)', fontWeight: active ? 700 : 400, fontSize: '0.95rem' }}>
+                                <div key={item.key} onClick={() => { setActiveTab(item.key); setMobileNavOpen(false); }} style={{ padding: '14px 12px', borderRadius: 12, marginBottom: 4, background: active ? (theme === 'light' ? 'rgba(116,65,155,0.1)' : 'linear-gradient(90deg,rgba(134,37,160,0.25),rgba(160,39,157,0.1))') : 'transparent', borderLeft: active ? `3px solid ${theme === 'light' ? '#74419B' : '#A6279C'}` : '3px solid transparent', cursor: 'pointer', color: active ? (theme === 'light' ? '#74419B' : '#fff') : (theme === 'light' ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)'), fontWeight: active ? 700 : 400, fontSize: '0.95rem' }}>
                                     {item.label}
                                 </div>
                             );
@@ -979,7 +969,7 @@ export default function Settings() {
                 {!isMobile && <div className={styles.rightSection}>
                     <div className={styles.settingsNavContainer}>
                         <div className={styles.settingsNavHeader}>
-                            {renderSolidIcon(Setting, theme === 'light' ? '#662D91' : '#E6E6E6', '25px', '25px')}
+                            {renderSolidIcon(Setting, theme === 'light' ? '#74419B' : '#E6E6E6', '25px', '25px')}
                             <h2 className={styles.settingsNavTitle}>Settings</h2>
                         </div>
                         <div className={styles.centeredDivider} />

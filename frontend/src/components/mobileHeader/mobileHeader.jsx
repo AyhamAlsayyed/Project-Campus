@@ -21,7 +21,7 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
     const [showAvatarDropdown, setShowAvatarDropdown] = useState(false);
     const [showDrawerChats, setShowDrawerChats] = useState(false);
     const [showDrawerNotifs, setShowDrawerNotifs] = useState(false);
-    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
     // ── Notifications state ──
     const [drawerNotifications, setDrawerNotifications] = useState([]);
@@ -147,6 +147,7 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                     status: chat.is_online ? 'online' : 'offline',
                     dotStyle: chat.is_online ? 'online' : 'offline',
                     isGroup: chat.is_group || false,
+                    isPage: chat.is_page || false,
                     unread: chat.unread_count || 0,
                     time: timeAgo(chat.last_message_time),
                     left_at: chat.left_at || null,
@@ -202,10 +203,20 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
     };
 
     const handleNotificationClick = (n) => {
-        if (n.event_id) navigate(`/events/${n.event_id}`);
-        else if (n.post_id) navigate(`/posts/${n.post_id}`);
-        else if (n.actor_id) navigate(`/profile/${n.actor_id}`);
         setShowDrawerNotifs(false);
+        const type = (n.type || '').toLowerCase();
+        const link = n.link || {};
+        const communityId = link.community_id;
+        const eventId = link.event_id || n.event_id;
+        const postId = typeof link === 'number' ? link : (link.post?.post_id || link.post_id || n.post_id);
+        const actorId = typeof link === 'number' ? link : n.actor_id;
+
+        if (communityId) { navigate(`/communities/${communityId}`); return; }
+        if (type.includes('friend')) { if (actorId) navigate(`/profile/${actorId}`); return; }
+        if (type.includes('dm')) { navigate('/chats'); return; }
+        if (postId) { navigate('/home', { state: { openPost: { postId } } }); return; }
+        if (eventId) { navigate(`/events/${eventId}`); return; }
+        if (actorId) navigate(`/profile/${actorId}`);
     };
 
     // ── Effects ──
@@ -273,7 +284,7 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
             <div className={headerStyles.headerBar}>
                 {/* Hamburger */}
                 <button className={headerStyles.hamburgerBtn} onClick={() => setMobileMenuOpen(true)}>
-                    <Menu size={22} color="white" />
+                    <Menu size={22} className={headerStyles.hamburgerIcon} />
                 </button>
 
                 {/* Logo */}
@@ -336,7 +347,7 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                             <button className={headerStyles.dropdownItem}
                                 onClick={(e) => {
                                     const rect = e.currentTarget.getBoundingClientRect();
-                                    setDropdownPosition({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+                                    const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1; setDropdownPosition({ top: rect.bottom / z + 8, left: rect.right / z });
                                     setShowDrawerChats(prev => !prev);
                                     setShowDrawerNotifs(false);
                                 }}>
@@ -354,7 +365,7 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                             <button className={headerStyles.dropdownItem}
                                 onClick={(e) => {
                                     const rect = e.currentTarget.getBoundingClientRect();
-                                    setDropdownPosition({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+                                    const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1; setDropdownPosition({ top: rect.bottom / z + 8, left: rect.right / z });
                                     setShowDrawerNotifs(prev => !prev);
                                     setShowDrawerChats(false);
                                 }}>
@@ -395,11 +406,11 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                                         <div className={headerStyles.sectionLabel}>People</div>
                                         {searchResults.people.slice(0, 3).map(person => {
                                             const av = person.profile?.profile_image || person.avatar_url || person.avatar;
-                                            const src = !av ? '/default-avatar.png' : av.startsWith('http') ? av : `${API}${av}`;
+                                            const src = !av ? DefaultPfp : av.startsWith('http') ? av : `${API}${av}`;
                                             return (
                                                 <div key={person.id} className={headerStyles.resultRow}
                                                     onMouseDown={() => handleResultClick('person', person)}>
-                                                    <img src={src} alt="" className={headerStyles.resultAvatar} />
+                                                    <img src={src} alt="" className={`${headerStyles.resultAvatar}${!av ? ' defaultPfp' : ''}`} onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp'); }} />
                                                     <div className={headerStyles.resultInfo}>
                                                         <div className={headerStyles.resultName}>{person.profile?.full_name || person.full_name || person.username}</div>
                                                         <div className={headerStyles.resultSub}>@{person.username}</div>

@@ -2,7 +2,7 @@ import styles from './profilepage.module.css';
 import DefaultBanner from '../../Assets/Pictures/default-community-banner.png';
 import Header from '../../components/pagelayout/header/header';
 import { useEffect, useState, useRef } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import PostCard from '../../components/posts/postCard';
 import UserDetails from '../../components/rightPanel/userDetails/userDetails';
 import CommentModal from '../../components/comments/commentsModal';
@@ -10,6 +10,7 @@ import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import FriendsTab from '../../components/rightPanel/FriendsTab/FriendsTab';
 import FriendsSuggestion from '../../components/rightPanel/recentlycontacted/recentlyContacted';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
+import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 import MobileEditView from '../../components/profile/mobileEditView';
 import MobileProfileView from '../../components/profile/mobileProfileView';
 import { useProfileEdit } from '../../components/profile/useEditProfile';
@@ -280,13 +281,14 @@ export default function ProfilePage({ type }) {
     const [friendsLoading, setFriendsLoading] = useState(false);
     const [postsLoading, setPostsLoading] = useState(true);
     const [postsError, setPostsError] = useState('');
-    const [activeTab, setActiveTab] = useState('Posts');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'Posts');
     const [activityPosts, setActivityPosts] = useState([]);
     const [activitiesLoading, setActivitiesLoading] = useState(false);
     const [communityPicks, setCommunityPicks] = useState([]);
     const [picksSlide, setPicksSlide] = useState(0);
     const [savedPosts, setSavedPosts] = useState([]);
-    const [activitiesFilter, setActivitiesFilter] = useState('likes');
+    const [activitiesFilter, setActivitiesFilter] = useState(() => searchParams.get('activity') || 'likes');
     const [activitiesDropdownOpen, setActivitiesDropdownOpen] = useState(false);
     const [savedLoading, setSavedLoading] = useState(false);
     const [isFollowing, setIsFollowing] = useState(false);
@@ -334,7 +336,6 @@ export default function ProfilePage({ type }) {
     // refs
     const menuRef = useRef(null);
     const activitiesDropdownRef = useRef(null);
-    const mobileMenuRef = useRef(null);
     const onSavedRef = useRef(null);
 
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
@@ -344,6 +345,14 @@ export default function ProfilePage({ type }) {
     const { userId, id } = useParams();
     const profileId = userId || id;
     const navigate = useNavigate();
+
+    // Sync active tab + activity filter to URL so reload restores position
+    useEffect(() => {
+        const params = {};
+        if (activeTab !== 'Posts') params.tab = activeTab;
+        if (activitiesFilter !== 'likes') params.activity = activitiesFilter;
+        setSearchParams(params, { replace: true });
+    }, [activeTab, activitiesFilter]);
 
     const edit = useProfileEdit({ user, token, API, onSaved: () => onSavedRef.current?.() });
     const { isEditing, setIsEditing } = edit;
@@ -438,6 +447,9 @@ export default function ProfilePage({ type }) {
     }, [user]);
 
     useEffect(() => {
+        setIsEditing(false);
+        setActiveTab(searchParams.get('tab') || 'Posts');
+        setActivitiesFilter(searchParams.get('activity') || 'likes');
         loadCurrentUser();
         loadProfileUser();
     }, [userId]);
@@ -968,22 +980,7 @@ export default function ProfilePage({ type }) {
             )}
 
             {/* Mobile drawer */}
-            {isMobile && mobileMenuOpen && (
-                <div className={styles.mobileDrawerOverlay}>
-                    <div className={styles.mobileDrawerBackdrop} onClick={() => setMobileMenuOpen(false)} />
-                    <div ref={mobileMenuRef} className={styles.mobileDrawer} onClick={e => e.stopPropagation()}>
-                        <button className={styles.mobileDrawerCloseBtn} onClick={() => setMobileMenuOpen(false)}>
-                            <X size={16} color="white" />
-                        </button>
-                        <div className={styles.mobileDrawerHeader}>
-                            <span className={styles.mobileDrawerTitle} style={{ cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
-                        </div>
-                        <div className={styles.mobileDrawerNav}>
-                            <SideBarNav variant={isOwnProfile ? 'profile' : 'default'} currentUser={currentUser} onClose={() => setMobileMenuOpen(false)} />
-                        </div>
-                    </div>
-                </div>
-            )}
+            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} variant={isOwnProfile ? 'profile' : 'default'} currentUser={currentUser} />
 
             {/* Desktop header */}
             {!isMobile && (

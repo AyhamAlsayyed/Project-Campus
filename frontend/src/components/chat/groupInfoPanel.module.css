@@ -1242,6 +1242,129 @@
     box-shadow: none;
 }
 /* ══════════════════════════════════════
+   GROUP INFO PANEL — MOBILE
+══════════════════════════════════════ */
+
+@media (max-width: 600px) {
+    .header {
+        padding: 16px 16px;
+        gap: 12px;
+    }
+
+    .headerTitle {
+        font-size: 1.3rem;
+    }
+
+    .headerIcons {
+        gap: 8px;
+    }
+
+    .body {
+        padding: 16px 16px 32px;
+        gap: 20px;
+    }
+
+    .infoAndPictureWrapper {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        text-align: center;
+    }
+
+    .avatarRing {
+        width: 90px;
+        height: 90px;
+    }
+
+    .avatar {
+        width: 90px;
+        height: 90px;
+    }
+
+    .identityBlock {
+        align-items: center;
+        width: 100%;
+    }
+
+    .nameRow {
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .groupName {
+        font-size: 1.4rem;
+    }
+
+    .createdBy {
+        font-size: 0.85rem;
+    }
+
+    .descriptionAndButtonsWrapper {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .buttonsContainer {
+        width: 100%;
+        flex-direction: row;
+        margin-top: 0;
+        gap: 8px;
+    }
+
+    .shareBtn,
+    .addMemberBtn {
+        flex: 1;
+        padding: 10px 12px;
+    }
+
+    .bioBox {
+        padding: 16px;
+        min-height: 80px;
+    }
+
+    .mediaGrid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .mediaCardTitle {
+        font-size: 1.2rem;
+    }
+
+    .sectionTitle {
+        font-size: 1.1rem;
+    }
+
+    .memberRow {
+        padding: 8px 0;
+    }
+
+    .otherBtn {
+        padding: 11px 2px;
+        font-size: 0.85rem;
+    }
+
+    .permissionLabel {
+        font-size: 0.95rem;
+    }
+
+    .permissionDesc {
+        font-size: 0.8rem;
+    }
+
+    .modalContent {
+        width: min(95vw, 440px);
+        padding: 18px;
+    }
+
+    .viewAllModalContent {
+        border-radius: 18px;
+        padding: 18px;
+    }
+}
+
+/* ══════════════════════════════════════
    GROUP INFO PANEL — LIGHT MODE
 ══════════════════════════════════════ */
 
@@ -1372,4 +1495,211 @@
 
 [data-theme="light"] .exitOutlineBtn {
     border-color: rgba(0, 0, 0, 0.1);
+}
+
+
+/* ── Light mode: section titles & subtitles ── */
+[data-theme="light"] .sectionTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .sectionSub {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .sectionDivider {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+/* ── Light mode: group name & meta ── */
+[data-theme="light"] .groupName {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .createdBy {
+    color: #666666;
+}
+
+[data-theme="light"] .editBtn {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .editBtn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1a1a1a;
+}
+
+/* ── Light mode: bio box ── */
+[data-theme="light"] .bioBox {
+    background: #f3e8ff;
+    border: 1px solid rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .bioText {
+    color: rgba(0, 0, 0, 0.65);
+}
+
+/* ── Light mode: media card ── */
+[data-theme="light"] .mediaCard {
+    background: #f3f3f3;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .mediaCardTitle {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .mediaHeaderLine {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .pdfTile {
+    background: #e8e8e8;
+}
+
+[data-theme="light"] .pdfName {
+    color: rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="light"] .pdfMeta {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .imageTile {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .viewAllTile {
+    background: rgba(102, 45, 145, 0.06);
+    color: #662D91;
+}
+
+[data-theme="light"] .viewAllTile:hover {
+    background: rgba(102, 45, 145, 0.12);
+}
+
+/* ── Light mode: members section ── */
+[data-theme="light"] .memberAvatar {
+    background: #f3e8ff;
+}
+
+[data-theme="light"] .memberInitials {
+    color: #662D91;
+}
+
+[data-theme="light"] .memberBadge {
+    background: #e8e8e8;
+    color: rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="light"] .memberName {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .memberCountLabel {
+    color: rgba(0, 0, 0, 0.42);
+}
+
+[data-theme="light"] .memberDot {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .viewAllBtn {
+    background: #f3e8ff;
+    border-color: rgba(102, 45, 145, 0.15);
+    color: #662D91;
+}
+
+[data-theme="light"] .viewAllBtn:hover {
+    background: #e9d5ff;
+}
+
+[data-theme="light"] .memberMenuBtn {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .memberMenuBtn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .memberDropdown {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .memberMenuItem {
+    color: #333333;
+}
+
+[data-theme="light"] .memberMenuItem:hover {
+    background: rgba(102, 45, 145, 0.06);
+}
+
+[data-theme="light"] .menuDivider {
+    background: rgba(0, 0, 0, 0.07);
+}
+
+/* ── Light mode: other section buttons ── */
+[data-theme="light"] .otherBtn {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="light"] .otherBtn:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .otherIcon {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+/* ── Light mode: modals ── */
+[data-theme="light"] .modalContent {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .modalTitle {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .modalCloseBtn {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .modalCloseBtn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .copyWidgetContainer {
+    background: #f3e8ff;
+    border-color: rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .copyWidgetInput {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .searchContactWrap {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .popupItemAvatar {
+    background: #f3e8ff;
+    color: #662D91;
+}
+
+[data-theme="light"] .popupItemName {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .popupItemRow:hover {
+    background: rgba(102, 45, 145, 0.04);
+}
+
+[data-theme="light"] .popupEmptyState {
+    color: rgba(0, 0, 0, 0.35);
 }

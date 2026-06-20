@@ -27,6 +27,7 @@ import SaveIcon from '../../Assets/icons/save-icon.png';
 import BellOn from '../../Assets/icons/notifications.png';
 import SearchIcon from '../../Assets/icons/search.png';
 import BellOff from '../../Assets/icons/mute.png';
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
 import API from "../../config";
 export default function PostCard({
   post, openComments, isOwnProfile, hasPinnedPost, onPinChange,
@@ -50,7 +51,7 @@ export default function PostCard({
   const [isSharing, setIsSharing] = useState(false);
   const [isKicked, setIsKicked] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [isBlocked, setIsBlocked] = useState(post?.author?.is_blocked || false);
   const [adReaction, setAdReaction] = useState(post?.ad_reaction || null);
   const [showReport, setShowReport] = useState(false);
@@ -229,7 +230,7 @@ export default function PostCard({
 
           const formatted = deduped.map(chat => ({
             ...chat,
-            avatar: chat.avatar ? chat.avatar.startsWith("http") ? chat.avatar : `${API}${chat.avatar}` : "/default-avatar.png"
+            avatar: chat.avatar ? chat.avatar.startsWith("http") ? chat.avatar : `${API}${chat.avatar}` : DefaultPfp
           }));
           setShareTargets(formatted);
         }
@@ -477,7 +478,7 @@ export default function PostCard({
               ? `/page/${post.author?.id || post.author_id}`
               : `/profile/${post.author?.id || post.author_id}`
           }>
-            <img className={styles.avatar} src={post.author?.avatar || "/default-avatar.png"} alt="" />
+            <img className={`${styles.avatar}${!post.author?.avatar ? ' defaultPfp' : ''}`} src={post.author?.avatar || DefaultPfp} alt="" onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp'); }} />
           </Link>
 
           <div className={styles.userMeta}>
@@ -497,6 +498,12 @@ export default function PostCard({
 
                 {post.author?.type === 'page' && (
                   <span className={styles.pageType}>{post.author?.page_type || 'Page'}</span>
+                )}
+
+                {post.community_name && (
+                  <span className={styles.communityBadge}>
+                    {post.community_name}
+                  </span>
                 )}
               </div>
 
@@ -540,7 +547,8 @@ export default function PostCard({
                 className={styles.menuBtn}
                 onClick={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
-                  setMenuPosition({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+                  const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+                  setMenuPosition({ top: rect.bottom / z + 6, left: rect.right / z });
                   setShowMenu(prev => !prev);
                 }}
                 aria-label="menu"
@@ -551,7 +559,7 @@ export default function PostCard({
             {showMenu && document.body && createPortal(
               <div
                 className={styles.postMenu}
-                style={{ position: 'fixed', top: menuPosition.top, right: menuPosition.right, zIndex: 999999 }}
+                style={{ position: 'fixed', top: menuPosition.top, left: menuPosition.left, transform: 'translateX(-100%)', zIndex: 999999 }}
                 onMouseDown={e => e.stopPropagation()}
               >
                 <button className={styles.postMenuItem} onClick={() => handleMenuAction('save')}>
@@ -732,7 +740,7 @@ export default function PostCard({
               setIsVoting(true);
               try {
                 const token = localStorage.getItem("access");
-                const res = await fetch(`${API}/api/posts/${post.post_id}/vote/`, {
+                const res = await fetch(`${API}/api/posts/${post.id || post.post_id}/vote/`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                   body: JSON.stringify({ option_id: opt.id }),
@@ -753,10 +761,8 @@ export default function PostCard({
                   {hasVoted && (
                     <div className={styles.pollVoterGroup}>
                       {avatars.length > 0 && <span className={styles.pollVoterPlus}>+</span>}
-                      {avatars.map((av, i) => (
-                        av
-                          ? <img key={i} src={av} className={styles.pollVoterAvatar} alt="" />
-                          : <div key={i} className={styles.pollVoterAvatarFallback} />
+                      {avatars.map((av, idx) => (
+                        <img key={idx} src={av} className={styles.pollVoterAvatar} style={idx === 0 ? { marginLeft: 4 } : {}} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
                       ))}
                       <span className={styles.pollVoteCount}>{opt.votes_count || 0}</span>
                     </div>
@@ -956,7 +962,7 @@ export default function PostCard({
                                   src={target.avatar}
                                   alt=""
                                   className={styles.shareAvatarImg}
-                                  onError={e => { e.currentTarget.src = "/default-avatar.png"; }}
+                                  onError={e => { e.currentTarget.src = DefaultPfp; }}
                                 />
                               </div>
                               <span className={styles.targetName}>

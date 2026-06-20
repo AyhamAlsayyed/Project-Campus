@@ -207,11 +207,14 @@ def send_message(request, conversation_id):
         except Message.DoesNotExist:
             parent_message = None
 
+    is_forwarded = request.data.get("is_forwarded", False)
+
     msg = Message.objects.create(
         conversation_id=conversation_id,
         content=text if text else None,
         sender=user,
         parent_message=parent_message,
+        is_forwarded=is_forwarded,
     )
 
     media_data_response = []
@@ -266,6 +269,7 @@ def send_message(request, conversation_id):
                 "username": user.username,
                 "avatar": avatar_url,
                 "content": msg.content,
+                "is_forwarded": msg.is_forwarded,
                 "parent_message_id": parent_message.message_id if parent_message else None,
                 "sent_at": msg.sent_at.isoformat(),
                 "media": media_data_response,
@@ -278,6 +282,7 @@ def send_message(request, conversation_id):
         {
             "id": msg.message_id,
             "text": msg.content,
+            "is_forwarded": msg.is_forwarded,
             "type": "text" if not media_data_response else "media",
             "time": msg.sent_at.strftime("%H:%M"),
             "senderId": "me",

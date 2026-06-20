@@ -140,7 +140,7 @@ class UserProfile(models.Model):
         max_length=15, choices=FriendsListPrivacy.choices, default=FriendsListPrivacy.EVERYONE
     )
     message_privacy = models.CharField(max_length=15, choices=MessagePrivacy.choices, default=MessagePrivacy.EVERYONE)
-    status = models.CharField(max_length=12, choices=Status.choices, default=Status.ONLINE)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.OFFLINE)
     primary_phone = models.CharField(max_length=11, blank=True, null=True)
     secondary_phone = models.CharField(max_length=11, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -1172,6 +1172,7 @@ class Message(models.Model):
     )
 
     content = models.TextField(blank=True, null=True)
+    is_forwarded = models.BooleanField(default=False)
     shared_post = models.ForeignKey("post", on_delete=models.SET_NULL, null=True, blank=True)
 
     sender = models.ForeignKey(

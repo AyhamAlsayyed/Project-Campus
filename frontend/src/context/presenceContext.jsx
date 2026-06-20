@@ -24,6 +24,8 @@ const TOKEN_KEY = 'access';
 const INITIAL_BACKOFF = 1_000;
 const MAX_BACKOFF = 30_000;
 const MAX_RETRY_COUNT = 10;
+const HEARTBEAT_INTERVAL = 25_000; // ping every 25s
+const HEARTBEAT_TIMEOUT  = 5_000;  // close if no pong within 5s
 
 const FATAL_CLOSE_CODES = new Set([
   4001,
@@ -46,6 +48,8 @@ export function PresenceProvider({ children }) {
   const retryTimerRef = useRef(null);
   const intentionalClose = useRef(false);
   const myStatusRef = useRef('online');
+  const heartbeatIntervalRef = useRef(null);
+  const heartbeatTimeoutRef = useRef(null);
 
   const getToken = () => localStorage.getItem(TOKEN_KEY);
 
@@ -54,6 +58,26 @@ export function PresenceProvider({ children }) {
       clearTimeout(retryTimerRef.current);
       retryTimerRef.current = null;
     }
+  };
+
+  const stopHeartbeat = () => {
+    clearInterval(heartbeatIntervalRef.current);
+    clearTimeout(heartbeatTimeoutRef.current);
+    heartbeatIntervalRef.current = null;
+    heartbeatTimeoutRef.current = null;
+  };
+
+  const startHeartbeat = (ws) => {
+    stopHeartbeat();
+    heartbeatIntervalRef.current = setInterval(() => {
+      if (ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: 'ping' }));
+      // Close if no pong within HEARTBEAT_TIMEOUT
+      heartbeatTimeoutRef.current = setTimeout(() => {
+        console.warn('[Presence] Heartbeat timeout — closing stale connection.');
+        ws.close(1001, 'Heartbeat timeout');
+      }, HEARTBEAT_TIMEOUT);
+    }, HEARTBEAT_INTERVAL);
   };
 
   // ── Core: connect ─────────────────────────────────────────────────────────
@@ -85,6 +109,9 @@ export function PresenceProvider({ children }) {
       console.info('[Presence] WebSocket connected.');
       setConnectionStatus('connected');
       retryCountRef.current = 0;
+      // Clear stale status from previous session — fresh roster is incoming
+      setOnlineUsers({});
+      startHeartbeat(ws);
     };
 
     ws.onmessage = (event) => {
@@ -93,6 +120,13 @@ export function PresenceProvider({ children }) {
         data = JSON.parse(event.data);
       } catch {
         console.error('[Presence] Received non-JSON payload:', event.data);
+        return;
+      }
+
+      // Handle pong — cancel the heartbeat timeout
+      if (data.type === 'pong') {
+        clearTimeout(heartbeatTimeoutRef.current);
+        heartbeatTimeoutRef.current = null;
         return;
       }
 
@@ -118,7 +152,10 @@ export function PresenceProvider({ children }) {
     ws.onclose = (event) => {
       console.info(`[Presence] WebSocket closed (code=${event.code}, reason="${event.reason}").`);
       wsRef.current = null;
+      stopHeartbeat();
       setConnectionStatus('disconnected');
+      // Clear statuses — we can't trust stale data while disconnected
+      setOnlineUsers({});
 
       if (intentionalClose.current) return;
       if (FATAL_CLOSE_CODES.has(event.code)) {
@@ -165,6 +202,7 @@ export function PresenceProvider({ children }) {
   const disconnect = useCallback(() => {
     intentionalClose.current = true;
     clearRetryTimer();
+    stopHeartbeat();
 
     if (wsRef.current) {
       wsRef.current.close(1000, 'Client disconnecting intentionally.');
@@ -233,7 +271,8 @@ export function PresenceProvider({ children }) {
     const onLogin = () => {
       if (!getToken()) return;
       intentionalClose.current = false;
-      retryCountRef.current = 0;
+      retryCountRef.current = 0; // reset so it can reconnect after hitting max retries
+      clearRetryTimer();
       connect();
     };
 

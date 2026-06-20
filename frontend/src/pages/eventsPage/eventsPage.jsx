@@ -4,6 +4,8 @@ import CreateEventForm from '../../components/createEvent/CreateEventForm';
 import CreateEventRightSidebar from '../../components/createEvent/CreateEventRightSidebar';
 import Bin from '../../Assets/icons/bin.png';
 import EditIcon from '../../Assets/icons/edit.png';
+import EventIcon from '../../Assets/icons/event.png';
+import StarIcon from '../../Assets/icons/star.png';
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
@@ -18,8 +20,7 @@ import { createPortal } from 'react-dom';
 import API from '../../config';
 import useTheme from '../../hooks/useTheme';
 import DefaultBanner from '../../Assets/Pictures/default-community-banner.png'
-import { X } from 'lucide-react';
-import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
+import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 
 export default function EventsPage() {
     const [user, setUser] = useState(null);
@@ -64,7 +65,6 @@ export default function EventsPage() {
     const [highlightId, setHighlightId] = useState(location.state?.highlightId || null);
 
     const pageIdRef = useRef(null);
-    const mobileMenuRef = useRef(null);
 
     const durationOptions = [
         { label: '1 week', cost: 4.99 },
@@ -323,55 +323,7 @@ export default function EventsPage() {
             )}
 
             {/* Mobile Drawer (Navigation) */}
-            {isMobile && mobileMenuOpen && (
-                <div style={{ position: "fixed", inset: 0, zIndex: 9998 }}>
-                    <div
-                        style={{
-                            position: "absolute", inset: 0,
-                            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)"
-                        }}
-                        onClick={() => setMobileMenuOpen(false)}
-                    />
-                    <div
-                        ref={mobileMenuRef}
-                        style={{
-                            position: "absolute", left: 0, top: 0,
-                            height: "100%", width: "75vw", maxWidth: 350,
-                            background: " linear-gradient(135deg, var(--bg-main), var(--bg-secondary))",
-                            borderRight: "1px solid rgba(255,255,255,0.1)",
-                            display: "flex", flexDirection: "column", overflow: "hidden",
-                            boxShadow: "4px 0 30px rgba(0,0,0,0.6)"
-                        }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <button
-                            style={{
-                                position: "absolute", top: 14, right: 14, zIndex: 10,
-                                width: 32, height: 32, borderRadius: "50%",
-                                background: "rgba(255,255,255,0.1)", border: "none",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                cursor: "pointer"
-                            }}
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            <X size={16} color="white" />
-                        </button>
-
-                        <div style={{
-                            display: "flex", alignItems: "center", gap: 10,
-                            padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)"
-                        }}>
-                            <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                            <span style={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem", letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>
-                                CAMPUS
-                            </span>
-                        </div>
-                        <div style={{ flex: 1, overflowY: "auto" }}>
-                            <SideBarNav onClose={() => setMobileMenuOpen(false)} />
-                        </div>
-                    </div>
-                </div>
-            )}
+            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} />
 
             {/* Desktop Header */}
             {!isMobile && (
@@ -446,6 +398,13 @@ export default function EventsPage() {
                                 </h1>
 
                                 <div className={styles.eventsContainer}>
+                                    {events.length === 0 && (
+                                        <div className={styles.emptyState}>
+                                            <img src={EventIcon} alt="" className={styles.emptyStateIcon} />
+                                            <div style={{ fontWeight: 600, marginBottom: 4 }}>No events yet</div>
+                                            <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Events from pages you follow will appear here.</div>
+                                        </div>
+                                    )}
                                     {events.map((event) => (
                                         <div key={event.id} id={`event-${event.id}`} className={styles.eventCard}>
                                             <div className={styles.cardHeader}>
@@ -612,6 +571,13 @@ export default function EventsPage() {
                                         <div className={styles.pill} style={{ left: "20px" }}>RECOMMENDED</div>
                                         <div className={styles.rightCard}>
                                             <div className={styles.rightList}>
+                                                {recommendedEvents.length === 0 && (
+                                                    <div className={styles.emptyState}>
+                                                        <img src={StarIcon} alt="" className={styles.emptyStateIcon} />
+                                                        <div style={{ fontWeight: 600, marginBottom: 4 }}>No recommendations yet</div>
+                                                        <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Follow more pages to get event recommendations.</div>
+                                                    </div>
+                                                )}
                                                 {recommendedEvents.map((rec, index) => (
                                                     <div key={rec.id} className={styles.recItemWrapper}>
                                                         <div className={styles.recCard}>
@@ -712,13 +678,13 @@ export default function EventsPage() {
                                     {/* ON-HOLD Section */}
                                     <div style={{ padding: "12px 16px" }}>
                                         <div style={{
-                                            background: "#333333",
+                                            background: "var(--bg-card)",
                                             borderRadius: 24,
                                             padding: 16,
-                                            border: "1px solid rgba(255,255,255,0.08)"
+                                            border: "1px solid var(--border-color)"
                                         }}>
                                             <div style={{ marginBottom: 12 }}>
-                                                <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.85rem", margin: 0, marginBottom: 8 }}>
+                                                <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", margin: 0, marginBottom: 8 }}>
                                                     {promoCart.length} Pending checkout
                                                 </p>
                                                 <div style={{ height: 1, background: "rgba(255,255,255,0.1)", marginBottom: 12 }}></div>
@@ -733,8 +699,8 @@ export default function EventsPage() {
                                                         const eventData = item.event || {};
                                                         return (
                                                             <div key={item.eventId} style={{ marginBottom: idx < promoCart.length - 1 ? 12 : 0 }}>
-                                                                <h4 style={{ margin: "0 0 4px", fontSize: "0.9rem", color: "white" }}>{item.event.title}</h4>
-                                                                <p style={{ margin: "0 0 8px", fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>
+                                                                <h4 style={{ margin: "0 0 4px", fontSize: "0.9rem", color: "var(--text-primary)" }}>{item.event.title}</h4>
+                                                                <p style={{ margin: "0 0 8px", fontSize: "0.75rem", color: "var(--text-muted)" }}>
                                                                     {item.label} - ${item.cost.toFixed(2)}
                                                                 </p>
                                                                 {idx < promoCart.length - 1 && <div style={{ height: 1, background: "rgba(255,255,255,0.1)" }}></div>}
@@ -747,7 +713,7 @@ export default function EventsPage() {
                                                 <>
                                                     <div style={{ height: 1, background: "rgba(255,255,255,0.1)", marginBottom: 12 }}></div>
                                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                                                        <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.7)" }}>
+                                                        <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
                                                             Total: ${promoCart.reduce((sum, item) => sum + item.cost, 0).toFixed(2)}
                                                         </span>
                                                     </div>
@@ -775,15 +741,15 @@ export default function EventsPage() {
                                     {/* Event Promotion Section */}
                                     <div style={{ padding: "12px 16px" }}>
                                         <div style={{
-                                            background: "#333333",
+                                            background: "var(--bg-card)",
                                             borderRadius: 24,
                                             padding: 16,
-                                            border: "1px solid rgba(255,255,255,0.08)"
+                                            border: "1px solid var(--border-color)"
                                         }}>
-                                            <h3 style={{ margin: "0 0 8px", fontSize: "0.95rem", color: "white", fontWeight: 600 }}>
+                                            <h3 style={{ margin: "0 0 8px", fontSize: "0.95rem", color: "var(--text-primary)", fontWeight: 600 }}>
                                                 Event Promotion
                                             </h3>
-                                            <p style={{ margin: "0 0 12px", fontSize: "0.8rem", color: "#CCCCCC", lineHeight: 1.5 }}>
+                                            <p style={{ margin: "0 0 12px", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
                                                 Manage your promotion plan and get more users to notice your event.
                                             </p>
                                             <button
@@ -807,7 +773,7 @@ export default function EventsPage() {
 
                                     {/* Your Events Section */}
                                     <div style={{ padding: "12px 16px" }}>
-                                        <h2 style={{ margin: "0 0 12px", fontSize: "1.1rem", color: "white", fontWeight: 700 }}>
+                                        <h2 style={{ margin: "0 0 12px", fontSize: "1.1rem", color: "var(--text-primary)", fontWeight: 700 }}>
                                             Your <span className={styles.highlight}>EVENTS</span>
                                         </h2>
                                         <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
@@ -880,19 +846,23 @@ export default function EventsPage() {
 
                             {/* All Events Feed */}
                             <div style={{ padding: "12px 16px 0" }}>
-                                <h2 style={{ margin: "0 0 16px", fontSize: "1.1rem", color: "white", fontWeight: 700 }}>
+                                <h2 style={{ margin: "0 0 16px", fontSize: "1.1rem", color: "var(--text-primary)", fontWeight: 700 }}>
                                     Looking for events to <span className={styles.highlight}>participate in</span>
                                 </h2>
                                 {events.length === 0 ? (
-                                    <p style={{ color: "rgba(255,255,255,0.5)", textAlign: "center", padding: "20px 0" }}>No events yet</p>
+                                    <div className={styles.emptyState}>
+                                        <img src={EventIcon} alt="" className={styles.emptyStateIcon} />
+                                        <div style={{ fontWeight: 600, marginBottom: 4 }}>No events yet</div>
+                                        <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Events from pages you follow will appear here.</div>
+                                    </div>
                                 ) : (
                                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                                         {events.map((event) => (
                                             <div key={event.id} style={{
-                                                background: "#333333",
+                                                background: "var(--bg-card)",
                                                 borderRadius: 40,
                                                 overflow: "hidden",
-                                                border: "1px solid rgba(255,255,255,0.05)"
+                                                border: "1px solid var(--border-color)"
                                             }}>
                                                 {/* Header with org info */}
                                                 <div style={{ padding: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -910,12 +880,12 @@ export default function EventsPage() {
                                                         />
                                                         <div style={{ minWidth: 0 }}>
                                                             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                                                                <h4 style={{ margin: 0, fontSize: "0.95rem", color: "white", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                                <h4 style={{ margin: 0, fontSize: "0.95rem", color: "var(--text-primary)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                                                     {event.orgName}
                                                                 </h4>
                                                                 <img src={VerifiedBadge} alt="verified" style={{ width: 16, height: 16, flexShrink: 0, filter: 'brightness(0) invert(1)' }} />
                                                             </div>
-                                                            <p style={{ margin: 0, fontSize: "0.8rem", color: "rgba(255,255,255,0.6)" }}>
+                                                            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-secondary)" }}>
                                                                 {event.pageType}
                                                             </p>
                                                         </div>

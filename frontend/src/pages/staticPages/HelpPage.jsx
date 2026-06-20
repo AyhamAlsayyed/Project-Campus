@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ChevronDown, X as XIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
+import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 import styles from './staticPages.module.css';
 import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
-import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
 import useTheme from '../../hooks/useTheme';
 import API from '../../config';
 
@@ -36,11 +35,9 @@ function AccordionItem({ q, a }) {
 
 export default function HelpPage() {
     const { theme, toggleTheme } = useTheme();
-    const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const mobileMenuRef = useRef(null);
 
     useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
     useEffect(() => {
@@ -68,21 +65,7 @@ export default function HelpPage() {
             {isMobile && (
                 <MobileHeader avatarSrc={avatarSrc} user={user} setMobileMenuOpen={setMobileMenuOpen} token={localStorage.getItem('access')} API={API} />
             )}
-            {isMobile && mobileMenuOpen && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }}>
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setMobileMenuOpen(false)} />
-                    <div ref={mobileMenuRef} style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: '75vw', maxWidth: 350, background: 'linear-gradient(315deg, var(--bg-main), var(--bg-secondary))', borderRight: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '4px 0 30px rgba(0,0,0,0.6)' }} onClick={e => e.stopPropagation()}>
-                        <button style={{ position: 'absolute', top: 14, right: 14, zIndex: 10, width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} onClick={() => setMobileMenuOpen(false)}>
-                            <XIcon size={16} color="white" />
-                        </button>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '20px 16px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                            <img src={darkModeIcon} alt="Logo" style={{ height: 40 }} />
-                            <span style={{ color: '#fff', fontWeight: 800, fontSize: '1.3rem', letterSpacing: 1, cursor: 'pointer' }} onClick={() => navigate('/home')}>CAMPUS</span>
-                        </div>
-                        <div style={{ flex: 1, overflowY: 'auto' }}><SideBarNav onClose={() => setMobileMenuOpen(false)} /></div>
-                    </div>
-                </div>
-            )}
+            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} />
             {!isMobile && (
                 <div className={`${styles.header} ${styles.page}`}>
                     <Header theme={theme} toggleTheme={toggleTheme} user={user} />
