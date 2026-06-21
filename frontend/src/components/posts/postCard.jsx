@@ -845,38 +845,65 @@ export default function PostCard({
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span className={styles.prompt}>how do you feel about this ad?</span>
                 <div className={styles.reactions}>
-                  {[
-                    { key: 'good', src: GoodReview },
-                    { key: 'neutral', src: NatrualReview },
-                    { key: 'bad', src: BadReview },
-                  ].map(({ key, src }) => (
-                    <button
-                      key={key}
-                      className={styles.reactionBtn}
-                      onClick={() => handleAdReaction(key)}
-                      style={{
-                        transform: adReaction === key ? 'scale(1.3)' : 'scale(1)',
-                        background: 'transparent',
-                        boxShadow: 'none',
-                        transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                      }}
-                    >
-                      <img
-                        src={src}
-                        alt={key}
-                        width={30}
-                        height={30}
-                        style={{
-                          filter: adReaction === key
-                            ? 'brightness(0) invert(1) opacity(0.55)'
-                            : adReaction && adReaction !== key
-                              ? 'grayscale(1) opacity(0.3)'
-                              : 'brightness(0) saturate(100%) invert(32%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(96%)',
-                          transition: 'filter 0.2s ease',
-                        }}
-                      />
-                    </button>
-                  ))}
+                  {(() => {
+                    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                    return [
+                      { key: 'good',    src: GoodReview,    lightBg: '#6455BB' },
+                      { key: 'neutral', src: NatrualReview, lightBg: 'linear-gradient(135deg, #9158B6, #B55AB2)' },
+                      { key: 'bad',     src: BadReview,     lightBg: '#B95AB2' },
+                    ].map(({ key, src, lightBg }) => {
+                      const isSelected      = adReaction === key;
+                      const isDeemphasized  = adReaction && adReaction !== key;
+                      return (
+                        <button
+                          key={key}
+                          className={styles.reactionBtn}
+                          onClick={() => handleAdReaction(key)}
+                          style={{
+                            transform: isSelected ? 'scale(1.3)' : 'scale(1)',
+                            background: 'transparent',
+                            boxShadow: 'none',
+                            transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                          }}
+                        >
+                          {isLight ? (
+                            <div
+                              style={{
+                                width: 30,
+                                height: 30,
+                                background: isSelected
+                                  ? 'rgba(0,0,0,0.4)'
+                                  : lightBg,
+                                WebkitMaskImage: `url(${src})`,
+                                WebkitMaskSize: '100% 100%',
+                                WebkitMaskRepeat: 'no-repeat',
+                                maskImage: `url(${src})`,
+                                maskSize: '100% 100%',
+                                maskRepeat: 'no-repeat',
+                                opacity: isDeemphasized ? 0.3 : 1,
+                                transition: 'background 0.2s ease, opacity 0.2s ease',
+                              }}
+                            />
+                          ) : (
+                            <img
+                              src={src}
+                              alt={key}
+                              width={30}
+                              height={30}
+                              style={{
+                                filter: isSelected
+                                  ? 'brightness(0) invert(1) opacity(0.55)'
+                                  : isDeemphasized
+                                    ? 'grayscale(1) opacity(0.3)'
+                                    : 'brightness(0) saturate(100%) invert(32%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(96%)',
+                                transition: 'filter 0.2s ease',
+                              }}
+                            />
+                          )}
+                        </button>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             ) : (

@@ -8,13 +8,12 @@ import API from '../../config';
 import useTheme from '../../hooks/useTheme'
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
-import ProfilePicture from '../../Assets/icons/default-pfp.png';
+import { useUser } from '../../context/UserContext';
 export default function FollowedCommunities() {
     const { theme, toggleTheme } = useTheme();
+    const { user: currentUser, avatarSrc } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
-    const [userLoading, setUserLoading] = useState(true);
-    const [userError, setUserError] = useState(null);
-    const [currentUser, setCurrentUser] = useState(null);
+    const [pageLoading, setPageLoading] = useState(true);
     const [communities, setCommunities] = useState([]);
     const [recommended, setRecommended] = useState([]);
     const [expandedIds, setExpandedIds] = useState({});
@@ -29,20 +28,17 @@ export default function FollowedCommunities() {
 
     useEffect(() => {
         const fetchData = async () => {
-            setUserLoading(true);
+            setPageLoading(true);
             try {
                 const token = localStorage.getItem("access");
                 if (!token) return;
 
                 const headers = { Authorization: `Bearer ${token}` };
 
-                const [userRes, joinedRes, recommendedRes] = await Promise.all([
-                    fetch(`${API}/api/auth/me/`, { headers }),
+                const [joinedRes, recommendedRes] = await Promise.all([
                     fetch(`${API}/api/communities/?filter=joined`, { headers }),
                     fetch(`${API}/api/communities/?filter=recommended`, { headers })
                 ]);
-
-                if (userRes.ok) setCurrentUser(await userRes.json());
 
                 if (joinedRes.ok) {
                     const joinedData = await joinedRes.json();
@@ -65,7 +61,7 @@ export default function FollowedCommunities() {
             } catch (err) {
                 console.error("Fetch Error:", err);
             } finally {
-                setUserLoading(false);
+                setPageLoading(false);
             }
         };
 
@@ -83,11 +79,6 @@ export default function FollowedCommunities() {
         document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [mobileMenuOpen]);
-
-    const rawAvatar = currentUser?.profile?.avatar || currentUser?.avatar || currentUser?.profile_image;
-    const avatarSrc = rawAvatar
-        ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
-        : ProfilePicture;
 
     const communitiesList = (
         <>
@@ -133,7 +124,7 @@ export default function FollowedCommunities() {
             {/* ══════════════════════════════════════
                     MOBILE DRAWER
                 ══════════════════════════════════════ */}
-            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} />
+            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} variant='profile' currentUser={currentUser} />
 
             {/* ══════════════════════════════════════
                     DESKTOP HEADER

@@ -21,10 +21,11 @@ import API from '../../config';
 import useTheme from '../../hooks/useTheme';
 import DefaultBanner from '../../Assets/Pictures/default-community-banner.png'
 import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
+import { useUser } from '../../context/UserContext';
 
 export default function EventsPage() {
-    const [user, setUser] = useState(null);
     const { theme, toggleTheme } = useTheme();
+    const { user, avatarSrc } = useUser();
 
     const [events, setEvents] = useState([]);
     const [recommendedEvents, setRecommendedEvents] = useState([]);
@@ -123,27 +124,19 @@ export default function EventsPage() {
             const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
             try {
-                const [eventsRes, userRes] = await Promise.all([
-                    fetch(`${API}/api/events/`, { headers }),
-                    fetch(`${API}/api/auth/me/`, { headers })
-                ]);
-
-                if (userRes.ok) {
-                    const userData = await userRes.json();
-                    setUser(userData);
-
-                    const userType = localStorage.getItem('user_type');
-                    if ((userData.role === 'university' || ['university', 'uni', 'page'].includes(userType)) && userData.page_id) {
-                        pageIdRef.current = userData.page_id;
-                        const evRes = await fetch(`${API}/api/pages/${userData.page_id}/events/`, {
-                            headers: { Authorization: `Bearer ${token}` }
-                        });
-                        if (evRes.ok) {
-                            const evData = await evRes.json();
-                            setOwnPageEvents(Array.isArray(evData) ? evData : []);
-                        }
+                const userType = localStorage.getItem('user_type');
+                if (user && (user.role === 'university' || ['university', 'uni', 'page'].includes(userType)) && user.page_id) {
+                    pageIdRef.current = user.page_id;
+                    const evRes = await fetch(`${API}/api/pages/${user.page_id}/events/`, { headers });
+                    if (evRes.ok) {
+                        const evData = await evRes.json();
+                        setOwnPageEvents(Array.isArray(evData) ? evData : []);
                     }
                 }
+
+                const [eventsRes] = await Promise.all([
+                    fetch(`${API}/api/events/`, { headers })
+                ]);
 
                 if (eventsRes.ok) {
                     const data = await eventsRes.json();
@@ -314,7 +307,7 @@ export default function EventsPage() {
             {/* Mobile Header */}
             {isMobile && (
                 <MobileHeader
-                    avatarSrc={user?.profile?.avatar || user?.avatar || user?.profile_image || '/default-avatar.png'}
+                    avatarSrc={avatarSrc}
                     user={user}
                     setMobileMenuOpen={setMobileMenuOpen}
                     token={localStorage.getItem("access")}

@@ -5,8 +5,8 @@ import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Setting from '../../Assets/icons/setting.png';
 import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
-import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import useTheme from '../../hooks/useTheme';
+import { useUser } from '../../context/UserContext';
 import API from '../../config';
 import { X as XIcon } from 'lucide-react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
@@ -66,8 +66,8 @@ export default function Settings() {
     const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
     const { theme, toggleTheme } = useTheme();
+    const { user: currentUser, avatarSrc } = useUser();
     const [appearanceTheme, setAppearanceTheme] = useState(theme);
-    const [currentUser, setCurrentUser] = useState(null);
     const [activeTab, _setActiveTab] = useState(
         searchParams.get('tab') || location.state?.tab || 'Account'
     );
@@ -129,27 +129,6 @@ export default function Settings() {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
-    // ── Fetch current user ───────────────────────────────────────────────────
-    useEffect(() => {
-        const fetchUser = async () => {
-
-
-            if (!token) return;
-            try {
-                const res = await fetch(`${API}/api/auth/me/`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) return;
-                setCurrentUser(data);
-            } catch (e) {
-                // silently fail
-            }
-        };
-        fetchUser();
-    }, []);
-
 
     // ── Fetch settings on tab change ─────────────────────────────────────────
     useEffect(() => {
@@ -453,10 +432,6 @@ export default function Settings() {
         return () => { document.body.style.overflow = ''; };
     }, [mobileMenuOpen, mobileNavOpen]);
 
-    const rawAvatar = currentUser?.profile?.avatar || currentUser?.avatar || currentUser?.profile_image;
-    const avatarSrc = rawAvatar
-        ? (rawAvatar.startsWith('http') ? rawAvatar : `${API}${rawAvatar}`)
-        : ProfilePicture;
 
 
     const navItems = [
@@ -535,11 +510,12 @@ export default function Settings() {
                     setMobileMenuOpen={setMobileMenuOpen}
                     token={token}
                     API={API}
+                    homeMode={true}
                 />
             )}
 
             {/* ── Mobile side-drawer (hamburger) ── */}
-            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} />
+            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} variant="profile" currentUser={currentUser} />
 
             {/* ── Mobile settings-nav drawer ── */}
             {isMobile && mobileNavOpen && (

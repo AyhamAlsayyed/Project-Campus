@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 
 import useTheme from '../../hooks/useTheme';
+import { useUser } from '../../context/UserContext';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -267,14 +268,13 @@ export default function ProfilePage({ type }) {
     const isLight = theme === 'light';
     const [user, setUser] = useState(null);
     const [friendStatus, setFriendStatus] = useState('none');
-    const [currentUser, setCurrentUser] = useState(null);
+    const { user: currentUser, setUser: setCurrentUser, avatarSrc: currentAvatarSrc } = useUser();
 
     const token = localStorage.getItem('access');
     const userType = localStorage.getItem('user_type');
 
     // ui state
     const [userLoading, setUserLoading] = useState(true);
-    const [userError, setUserError] = useState('');
     const [selectedPost, setSelectedPost] = useState(null);
     const [posts, setPosts] = useState([]);
     const [friends, setFriends] = useState([]);
@@ -390,10 +390,6 @@ export default function ProfilePage({ type }) {
     const avatarUrl = user?.avatar_url || user?.avatar || '';
     const coverUrl = user?.cover_url || user?.cover || '';
 
-    const currentAvatarSrc = currentUser?.avatar
-        ? resolveUrl(currentUser.avatar)
-        : ProfilePicture;
-
     const photoPosts = posts.filter(post => {
         const fileUrl = post.image || post.image_url || (Array.isArray(post.media) && post.media[0]?.url);
         if (!fileUrl || typeof fileUrl !== 'string') return false;
@@ -450,7 +446,6 @@ export default function ProfilePage({ type }) {
         setIsEditing(false);
         setActiveTab(searchParams.get('tab') || 'Posts');
         setActivitiesFilter(searchParams.get('activity') || 'likes');
-        loadCurrentUser();
         loadProfileUser();
     }, [userId]);
 
@@ -470,21 +465,6 @@ export default function ProfilePage({ type }) {
 
     // ─── data loaders ───────────────────────────────────────────────────────
 
-    const loadCurrentUser = async () => {
-        try {
-            const res = await fetch(`${API}/api/auth/me/`, { headers: { Authorization: `Bearer ${token}` } });
-            if (!res.ok) return;
-            const data = await res.json();
-            if ((data.role === 'university' || localStorage.getItem('user_type') === 'university') && data.id) {
-                const pageRes = await fetch(`${API}/api/pages/${data.id}/`, { headers: { Authorization: `Bearer ${token}` } });
-                if (pageRes.ok) {
-                    const pageData = await pageRes.json();
-                    data.avatar = pageData.profile_image;
-                }
-            }
-            setCurrentUser(data);
-        } catch (e) { console.error(e); }
-    };
     const loadPromotions = async () => {
         setPromotionsLoading(true);
         try {
@@ -521,7 +501,7 @@ export default function ProfilePage({ type }) {
                 }
             }
 
-            if (!res.ok) { setUserError('Failed'); setUser(null); return; }
+            if (!res.ok) { setUser(null); return; }
             raw = await res.json();
 
             let data;
@@ -565,7 +545,7 @@ export default function ProfilePage({ type }) {
             if (data?.id) loadPosts(data.id, data.type);
         } catch (e) {
             console.error(e);
-            setUserError(e?.message || 'Something went wrong');
+            console.error('Profile load error:', e?.message);
         } finally {
             setUserLoading(false);
         }

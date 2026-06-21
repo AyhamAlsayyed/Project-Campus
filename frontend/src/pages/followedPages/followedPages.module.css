@@ -367,10 +367,7 @@ body {
 /* Popup / Modal Windows */
 .popupOverlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    inset: 0;
     background: 3333333;
     backdrop-filter: blur(4px);
     display: flex;
@@ -390,6 +387,7 @@ body {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
 }
 
 .popupHeader {
@@ -453,6 +451,7 @@ body {
 .popupList {
     max-height: 340px;
     overflow-y: auto;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     gap: 35px;

@@ -8,12 +8,12 @@ import CommunityCard from '../../components/communityCard/communityCard'
 import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 import API from '../../config';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
-import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import useTheme from '../../hooks/useTheme';
+import { useUser } from '../../context/UserContext';
 
 export default function SearchResults() {
     const { theme, toggleTheme } = useTheme();
-    const [user, setUser] = useState(null);
+    const { user, avatarSrc } = useUser();
     const [filter, setFilter] = useState("All");
     const [results, setResults] = useState({ people: [], communities: [], posts: [], pages: [] });
     const [loading, setLoading] = useState(false);
@@ -44,25 +44,6 @@ export default function SearchResults() {
         document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [mobileMenuOpen]);
-
-    // Fetch current user
-    useEffect(() => {
-        if (!token) return;
-        const fetchUser = async () => {
-            try {
-                const res = await fetch(`${API}/api/auth/me/`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                if (res.ok) setUser(await res.json());
-            } catch (e) { console.error(e); }
-        };
-        fetchUser();
-    }, []);
-
-    const rawAvatar = user?.profile?.avatar || user?.avatar || user?.profile_image;
-    const avatarSrc = rawAvatar
-        ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
-        : ProfilePicture;
 
     // Fetch search results whenever query changes
     useEffect(() => {

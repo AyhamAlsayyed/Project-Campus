@@ -2631,10 +2631,7 @@ body {
 
 .modalOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
   display: flex;
@@ -3248,10 +3245,7 @@ body {
 /* ---- Overlay & Modal Box ---- */
 .manageModalOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
@@ -5015,6 +5009,7 @@ body {
 .mobileProfileHeaderWrap {
     position: relative;
     z-index: 2;
+    width: 100%;
 }
 
 .mobileAvatarNameRow {
@@ -5119,6 +5114,11 @@ body {
     color: rgba(255, 255, 255, 0.6);
     font-size: 0.78rem;
     line-height: 1.4;
+    overflow-wrap: break-word;
+    word-break: break-all;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* ── Action buttons ── */

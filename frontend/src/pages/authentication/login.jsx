@@ -366,9 +366,24 @@ export default function Login() {
             {showExpiredPopup && (
                 <div className={styles.expiredOverlay}>
                     <div style={{ position: 'relative', display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
-                        <span className={styles.expiredHeading}>
-                            Your subscription has expired — choose a plan to continue
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                            <span className={styles.expiredHeading}>
+                                Your subscription has expired — choose a plan to continue
+                            </span>
+                            <button
+                                onClick={() => {
+                                    ['access', 'refresh', 'user_type', 'user_id', 'login_user', 'is_premium', 'remember_me'].forEach(k => localStorage.removeItem(k));
+                                    setShowExpiredPopup(false);
+                                }}
+                                style={{
+                                    background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 20,
+                                    color: 'rgba(255,255,255,0.6)', padding: '8px 18px', cursor: 'pointer',
+                                    fontSize: '0.85rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0,
+                                }}
+                            >
+                                Log out
+                            </button>
+                        </div>
 
                         {/* Basic Card */}
                         <div className={styles.basicCard}>

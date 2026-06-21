@@ -7,31 +7,23 @@ import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 import API from '../../config';
 import useTheme from '../../hooks/useTheme';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
-import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../../context/UserContext';
 export default function Subscriptions() {
     const navigate = useNavigate();
    const { theme, toggleTheme } = useTheme();
-    const [currentUser, setCurrentUser] = useState(null);
+    const { user: currentUser, avatarSrc } = useUser();
     const [subscription, setSubscription] = useState(null);
     const [loading, setLoading] = useState(true);
     const [cancelling, setCancelling] = useState(false);
     const [subscribing, setSubscribing] = useState(false);
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const token = localStorage.getItem("access");
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
    
 
-    const loadCurrentUser = async () => {
-        if (!token) return;
-        try {
-            const res = await fetch(`${API}/api/auth/me/`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) setCurrentUser(await res.json());
-        } catch (e) { console.error(e); }
-    };
 
     const loadSubscription = async () => {
         if (!token) return;
@@ -55,7 +47,6 @@ export default function Subscriptions() {
     };
 
     useEffect(() => {
-        loadCurrentUser();
         loadSubscription();
     }, []);
 
@@ -69,11 +60,6 @@ export default function Subscriptions() {
         document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [mobileMenuOpen]);
-
-    const rawAvatar = currentUser?.profile?.avatar || currentUser?.avatar || currentUser?.profile_image;
-    const avatarSrc = rawAvatar
-        ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
-        : ProfilePicture;
 
     const handleSubscribe = async (plan) => {
         
@@ -96,12 +82,12 @@ export default function Subscriptions() {
     const handleCancel = async () => {
         try {
             setCancelling(true);
+            setShowCancelConfirm(false);
             const res = await fetch(`${API}/api/subscriptions/cancel/`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
-                setSubscription(null);
                 await loadSubscription();
             }
         } catch (e) { console.error(e); }
@@ -166,7 +152,7 @@ export default function Subscriptions() {
                 </ul>
                 <div className={styles.basicFooter}>
                     {isBasicActive && (
-                        <button onClick={handleCancel} disabled={cancelling} className={styles.cancelBtn}>
+                        <button onClick={() => setShowCancelConfirm(true)} disabled={cancelling} className={styles.cancelBtn}>
                             {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
                         </button>
                     )}
@@ -210,7 +196,7 @@ export default function Subscriptions() {
             </ul>
             <div className={styles.premiumFooter}>
                 {isPremiumActive && (
-                    <button onClick={handleCancel} disabled={cancelling} className={styles.cancelBtn}>
+                    <button onClick={() => setShowCancelConfirm(true)} disabled={cancelling} className={styles.cancelBtn}>
                         {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
                     </button>
                 )}
@@ -250,7 +236,7 @@ export default function Subscriptions() {
             {/* ══════════════════════════════════════
                     MOBILE DRAWER
                 ══════════════════════════════════════ */}
-            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} />
+            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} variant="profile" currentUser={currentUser} />
 
             {/* ══════════════════════════════════════
                     DESKTOP HEADER
@@ -276,10 +262,62 @@ export default function Subscriptions() {
                 ══════════════════════════════════════ */}
             {!isMobile && (
                 <div className={`${styles.content} ${styles.page}`}>
-                    <SidebarNav currentUser={currentUser} />
+                    <SidebarNav variant="profile" currentUser={currentUser} />
                     {basicCard}
                     <div className={styles.rightSection}>
                         {premiumCard}
+                    </div>
+                </div>
+            )}
+            {showCancelConfirm && (
+                <div
+                    style={{
+                        position: 'fixed', inset: 0, zIndex: 9999,
+                        background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                    onClick={() => setShowCancelConfirm(false)}
+                >
+                    <div
+                        style={{
+                            background: '#242526', borderRadius: 20, padding: '28px 28px 24px',
+                            maxWidth: 380, width: '90%',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <h3 style={{ color: '#fff', margin: '0 0 8px', fontSize: '1.1rem', fontWeight: 700 }}>
+                            Cancel subscription?
+                        </h3>
+                        <p style={{ color: 'rgba(255,255,255,0.55)', margin: '0 0 24px', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                            You'll lose access to your current plan's features at the end of the billing period. This cannot be undone.
+                        </p>
+                        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                            <button
+                                onClick={() => setShowCancelConfirm(false)}
+                                style={{
+                                    background: 'rgba(255,255,255,0.08)', border: 'none',
+                                    color: '#fff', padding: '9px 20px',
+                                    borderRadius: 10, cursor: 'pointer', fontSize: '0.9rem',
+                                }}
+                            >
+                                Keep plan
+                            </button>
+                            <button
+                                onClick={handleCancel}
+                                disabled={cancelling}
+                                style={{
+                                    background: '#c0392b', border: 'none', color: '#fff',
+                                    padding: '9px 20px', borderRadius: 10,
+                                    cursor: cancelling ? 'not-allowed' : 'pointer',
+                                    fontSize: '0.9rem', fontWeight: 600,
+                                    opacity: cancelling ? 0.6 : 1,
+                                }}
+                            >
+                                {cancelling ? 'Cancelling…' : 'Yes, cancel'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

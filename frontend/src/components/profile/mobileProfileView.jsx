@@ -211,7 +211,6 @@ export default function MobileProfileView({
                                     {user?.category && <span>•</span>}
                                     <span>{followersCount.toLocaleString()} followers</span>
                                 </div>
-                                {bio && <p className={styles.mobileBio}>{bio}</p>}
                             </>
                         ) : user?.role === 'instructor' ? (
                             <>
@@ -220,7 +219,6 @@ export default function MobileProfileView({
                                     {user?.department && <span>{user.department}</span>}
                                     {user?.employment_type && <><span>·</span><span>{user.employment_type}</span></>}
                                 </div>
-                                {bio && <p className={styles.mobileBio}>{bio}</p>}
                             </>
                         ) : (
                             <>
@@ -230,8 +228,6 @@ export default function MobileProfileView({
                                 </div>
                                 <div className={styles.mobileFullName}>{fullName}</div>
                                 <div className={styles.mobileUniMajor}>{university} — {major}</div>
-                                {/* Issue 2: bio for regular users */}
-                                {bio && <p className={styles.mobileBio}>{bio}</p>}
                             </>
                         )}
                     </div>
@@ -269,6 +265,13 @@ export default function MobileProfileView({
                         <button className={styles.mobileEditBtn} onClick={onEditClick}>Edit ✎</button>
                     )}
                 </div>
+
+                {/* ── Bio (full width below avatar row) ── */}
+                {bio && (
+                    <p className={styles.mobileBio} style={{ padding: '0 16px 10px', margin: 0 }}>
+                        {bio}
+                    </p>
+                )}
             </div>
 
             {/* ── Tabs ── */}

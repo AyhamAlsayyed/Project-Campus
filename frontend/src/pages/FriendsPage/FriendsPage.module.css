@@ -83,7 +83,9 @@
 }
 
 .rightSection {
-    position: relative;
+    position: sticky;
+    top: 100px;
+    align-self: flex-start;
     flex: 0 0 420px;
     width: 25%;
     margin: 5% 0 0 0;
@@ -425,10 +427,7 @@
 /* ── Popup / Modal ── */
 .popupOverlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    inset: 0;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
     display: flex;

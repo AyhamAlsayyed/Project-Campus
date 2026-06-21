@@ -1259,4 +1259,5 @@
   .ownedCommunitiesContainer { width: 100%; padding: 12px 16px; }
   .rightSection { display: none; }
   .title { font-size: 1.8rem; }
+  .communityRequest { width: 100%; padding: 24px 16px; border-radius: 20px; }
 }

@@ -1,20 +1,4 @@
-﻿html {
-    height: auto;
-    min-height: auto;
-    display: flow-root;
-
-}
-
-body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    background: transparent;
-    background: linear-gradient(315deg, var(--bg-main), var(--bg-secondary));
-    background-attachment: fixed;
-    background-size: cover;
-}
-
+﻿
 .darkContainer {
     min-height: 100%;
     box-sizing: border-box;
@@ -26,11 +10,11 @@ body {
 }
 
 .page {
-    width: min(1800px, 95%);
+    width: min(1800px, 90%);
     margin: 0 auto;
     --left-col: 300px;
     --right-col: 380px;
-    --col-gap: 40px;
+    --col-gap: 65px;
 }
 
 .header {
@@ -38,22 +22,23 @@ body {
     margin-top: 2%;
     height: 110px;
     width: 100%;
-
 }
 
 .content {
     display: flex;
+    width: min(1800px, 100%);
     margin: 20px auto 0 auto;
     gap: var(--col-gap);
-    margin-top: 20px;
     align-items: flex-start;
 }
+
 .rightSection {
-    position: relative;
-    flex: 0 0 450px;
+    position: sticky;
+    top: 100px;
+    align-self: flex-start;
+    flex: 0 0 425px;
     width: 25%;
-    margin: 2% 0 0 0;
-    gap: 70px;
+    margin: 20px 0 0 0;
     display: flex;
     flex-direction: column;
 }
@@ -66,10 +51,10 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;       /* Centers all inner containers in the middle */
-    align-self: stretch;       /* Stretches box to match max height of columns */
+    align-items: center;
+    align-self: stretch;
     padding: 0 36px;
-    margin-top: 5%;
+    margin-top: 40px;
 }
 
 /* Active Progress Info Header */
@@ -149,7 +134,7 @@ body {
     width: 100%;
     max-width: 650px;
     box-sizing: border-box;
-    margin-top: 12%;         
+    margin-top: 60px;
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
 }
 

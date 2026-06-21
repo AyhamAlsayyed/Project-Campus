@@ -73,6 +73,11 @@ code {
     --border-color: rgba(0,0,0,0.1);
 }
 
+/* Swap default avatar for light mode */
+[data-theme="light"] img.defaultPfp {
+  content: url('./Assets/icons/default-pfp-lightmode.png');
+}
+
 @media (min-width: 2300px) {
   html { zoom: 1.25; }
 }

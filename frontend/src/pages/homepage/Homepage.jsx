@@ -5,7 +5,6 @@ import Header from '../../components/pagelayout/header/header';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import DesktopCreatePost from '../../components/createPost/DesktopCreatePost/desktopCreatePost';
 import CommentModal from '../../components/comments/commentsModal';
-import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -13,8 +12,7 @@ import {
     Check, MoreHorizontal, Volume2, Calendar, UserPlus, Heart,
     User, MessageSquare as MessageSquareIcon2, Bell as BellIcon2, ChevronDown, BarChart2
 } from "lucide-react";
-import MediaIcon from '../../Assets/icons/media.png';
-import DocumentIcon from '../../Assets/icons/document.png';
+import CreatePostModal from '../../components/createPost/CreatePostModal/CreatePostModal';
 import PostCard from '../../components/posts/postCard'
 import WeeklyNews from '../../components/rightPanel/weeklynews/weeklynews';
 import ThemeToggler from '../../components/pagelayout/themeToggle';
@@ -25,6 +23,7 @@ import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import Calender from '../../Assets/icons/calender.png'
 import API from '../../config';
 import useTheme from '../../hooks/useTheme';
+import { useUser } from '../../context/UserContext';
 
 export default function Homepage() {
     const navigate = useNavigate();
@@ -34,17 +33,15 @@ export default function Homepage() {
     const [modalCommunityDropdownOpen, setModalCommunityDropdownOpen] = useState(false);
 
     const { theme, toggleTheme } = useTheme();
+    const { user, avatarSrc } = useUser();
     const [posts, setPosts] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
-    const [user, setUser] = useState(null)
     const [content, setContent] = useState("")
     const [images, setImages] = useState([]);
     const [files, setFiles] = useState([])
     const [selectedPost, setSelectedPost] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [userError, setUserError] = useState("")
-    const [userLoading, setUserLoading] = useState(true)
     const [selectedCommunity, setSelectedCommunity] = useState(null);
     const [communityDropdownOpen, setCommunityDropdownOpen] = useState(false);
     const [joinedCommunities, setJoinedCommunities] = useState([]);
@@ -110,29 +107,6 @@ export default function Homepage() {
     };
 
     const token = localStorage.getItem("access")
-
-    const loadUser = async () => {
-        if (!token) { setUserLoading(false); setUserError("No token found"); return }
-        try {
-            const res = await fetch(`${API}/api/auth/me/`, { headers: { Authorization: `Bearer ${token}` } })
-            const data = await res.json().catch(() => ({}))
-
-            if (!res.ok) { setUserError("Failed to load user"); setUser(null); return }
-            if ((data.role === 'uni' || localStorage.getItem('user_type') === 'university') && data.id) {
-                const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                if (pageRes.ok) {
-                    const pageData = await pageRes.json();
-                    data.avatar = pageData.profile_image;
-                }
-                data.username = data.page_full_name || data.page_name;
-            }
-
-            setUser(data)
-        } catch (e) { setUserError("Something went wrong") }
-        finally { setUserLoading(false) }
-    }
 
     const openComments = (post) => { setSelectedPost(post); };
     const closeComments = () => { setSelectedPost(null); };
@@ -403,7 +377,6 @@ export default function Homepage() {
 
     useEffect(() => {
         loadPosts();
-        loadUser();
         fetchJoined()
         fetchWeather();
     }, [])
@@ -411,11 +384,6 @@ export default function Homepage() {
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
     }, [theme]);
-
-    const rawAvatar = user?.profile?.avatar || user?.avatar || user?.profile_image;
-    const avatarSrc = rawAvatar
-        ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
-        : ProfilePicture;
 
     return (
         <div className={styles.darkContainer} data-theme={theme}>
@@ -586,361 +554,171 @@ export default function Homepage() {
             {/* ══════════════════════════════════════
                     CREATE POST MODAL (shared)
                 ══════════════════════════════════════ */}
-            {isModalOpen && (
-                <div className={styles.modalOverlay} onClick={() => { setIsModalOpen(false); resetPostState(); setModalCommunityDropdownOpen(false); }}>
-                    <div
-                        className={styles.modal}
-                        onClick={e => e.stopPropagation()}
-                        style={isMobile ? { width: "calc(100vw - 24px)", maxWidth: 500, boxSizing: "border-box", padding: 16 } : {}}
-                    >
-                        <div className={styles.modalHeader}>
-                            <h3>Create post</h3>
-                            <button className={styles.closeButton} onClick={() => { setIsModalOpen(false); resetPostState(); setModalCommunityDropdownOpen(false); }}>✕</button>
-                        </div>
-
-                        {/* Name row + toggles on the right */}
-                        <div className={styles.leftSide}>
-                            <img
-                                src={avatarSrc}
-                                alt=""
-                                className={styles.userProfilePicture}
-                                onError={e => { e.currentTarget.src = ProfilePicture; }}
-                            />
-                            <strong>{user?.full_name || user?.page_full_name || user?.username}</strong>
-
-                            {(localStorage.getItem("user_type") === "university" ||
-                                localStorage.getItem("user_type") === "page" ||
-                                user?.role === "instructor") && (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginLeft: 'auto' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-                                            <span style={{ color: '#ADADAD', fontSize: '0.85rem' }}>
-                                                {user?.role === "instructor" ? "Academic?" : "Announcement?"}
-                                            </span>
-                                            <label className={styles.switch}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isAnnouncement}
-                                                    onChange={handleAnnouncementToggle}
-                                                />
-                                                <span className={styles.switchSlider}></span>
-                                            </label>
-                                        </div>
-                                        {(localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page") && (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-                                                <span style={{ color: '#ADADAD', fontSize: '0.85rem' }}>
-                                                    Promote?
-                                                </span>
-                                                <label className={styles.switch}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isPromote}
-                                                        onChange={handlePromoteToggle}
-                                                    />
-                                                    <span className={styles.switchSlider}></span>
-                                                </label>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                        </div>
-
-                        {/* ANNOUNCEMENT FIELDS */}
-                        {isAnnouncement && localStorage.getItem("user_type") === "university" ? (
-                            <div className={styles.announcementFields}>
-                                <input
-                                    type="text"
-                                    placeholder="Announcement title..."
-                                    value={announcementTitle}
-                                    onChange={e => setAnnouncementTitle(e.target.value)}
-                                    className={styles.announcementTitleInput}
-                                />
-                                <textarea
-                                    placeholder="Announcement description..."
-                                    value={announcementDesc}
-                                    onChange={e => setAnnouncementDesc(e.target.value)}
-                                    className={styles.announcementDescInput}
-                                />
-                                <div className={styles.announcementFieldDivider} />
-                                <div className={styles.annDurationRow}>
-                                    <span className={styles.annDurationLabel}>
-                                        <img src={Calender} alt="" style={{ width: 16, height: 16, filter: 'brightness(0) saturate(100%) invert(31%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)', flexShrink: 0 }} />
-                                        Duration
-                                    </span>
-                                    <div className={styles.annSliderWrapper}>
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="4"
-                                            value={announcementDuration}
-                                            onChange={e => setAnnouncementDuration(Number(e.target.value))}
-                                            className={styles.annRangeInput}
-                                        />
-                                        <div className={styles.annTrackBase} />
-                                        <div className={styles.annTrackFill} style={{ width: `${(announcementDuration / 4) * 100}%` }} />
-                                        <div className={styles.annNodesRow}>
-                                            {["1 week", "1 month", "3 months", "6 months", "1 year"].map((label, i) => (
-                                                <div key={i} className={styles.annNode} onClick={() => setAnnouncementDuration(i)}>
-                                                    <div className={`${styles.annNodeDot} ${i === announcementDuration ? styles.annNodeDotActive : i < announcementDuration ? styles.annNodeDotPassed : ''}`} />
-                                                    <span className={`${styles.annNodeLabel} ${i === announcementDuration ? styles.annNodeLabelActive : ''}`}>{label}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : isPromote && (localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page") ? (
-                            /* PROMOTE FIELDS */
-                            <div className={styles.announcementFields}>
-                                <input
-                                    type="text"
-                                    placeholder="Promote title..."
-                                    value={promoteTitle}
-                                    onChange={e => setPromoteTitle(e.target.value)}
-                                    className={styles.announcementTitleInput}
-                                />
-                                <textarea
-                                    placeholder="Promote content..."
-                                    value={promoteContent}
-                                    onChange={e => setPromoteContent(e.target.value)}
-                                    className={styles.announcementDescInput}
-                                    style={{ minHeight: '60px' }}
-                                />
-                                <textarea
-                                    placeholder="Promote description..."
-                                    value={promoteDesc}
-                                    onChange={e => setPromoteDesc(e.target.value)}
-                                    className={styles.announcementDescInput}
-                                    style={{ minHeight: '60px' }}
-                                />
-                                <div className={styles.announcementFieldDivider} />
-                                <div className={styles.annDurationRow}>
-                                    <span className={styles.annDurationLabel}>
-                                        <img src={Calender} alt="" style={{ width: 16, height: 16, filter: 'brightness(0) saturate(100%) invert(31%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)', flexShrink: 0 }} />
-                                        Duration
-                                    </span>
-                                    <div className={styles.annSliderWrapper}>
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="4"
-                                            value={promoteDuration}
-                                            onChange={e => setPromoteDuration(Number(e.target.value))}
-                                            className={styles.annRangeInput}
-                                        />
-                                        <div className={styles.annTrackBase} />
-                                        <div className={styles.annTrackFill} style={{ width: `${(promoteDuration / 4) * 100}%` }} />
-                                        <div className={styles.annNodesRow}>
-                                            {promoteDurationOptions.map((opt, i) => (
-                                                <div key={i} className={styles.annNode} onClick={() => setPromoteDuration(i)}>
-                                                    <div className={`${styles.annNodeDot} ${i === promoteDuration ? styles.annNodeDotActive : i < promoteDuration ? styles.annNodeDotPassed : ''}`} />
-                                                    <span className={`${styles.annNodeLabel} ${i === promoteDuration ? styles.annNodeLabelActive : ''}`}>{opt.label}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style={{
-                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                    background: 'linear-gradient(-90deg, rgba(166,39,156,0.15), rgba(49,32,169,0.15))',
-                                    border: '1px solid rgba(166,39,156,0.25)',
-                                    borderRadius: 14, padding: '10px 18px', marginTop: 8,
-                                }}>
-                                    <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
-                                        {promoteDurationOptions[promoteDuration].label} promotion
-                                    </span>
-                                    <span style={{
-                                        fontSize: '1.1rem', fontWeight: 700,
-                                        background: 'linear-gradient(30deg, #c72cff, #8b2dff)',
-                                        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-                                    }}>
-                                        ${promoteDurationOptions[promoteDuration].cost.toFixed(2)}
-                                    </span>
-                                </div>
-                            </div>
-                        ) : (
-                            /* STANDARD FIELDS */
-                            <textarea
-                                value={content}
-                                onChange={e => setContent(e.target.value)}
-                                placeholder={`What's on your mind, ${user?.page_full_name || user?.username || "User"}?`}
-                                className={styles.modalInput}
-                            />
-                        )}
-
-                        {images.length > 0 && (
-                            <div className={styles.previewContainer}>
-                                {images.map((file, i) => {
-                                    const url = URL.createObjectURL(file);
-                                    if (file.type.startsWith("video/")) return (
-                                        <div key={i} className={styles.previewWrapper}>
-                                            <video src={url} className={styles.previewImage} controls />
-                                            <button className={styles.removeImage}
-                                                onClick={() => setImages(prev => prev.filter((_, idx) => idx !== i))}>
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                    );
-                                    return (
-                                        <div key={i} className={styles.previewWrapper}>
-                                            <img src={url} alt="" className={styles.previewImage} />
-                                            <button className={styles.removeImage}
-                                                onClick={() => setImages(prev => prev.filter((_, idx) => idx !== i))}>
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-
-                        {files.length > 0 && (
-                            <div className={styles.filePreviewContainer}>
-                                {files.map((f, i) => (
-                                    <div key={i} className={styles.fileItem}>
-                                        📁 {f.name}
-                                        <button className={styles.removeFile}
-                                            onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))}>
-                                            <X size={14} />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        <div className={styles.actionsRow}>
-                            <label className={styles.actionButton}>
-                                <img src={MediaIcon} alt="" className={styles.actionIcon} />
-                                Media
-                                <input hidden type="file" accept="image/*,video/*" multiple onChange={handleMediaUpload} />
+            <CreatePostModal
+                isOpen={isModalOpen}
+                onClose={() => { setIsModalOpen(false); resetPostState(); setModalCommunityDropdownOpen(false); }}
+                user={user}
+                avatarSrc={avatarSrc}
+                isMobile={isMobile}
+                content={content}
+                setContent={setContent}
+                placeholder={`What's on your mind, ${user?.page_full_name || user?.username || "User"}?`}
+                images={images}
+                setImages={setImages}
+                files={files}
+                setFiles={setFiles}
+                isPollOpen={isPollOpen}
+                setIsPollOpen={setIsPollOpen}
+                pollOptions={pollOptions}
+                setPollOptions={setPollOptions}
+                onSubmit={() => {
+                    if (isAnnouncement && localStorage.getItem("user_type") === "university") {
+                        if (images.length === 0) { setAnnImageError(true); return; }
+                        if (!announcementTitle.trim() || !announcementDesc.trim()) return;
+                    }
+                    if (isPromote && (localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page")) {
+                        if (images.length === 0) { setAnnImageError(true); return; }
+                        if (!promoteTitle.trim() || !promoteContent.trim() || !promoteDesc.trim()) return;
+                        setIsPromoteCheckoutOpen(true);
+                        return;
+                    }
+                    handleCreatePost();
+                }}
+                submitDisabled={
+                    isAnnouncement && localStorage.getItem("user_type") === "university"
+                        ? (!announcementTitle.trim() || !announcementDesc.trim())
+                        : isPromote
+                            ? (!promoteTitle.trim() || !promoteContent.trim() || !promoteDesc.trim())
+                            : (!content.trim() && !images.length && !files.length && !isPollOpen)
+                }
+                toggles={(localStorage.getItem("user_type") === "university" ||
+                    localStorage.getItem("user_type") === "page" ||
+                    user?.role === "instructor") ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginLeft: 'auto' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                            <span style={{ color: '#ADADAD', fontSize: '0.85rem' }}>
+                                {user?.role === "instructor" ? "Academic?" : "Announcement?"}
+                            </span>
+                            <label className={styles.switch}>
+                                <input type="checkbox" checked={isAnnouncement} onChange={handleAnnouncementToggle} />
+                                <span className={styles.switchSlider}></span>
                             </label>
-                            <label className={styles.actionButton}>
-                                <img src={DocumentIcon} alt="" className={styles.actionIcon} />
-                                File
-                                <input hidden type="file" multiple onChange={handleFileUpload} />
-                            </label>
-                            <button type="button" className={styles.actionButton}
-                                onClick={() => { if (isPollOpen) { setIsPollOpen(false); setPollOptions(["", ""]); } else setIsPollOpen(true); }}>
-                                <BarChart2 size={16} className={styles.actionIconSvg} />
-                                Poll
-                            </button>
-                            <div style={{ position: "relative", display: "flex", justifyContent: "flex-end" }} onClick={e => e.stopPropagation()}>
-                                <button
-                                    style={{ display: "flex", alignItems: "center", background: "transparent", border: "none", padding: "2px 8px", cursor: "pointer" }}
-                                    onClick={e => { e.stopPropagation(); setModalCommunityDropdownOpen(prev => !prev); }}
-                                >
-                                    <span style={{
-                                        position: "relative", zIndex: 0, marginRight: "-15px",
-                                        background: theme === "light" ? "#E8E8E8" : "#262626",
-                                        borderRadius: 20, padding: "1px 30px 1px 15px",
-                                        color: theme === "light" ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.45)",
-                                        fontSize: 12, whiteSpace: "nowrap"
-                                    }}>
-                                        {selectedCommunity ? selectedCommunity.name : "Community"}
-                                    </span>
-                                    <span style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center", width: 25, height: 25, background: "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))", borderRadius: "50%", fontSize: 20, color: "white", flexShrink: 0 }}>▾</span>
-                                </button>
-                                {modalCommunityDropdownOpen && (
-                                    <div style={{
-                                        position: "absolute", top: "calc(100% + 6px)", right: 0,
-                                        minWidth: 200,
-                                        background: theme === "light" ? "#ffffff" : "#2a2a2a",
-                                        border: theme === "light" ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.1)",
-                                        borderRadius: 14, padding: 6, zIndex: 100,
-                                        display: "flex", flexDirection: "column", gap: 2,
-                                        boxShadow: "0 10px 30px rgba(0,0,0,0.2)"
-                                    }}
-                                        onClick={e => e.stopPropagation()}>
-                                        <div
-                                            style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, fontSize: 13, color: theme === "light" ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.75)", cursor: "pointer" }}
-                                            onClick={() => { setSelectedCommunity(null); setModalCommunityDropdownOpen(false); }}
-                                            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
-                                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                                        >
-                                            None
-                                        </div>
-                                        {joinedCommunities.map(c => (
-                                            <div
-                                                key={c.id}
-                                                style={{
-                                                    display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, fontSize: 13,
-                                                    color: selectedCommunity?.id === c.id ? "#c084fc" : theme === "light" ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.75)",
-                                                    background: selectedCommunity?.id === c.id ? "rgba(168,85,247,0.15)" : "transparent", cursor: "pointer"
-                                                }}
-                                                onClick={() => { setSelectedCommunity(c); setModalCommunityDropdownOpen(false); }}
-                                                onMouseEnter={e => e.currentTarget.style.background = theme === "light" ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.07)"}
-                                                onMouseLeave={e => e.currentTarget.style.background = selectedCommunity?.id === c.id ? "rgba(168,85,247,0.15)" : "transparent"}
-                                            >
-                                                {c.avatar && <img src={c.avatar.startsWith("http") ? c.avatar : `${API}${c.avatar}`} alt="" style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />}
-                                                {c.name}
+                        </div>
+                        {(localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page") && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                                <span style={{ color: '#ADADAD', fontSize: '0.85rem' }}>Promote?</span>
+                                <label className={styles.switch}>
+                                    <input type="checkbox" checked={isPromote} onChange={handlePromoteToggle} />
+                                    <span className={styles.switchSlider}></span>
+                                </label>
+                            </div>
+                        )}
+                    </div>
+                ) : null}
+                bodyContent={
+                    isAnnouncement && localStorage.getItem("user_type") === "university" ? (
+                        <div className={styles.announcementFields}>
+                            <input type="text" placeholder="Announcement title..." value={announcementTitle} onChange={e => setAnnouncementTitle(e.target.value)} className={styles.announcementTitleInput} />
+                            <textarea placeholder="Announcement description..." value={announcementDesc} onChange={e => setAnnouncementDesc(e.target.value)} className={styles.announcementDescInput} />
+                            <div className={styles.announcementFieldDivider} />
+                            <div className={styles.annDurationRow}>
+                                <span className={styles.annDurationLabel}>
+                                    <img src={Calender} alt="" style={{ width: 16, height: 16, filter: 'brightness(0) saturate(100%) invert(31%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)', flexShrink: 0 }} />
+                                    Duration
+                                </span>
+                                <div className={styles.annSliderWrapper}>
+                                    <input type="range" min="0" max="4" value={announcementDuration} onChange={e => setAnnouncementDuration(Number(e.target.value))} className={styles.annRangeInput} />
+                                    <div className={styles.annTrackBase} />
+                                    <div className={styles.annTrackFill} style={{ width: `${(announcementDuration / 4) * 100}%` }} />
+                                    <div className={styles.annNodesRow}>
+                                        {["1 week", "1 month", "3 months", "6 months", "1 year"].map((label, i) => (
+                                            <div key={i} className={styles.annNode} onClick={() => setAnnouncementDuration(i)}>
+                                                <div className={`${styles.annNodeDot} ${i === announcementDuration ? styles.annNodeDotActive : i < announcementDuration ? styles.annNodeDotPassed : ''}`} />
+                                                <span className={`${styles.annNodeLabel} ${i === announcementDuration ? styles.annNodeLabelActive : ''}`}>{label}</span>
                                             </div>
                                         ))}
                                     </div>
-                                )}
+                                </div>
                             </div>
                         </div>
-
-                        {isPollOpen && (
-                            <div className={styles.pollContainer}>
-                                {pollOptions.map((option, i) => (
-                                    <div key={i} className={styles.pollOptionRow}>
-                                        <input
-                                            value={option}
-                                            onChange={e => { const u = [...pollOptions]; u[i] = e.target.value; setPollOptions(u); }}
-                                            placeholder={`Option ${i + 1}`}
-                                            className={styles.pollInput}
-                                            style={{ width: "100%", boxSizing: "border-box" }}
-                                        />
-                                        {pollOptions.length > 2 && (
-                                            <button className={styles.removeOption}
-                                                onClick={() => setPollOptions(pollOptions.filter((_, idx) => idx !== i))}>✕</button>
-                                        )}
+                    ) : isPromote && (localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page") ? (
+                        <div className={styles.announcementFields}>
+                            <input type="text" placeholder="Promote title..." value={promoteTitle} onChange={e => setPromoteTitle(e.target.value)} className={styles.announcementTitleInput} />
+                            <textarea placeholder="Promote content..." value={promoteContent} onChange={e => setPromoteContent(e.target.value)} className={styles.announcementDescInput} style={{ minHeight: '60px' }} />
+                            <textarea placeholder="Promote description..." value={promoteDesc} onChange={e => setPromoteDesc(e.target.value)} className={styles.announcementDescInput} style={{ minHeight: '60px' }} />
+                            <div className={styles.announcementFieldDivider} />
+                            <div className={styles.annDurationRow}>
+                                <span className={styles.annDurationLabel}>
+                                    <img src={Calender} alt="" style={{ width: 16, height: 16, filter: 'brightness(0) saturate(100%) invert(31%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(85%)', flexShrink: 0 }} />
+                                    Duration
+                                </span>
+                                <div className={styles.annSliderWrapper}>
+                                    <input type="range" min="0" max="4" value={promoteDuration} onChange={e => setPromoteDuration(Number(e.target.value))} className={styles.annRangeInput} />
+                                    <div className={styles.annTrackBase} />
+                                    <div className={styles.annTrackFill} style={{ width: `${(promoteDuration / 4) * 100}%` }} />
+                                    <div className={styles.annNodesRow}>
+                                        {promoteDurationOptions.map((opt, i) => (
+                                            <div key={i} className={styles.annNode} onClick={() => setPromoteDuration(i)}>
+                                                <div className={`${styles.annNodeDot} ${i === promoteDuration ? styles.annNodeDotActive : i < promoteDuration ? styles.annNodeDotPassed : ''}`} />
+                                                <span className={`${styles.annNodeLabel} ${i === promoteDuration ? styles.annNodeLabelActive : ''}`}>{opt.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(-90deg, rgba(166,39,156,0.15), rgba(49,32,169,0.15))', border: '1px solid rgba(166,39,156,0.25)', borderRadius: 14, padding: '10px 18px', marginTop: 8 }}>
+                                <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>{promoteDurationOptions[promoteDuration].label} promotion</span>
+                                <span style={{ fontSize: '1.1rem', fontWeight: 700, background: 'linear-gradient(30deg, #c72cff, #8b2dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>${promoteDurationOptions[promoteDuration].cost.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    ) : null
+                }
+                actionsExtra={
+                    <div style={{ position: "relative", display: "flex", justifyContent: "flex-end" }} onClick={e => e.stopPropagation()}>
+                        <button
+                            style={{ display: "flex", alignItems: "center", background: "transparent", border: "none", padding: "2px 8px", cursor: "pointer" }}
+                            onClick={e => { e.stopPropagation(); setModalCommunityDropdownOpen(prev => !prev); }}
+                        >
+                            <span style={{ position: "relative", zIndex: 0, marginRight: "-15px", background: theme === "light" ? "#E8E8E8" : "#262626", borderRadius: 20, padding: "1px 30px 1px 15px", color: theme === "light" ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.45)", fontSize: 12, whiteSpace: "nowrap" }}>
+                                {selectedCommunity ? selectedCommunity.name : "Community"}
+                            </span>
+                            <span style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center", width: 25, height: 25, background: "linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9))", borderRadius: "50%", fontSize: 20, color: "white", flexShrink: 0 }}>▾</span>
+                        </button>
+                        {modalCommunityDropdownOpen && (
+                            <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, minWidth: 200, background: theme === "light" ? "#ffffff" : "#2a2a2a", border: theme === "light" ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: 6, zIndex: 100, display: "flex", flexDirection: "column", gap: 2, boxShadow: "0 10px 30px rgba(0,0,0,0.2)" }} onClick={e => e.stopPropagation()}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, fontSize: 13, color: theme === "light" ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.75)", cursor: "pointer" }}
+                                    onClick={() => { setSelectedCommunity(null); setModalCommunityDropdownOpen(false); }}
+                                    onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
+                                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                    None
+                                </div>
+                                {joinedCommunities.map(c => (
+                                    <div key={c.id}
+                                        style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, fontSize: 13, color: selectedCommunity?.id === c.id ? "#c084fc" : theme === "light" ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.75)", background: selectedCommunity?.id === c.id ? "rgba(168,85,247,0.15)" : "transparent", cursor: "pointer" }}
+                                        onClick={() => { setSelectedCommunity(c); setModalCommunityDropdownOpen(false); }}
+                                        onMouseEnter={e => e.currentTarget.style.background = theme === "light" ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.07)"}
+                                        onMouseLeave={e => e.currentTarget.style.background = selectedCommunity?.id === c.id ? "rgba(168,85,247,0.15)" : "transparent"}>
+                                        {c.avatar && <img src={c.avatar.startsWith("http") ? c.avatar : `${API}${c.avatar}`} alt="" style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />}
+                                        {c.name}
                                     </div>
                                 ))}
-                                <button type="button" onClick={() => setPollOptions([...pollOptions, ""])} className={styles.addOption}>+ Add Option</button>
                             </div>
                         )}
-
-                        {annImageError && (
-                            <div className={styles.annImageWarning}>
-                                <span className={styles.annImageWarningIcon}>📸</span>
-                                <div>
-                                    <p className={styles.annImageWarningTitle}>Image required</p>
-                                    <p className={styles.annImageWarningDesc}>
-                                        {isPromote ? "Promotions need a cover image to stand out in the feed." : "Announcements need a cover image to stand out in the feed."}
-                                    </p>
-                                </div>
-                                <button className={styles.annImageWarningClose} onClick={() => setAnnImageError(false)}>✕</button>
-                            </div>
-                        )}
-
-                        <button
-                            className={styles.postButton}
-                            onClick={() => {
-                                if (isAnnouncement && localStorage.getItem("user_type") === "university") {
-                                    if (images.length === 0) { setAnnImageError(true); return; }
-                                    if (!announcementTitle.trim() || !announcementDesc.trim()) return;
-                                }
-                                if (isPromote && (localStorage.getItem("user_type") === "university" || localStorage.getItem("user_type") === "page")) {
-                                    if (images.length === 0) { setAnnImageError(true); return; }
-                                    if (!promoteTitle.trim() || !promoteContent.trim() || !promoteDesc.trim()) return;
-                                    setIsPromoteCheckoutOpen(true);
-                                    return;
-                                }
-                                handleCreatePost();
-                            }}
-                            disabled={
-                                isAnnouncement && localStorage.getItem("user_type") === "university"
-                                    ? (!announcementTitle.trim() || !announcementDesc.trim())
-                                    : isPromote
-                                        ? (!promoteTitle.trim() || !promoteContent.trim() || !promoteDesc.trim())
-                                        : (!content.trim() && !images.length && !files.length && !isPollOpen)
-                            }
-                        >
-                            Post
-                        </button>
                     </div>
-                </div>
-            )}
+                }
+                belowPoll={annImageError ? (
+                    <div className={styles.annImageWarning}>
+                        <span className={styles.annImageWarningIcon}>📸</span>
+                        <div>
+                            <p className={styles.annImageWarningTitle}>Image required</p>
+                            <p className={styles.annImageWarningDesc}>
+                                {isPromote ? "Promotions need a cover image to stand out in the feed." : "Announcements need a cover image to stand out in the feed."}
+                            </p>
+                        </div>
+                        <button className={styles.annImageWarningClose} onClick={() => setAnnImageError(false)}>✕</button>
+                    </div>
+                ) : null}
+            />
 
             {selectedPost && (
                 <CommentModal post={selectedPost} onClose={closeComments} currentUser={user} />

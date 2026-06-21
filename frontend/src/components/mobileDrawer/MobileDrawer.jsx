@@ -7,7 +7,7 @@ import LightModeIcon from '../../Assets/icons/light-mode.png';
 import DarkModeIcon from '../../Assets/icons/dark-mode.png';
 import SideBarNav from '../pagelayout/sidebarnav/sideBarNav';
 
-export default function MobileDrawer({ isOpen, onClose, theme, toggleTheme, variant = 'default', currentUser }) {
+export default function MobileDrawer({ isOpen, onClose, theme, toggleTheme, variant, currentUser }) {
     const navigate = useNavigate();
     if (!isOpen) return null;
 
@@ -45,7 +45,7 @@ export default function MobileDrawer({ isOpen, onClose, theme, toggleTheme, vari
                     </button>
                 </div>
                 <div className={styles.nav}>
-                    <SideBarNav onClose={onClose} variant={variant} currentUser={currentUser} />
+                    <SideBarNav onClose={onClose} currentUser={currentUser} />
                 </div>
             </div>
         </div>

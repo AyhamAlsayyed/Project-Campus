@@ -18,11 +18,11 @@ import ReportModal from '../../components/posts/ReportModal';
 import API from '../../config';
 import useTheme from '../../hooks/useTheme'
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
-import ProfilePicture from '../../Assets/icons/default-pfp.png';
+import { useUser } from '../../context/UserContext';
 export default function FollowedPages() {
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
-    const [currentUser, setCurrentUser] = useState(null);
+    const { user: currentUser, avatarSrc } = useUser();
     const ownPageId = currentUser?.page_id || currentUser?.id;
     const uniPageName = currentUser?.university;
     const isUniPage = (page) => uniPageName && page.page_name === uniPageName;
@@ -39,8 +39,6 @@ export default function FollowedPages() {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-    const [userError, setUserError] = useState("");
-    const [userLoading, setUserLoading] = useState(true);
     const token = localStorage.getItem("access");
     const [showAllRec, setShowAllRec] = useState(false);
 
@@ -110,25 +108,7 @@ export default function FollowedPages() {
                 const token = localStorage.getItem("access");
                 if (!token) return;
 
-                // 1. User
-                const userRes = await fetch(`${API}/api/auth/me/`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (!userRes.ok) return;
-                const userData = await userRes.json();
-
-                if ((userData.role === 'university' || localStorage.getItem('user_type') === 'university') && userData.id) {
-                    const pageRes = await fetch(`${API}/api/pages/${userData.id}/`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-                    if (pageRes.ok) {
-                        const pageData = await pageRes.json();
-                        userData.avatar = pageData.profile_image;
-                    }
-                }
-
-                setCurrentUser(userData);
-                // 2. Fetch followed pages + posts
+                // Fetch followed pages + posts
                 const [pagesRes, postsRes] = await Promise.all([
                     fetch(`${API}/api/pages/followed/`, {
                         headers: { Authorization: `Bearer ${token}` },
@@ -228,11 +208,6 @@ export default function FollowedPages() {
         document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [mobileMenuOpen]);
-
-    const rawAvatar = currentUser?.profile?.avatar || currentUser?.avatar || currentUser?.profile_image;
-    const avatarSrc = rawAvatar
-        ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
-        : ProfilePicture;
 
     const handleNextSlide = () => {
         setCurrentSlide((prev) => (prev + 1) % recommendedPages.length);
@@ -367,7 +342,7 @@ export default function FollowedPages() {
             {/* ══════════════════════════════════════
                     MOBILE DRAWER
                 ══════════════════════════════════════ */}
-            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} currentUser={currentUser} />
+            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} variant='profile' currentUser={currentUser} />
 
             {/* ══════════════════════════════════════
                     DESKTOP HEADER

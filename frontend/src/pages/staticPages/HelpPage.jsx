@@ -7,6 +7,7 @@ import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import useTheme from '../../hooks/useTheme';
 import API from '../../config';
+import { useUser } from '../../context/UserContext';
 
 const faqs = [
     { q: "How do I join a community?", a: "Go to the Communities page from the sidebar. Browse or search for a community, then click Join. Public communities are instant; private ones send a join request to the admin." },
@@ -35,7 +36,7 @@ function AccordionItem({ q, a }) {
 
 export default function HelpPage() {
     const { theme, toggleTheme } = useTheme();
-    const [user, setUser] = useState(null);
+    const { user, avatarSrc } = useUser();
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -49,16 +50,6 @@ export default function HelpPage() {
         document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [mobileMenuOpen]);
-    useEffect(() => {
-        const token = localStorage.getItem('access');
-        if (!token) return;
-        fetch(`${API}/api/auth/me/`, { headers: { Authorization: `Bearer ${token}` } })
-            .then(r => r.ok ? r.json() : null).then(d => { if (d) setUser(d); });
-    }, []);
-
-    const avatarSrc = user?.profile?.avatar
-        ? (user.profile.avatar.startsWith('http') ? user.profile.avatar : `${API}${user.profile.avatar}`)
-        : null;
 
     return (
         <div className={styles.darkContainer} data-theme={theme}>

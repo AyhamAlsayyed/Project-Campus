@@ -25,6 +25,7 @@ import PrivacyPolicy from "./pages/staticPages/PrivacyPolicy.jsx";
 import HelpPage from "./pages/staticPages/HelpPage.jsx";
 import { PresenceProvider } from "./context/presenceContext.jsx";
 import { NotificationProvider } from "./context/NotificationContext.jsx";
+import { UserProvider } from "./context/UserContext.jsx";
 
 // Clear auth if user didn't check "Remember Me" and the browser session ended
 if (localStorage.getItem("remember_me") === "false" && !sessionStorage.getItem("session_active")) {
@@ -32,6 +33,7 @@ if (localStorage.getItem("remember_me") === "false" && !sessionStorage.getItem("
 }
 function App() {
   return (
+    <UserProvider>
     <PresenceProvider>
       <NotificationProvider>
         <BrowserRouter>
@@ -191,6 +193,7 @@ function App() {
         </BrowserRouter>
       </NotificationProvider>
     </PresenceProvider>
+    </UserProvider>
 
   );
 }

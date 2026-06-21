@@ -7,9 +7,7 @@ import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { X, Menu, BarChart2 } from "lucide-react";
-import MediaIcon from '../../Assets/icons/media.png';
-import DocumentIcon from '../../Assets/icons/document.png';
+import CreatePostModal from '../../components/createPost/CreatePostModal/CreatePostModal';
 import { Navigate } from 'react-router-dom';
 import CommentModal from '../../components/comments/commentsModal';
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
@@ -18,7 +16,7 @@ import NotificationInactive from '../../Assets/icons/mute.png'
 import NotificationActive from '../../Assets/icons/notifications-active.png'
 import Leave from '../../Assets/icons/leave.png'
 import Setting from '../../Assets/icons/setting.png'
-import ProfilePicture from '../../Assets/icons/default-pfp.png'
+import { useUser } from '../../context/UserContext';
 import useTheme from '../../hooks/useTheme';
 import CommunitySettingsNav from '../../components/communitySettings/CommunitySettingsNav';
 import CommunityInfoPanel from '../../components/communitySettings/CommunityInfoPanel';
@@ -29,7 +27,7 @@ import DeleteCommunityModal from '../../components/communitySettings/deleteCommu
 import API from '../../config';
 
 export default function CommunityPage() {
-    const [user, setUser] = useState(null)
+    const { user, avatarSrc } = useUser();
     const { theme, toggleTheme } = useTheme();
     const [posts, setPosts] = useState([]);
     const [searchParams, setSearchParams] = useSearchParams();
@@ -135,28 +133,6 @@ export default function CommunityPage() {
         setCommunity(data);
     };
     
-    const loadUser = async () => {
-        if (!token) return;
-        try {
-            const res = await fetch(`${API}/api/auth/me/`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (!res.ok) return;
-            const data = await res.json();
-
-            if ((data.role === 'university' || localStorage.getItem('user_type') === 'university') && data.id) {
-                const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                if (pageRes.ok) {
-                    const pageData = await pageRes.json();
-                    data.avatar = pageData.profile_image;
-                }
-            }
-
-            setUser(data);
-        } catch (err) { console.error("Failed to load user"); }
-    };
     
     useEffect(() => {
         const fetchJoinedCommunities = async () => {
@@ -214,7 +190,7 @@ export default function CommunityPage() {
     };
 
     useEffect(() => {
-        loadUser(); fetchPosts(); fetchCommunity(); fetchWeather();
+        fetchPosts(); fetchCommunity(); fetchWeather();
     }, [id, filter]);
 
     const handleMediaUpload = (e) => { setImages(prev => [...prev, ...Array.from(e.target.files)]); };
@@ -235,11 +211,6 @@ export default function CommunityPage() {
             console.error("Error deleting community:", err);
         }
     };
-
-    const rawAvatar = user?.profile?.avatar || user?.avatar || user?.profile_image;
-    const avatarSrc = rawAvatar
-        ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
-        : ProfilePicture;
 
     const canManage = community?.user_role === 'owner' || community?.user_role === 'admin';
 
@@ -593,101 +564,35 @@ export default function CommunityPage() {
             )}
 
             {/* ── MODALS ── */}
-            {isModalOpen && (
-                <div className={styles.modalOverlay} onClick={() => { setIsModalOpen(false); resetPostState(); }}>
-                    <div className={styles.modal} onClick={e => e.stopPropagation()} style={isMobile ? { width: "calc(100vw - 24px)", maxWidth: 500, boxSizing: "border-box", padding: 16 } : {}}>
-                        <div className={styles.modalHeader}>
-                            <h3>Create post</h3>
-                            <button className={styles.closeButton} onClick={() => { setIsModalOpen(false); resetPostState(); }}>✕</button>
-                        </div>
-
-                        <div className={styles.leftSide}>
-                            <img src={avatarSrc} alt="" className={styles.userProfilePicture} />
-                            <strong>{user?.full_name || user?.username}</strong>
-
-                            {user?.role === "instructor" && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
-                                    <span style={{ color: '#ADADAD', fontSize: '0.85rem' }}>Academic?</span>
-                                    <label className={styles.switch}>
-                                        <input
-                                            type="checkbox"
-                                            checked={isAcademic}
-                                            onChange={() => setIsAcademic(prev => !prev)}
-                                        />
-                                        <span className={styles.switchSlider}></span>
-                                    </label>
-                                </div>
-                            )}
-                        </div>
-
-                        <textarea
-                            value={content}
-                            onChange={e => setContent(e.target.value)}
-                            placeholder={`What's on your mind, ${user?.username || "User"}?`}
-                            className={styles.modalInput}
-                        />
-
-                        {images.length > 0 && (
-                            <div className={styles.previewContainer}>
-                                {images.map((img, i) => (
-                                    <div key={i} className={styles.previewWrapper}>
-                                        <img src={URL.createObjectURL(img)} alt="" className={styles.previewImage} />
-                                        <button className={styles.removeImage} onClick={() => setImages(prev => prev.filter((_, idx) => idx !== i))}><X size={14} /></button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {files.length > 0 && (
-                            <div className={styles.filePreviewContainer}>
-                                {files.map((f, i) => (
-                                    <div key={i} className={styles.fileItem}>
-                                        📁 {f.name}
-                                        <button className={styles.removeFile} onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))}><X size={14} /></button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        <div className={styles.actionsRow}>
-                            <label className={styles.actionButton}>
-                                <img src={MediaIcon} alt="" className={styles.actionIcon} />
-                                Media
-                                <input hidden type="file" accept="image/*,video/*" multiple onChange={handleMediaUpload} />
-                            </label>
-                            <label className={styles.actionButton}>
-                                <img src={DocumentIcon} alt="" className={styles.actionIcon} />
-                                File
-                                <input hidden type="file" multiple onChange={handleFileUpload} />
-                            </label>
-                            <button type="button" className={styles.actionButton} onClick={() => { if (isPollOpen) { setIsPollOpen(false); setPollOptions(["", ""]); } else setIsPollOpen(true); }}>
-                                <BarChart2 size={16} className={styles.actionIconSvg} />
-                                Poll
-                            </button>
-                        </div>
-
-                        {isPollOpen && (
-                            <div className={styles.pollContainer}>
-                                {pollOptions.map((option, i) => (
-                                    <div key={i} className={styles.pollOptionRow}>
-                                        <input value={option} onChange={e => { const u = [...pollOptions]; u[i] = e.target.value; setPollOptions(u); }} placeholder={`Option ${i + 1}`} className={styles.pollInput} style={{ width: "100%", boxSizing: "border-box" }} />
-                                        {pollOptions.length > 2 && <button className={styles.removeOption} onClick={() => setPollOptions(pollOptions.filter((_, idx) => idx !== i))}>✕</button>}
-                                    </div>
-                                ))}
-                                <button type="button" onClick={() => setPollOptions([...pollOptions, ""])} className={styles.addOption}>+ Add Option</button>
-                            </div>
-                        )}
-
-                        <button
-                            className={styles.postButton}
-                            onClick={handleCreatePost}
-                            disabled={!content && !images.length && !files.length && !isPollOpen}
-                        >
-                            Post
-                        </button>
+            <CreatePostModal
+                isOpen={isModalOpen}
+                onClose={() => { setIsModalOpen(false); resetPostState(); }}
+                user={user}
+                avatarSrc={avatarSrc}
+                isMobile={isMobile}
+                content={content}
+                setContent={setContent}
+                placeholder={`What's on your mind, ${user?.username || "User"}?`}
+                images={images}
+                setImages={setImages}
+                files={files}
+                setFiles={setFiles}
+                isPollOpen={isPollOpen}
+                setIsPollOpen={setIsPollOpen}
+                pollOptions={pollOptions}
+                setPollOptions={setPollOptions}
+                onSubmit={handleCreatePost}
+                submitDisabled={!content && !images.length && !files.length && !isPollOpen}
+                toggles={user?.role === "instructor" ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+                        <span style={{ color: '#ADADAD', fontSize: '0.85rem' }}>Academic?</span>
+                        <label className={styles.switch}>
+                            <input type="checkbox" checked={isAcademic} onChange={() => setIsAcademic(prev => !prev)} />
+                            <span className={styles.switchSlider}></span>
+                        </label>
                     </div>
-                </div>
-            )}
+                ) : null}
+            />
 
             {isCommentModalOpen && <CommentModal post={selectedPost} onClose={() => setIsCommentModalOpen(false)} currentUser={user} />}
 

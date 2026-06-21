@@ -4,7 +4,7 @@ import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav';
 import { useState, useEffect, useRef } from 'react';  // add useRef
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
-import ProfilePicture from '../../Assets/icons/default-pfp.png';
+import { useUser } from '../../context/UserContext';
 import VerifiedBadge from '../../Assets/icons/verified-mark.png';
 import EventsIcon from '../../Assets/icons/event.png';
 import { createPortal } from 'react-dom';
@@ -17,7 +17,7 @@ export default function PageEventsPage() {
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
 
-    const [currentUser, setCurrentUser] = useState(null);
+    const { user: currentUser, avatarSrc } = useUser();
     const [pageEvents, setPageEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [popupEvent, setPopupEvent] = useState(null);
@@ -37,12 +37,7 @@ export default function PageEventsPage() {
         const fetchData = async () => {
             try {
                 const headers = { Authorization: `Bearer ${token}` };
-                const userRes = await fetch(`${API}/api/auth/me/`, { headers });
-                if (!userRes.ok) return;
-                const userData = await userRes.json();
-                setCurrentUser(userData);
-
-                const pageId = userData.page_id;
+                const pageId = currentUser?.page_id;
                 if (!pageId) return;
 
                 const evRes = await fetch(`${API}/api/pages/${pageId}/events/`, { headers });
@@ -128,11 +123,6 @@ export default function PageEventsPage() {
         document.documentElement.setAttribute('data-theme', theme);
     }, [theme]);
 
-    const rawImage = currentUser?.profile_image || currentUser?.avatar || currentUser?.profile?.avatar;
-    const avatarSrc = rawImage
-        ? (rawImage.startsWith('http') ? rawImage : `${API}${rawImage}`)
-        : ProfilePicture;
-
     // ─── render ──────────────────────────────────────────────────────────────
 
     return (
@@ -150,7 +140,7 @@ export default function PageEventsPage() {
             )}
 
             {/* ── MOBILE DRAWER ── */}
-            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} />
+            <MobileDrawer isOpen={isMobile && mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} theme={theme} toggleTheme={toggleTheme} variant="profile" currentUser={currentUser} />
 
             {/* ── DESKTOP HEADER ── */}
             {!isMobile && (

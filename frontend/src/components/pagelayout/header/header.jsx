@@ -95,7 +95,10 @@ function formatNotif(item) {
     post_id: resolvedPostId,
     post: linkPost,
     comment_id: typeof item.link === "object" ? notifLink.comment_id || item.comment_id || null : null,
-    actor_id: item.actor_id || null,
+    actor_id: item.actor_id
+      || (typeof item.link === 'number' ? item.link : null)
+      || (typeof item.link === 'object' ? (item.link?.user_id || item.link?.actor_id || null) : null)
+      || null,
     event_id: item.event_id || null,
     time: timeAgo(item.time || item.created_at || new Date().toISOString()),
   };
@@ -188,7 +191,9 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
     const id = isPageUser ? user?.page_id : user?.id;
     return (
       location.pathname.startsWith(`/profile/${id}`) ||
-      location.pathname.startsWith(`/page/${id}`)
+      location.pathname.startsWith(`/page/${id}`) ||
+      location.pathname.startsWith('/settings') ||
+      location.pathname.startsWith('/subscriptions')
     );
   }, [location.pathname, user]);
 
@@ -436,6 +441,39 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
     }
   }, [notifications]);
 
+  const handleAcceptFriend = useCallback(async (e, actorId, notifId) => {
+    e.stopPropagation();
+    if (!actorId) return;
+    const token = localStorage.getItem("access");
+    try {
+      const res = await fetch(`${API}/api/friends/accept/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ user_id: actorId }),
+      });
+      if (res.ok) setNotifications(prev => prev.filter(n => n.id !== notifId));
+    } catch (e) { console.error(e); }
+  }, []);
+
+  const handleDeclineFriend = useCallback(async (e, actorId, notifId) => {
+    e.stopPropagation();
+    if (!actorId) return;
+    const token = localStorage.getItem("access");
+    try {
+      const res = await fetch(`${API}/api/friends/decline/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ user_id: actorId }),
+      });
+      if (res.ok) setNotifications(prev => prev.filter(n => n.id !== notifId));
+    } catch (e) { console.error(e); }
+  }, []);
+
+  const isFriendRequest = (type) => {
+    const t = (type || "").toLowerCase();
+    return (t.includes("friend") || t.includes("request")) && !t.includes("accept");
+  };
+
   const handleMarkAllChatsAsRead = useCallback(async () => {
     const token = localStorage.getItem("access");
     const unreadIds = chats.filter((c) => c.unread > 0).map((c) => c.id);
@@ -496,13 +534,18 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
   }, [navigate]);
 
   const handleAvatarClick = useCallback(() => {
-    const loggedInType = localStorage.getItem("user_type");
-    const isPageUser = loggedInType === "page" || loggedInType === "university";
-    const id = isPageUser ? user?.page_id : user?.id;
-    if (!id) return;
-    const profilePath = isPageUser ? `/page/${id}` : `/profile/${id}`;
-    location.pathname.startsWith(profilePath) ? navigate("/home") : navigate(profilePath);
-  }, [user, location.pathname, navigate]);
+    if (isInProfileSection) {
+      // We're already in the profile context — the icon shows "Home", so go home
+      navigate("/home");
+    } else {
+      // Outside profile context — navigate to the user's profile
+      const loggedInType = localStorage.getItem("user_type");
+      const isPageUser = loggedInType === "page" || loggedInType === "university";
+      const id = isPageUser ? user?.page_id : user?.id;
+      if (!id) return;
+      navigate(isPageUser ? `/page/${id}` : `/profile/${id}`);
+    }
+  }, [isInProfileSection, user, navigate]);
 
   // ── Community join / request ──
   const handleJoinCommunity = useCallback(async () => {
@@ -578,8 +621,8 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                 id="search-results-portal"
                 className={styles.searchPortal}
                 style={{
-                  top: searchBoxRect.bottom + 8,
-                  left: searchBoxRect.left + searchBoxRect.width / 2,
+                  top: searchBoxRect.bottom / (parseFloat(getComputedStyle(document.documentElement).zoom) || 1) + 8,
+                  left: (searchBoxRect.left + searchBoxRect.width / 2) / (parseFloat(getComputedStyle(document.documentElement).zoom) || 1),
                 }}
               >
                 {/* See all */}
@@ -903,6 +946,12 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
                           <span className={styles.notifTime}>{n.time}</span>
                         </div>
                         <p className={styles.notifText}>{n.text}</p>
+                        {isFriendRequest(n.type) && (
+                          <div className={styles.notifFriendActions} onClick={e => e.stopPropagation()}>
+                            <button className={styles.notifAcceptBtn} onClick={e => handleAcceptFriend(e, n.actor_id, n.id)}>Accept</button>
+                            <button className={styles.notifDeclineBtn} onClick={e => handleDeclineFriend(e, n.actor_id, n.id)}>Decline</button>
+                          </div>
+                        )}
                       </div>
                       <div
                         className={styles.notifMenuWrapper}

@@ -10,6 +10,7 @@ import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 import CommentsModal from '../../components/comments/commentsModal'
 import DefaultProfileIcon from '../../Assets/icons/default-pfp.png'
 import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 import ReportModal from '../../components/posts/ReportModal';
 import RemoveFriendIcon from '../../Assets/icons/remove-person.png'
 import Block from '../../Assets/icons/block.png'
@@ -18,15 +19,15 @@ import API from '../../config';
 import NeutralReview from '../../Assets/icons/neutral-review.png';
 import useTheme from '../../hooks/useTheme'
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
+import StatusDot from '../../components/presence/StatusDot';
+import { useUser } from '../../context/UserContext';
 
 export default function FriendsPage() {
     const { theme, toggleTheme } = useTheme()
-    const [currentUser, setCurrentUser] = useState(null);
+    const { user: currentUser, avatarSrc, loading: userLoading } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     const [friends, setFriends] = useState([]);
     const [posts, setPosts] = useState([]);
-    const [userError, setUserError] = useState("");
-    const [userLoading, setUserLoading] = useState(true);
     const [showAllPopup, setShowAllPopup] = useState(false);
     const [popupSearchTerm, setPopupSearchTerm] = useState("");
     const [activeMenuId, setActiveMenuId] = useState(null);
@@ -80,25 +81,14 @@ export default function FriendsPage() {
         } catch (e) { console.error("Block failed:", e); }
     };
     useEffect(() => {
+        if (!currentUser?.id) return;
         const fetchPageData = async () => {
-            setUserLoading(true);
             try {
                 const token = localStorage.getItem("access");
-                if (!token) {
-                    setUserLoading(false);
-                    return;
-                }
-
-
-                const userRes = await fetch(`${API}/api/auth/me/`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (!userRes.ok) throw new Error("User fetch failed");
-                const userData = await userRes.json();
-                setCurrentUser(userData);
+                if (!token) return;
 
                 const [friendsRes, postsRes] = await Promise.all([
-                    fetch(`${API}/api/users/${userData.id}/friends/`, {
+                    fetch(`${API}/api/users/${currentUser.id}/friends/`, {
                         headers: { Authorization: `Bearer ${token}` },
                     }),
                     fetch(`${API}/api/posts/feed/?filter=friends`, {
@@ -120,7 +110,7 @@ export default function FriendsPage() {
                                     ? (f.avatar_url.startsWith("http")
                                         ? f.avatar_url
                                         : `${API}${f.avatar_url}`)
-                                    : "/default-avatar.png",
+                                    : DefaultProfileIcon,
                                 major: f.major || "No Major Set",
                                 is_online: f.is_online || false
                             };
@@ -144,14 +134,11 @@ export default function FriendsPage() {
 
             } catch (error) {
                 console.error("FriendsPage Error:", error);
-                setUserError("Could not load your feed.");
-            } finally {
-                setUserLoading(false);
             }
         };
 
         fetchPageData();
-    }, [token]);
+    }, [currentUser?.id]);
 
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 1024);
@@ -175,10 +162,6 @@ export default function FriendsPage() {
         };
     }, []);
 
-    const rawAvatar = currentUser?.profile?.avatar || currentUser?.avatar || currentUser?.profile_image;
-    const avatarSrc = rawAvatar
-        ? (rawAvatar.startsWith("http") ? rawAvatar : `${API}${rawAvatar}`)
-        : DefaultProfileIcon;
     const handleMessage = async (userId, username) => {
         try {
             // First check if a conversation already exists
@@ -270,8 +253,15 @@ export default function FriendsPage() {
                                 <div className={styles.friendItemRow}>
                                     <div className={styles.friendItemLeft} onClick={() => handleFriendClick(friend.id)}>
                                         <div className={styles.friendAvatarWrapper}>
-                                            <img src={friend.avatar || "/default-avatar.png"} alt={friend.username} className={styles.friendAvatar} />
-                                            <div className={`${styles.statusDot} ${friend.is_online ? styles.online : styles.offline}`}></div>
+                                            <img
+                                                src={friend.avatar || DefaultProfileIcon}
+                                                alt={friend.username}
+                                                className={`${styles.friendAvatar}${!friend.avatar ? ' defaultPfp' : ''}`}
+                                                onError={e => { e.currentTarget.src = DefaultProfileIcon; e.currentTarget.classList.add('defaultPfp'); }}
+                                            />
+                                            <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
+                                                <StatusDot userId={friend.id} size="sm" />
+                                            </span>
                                         </div>
                                         <div className={styles.friendInfo}>
                                             <div className={styles.friendName}>{friend.username}</div>
@@ -304,56 +294,6 @@ export default function FriendsPage() {
                 </div>
             </div>
 
-            {showAllPopup && (
-                <div className={styles.popupOverlay} onClick={() => setShowAllPopup(false)}>
-                    <div className={styles.popupContent} onClick={(e) => e.stopPropagation()}>
-                        <div className={styles.popupHeader}>
-                            <h3>All Friends</h3>
-                            <button className={styles.closePopupBtn} onClick={() => setShowAllPopup(false)}>×</button>
-                        </div>
-                        <div className={styles.searchContactWrap}>
-                            <Search size={16} color="#888" className={styles.searchIcon} />
-                            <input type="text" placeholder='Searching for someone?' className={styles.searchInput} value={popupSearchTerm} onChange={(e) => setPopupSearchTerm(e.target.value)} />
-                        </div>
-                        <div className={styles.popupList}>
-                            {friends && friends
-                                .filter(friend => friend.username.toLowerCase().includes(popupSearchTerm.toLowerCase()))
-                                .map(friend => (
-                                    <div key={`popup-${friend.id}`} className={styles.popupFriendWrapper}>
-                                        <div className={styles.friendItemRow}>
-                                            <div className={styles.friendItemLeft} onClick={() => { handleFriendClick(friend.id); setShowAllPopup(false); }}>
-                                                <div className={styles.friendAvatarWrapper}>
-                                                    <img src={friend.avatar || "/default-avatar.png"} alt={friend.username} className={styles.friendAvatar} />
-                                                    <div className={`${styles.statusDot} ${friend.is_online ? styles.online : styles.offline}`}></div>
-                                                </div>
-                                                <div className={styles.friendInfo}>
-                                                    <div className={styles.friendName}>{friend.username}</div>
-                                                    <div className={styles.friendMajor}>{friend.major || "No Major Set"}</div>
-                                                </div>
-                                            </div>
-                                            <div className={styles.friendActions}>
-                                                <button className={styles.actionBtn} onClick={(e) => { e.stopPropagation(); handleMessage(friend.id, friend.username); }}>
-                                                    <img src={Messages} alt="Messages" className={styles.messageIcon} />
-                                                </button>
-                                                <div className={styles.dropdownContainer}>
-                                                    <button className={styles.actionBtn} onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (activeMenuId === `popup-${friend.id}`) { setActiveMenuId(null); }
-                                                        else {
-                                                            const rect = e.currentTarget.getBoundingClientRect();
-                                                            const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1; setMenuPosition({ top: rect.bottom / z + 6, left: rect.right / z });
-                                                            setActiveMenuId(`popup-${friend.id}`);
-                                                        }
-                                                    }}>•••</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                        </div>
-                    </div>
-                </div>
-            )}
         </>
     );
 
@@ -463,6 +403,79 @@ export default function FriendsPage() {
                     contentType="user"
                     onClose={() => setReportTargetId(null)}
                 />
+            )}
+
+            {showAllPopup && createPortal(
+                <div className={styles.popupOverlay} onClick={() => { setShowAllPopup(false); setPopupSearchTerm(''); }}>
+                    <div className={styles.popupContent} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.popupHeader}>
+                            <h3>All Friends</h3>
+                            <button className={styles.closePopupBtn} onClick={() => { setShowAllPopup(false); setPopupSearchTerm(''); }}>
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className={styles.searchContactWrap}>
+                            <Search size={16} color="#888" className={styles.searchIcon} />
+                            <input
+                                type="text"
+                                placeholder="Searching for someone?"
+                                className={styles.searchInput}
+                                value={popupSearchTerm}
+                                onChange={(e) => setPopupSearchTerm(e.target.value)}
+                                autoFocus
+                            />
+                        </div>
+                        <div className={styles.popupList}>
+                            {friends
+                                .filter(f => f.username.toLowerCase().includes(popupSearchTerm.toLowerCase()))
+                                .map((friend, index, arr) => (
+                                    <div key={`popup-${friend.id}`} className={styles.friendWrapper}>
+                                        <div className={styles.friendItemRow}>
+                                            <div className={styles.friendItemLeft} onClick={() => { handleFriendClick(friend.id); setShowAllPopup(false); setPopupSearchTerm(''); }}>
+                                                <div className={styles.friendAvatarWrapper}>
+                                                    <img
+                                                src={friend.avatar || DefaultProfileIcon}
+                                                alt={friend.username}
+                                                className={`${styles.friendAvatar}${!friend.avatar ? ' defaultPfp' : ''}`}
+                                                onError={e => { e.currentTarget.src = DefaultProfileIcon; e.currentTarget.classList.add('defaultPfp'); }}
+                                            />
+                                                    <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
+                                                        <StatusDot userId={friend.id} size="sm" />
+                                                    </span>
+                                                </div>
+                                                <div className={styles.friendInfo}>
+                                                    <div className={styles.friendName}>{friend.username}</div>
+                                                    <div className={styles.friendMajor}>{friend.major || "No Major Set"}</div>
+                                                </div>
+                                            </div>
+                                            <div className={styles.friendActions}>
+                                                <button className={styles.actionBtn} onClick={(e) => { e.stopPropagation(); handleMessage(friend.id, friend.username); }}>
+                                                    <img src={Messages} alt="Messages" className={styles.messageIcon} />
+                                                </button>
+                                                <div className={styles.dropdownContainer}>
+                                                    <button className={styles.actionBtn} onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (activeMenuId === `popup-${friend.id}`) { setActiveMenuId(null); }
+                                                        else {
+                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                            const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+                                                            setMenuPosition({ top: rect.bottom / z + 6, left: rect.right / z });
+                                                            setActiveMenuId(`popup-${friend.id}`);
+                                                        }
+                                                    }}>•••</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {index !== arr.length - 1 && <div className={styles.divider} />}
+                                    </div>
+                                ))}
+                            {friends.filter(f => f.username.toLowerCase().includes(popupSearchTerm.toLowerCase())).length === 0 && (
+                                <p className={styles.noDataText}>{popupSearchTerm ? "No friends match your search." : "No friends yet."}</p>
+                            )}
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
 
         </div>

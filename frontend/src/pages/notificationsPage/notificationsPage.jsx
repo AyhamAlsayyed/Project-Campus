@@ -12,6 +12,7 @@ import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import useTheme from '../../hooks/useTheme';
 import API from '../../config';
 import { useNotificationContext } from '../../context/NotificationContext';
+import { useUser } from '../../context/UserContext';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function resolveAvatar(url, fallback = ProfilePicture) {
@@ -102,7 +103,7 @@ export default function NotificationsPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const { liveNotifications, liveNotifCount, clearLiveNotifCount } = useNotificationContext();
 
-    const [currentUser, setCurrentUser] = useState(null);
+    const { user: currentUser, avatarSrc } = useUser();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeFilter, _setActiveFilter] = useState(searchParams.get('filter') || 'All');
@@ -134,21 +135,6 @@ export default function NotificationsPage() {
         document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [mobileMenuOpen]);
-
-    // ── Fetch user ──
-    useEffect(() => {
-        const fetchUser = async () => {
-            const token = localStorage.getItem('access');
-            if (!token) return;
-            try {
-                const res = await fetch(`${API}/api/auth/me/`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (res.ok) setCurrentUser(await res.json());
-            } catch (e) { console.error(e); }
-        };
-        fetchUser();
-    }, []);
 
     // ── Fetch notifications ──
     const fetchNotifications = useCallback(async (showLoader = false) => {
@@ -340,11 +326,6 @@ export default function NotificationsPage() {
     const thisMonth = useMemo(() => filtered.filter(n => n.bucket === 'month'), [filtered]);
     const earlier = useMemo(() => filtered.filter(n => n.bucket === 'earlier'), [filtered]);
     const unreadCount = useMemo(() => notifications.filter(n => !n.is_read).length, [notifications]);
-
-    const rawAvatar = currentUser?.profile?.avatar || currentUser?.avatar || currentUser?.profile_image;
-    const avatarSrc = rawAvatar
-        ? (rawAvatar.startsWith('http') ? rawAvatar : `${API}${rawAvatar}`)
-        : ProfilePicture;
 
     // ── Render a single notification ──
     const renderNotif = (n) => (

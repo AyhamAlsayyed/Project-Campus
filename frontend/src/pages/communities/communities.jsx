@@ -23,15 +23,15 @@ import CreateCommunityIcon from '../../Assets/icons/create-group.png';
 import CreateCommunityForm from '../../components/createCommunity/CreateCommunity';
 import CommunityPermissions from '../../components/createCommunity/CommunityPermissions';
 import API from '../../config';
-import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import useTheme from '../../hooks/useTheme';
+import { useUser } from '../../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function Community() {
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
+    const { user, avatarSrc } = useUser();
     const [loading, setLoading] = useState(true)
-    const [user, setUser] = useState(null)
     const [communities, setCommunities] = useState([]);
     const [filter, setFilter] = useState("recommended");
     const [friendsCommunities, setFriendsCommunities] = useState([]);
@@ -108,6 +108,7 @@ export default function Community() {
     }, []);
 
     useEffect(() => {
+        if (!isUserPage) return;
         const fetchPromoCart = async () => {
             try {
                 const res = await fetch(`${API}/api/communities/promotions/`, {
@@ -173,29 +174,6 @@ export default function Community() {
         document.documentElement.setAttribute("data-theme", theme);
     }, [theme]);
 
-    const loadUser = async () => {
-        if (!token) return;
-        try {
-            const res = await fetch(`${API}/api/auth/me/`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (!res.ok) return;
-            const data = await res.json();
-            if ((data.role === 'uni' || localStorage.getItem('user_type') === 'university') && data.id) {
-                const pageRes = await fetch(`${API}/api/pages/${data.id}/`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                if (pageRes.ok) {
-                    const pageData = await pageRes.json();
-                    data.avatar = pageData.profile_image;
-                }
-            } else {
-                data.avatar = data.profile?.avatar || null;
-            }
-            setUser(data);
-        } catch (err) { console.error("Failed to load user"); }
-    };
-
     useEffect(() => {
         const checkRequestStatus = async () => {
             if (!token) return;
@@ -241,14 +219,6 @@ export default function Community() {
         };
         fetchCommunities();
     }, [filter]);
-
-    useEffect(() => { loadUser(); }, []);
-
-    const rawImage = user?.profile_image || user?.avatar;
-
-    const avatarSrc = rawImage
-        ? rawImage.startsWith("http") ? rawImage : `${API}${rawImage}`
-        : ProfilePicture;
 
     const mobileFilters = [
         { key: "recommended", label: "Recommended" },
@@ -864,6 +834,37 @@ export default function Community() {
                         </>
                     ) : (
                         <>
+                            {/* ── REQUEST COMMUNITY (mobile, regular users) ── */}
+                            <div className={styles.communityRequest} style={{ position: "relative", overflow: "hidden", marginBottom: 16 }}>
+                                {requestSent && (
+                                    <div style={{
+                                        position: "absolute", inset: 0,
+                                        background: "rgba(35,35,36,0.4)",
+                                        borderRadius: "inherit",
+                                        display: "flex", flexDirection: "column",
+                                        alignItems: "center", justifyContent: "center",
+                                        gap: 8, zIndex: 10, backdropFilter: "blur(0.9px)",
+                                    }} />
+                                )}
+                                <div className={styles.requestHeader}>
+                                    <div className={styles.paletteIcon} style={{ maskImage: `url(${Palette})`, WebkitMaskImage: `url(${Palette})` }} />
+                                    <h3 className={styles.requestTitle}>Request a community</h3>
+                                </div>
+                                <div className={styles.requestBody}>
+                                    <p className={styles.requestText}>
+                                        Can't find your community?<br />
+                                        Request one and we'll review it.
+                                    </p>
+                                    {requestSent ? (
+                                        <span className={styles.waitingText}>Waiting...</span>
+                                    ) : (
+                                        <button className={styles.applyButton} onClick={() => setIsModalOpen(true)}>
+                                            Apply
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
                             <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text-primary)", margin: "0 0 12px" }}>
                                 Looking for <span style={{
                                     background: "linear-gradient(30deg, #c72cff, #8b2dff)",

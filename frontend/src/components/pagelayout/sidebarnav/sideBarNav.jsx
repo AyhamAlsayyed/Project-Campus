@@ -24,9 +24,27 @@ import {
   HelpCircle,
 } from "lucide-react";
 
-export default function SidebarNav({ variant = "default", currentUser }) {
+// Routes that show the profile-context sidebar
+const PROFILE_PATHS = ['/profile/', '/page/', '/settings', '/subscriptions'];
+
+export default function SidebarNav({ variant: variantProp, currentUser, onClose }) {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, state: locationState } = useLocation();
+
+  // Auto-detect variant from the current URL; prop and location state act as overrides
+  const isProfileRoute =
+    pathname.startsWith('/profile/') ||
+    pathname.startsWith('/page/') ||
+    pathname.startsWith('/settings');
+
+  const variant = variantProp ?? locationState?.sidebarVariant ?? (isProfileRoute ? 'profile' : 'default');
+
+  const handleNav = (path) => {
+    // Carry the current variant forward so ambiguous pages (e.g. /subscriptions)
+    // know which context the user navigated from
+    navigate(path, { state: { sidebarVariant: variant } });
+    if (onClose) onClose();
+  };
 
   const isActive = (path) => {
     if (
@@ -126,7 +144,7 @@ export default function SidebarNav({ variant = "default", currentUser }) {
       {mainItems.map(({ label, path, icon: Icon }) => (
         <button
           key={path}
-          onClick={() => navigate(path)}
+          onClick={() => handleNav(path)}
           className={`${styles.sideBarButton} ${isActive(path) ? styles.active : ""}`}
         >
           {Icon && typeof Icon === "string" ? (
@@ -152,7 +170,7 @@ export default function SidebarNav({ variant = "default", currentUser }) {
       {footerItems.map(({ label, path, icon: Icon }) => (
         <button
           key={path}
-          onClick={() => navigate(path)}
+          onClick={() => handleNav(path)}
           className={`${styles.sideBarButton} ${isActive(path) ? styles.active : ""}`}
         >
           {Icon && typeof Icon === "string" ? (

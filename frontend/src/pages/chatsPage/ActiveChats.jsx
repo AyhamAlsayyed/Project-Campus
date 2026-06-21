@@ -629,7 +629,10 @@ export default function ActiveChat({
     };
 
     return (
-        <div className={`${styles.activeChatPill} ${styles.activeChatOuter}`}>
+        <div
+            className={`${styles.activeChatPill} ${styles.activeChatOuter}`}
+            style={showGroupInfo ? { maxHeight: 'none', alignSelf: 'stretch', flex: 1 } : undefined}
+        >
             <style>{`
                 @keyframes typingBounce {
                     0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }

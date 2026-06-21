@@ -19,14 +19,13 @@ import RemovePersonIcon from '../../Assets/icons/remove-person.png';
 import MessagesIcon from '../../Assets/icons/messages.png';
 import InfoIcon from '../../Assets/icons/info.png';
 import EducationIcon from '../../Assets/icons/education.png';
-import ProfilePicture from '../../Assets/icons/default-pfp.png';
 import API from '../../config';
-import useTheme from '../../hooks/useTheme'
+import useTheme from '../../hooks/useTheme';
+import { useUser } from '../../context/UserContext';
 
 export default function Universities() {
     const { theme, toggleTheme } = useTheme();
-    const [user, setUser] = useState(null);
-    const [userError, setUserError] = useState("");
+    const { user, avatarSrc } = useUser();
     const [newsIndex, setNewsIndex] = useState(0);
     const [eventIndex, setEventIndex] = useState(0);
     const [searchTerm, setSearchTerm] = useState('')
@@ -49,6 +48,8 @@ export default function Universities() {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [showAllDoctors, setShowAllDoctors] = useState(false);
+    const [doctorsPopupSearch, setDoctorsPopupSearch] = useState('');
     const dropdownRef = useRef(null);
 
     const isUniversity = localStorage.getItem("user_type") === "university";
@@ -105,11 +106,10 @@ export default function Universities() {
             };
 
             try {
-                const [newsRes, eventsRes, doctorsRes, userRes, univRes] = await Promise.all([
+                const [newsRes, eventsRes, doctorsRes, univRes] = await Promise.all([
                     fetch(`${API}/api/university/news/`, { headers }),
                     fetch(`${API}/api/university/events/`, { headers }),
                     fetch(`${API}/api/university/doctors/`, { headers }),
-                    fetch(`${API}/api/auth/me/`, { headers }),
                     fetch(`${API}/api/university/`, { headers })
                 ]);
                 const univJson = univRes.ok ? await univRes.json() : null;
@@ -120,20 +120,6 @@ export default function Universities() {
                 if (newsJson) setNews(newsJson);
                 if (eventsRes.ok) setEvents(await eventsRes.json());
                 if (doctorsJson) setDoctors(doctorsJson);
-                if (userRes.ok) {
-                    const userData = await userRes.json();
-                    // resolve avatar same as communities.jsx
-                    if ((userData.role === 'uni' || localStorage.getItem('user_type') === 'university') && userData.id) {
-                        const pageRes = await fetch(`${API}/api/pages/${userData.id}/`, { headers });
-                        if (pageRes.ok) {
-                            const pageData = await pageRes.json();
-                            userData.avatar = pageData.profile_image;
-                        }
-                    } else {
-                        userData.avatar = userData.profile?.avatar || null;
-                    }
-                    setUser(userData);
-                }
             } catch (err) {
                 console.error("Network or parsing error on Universities page:", err);
             } finally {
@@ -249,15 +235,13 @@ export default function Universities() {
         d.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const rawImage = user?.profile_image || user?.avatar;
-
-    const avatarSrc = rawImage
-        ? rawImage.startsWith("http") ? rawImage : `${API}${rawImage}`
-        : ProfilePicture;
     // ── Shared doctors list (reused in both mobile and desktop) ──
-    const DoctorsList = () => (
+    const DoctorsList = ({ limit, sourceDoctors } = {}) => {
+        const docs = sourceDoctors ?? filteredDoctors;
+        const displayDocs = limit ? docs.slice(0, limit) : docs;
+        return (
         <div className={styles.scrollableList}>
-            {filteredDoctors.length === 0 && (
+            {docs.length === 0 && (
                 <div className={styles.emptyState}>
                     <img src={EducationIcon} alt="" className={styles.emptyStateIcon} />
                     <div style={{ fontWeight: 600, marginBottom: 4 }}>
@@ -268,7 +252,7 @@ export default function Universities() {
                     </div>
                 </div>
             )}
-            {filteredDoctors.map((doc, index) => (
+            {displayDocs.map((doc, index) => (
                 <div key={doc.id} className={styles.doctorItemWrapper}>
                     <div className={styles.doctorItem} onClick={() => navigate(`/profile/${doc.id}`)}>
                         <div className={styles.docAvatar}>
@@ -302,13 +286,14 @@ export default function Universities() {
                             style={{ filter: 'brightness(0) invert(95%)' }}
                         />
                     </div>
-                    {(isUniversity && index < filteredDoctors.length - 1) && (
+                    {index < displayDocs.length - 1 && (
                         <div className={styles.docDivider} />
                     )}
                 </div>
             ))}
         </div>
-    );
+        );
+    };
 
     return (
         <div className={styles.darkContainer}>
@@ -394,29 +379,38 @@ export default function Universities() {
                             )}
                         </div>
 
-                        {/* search */}
-                        <div style={{
-                            display: "flex", alignItems: "center", gap: 8,
-                            margin: "10px 16px",
-                            background: "rgba(255,255,255,0.06)",
-                            borderRadius: 25, padding: "8px 12px"
-                        }}>
-                            <Search size={15} color="rgba(255,255,255,0.4)" style={{ flexShrink: 0 }} />
-                            <input
-                                type="text"
-                                placeholder="Searching for someone?"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{
-                                    flex: 1, background: "transparent", border: "none",
-                                    outline: "none", color: "#fff", fontSize: "0.83rem"
-                                }}
-                            />
+                        {/* search + view all */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "10px 16px" }}>
+                            <div style={{
+                                display: "flex", alignItems: "center", gap: 8, flex: 1,
+                                background: "rgba(255,255,255,0.06)",
+                                borderRadius: 25, padding: "8px 12px"
+                            }}>
+                                <Search size={15} color="rgba(255,255,255,0.4)" style={{ flexShrink: 0 }} />
+                                <input
+                                    type="text"
+                                    placeholder="Searching for someone?"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    style={{
+                                        flex: 1, background: "transparent", border: "none",
+                                        outline: "none", color: "#fff", fontSize: "0.83rem"
+                                    }}
+                                />
+                            </div>
+                            {doctors.length > 5 && (
+                                <button
+                                    className={styles.viewAllBtn}
+                                    onClick={() => { setDoctorsPopupSearch(''); setShowAllDoctors(true); }}
+                                >
+                                    View All
+                                </button>
+                            )}
                         </div>
 
                         {/* list */}
                         <div style={{ maxHeight: 280, overflowY: "auto", paddingBottom: 8 }}>
-                            <DoctorsList />
+                            <DoctorsList limit={5} />
                         </div>
                     </div>
 
@@ -698,7 +692,7 @@ export default function Universities() {
                                         ))}
                                     </div>
                                 ) : news.length === 0 ? (
-                                    <div className={styles.emptyState} style={{ minHeight: 200, justifyContent: 'center' }}>
+                                    <div className={styles.emptyState}>
                                         <img src={InfoIcon} alt="" className={styles.emptyStateIcon} />
                                         <div style={{ fontWeight: 600, marginBottom: 4 }}>No news yet</div>
                                         <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Your university hasn&apos;t posted any announcements yet.</div>
@@ -752,7 +746,7 @@ export default function Universities() {
                             <div className={styles.pill}>Doctors and Teachers</div>
                             <div className={styles.rightCard} style={{ minHeight: isUniversity ? "570px" : "200px" }}>
                                 <div className={styles.rightCardHeader}>
-                                    <div className={styles.searchContainer} style={{ width: "100%" }}>
+                                    <div className={styles.searchContainer} style={{ flex: 1, minWidth: 0, margin: "12px 0 12px 12px" }}>
                                         <Search size={16} className={styles.searchIcon} />
                                         <input
                                             type="text"
@@ -762,9 +756,14 @@ export default function Universities() {
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                         />
                                     </div>
-
+                                    <button
+                                        className={styles.viewAllBtn}
+                                        onClick={() => { setDoctorsPopupSearch(''); setShowAllDoctors(true); }}
+                                    >
+                                        View All
+                                    </button>
                                 </div>
-                                <DoctorsList />
+                                <DoctorsList limit={5} />
                             </div>
                         </div>
 
@@ -996,6 +995,37 @@ export default function Universities() {
                 document.body
             )}
 
+
+            {/* ── ALL DOCTORS POPUP ── */}
+            {showAllDoctors && createPortal(
+                <div className={styles.popupOverlay} onClick={() => { setShowAllDoctors(false); setDoctorsPopupSearch(''); }}>
+                    <div className={styles.popupContent} onClick={e => e.stopPropagation()}>
+                        <div className={styles.popupHeader}>
+                            <h3>All Doctors &amp; Teachers</h3>
+                            <button className={styles.closePopupBtn} onClick={() => { setShowAllDoctors(false); setDoctorsPopupSearch(''); }}>×</button>
+                        </div>
+                        <div className={styles.popupSearchWrap}>
+                            <Search size={16} color="#888" style={{ flexShrink: 0 }} />
+                            <input
+                                type="text"
+                                placeholder="Searching for someone?"
+                                className={styles.popupSearchInput}
+                                value={doctorsPopupSearch}
+                                onChange={e => setDoctorsPopupSearch(e.target.value)}
+                                autoFocus
+                            />
+                        </div>
+                        <div className={styles.popupList}>
+                            <DoctorsList
+                                sourceDoctors={doctors.filter(d =>
+                                    d.name.toLowerCase().includes(doctorsPopupSearch.toLowerCase())
+                                )}
+                            />
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
 
         </div>
     );

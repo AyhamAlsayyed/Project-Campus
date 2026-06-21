@@ -521,7 +521,7 @@
 .rightSection {
     position: sticky;
     flex: 0 0 420px;
-    top: 130px;
+    top: 100px;
     width: 25%;
     margin: 5% 0 0 0;
     align-self: flex-start;
@@ -2513,25 +2513,31 @@
         z-index: 200 !important;
         border-radius: 0 !important;
         margin: 0 !important;
+        padding-top: 0 !important;
         height: 100dvh !important;
+        max-height: none !important;
     }
 
     .innerChatContainer {
         border-radius: 0 !important;
-        height: 100% !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding-top: 0 !important;
+        overflow: hidden !important;
     }
 
     .activeChatInnerContainer {
         border-radius: 0 !important;
         width: 100% !important;
         margin: 0 !important;
-        height: 100% !important;
         min-height: 0 !important;
     }
 
     .messagesScrollArea {
         max-height: none !important;
         flex: 1 !important;
+        min-height: 0 !important;
     }
 
     .activeChatHeader {

@@ -336,7 +336,14 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                                 </button>
                             ) : (
                                 <button className={headerStyles.dropdownItem}
-                                    onClick={() => { navigate(`/profile/${user?.id}`); setShowAvatarDropdown(false); }}>
+                                    onClick={() => {
+                                        const loggedInType = localStorage.getItem('user_type');
+                                        const isPageUser = loggedInType === 'page' || loggedInType === 'university';
+                                        const id = isPageUser ? user?.page_id : user?.id;
+                                        if (!id) return;
+                                        navigate(isPageUser ? `/page/${id}` : `/profile/${id}`);
+                                        setShowAvatarDropdown(false);
+                                    }}>
                                     <img src={avatarSrc} alt="" className={headerStyles.dropdownAvatarImg} />
                                     Profile
                                 </button>

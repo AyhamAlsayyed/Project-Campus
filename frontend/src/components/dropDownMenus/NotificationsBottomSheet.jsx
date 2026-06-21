@@ -45,7 +45,7 @@ function formatNotif(item) {
         text: item.message || item.content,
         link,
         // Extract navigation IDs from the link object
-        actor_id:    isLinkNum ? link : null,
+        actor_id:    isLinkNum ? link : (item.actor_id || linkObj.user_id || linkObj.actor_id || null),
         post_id:     isLinkNum ? link : (linkObj.post?.post_id || linkObj.post_id || null),
         comment_id:  linkObj.comment_id || null,
         event_id:    linkObj.event_id || null,
@@ -206,6 +206,39 @@ export default function NotifsBottomSheet({
         } catch { fetchNotifications(false); }
     }, [notifications, fetchNotifications]);
 
+    const handleAcceptFriend = useCallback(async (e, actorId, notifId) => {
+        e.stopPropagation();
+        if (!actorId) return;
+        const token = localStorage.getItem('access');
+        try {
+            const res = await fetch(`${API}/api/friends/accept/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ user_id: actorId }),
+            });
+            if (res.ok) setNotifications(prev => prev.filter(n => n.id !== notifId));
+        } catch (e) { console.error(e); }
+    }, []);
+
+    const handleDeclineFriend = useCallback(async (e, actorId, notifId) => {
+        e.stopPropagation();
+        if (!actorId) return;
+        const token = localStorage.getItem('access');
+        try {
+            const res = await fetch(`${API}/api/friends/decline/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ user_id: actorId }),
+            });
+            if (res.ok) setNotifications(prev => prev.filter(n => n.id !== notifId));
+        } catch (e) { console.error(e); }
+    }, []);
+
+    const isFriendRequest = (type) => {
+        const t = (type || '').toLowerCase();
+        return (t.includes('friend') || t.includes('request')) && !t.includes('accept');
+    };
+
     const unreadCount = notifications.filter(n => !n.is_read).length;
 
     return (
@@ -268,6 +301,12 @@ export default function NotifsBottomSheet({
                                 <span className={styles.notifTime}>{n.time}</span>
                             </div>
                             <p className={styles.notifText}>{n.text}</p>
+                            {isFriendRequest(n.type) && (
+                                <div className={styles.notifFriendActions} onClick={e => e.stopPropagation()}>
+                                    <button className={styles.notifAcceptBtn} onClick={e => handleAcceptFriend(e, n.actor_id, n.id)}>Accept</button>
+                                    <button className={styles.notifDeclineBtn} onClick={e => handleDeclineFriend(e, n.actor_id, n.id)}>Decline</button>
+                                </div>
+                            )}
                         </div>
                         <div
                             className={styles.notifMenuWrapper}

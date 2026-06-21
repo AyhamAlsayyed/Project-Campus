@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { API, normalizeMessages } from '../../pages/chatsPage/chatUtils';
 import { useNotificationContext } from '../../context/NotificationContext';
+import { useUser } from '../../context/UserContext';
 
 export function useChats() {
     const token = localStorage.getItem('access');
@@ -9,8 +10,7 @@ export function useChats() {
     const { chatId } = useParams();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const [user, setUser] = useState(null);
-    const [userLoading, setUserLoading] = useState(true);
+    const { user, loading: userLoading } = useUser();
     const [chats, setChats] = useState([]);
     const [loadingChats, setLoadingChats] = useState(true);
     const [filter, _setFilter] = useState(searchParams.get('filter') || 'all');
@@ -66,18 +66,6 @@ export function useChats() {
 
     // ── Loaders ───────────────────────────────────────────────────────────
 
-    const loadUser = useCallback(async () => {
-        if (!token) { setUserLoading(false); return; }
-        try {
-            const res = await fetch(`${API}/api/auth/me/`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const data = await res.json().catch(() => ({}));
-            if (res.ok) setUser(data);
-        } catch { }
-        finally { setUserLoading(false); }
-    }, [token]);
-
     const fetchChats = useCallback(async () => {
         try {
             const res = await fetch(`${API}/api/chats/`, {
@@ -114,7 +102,7 @@ export function useChats() {
     // ── Bootstrap ─────────────────────────────────────────────────────────
 
     useEffect(() => {
-        Promise.all([fetchChats(), loadUser()]);
+        fetchChats();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {

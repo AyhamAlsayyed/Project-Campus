@@ -371,6 +371,8 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    flex: 1;
+    min-width: 0;
 }
 
 .permissionLabel {
@@ -394,6 +396,7 @@
     margin: 0 0 0 35px;
     line-height: 1.4;
     max-width: 500px;
+    word-break: break-word;
 }
 
 .learnMoreLink {
@@ -409,12 +412,12 @@
 .toggle {
     width: 48px;
     height: 26px;
-    /* Off state uses #1A1A1A exactly like the old active white state */
     background-color: #1A1A1A;
     border-radius: 13px;
     position: relative;
     cursor: pointer;
     transition: background-color 0.3s;
+    flex-shrink: 0;
 }
 
 /* Prevents clicking when !isInstructor */
@@ -566,4 +569,132 @@
 [data-theme="light"] .createBtn {
     background-color: #e0e0e0;
     color: #888888;
+}
+
+/* ══════════════════════════════════════
+   CREATE GROUP — MOBILE
+══════════════════════════════════════ */
+@media (max-width: 1023px) {
+    .pageContainer {
+        margin: 0;
+        border-radius: 0;
+        padding-top: 6px;
+    }
+
+    .createGroupCard {
+        padding: 20px 16px 40px;
+        border-radius: 0;
+    }
+
+    .headerTitle {
+        font-size: 1.3rem;
+    }
+
+    .createBtn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    /* Stack photo + inputs vertically */
+    .detailsSection {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .photoColumn {
+        width: 100%;
+        align-items: center;
+    }
+
+    /* Fix broken 100% margin trick on subtext */
+    .photoSubtext {
+        margin: 10px 0 0 0;
+        width: 100%;
+        text-align: center;
+    }
+
+    .inputsColumn {
+        width: 100%;
+    }
+
+    /* Stack name input + hint vertically */
+    .nameRow {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .inputWrapper {
+        flex: none;
+        width: 100%;
+    }
+
+    .inputHint {
+        flex: none;
+        font-size: 0.72rem;
+        color: #888888;
+    }
+
+    /* Academic section — stack vertically */
+    .academicSection {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 0;
+    }
+
+    .academicLeft {
+        width: 100%;
+    }
+
+    .academicMiddle {
+        width: 100%;
+        margin-left: 0;
+        font-size: 0.75rem;
+    }
+
+    .academicRight {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .academicTitle {
+        font-size: 1.4rem;
+    }
+
+    /* Permissions */
+    .permissionsHeader {
+        flex-wrap: wrap;
+        padding: 0;
+        gap: 8px;
+    }
+
+    .permissionsTitle {
+        font-size: 1.3rem;
+    }
+
+    .permissionsSubtext {
+        margin-left: 0;
+        width: 100%;
+        font-size: 0.72rem;
+    }
+
+    .permissionsContainer {
+        padding: 20px 16px;
+    }
+
+    .permissionLabel {
+        font-size: 0.95rem;
+    }
+
+    .approvalDescriptionText {
+        max-width: 100%;
+        margin-left: 28px;
+    }
+
+    .sectionDivider {
+        margin: 20px auto;
+        width: 90%;
+    }
 }
