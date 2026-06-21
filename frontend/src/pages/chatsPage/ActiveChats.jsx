@@ -94,6 +94,18 @@ export default function ActiveChat({
     const typingTimer = useRef(null);
     const typingClearTimer = useRef(null);
 
+    // ── Hydrate poll messages with voter avatars on load ──
+    useEffect(() => {
+        messages.forEach(m => {
+            try {
+                const poll = JSON.parse(m.text || m.content || '');
+                if (poll._type === 'poll' && poll.options?.some(o => Array.isArray(o.voter_ids) && o.voter_ids.length > 0 && !o.voter_avatars)) {
+                    fetchPollData(m.id);
+                }
+            } catch {}
+        });
+    }, [messages.length]);
+
     // ── scrollToBottom must be defined before handleWsMessage ──
     const scrollToBottom = useCallback(() => {
         if (chatSearchOpen) return;
@@ -548,6 +560,73 @@ export default function ActiveChat({
         if (pollOptions.length > 2) setPollOptions(prev => prev.filter((_, i) => i !== index));
     };
 
+    const handleSendPoll = async () => {
+        const validOpts = pollOptions.filter(o => o.trim());
+        if (!pollQuestion.trim() || validOpts.length < 2) return;
+        const fd = new FormData();
+        fd.append('poll_question', pollQuestion.trim());
+        validOpts.forEach(o => fd.append('poll_options', o.trim()));
+        try {
+            const res = await fetch(`${API}/api/chats/${selectedChat.id}/send/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                body: fd,
+            });
+            if (res.ok) {
+                const newMsg = await res.json();
+                setMessages(prev => {
+                    const [nm] = normalizeMessages([newMsg]);
+                    return [...prev, nm];
+                });
+            }
+        } catch (err) { console.error('Poll send error:', err); }
+        setPollOpen(false);
+        setPollQuestion('');
+        setPollOptions(['', '']);
+    };
+
+    const fetchPollData = async (messageId) => {
+        try {
+            const res = await fetch(`${API}/api/messages/${messageId}/poll-vote/`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setMessages(prev => prev.map(m => {
+                    if (m.id !== messageId) return m;
+                    try {
+                        const poll = JSON.parse(m.text || m.content || '{}');
+                        poll.options = data.options;
+                        const updated = JSON.stringify(poll);
+                        return { ...m, text: updated, content: updated };
+                    } catch { return m; }
+                }));
+            }
+        } catch {}
+    };
+
+    const handlePollVote = async (messageId, optionId) => {
+        try {
+            const res = await fetch(`${API}/api/messages/${messageId}/poll-vote/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ option_id: optionId }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setMessages(prev => prev.map(m => {
+                    if (m.id !== messageId) return m;
+                    try {
+                        const poll = JSON.parse(m.text || m.content || '{}');
+                        poll.options = data.options;
+                        const updated = JSON.stringify(poll);
+                        return { ...m, text: updated, content: updated };
+                    } catch { return m; }
+                }));
+            }
+        } catch (err) { console.error('Poll vote error:', err); }
+    };
+
     const handleToggleMute = async () => {
         try {
             const res = await fetch(`${API}/api/chats/${selectedChat.id}/mute/`, {
@@ -997,24 +1076,83 @@ export default function ActiveChat({
                                                                         </div>
                                                                     </div>
                                                                     )
-                                                                ) : (
-                                                                    <>
-                                                                    {msg.is_forwarded && (
-                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4, opacity: 0.7, whiteSpace: 'nowrap' }}>
-                                                                            <img src={ShareIcon} alt="" width={12} height={12} style={{ filter: isMine ? 'brightness(0) invert(1)' : 'brightness(0) saturate(100%) invert(28%) sepia(60%) saturate(600%) hue-rotate(255deg) brightness(90%)', flexShrink: 0 }} />
-                                                                            <span style={{ fontSize: '0.7rem', fontStyle: 'italic', letterSpacing: '0.02em' }}>Forwarded</span>
-                                                                        </div>
-                                                                    )}
-                                                                    <span style={{ whiteSpace: 'pre-wrap' }}>
-                                                                        {msg.text}
-                                                                        {msg.is_edited && (
-                                                                            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', marginLeft: '8px', fontStyle: 'italic' }}>
-                                                                                (edited)
-                                                                            </span>
+                                                                ) : (() => {
+                                                                    let poll = null;
+                                                                    try {
+                                                                        const parsed = JSON.parse(msg.text || msg.content || '');
+                                                                        if (parsed._type === 'poll') poll = parsed;
+                                                                    } catch {}
+
+                                                                    if (poll) {
+                                                                        const currentUid = user?.id;
+                                                                        const total = poll.options.reduce((s, o) => s + (o.votes_count ?? o.voter_ids?.length ?? 0), 0);
+                                                                        const votedId = poll.options.find(o => o.is_voted || o.voter_ids?.includes(currentUid))?.id ?? null;
+                                                                        const hasVoted = votedId !== null;
+                                                                        return (
+                                                                            <div className={styles.chatPollBox}>
+                                                                                <div className={styles.chatPollTitle}>📊 Poll</div>
+                                                                                <div className={styles.chatPollQuestion}>{poll.question}</div>
+                                                                                {poll.options.map(opt => {
+                                                                                    const count = opt.votes_count ?? opt.voter_ids?.length ?? 0;
+                                                                                    const pct = opt.percentage ?? (total > 0 ? Math.round((count / total) * 100) : 0);
+                                                                                    const isVoted = opt.id === votedId;
+                                                                                    const avatars = opt.voter_avatars || [];
+                                                                                    const handleVote = () => handlePollVote(msg.id, opt.id, poll.options);
+                                                                                    return (
+                                                                                        <div key={opt.id} className={styles.chatPollOptionRow}>
+                                                                                            <div className={styles.chatPollLabelRow}>
+                                                                                                <span className={styles.chatPollOptionLabel}>{opt.text}</span>
+                                                                                                {hasVoted && (
+                                                                                                    <div className={styles.chatPollVoterGroup}>
+                                                                                                        {avatars.length > 0 && <span className={styles.chatPollVoterPlus}>+</span>}
+                                                                                                        {avatars.map((av, idx) => (
+                                                                                                            <img key={idx} src={av} className={styles.chatPollVoterAvatar} style={idx === 0 ? { marginLeft: 4 } : {}} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                                                                                                        ))}
+                                                                                                        <span className={styles.chatPollVoteCount}>{count}</span>
+                                                                                                    </div>
+                                                                                                )}
+                                                                                            </div>
+                                                                                            <div className={styles.chatPollBarRow}>
+                                                                                                <button
+                                                                                                    className={`${styles.chatPollRadio} ${isVoted ? styles.chatPollRadioVoted : ''}`}
+                                                                                                    onClick={handleVote}
+                                                                                                />
+                                                                                                <div className={styles.chatPollTrack} onClick={handleVote}>
+                                                                                                    <div
+                                                                                                        className={`${styles.chatPollBar} ${isVoted ? styles.chatPollBarVoted : ''}`}
+                                                                                                        style={{ width: hasVoted ? `${pct}%` : '0%' }}
+                                                                                                    />
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    );
+                                                                                })}
+                                                                                <div className={styles.chatPollFooter}>
+                                                                                    <span>{total} vote{total !== 1 ? 's' : ''}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        );
+                                                                    }
+
+                                                                    return (
+                                                                        <>
+                                                                        {msg.is_forwarded && (
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4, opacity: 0.7, whiteSpace: 'nowrap' }}>
+                                                                                <img src={ShareIcon} alt="" width={12} height={12} style={{ filter: isMine ? 'brightness(0) invert(1)' : 'brightness(0) saturate(100%) invert(28%) sepia(60%) saturate(600%) hue-rotate(255deg) brightness(90%)', flexShrink: 0 }} />
+                                                                                <span style={{ fontSize: '0.7rem', fontStyle: 'italic', letterSpacing: '0.02em' }}>Forwarded</span>
+                                                                            </div>
                                                                         )}
-                                                                    </span>
-                                                                    </>
-                                                                )}
+                                                                        <span style={{ whiteSpace: 'pre-wrap' }}>
+                                                                            {msg.text}
+                                                                            {msg.is_edited && (
+                                                                                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', marginLeft: '8px', fontStyle: 'italic' }}>
+                                                                                    (edited)
+                                                                                </span>
+                                                                            )}
+                                                                        </span>
+                                                                        </>
+                                                                    );
+                                                                })()}
                                                             </div>
                                                             <div className={styles.msgActionGroup}>
                                                                 {/* Emoji reaction button */}
@@ -1347,7 +1485,7 @@ export default function ActiveChat({
                                         </div>
                                     ))}
                                     {pollOptions.length < 6 && <button className={styles.addPollOption} onClick={addPollOption}>+ Add option</button>}
-                                    <button className={styles.sendPollBtn} onClick={() => { setPollOpen(false); setPollQuestion(''); setPollOptions(['', '']); }}>Send Poll</button>
+                                    <button className={styles.sendPollBtn} onClick={handleSendPoll}>Send Poll</button>
                                 </div>
                             )}
 
@@ -1430,8 +1568,11 @@ export default function ActiveChat({
                                             </button>
                                             {attachmentMenuOpen && (
                                                 <div className={styles.attachmentMenu}>
-                                                    <button className={styles.attachmentMenuItem} onClick={() => imageInputRef.current.click()}>🖼️ Image</button>
-                                                    <button className={styles.attachmentMenuItem} onClick={() => fileInputRef.current.click()}>📄 File / PDF</button>
+                                                    <button className={styles.attachmentMenuItem} onClick={() => { imageInputRef.current.click(); setAttachmentMenuOpen(false); }}>🖼️ Image</button>
+                                                    <button className={styles.attachmentMenuItem} onClick={() => { fileInputRef.current.click(); setAttachmentMenuOpen(false); }}>📄 File / PDF</button>
+                                                    {selectedChat.is_group && (
+                                                        <button className={styles.attachmentMenuItem} onClick={() => { setPollOpen(true); setAttachmentMenuOpen(false); }}>📊 Poll</button>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>

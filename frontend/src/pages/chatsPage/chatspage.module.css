@@ -1832,6 +1832,147 @@
     100% { box-shadow: 0 0 0 0px rgba(196, 59, 184, 0); }
 }
 /* ══════════════════════════════════════
+   CHAT POLL STYLES
+══════════════════════════════════════ */
+.chatPollBox {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 200px;
+    max-width: 260px;
+}
+
+.chatPollTitle {
+    font-size: 0.72rem;
+    opacity: 0.55;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 2px;
+}
+
+.chatPollQuestion {
+    font-weight: 700;
+    font-size: 0.9rem;
+    line-height: 1.3;
+    margin-bottom: 4px;
+}
+
+.chatPollOptionRow {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.chatPollLabelRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.chatPollOptionLabel {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: inherit;
+}
+
+.chatPollVoterGroup {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.chatPollVoterPlus {
+    font-size: 0.75rem;
+    color: inherit;
+    opacity: 0.55;
+    font-weight: 600;
+}
+
+.chatPollVoterAvatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #2a2a2a;
+    object-fit: cover;
+    margin-left: -6px;
+}
+
+.chatPollVoteCount {
+    font-size: 0.72rem;
+    color: inherit;
+    opacity: 0.6;
+    margin-left: 2px;
+}
+
+.chatPollBarRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.chatPollRadio {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(128, 128, 128, 0.45);
+    background: transparent;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.chatPollRadio:hover:not(:disabled) {
+    border-color: #BD60C7;
+}
+
+.chatPollRadioVoted {
+    background: #BD60C7;
+    border-color: #BD60C7;
+}
+
+.chatPollTrack {
+    flex: 1;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.chatPollBar {
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+.chatPollBarVoted {
+    background: #BD60C7;
+}
+
+.chatPollFooter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2px;
+    font-size: 0.72rem;
+    opacity: 0.5;
+}
+
+[data-theme="light"] .chatPollRadio:hover:not(:disabled) { border-color: #74419B; }
+[data-theme="light"] .chatPollRadioVoted { background: #74419B; border-color: #74419B; }
+[data-theme="light"] .chatPollTrack { background: rgba(0,0,0,0.08); }
+[data-theme="light"] .chatPollBar { background: rgba(0,0,0,0.15); }
+[data-theme="light"] .chatPollBarVoted { background: #74419B; }
+[data-theme="light"] .chatPollVoterAvatar { border-color: #F2F2F2; }
+[data-theme="light"] .chatPollVoteCount { color: rgba(0,0,0,0.5); }
+
+/* ══════════════════════════════════════
    CHATS PAGE — LIGHT MODE
 ══════════════════════════════════════ */
 

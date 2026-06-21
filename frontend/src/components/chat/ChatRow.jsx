@@ -118,10 +118,14 @@ const ChatRow = React.memo(({
                     chat.status === 'dnd' ? 'Do Not Disturb' :
                         'Offline';
 
-    const previewText =
-        chat.last_message_type === 'media' || chat.has_attachment
-            ? '📎 sent an attachment'
-            : chat.preview;
+    const previewText = (() => {
+        if (chat.last_message_type === 'media' || chat.has_attachment) return '📎 sent an attachment';
+        try {
+            const parsed = JSON.parse(chat.preview || '');
+            if (parsed._type === 'poll') return `📊 Poll: ${parsed.question}`;
+        } catch {}
+        return chat.preview;
+    })();
 
 
     return (

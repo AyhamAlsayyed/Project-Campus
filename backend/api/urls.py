@@ -46,7 +46,7 @@ from .views.communities.community_member_action import (
     kick_community_member,
     toggle_community_admin,
 )
-from .views.conversation.conversation import (  
+from .views.conversation.conversation import (
     toggle_message_reaction,
     create_dm,
     create_group_conversation,
@@ -55,6 +55,7 @@ from .views.conversation.conversation import (
     get_conversations,
     get_messages,
     send_message,
+    vote_message_poll,
 )
 from .views.conversation.conversation_action import (
     accept_chat_request,
@@ -260,6 +261,7 @@ urlpatterns += [
     path("chats/<int:conversation_id>/send/", send_message),
     path("messages/<int:message_id>/delete/", delete_message),
     path("messages/<int:message_id>/edit/", edit_message),
+    path("messages/<int:message_id>/poll-vote/", vote_message_poll),
     path("messages/<int:message_id>/react/", toggle_message_reaction),
     # chat_action
     path("chats/<int:conversation_id>/pin/", toggle_pin),

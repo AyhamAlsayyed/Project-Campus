@@ -110,10 +110,16 @@ function formatChat(chat) {
     userId: chat.other_member_id || chat.user_id || null,
     name: chat.name || chat.user_name || "Unknown User",
     avatar: resolveAvatar(chat.avatar, ProfilePicture),
-    message:
-      typeof chat.preview === "string" ? chat.preview
+    message: (() => {
+      const raw = typeof chat.preview === "string" ? chat.preview
         : typeof chat.last_message === "string" ? chat.last_message
-          : chat.last_message?.content || chat.last_message?.text || "No messages yet",
+          : chat.last_message?.content || chat.last_message?.text || "No messages yet";
+      try {
+        const parsed = JSON.parse(raw || '');
+        if (parsed._type === 'poll') return `📊 Poll: ${parsed.question}`;
+      } catch {}
+      return raw;
+    })(),
     status: chat.is_online ? "online" : "offline",
     dotStyle: chat.is_online ? "online" : "offline",
     isGroup: chat.is_group || false,

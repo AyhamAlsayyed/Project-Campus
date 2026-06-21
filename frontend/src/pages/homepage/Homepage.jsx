@@ -234,7 +234,8 @@ export default function Homepage() {
             if (!content.trim() && !images.length && !files.length && !isPollOpen) return;
         }
 
-        const postContent = isPromote ? promoteContent : (isAnnouncement ? announcementDesc : content);
+        const isUniversityAnnouncement = isAnnouncement && localStorage.getItem("user_type") === "university";
+        const postContent = isPromote ? promoteContent : (isUniversityAnnouncement ? announcementDesc : content);
 
         const optimisticPost = {
             id: `temp-${Date.now()}`,

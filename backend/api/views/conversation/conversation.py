@@ -1,3 +1,5 @@
+import json
+
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.contrib.auth import get_user_model
@@ -177,6 +179,20 @@ def send_message(request, conversation_id):
     parent_message = None
 
     uploaded_files = request.FILES.getlist("images")
+
+    # ── Poll message ──
+    poll_question = request.data.get("poll_question", "").strip()
+    poll_options_raw = request.data.getlist("poll_options")
+    is_poll = bool(poll_question and len([o for o in poll_options_raw if o.strip()]) >= 2)
+
+    if is_poll:
+        opts = [o.strip() for o in poll_options_raw if o.strip()]
+        poll_payload = {
+            "_type": "poll",
+            "question": poll_question,
+            "options": [{"id": i, "text": t, "voter_ids": []} for i, t in enumerate(opts)],
+        }
+        text = json.dumps(poll_payload)
 
     if not text and not uploaded_files:
         return Response({"error": "Cannot send an empty message"}, status=status.HTTP_400_BAD_REQUEST)
@@ -405,3 +421,87 @@ def create_dm(request, user_id):
 
     response_status = status.HTTP_201_CREATED if created else status.HTTP_200_OK
     return Response({"id": conversation.conversation_id}, status=response_status)
+
+
+
+def _get_avatar_url(request, user_obj):
+    try:
+        profile = getattr(user_obj, "profile", None)
+        if profile and profile.profile_image:
+            return request.build_absolute_uri(profile.profile_image.url)
+    except Exception:
+        pass
+    return None
+
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def vote_message_poll(request, message_id):
+    user = request.user
+    msg = get_object_or_404(Message, message_id=message_id)
+
+    try:
+        poll = json.loads(msg.content or "")
+        if poll.get("_type") != "poll":
+            raise ValueError
+    except (json.JSONDecodeError, ValueError):
+        return Response({"error": "Not a poll message"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == "GET":
+        uid = user.id
+        all_voter_ids = set(v for o in poll["options"] for v in o["voter_ids"])
+        voters = {u.id: u for u in User.objects.filter(id__in=all_voter_ids).select_related("profile")}
+        total = sum(len(o["voter_ids"]) for o in poll["options"])
+        result = []
+        for opt in poll["options"]:
+            count = len(opt["voter_ids"])
+            avatars = [_get_avatar_url(request, voters[vid]) for vid in opt["voter_ids"][:3] if vid in voters]
+            result.append({
+                "id": opt["id"],
+                "text": opt["text"],
+                "votes_count": count,
+                "percentage": round((count / total) * 100) if total else 0,
+                "is_voted": uid in opt["voter_ids"],
+                "voter_avatars": [a for a in avatars if a],
+            })
+        return Response({"question": poll["question"], "options": result}, status=status.HTTP_200_OK)
+
+    option_id = request.data.get("option_id")
+    if option_id is None:
+        return Response({"error": "option_id required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    option_id = int(option_id)
+    uid = user.id
+    # Remove previous vote from all options
+    for opt in poll["options"]:
+        if uid in opt["voter_ids"]:
+            opt["voter_ids"].remove(uid)
+
+    # Toggle: add vote if not previously voted for this option
+    for opt in poll["options"]:
+        if opt["id"] == option_id and uid not in opt["voter_ids"]:
+            opt["voter_ids"].append(uid)
+
+    msg.content = json.dumps(poll)
+    msg.save(update_fields=["content"])
+
+    # Build response with voter avatars
+    all_voter_ids = set(uid for o in poll["options"] for uid in o["voter_ids"])
+    voters = {u.id: u for u in User.objects.filter(id__in=all_voter_ids).select_related("profile")}
+
+    total = sum(len(o["voter_ids"]) for o in poll["options"])
+    result = []
+    for opt in poll["options"]:
+        count = len(opt["voter_ids"])
+        voter_avatars = [_get_avatar_url(request, voters[vid]) for vid in opt["voter_ids"][:3] if vid in voters]
+        voter_avatars = [a for a in voter_avatars if a]
+        result.append({
+            "id": opt["id"],
+            "text": opt["text"],
+            "votes_count": count,
+            "percentage": round((count / total) * 100) if total else 0,
+            "is_voted": uid in opt["voter_ids"],
+            "voter_avatars": voter_avatars,
+        })
+
+    return Response({"question": poll["question"], "options": result}, status=status.HTTP_200_OK)

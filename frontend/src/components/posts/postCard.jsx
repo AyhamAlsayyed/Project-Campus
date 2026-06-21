@@ -81,7 +81,10 @@ export default function PostCard({
   const loginUserRaw = localStorage.getItem("login_user");
   const loginUserObj = loginUserRaw ? JSON.parse(loginUserRaw) : null;
   const loggedInUserId = loginUserObj?.id;
-  const isOwnPost = String(post.author?.id || post.author_id) === String(loggedInUserId);
+  const loggedInUserType = localStorage.getItem("user_type");
+  const isPageOrUniViewer = loggedInUserType === 'page' || loggedInUserType === 'university';
+  const isOwnPost = String(post.author?.id || post.author_id) === String(loggedInUserId) ||
+    (isPageOrUniViewer && String(post.author?.id || post.author_id) === String(loginUserObj?.page_id));
   const CHAR_LIMIT = 150;
 
   const [commenterAvatars, setCommenterAvatars] = useState(
@@ -605,6 +608,16 @@ export default function PostCard({
                       {isBlocked ? 'Unblock user' : 'Block user'}
                     </button>
                     <MenuDivider />
+                    {communityContext && isAdmin && (
+                      <>
+                        <button className={`${styles.postMenuItem} ${styles.postMenuItemDestructive}`}
+                          onClick={() => handleMenuAction('delete')}>
+                          <img src={DeletePost} alt="" width={16} height={16} />
+                          Delete post
+                        </button>
+                        <MenuDivider />
+                      </>
+                    )}
                     <button className={`${styles.postMenuItem} ${styles.postMenuItemDestructive}`}
                       onClick={() => { setShowReport(true); setShowMenu(false); }}>
                       <img src={Report} alt="" width={16} height={16} />
