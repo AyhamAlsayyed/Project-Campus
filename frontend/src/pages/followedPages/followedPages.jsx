@@ -274,7 +274,7 @@ export default function FollowedPages() {
             {showPill && <div className={styles.pill}>FOLLOWED PAGES</div>}
             <div className={styles.rightCard}>
                 <div className={styles.followedHeaderRow} style={{ marginBottom: '12px', flexWrap: 'wrap', gap: 8 }}>
-                    <div className={styles.searchContactWrap} style={{ flex: 1, minWidth: 0 }}>
+                    <div className={styles.searchContactWrap} style={{ flex: 1, minWidth: 0, marginBottom: 0 }}>
                         <img src={Search} alt="Search" className={styles.searchIcon} />
                         <input
                             type="text"

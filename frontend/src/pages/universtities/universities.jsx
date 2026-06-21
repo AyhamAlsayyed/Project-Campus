@@ -237,11 +237,11 @@ export default function Universities() {
     );
 
     // ── Shared doctors list (reused in both mobile and desktop) ──
-    const DoctorsList = ({ limit, sourceDoctors } = {}) => {
+    const DoctorsList = ({ limit, sourceDoctors, tall } = {}) => {
         const docs = sourceDoctors ?? filteredDoctors;
         const displayDocs = limit ? docs.slice(0, limit) : docs;
         return (
-        <div className={styles.scrollableList}>
+        <div className={`${styles.scrollableList} ${tall ? styles.scrollableListTall : ''}`}>
             {docs.length === 0 && (
                 <div className={styles.emptyState}>
                     <img src={EducationIcon} alt="" className={styles.emptyStateIcon} />
@@ -602,7 +602,7 @@ export default function Universities() {
 
                         {/* ── Latest News ── */}
                         <div className={styles.latestNews}>
-                            <div className={styles.innerContainer} style={{ minHeight: isUniversity ? "530px" : "510px", borderRadius: isUniversity ? "30px 30px 0 0" : "30px" }}>
+                            <div className={styles.innerContainer} style={{ minHeight: isUniversity ? "530px" : "480px", borderRadius: isUniversity ? "30px 30px 0 0" : "30px" }}>
                                 <h2 className={styles.sectionTitle}>LATEST NEWS</h2>
 
                                 {isUniversity ? (
@@ -692,7 +692,7 @@ export default function Universities() {
                                         ))}
                                     </div>
                                 ) : news.length === 0 ? (
-                                    <div className={styles.emptyState} style={{ minHeight: 400, width: '96%', margin: '0 auto' }}>
+                                    <div className={styles.emptyState} style={{ minHeight: 350, width: '96%', margin: '0 auto' }}>
                                         <img src={NewsIcon} alt="" className={styles.emptyStateIcon} />
                                         <div style={{ fontWeight: 600, marginBottom: 4 }}>No news yet</div>
                                         <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Your university hasn&apos;t posted any announcements yet.</div>
@@ -744,7 +744,7 @@ export default function Universities() {
                     <div className={`${styles.rightSection} hidden md:block`}>
                         <div className={styles.rightCardWrapper}>
                             <div className={styles.pill}>Doctors and Teachers</div>
-                            <div className={styles.rightCard} style={{ minHeight: isUniversity ? "570px" : "200px" }}>
+                            <div className={styles.rightCard} style={isUniversity ? { minHeight: "570px" } : { height: "340px" }}>
                                 <div className={styles.rightCardHeader}>
                                     <div className={styles.searchContainer} style={{ flex: 1, minWidth: 0, margin: "12px 0 12px 12px" }}>
                                         <Search size={16} className={styles.searchIcon} />
@@ -763,13 +763,13 @@ export default function Universities() {
                                         View All
                                     </button>
                                 </div>
-                                <DoctorsList limit={5} />
+                                <DoctorsList limit={5} tall={isUniversity} />
                             </div>
                         </div>
 
                         {!isUniversity && (
                             <div className={styles.rightCardWrapper}>
-                                <div className={styles.rightCard} style={{ marginTop: 0 }}>
+                                <div className={styles.rightCard} style={{ marginTop: 8 }}>
                                     <div className={styles.relatedEventsHeader}>
                                         <img src={Events} alt="events" style={{ width: 30, height: 30 }} />
                                         <span className={styles.relatedEventsTitle}>Related events</span>

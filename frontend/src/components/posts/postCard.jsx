@@ -35,6 +35,16 @@ export default function PostCard({
   onDismiss, onReportDelete, onKick, onReportAction, isAdmin,
   communityContext, communityId, currentUser
 }) {
+  const [isLight, setIsLight] = useState(
+    () => document.documentElement.getAttribute('data-theme') === 'light'
+  );
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsLight(document.documentElement.getAttribute('data-theme') === 'light');
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
   const [current, setCurrent] = useState(0);
   const [isLiked, setIsLiked] = useState(post?.is_liked || post?.has_liked || false);
   const [isSaved, setIsSaved] = useState(post?.is_saved || false);
@@ -846,7 +856,6 @@ export default function PostCard({
                 <span className={styles.prompt}>how do you feel about this ad?</span>
                 <div className={styles.reactions}>
                   {(() => {
-                    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
                     return [
                       { key: 'good',    src: GoodReview,    lightBg: '#6455BB' },
                       { key: 'neutral', src: NatrualReview, lightBg: 'linear-gradient(135deg, #9158B6, #B55AB2)' },

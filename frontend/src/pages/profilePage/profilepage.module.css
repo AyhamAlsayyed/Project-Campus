@@ -449,6 +449,9 @@ body {
   opacity: 0.65;
   color: rgba(255, 255, 255, 0.6);
   line-height: 1.35rem;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .hr {

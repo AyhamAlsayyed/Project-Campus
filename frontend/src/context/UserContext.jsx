@@ -11,7 +11,15 @@ export function UserProvider({ children }) {
             return stored ? JSON.parse(stored) : null;
         } catch { return null; }
     });
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(() => {
+        // If we already have cached user data, start as not loading
+        // so the UI renders immediately with stored data
+        try {
+            const token = localStorage.getItem('access');
+            const stored = localStorage.getItem('login_user');
+            return !(token && stored);
+        } catch { return true; }
+    });
 
     const fetchUser = useCallback(async () => {
         const token = localStorage.getItem('access');
@@ -46,8 +54,13 @@ export function UserProvider({ children }) {
         }
     }, []);
 
-    // Fetch once on mount (only if a token exists)
+    // Fetch on mount and whenever the user logs in
     useEffect(() => { fetchUser(); }, [fetchUser]);
+
+    useEffect(() => {
+        window.addEventListener('auth:login', fetchUser);
+        return () => window.removeEventListener('auth:login', fetchUser);
+    }, [fetchUser]);
 
     // Derived avatar URL — ready to drop straight into <img src={avatarSrc}>
     const rawAvatar = user?.profile?.avatar || user?.avatar || user?.profile_image;

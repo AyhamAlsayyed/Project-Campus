@@ -779,6 +779,23 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
+.feedSpinner {
+    width: 44px;
+    height: 44px;
+    border: 4px solid rgba(139, 45, 255, 0.15);
+    border-top-color: #A6279C;
+    border-radius: 50%;
+    animation: homeFeedSpin 0.8s linear infinite;
+}
+
+.feedSpinnerWrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    width: 100%;
+}
+
 .annImageWarningIcon {
     font-size: 1.4rem;
     flex-shrink: 0;

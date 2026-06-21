@@ -470,7 +470,9 @@ export default function Homepage() {
                             {error ? (
                                 <div className={styles.errorBox}><p>{error}</p></div>
                             ) : loading ? (
-                                <p style={{ padding: 20, color: "var(--text-muted)" }}>Loading...</p>
+                                <div className={styles.feedSpinnerWrap}>
+                                    <div className={styles.feedSpinner} />
+                                </div>
                             ) : posts.length === 0 ? (
                                 <div className={styles.emptyState}>
                                     <div className={styles.emptyStateIcon}>📭</div>
@@ -507,7 +509,15 @@ export default function Homepage() {
                             {error ? (
                                 <div className={styles.errorBox}><p>{error}</p></div>
                             ) : loading ? (
-                                <p>Loading...</p>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
+                                    <div style={{
+                                        width: 44, height: 44,
+                                        border: '4px solid rgba(139,45,255,0.15)',
+                                        borderTop: '4px solid #A6279C',
+                                        borderRadius: '50%',
+                                        animation: 'homeFeedSpin 0.8s linear infinite',
+                                    }} />
+                                </div>
                             ) : posts.length === 0 ? (
                                 <div className={styles.emptyState}>
                                     <div className={styles.emptyStateIcon}>📭</div>

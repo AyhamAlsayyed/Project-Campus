@@ -1,5 +1,9 @@
 @tailwind utilities;
 
+@keyframes homeFeedSpin {
+  to { transform: rotate(360deg); }
+}
+
 @keyframes communityHighlightPulse {
   0%   { box-shadow: 0 0 0 0 rgba(158, 39, 157, 0.8); }
   50%  { box-shadow: 0 0 0 14px rgba(158, 39, 157, 0.25); }

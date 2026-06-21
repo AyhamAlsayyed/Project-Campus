@@ -118,7 +118,6 @@ export default function Settings() {
     const [deletePassword, setDeletePassword] = useState('');
 
     // ── Misc state ───────────────────────────────────────────────────────────
-    const [language, setLanguage] = useState('English');
     const [contactForm, setContactForm] = useState({ subject: 'Technical Issue', message: '', screenshot: null });
     const [contactSubmitted, setContactSubmitted] = useState(false);
     const [bugForm, setBugForm] = useState({ subject: 'Bug Report', message: '', actionTrack: '', screenshot: null });
@@ -164,12 +163,11 @@ export default function Settings() {
                         setNotifState(prev => ({ ...prev, ...d }));
                     }
                 }
-                if (activeTab === 'Appearance' || activeTab === 'Language') {
+                if (activeTab === 'Appearance') {
                     const res = await fetch(`${API}/api/settings/appearance/`, { headers: authHeaders() });
                     if (res.ok) {
                         const d = await res.json();
                         if (d.theme) setAppearanceTheme(d.theme);
-                        if (d.language) setLanguage(d.language);
                     }
                 }
                 if (activeTab === 'Data & Storage') {
@@ -232,31 +230,18 @@ export default function Settings() {
         showToast('Storage preferences saved.');
     };
 
-    const handleLogout = async () => {
-        setLoading(true);
-        try {
+    const handleLogout = () => {
+        // Fire backend logout in background — don't await it
+        const refreshToken = localStorage.getItem('refresh');
+        fetch(`${API}/api/auth/logout/`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ refresh: refreshToken })
+        }).catch(() => {});
 
-            const refreshToken = localStorage.getItem('refresh');
-            await fetch(`${API}/api/auth/logout/`, {
-                method: 'POST',
-                headers: authHeaders(),
-                body: JSON.stringify({ refresh: refreshToken })
-            });
-        } catch (err) {
-            console.error('Logout error:', err);
-        }
-        
-        window.dispatchEvent(new Event('auth:logout')); 
-
-      
+        window.dispatchEvent(new Event('auth:logout'));
         localStorage.clear();
-        showToast('Logged out successfully.');
-
-     
-        setTimeout(() => {
-            window.location.href = '/';
-        }, 1500);
-        setLoading(false);
+        window.location.href = '/';
     };
 
     // ── Account modals ───────────────────────────────────────────────────────
@@ -418,9 +403,6 @@ export default function Settings() {
         setLoading(false);
     };
 
-    const handleLanguageChange = (lang) => {
-        if (window.confirm('Switching language will reload the page. Continue?')) setLanguage(lang);
-    };
 
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 1024);
@@ -440,7 +422,6 @@ export default function Settings() {
         { key: 'Privacy', label: 'Privacy' },
         { key: 'Notifications', label: 'Notifications' },
         { key: 'Appearance', label: 'Appearance' },
-        { key: 'Language', label: 'Language' },
         { key: 'Security', label: 'Security' },
         { key: 'Help & Support', label: 'Help & Support' },
         { key: 'Data & Storage', label: 'Data & Storage' }
@@ -596,8 +577,8 @@ export default function Settings() {
                                         <label className={styles.settingLabelDestructive}>Logout</label>
                                         <p className={styles.settingDescription}>Log out of your account on this device and clear local session data.</p>
                                     </div>
-                                    <button className={styles.deleteBtn} onClick={handleLogout} disabled={loading}>
-                                        {loading ? 'Logging out...' : 'Logout'}
+                                    <button className={styles.deleteBtn} onClick={handleLogout}>
+                                        Logout
                                     </button>
                                 </div>
 
@@ -766,23 +747,6 @@ export default function Settings() {
                             </div>
                         )}
 
-                        {/* SECTION 5: LANGUAGE */}
-                        {activeTab === 'Language' && (
-                            <div className={styles.settingsFormGroup}>
-                                <label className={styles.settingLabel}>Interface Language</label>
-                                <div className={styles.radioGroup}>
-                                    {[['English', 'English'], ['Arabic', 'العربية (Arabic)']].map(([val, label]) => (
-                                        <label key={val} className={styles.radioOption}>
-                                            <input type="radio" name="lang" value={val} checked={language === val} onChange={() => handleLanguageChange(val)} />
-                                            <div className={styles.radioCircle} />
-                                            <span className={styles.radioLabel}>{label}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                                {language === 'Arabic' && <p className={styles.fieldNote}>Layout rendering set to RTL framework structure.</p>}
-                                <SaveBar onSave={saveAppearance} />
-                            </div>
-                        )}
 
                         {/* SECTION 6: SECURITY */}
                         {activeTab === 'Security' && (

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, Menu, Volume2, Calendar, UserPlus, Heart, Home } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useNotificationContext } from '../../context/NotificationContext';
 import DefaultPfp from '../../Assets/icons/default-pfp.png';
 import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
@@ -14,6 +14,8 @@ import { createPortal } from 'react-dom';
 import { Users, User, BookOpen, X } from 'lucide-react';
 export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token, API, homeMode = false }) {
     const navigate = useNavigate();
+    const location = useLocation();
+    const isOnProfilePage = location.pathname.startsWith('/profile/') || location.pathname.startsWith('/page/');
     const avatarDropdownRef = useRef(null);
     const { registerChatListener, liveNotifications, clearLiveNotifCount } = useNotificationContext();
 
@@ -329,6 +331,12 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                     {showAvatarDropdown && (
                         <div className={headerStyles.avatarDropdown}>
                             {homeMode ? (
+                                <button className={headerStyles.dropdownItem}
+                                    onClick={() => { navigate('/home'); setShowAvatarDropdown(false); }}>
+                                    <Home size={20} />
+                                    Home
+                                </button>
+                            ) : isOnProfilePage ? (
                                 <button className={headerStyles.dropdownItem}
                                     onClick={() => { navigate('/home'); setShowAvatarDropdown(false); }}>
                                     <Home size={20} />
