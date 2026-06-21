@@ -81,6 +81,7 @@ wheels/
 # Node / React
 # =========================
 node_modules/
+.claude/
 .pnp
 .pnp.js
 npm-debug.log*
@@ -130,3 +131,9 @@ atlassian-ide-plugin.xml
 # Project-specific
 # =========================
 settings_local.py
+.claude/worktrees/agent-a1f8a1be4f91946ae
+.claude/worktrees/agent-a1f8a1be4f91946ae
+.claude/worktrees/agent-a1f8a1be4f91946ae
+.claude/worktrees/agent-a1f8a1be4f91946ae
+.claude/worktrees/agent-a1f8a1be4f91946ae
+.claude/worktrees/agent-a1f8a1be4f91946ae
