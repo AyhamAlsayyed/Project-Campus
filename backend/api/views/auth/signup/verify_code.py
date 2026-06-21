@@ -111,6 +111,9 @@ def verify_code(request):
 
                         profile.recovery_email = recovery_email
                         profile.save(update_fields=["recovery_email"])
+            else:
+                if personal_email:
+                    action_type = "verify_personal_signup"
 
     except Exception as db_error:
         return Response(

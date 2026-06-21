@@ -15,6 +15,7 @@ from django.db.models import (
 )
 from django.db.models.functions import Now
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
@@ -27,6 +28,7 @@ from ...models import (
     CommunityRequest,
     Friendship,
     Post,
+    Promotion,
     Report,
     Subscription,
 )
@@ -157,10 +159,23 @@ def communities(request):
         return Response(serializer.data)
 
     else:  # default
+        community_ct = ContentType.objects.get_for_model(Community)
+        active_promotions = Promotion.objects.filter(
+            content_type_obj=community_ct,
+            object_id=OuterRef("community_id"),
+            status=Promotion.Status.ACTIVE,
+            start_date__lte=timezone.now(),
+            end_date__gte=timezone.now(),
+        )
         community_ids = CommunityMember.objects.filter(user=user).values("community_id")
-
         qs = (
-            qs.annotate(
+            qs.annotate(is_promoted=Exists(active_promotions))
+            .annotate(
+                p_promoted=Case(
+                    When(is_promoted=True, then=Value(50)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
                 p_joined=Case(
                     When(community_id__in=community_ids, then=Value(50)),
                     default=Value(0),
@@ -168,12 +183,12 @@ def communities(request):
                 ),
                 p_popularity=F("members_count"),
                 p_fresh=Case(
-                    When(created_at__gte=Now() - timedelta(days=3), then=Value(20)),
+                    When(created_at__gte=timezone.now() - timedelta(days=3), then=Value(20)),
                     default=Value(0),
                     output_field=IntegerField(),
                 ),
             )
-            .annotate(score=F("p_joined") + F("p_popularity") + F("p_fresh"))
+            .annotate(score=F("p_promoted") + F("p_joined") + F("p_popularity") + F("p_fresh"))
             .order_by("-score")
         )
 
