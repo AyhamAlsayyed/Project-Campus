@@ -72,7 +72,7 @@ function getNotificationIcon(type) {
   return <Volume2 size={12} color="currentColor" />;
 }
 
-function resolveAvatar(url, fallback = "/default-avatar.png") {
+function resolveAvatar(url, fallback = ProfilePicture) {
   if (!url) return fallback;
   return url.startsWith("http") ? url : `${API}${url}`;
 }

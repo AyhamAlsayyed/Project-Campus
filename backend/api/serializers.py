@@ -324,7 +324,10 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_major(self, obj):
         student = getattr(obj, "student_profile", None)
-        return student.major if student else ""
+        if student:
+            return student.major or ""
+        instructor = getattr(obj, "instructor_profile", None)
+        return instructor.department or "" if instructor else ""
 
     def get_department(self, obj):
         if self._should_restrict_data(obj):

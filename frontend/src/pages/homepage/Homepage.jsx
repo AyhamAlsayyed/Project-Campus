@@ -21,6 +21,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import MobileCreatePost from '../../components/createPost/MobileCreatePost/mobileCreatePost';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import Calender from '../../Assets/icons/calender.png'
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
 import API from '../../config';
 import useTheme from '../../hooks/useTheme';
 import { useUser } from '../../context/UserContext';
@@ -361,7 +362,7 @@ export default function Homepage() {
                                 ? (matchedPost.author_avatar.startsWith('http')
                                     ? matchedPost.author_avatar
                                     : `${API}${matchedPost.author_avatar}`)
-                                : "/default-avatar.png"
+                                : DefaultPfp
                         },
                         created_at: matchedPost?.created_at || null,
                     });

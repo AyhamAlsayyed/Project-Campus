@@ -3,6 +3,7 @@ import { useCreateEvent } from '../../components/createEvent/useCreateEvent';
 import CreateEventForm from '../../components/createEvent/CreateEventForm';
 import CreateEventRightSidebar from '../../components/createEvent/CreateEventRightSidebar';
 import Bin from '../../Assets/icons/bin.png';
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
 import EditIcon from '../../Assets/icons/edit.png';
 import EventIcon from '../../Assets/icons/event.png';
 import StarIcon from '../../Assets/icons/star.png';
@@ -147,7 +148,7 @@ export default function EventsPage() {
                         orgName: event.organization_name,
                         avatar: event.avatar
                             ? (event.avatar.startsWith("http") ? event.avatar : `${API}${event.avatar}`)
-                            : "/default-avatar.png",
+                            : DefaultPfp,
                         banner: (event.image || event.banner)
                             ? ((event.image || event.banner).startsWith("http")
                                 ? (event.image || event.banner)

@@ -2,6 +2,7 @@ import React from 'react';
 import styles from './FriendsTab.module.css';
 import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import DefaultPfp from '../../../Assets/icons/default-pfp.png';
 
 export default function FriendsTab({ friends = { mutual: [], all: [] } }) {
     const navigate = useNavigate();
@@ -41,7 +42,8 @@ export default function FriendsTab({ friends = { mutual: [], all: [] } }) {
                                     <div key={friend.id} className={styles.friendItem} onClick={() => handleFriendClick(friend.id)}>
                                         <div className={styles.avatarBox}>
                                             <img
-                                                src={friend.avatar_url || friend.avatar || 'https://i.pravatar.cc/150'}
+                                                src={friend.avatar_url || friend.avatar || DefaultPfp}
+                                                onError={e => { e.currentTarget.src = DefaultPfp; }}
                                                 alt={friend.username}
                                                 className={styles.friendImg}
                                             />
@@ -68,7 +70,8 @@ export default function FriendsTab({ friends = { mutual: [], all: [] } }) {
                             <div key={friend.id} className={styles.friendItem} onClick={() => handleFriendClick(friend.id)}>
                                 <div className={styles.avatarBox}>
                                     <img
-                                        src={friend.avatar_url || friend.avatar || 'https://i.pravatar.cc/150'}
+                                        src={friend.avatar_url || friend.avatar || DefaultPfp}
+                                                onError={e => { e.currentTarget.src = DefaultPfp; }}
                                         alt={friend.username}
                                         className={styles.friendImg}
                                     />

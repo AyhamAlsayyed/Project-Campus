@@ -1,3 +1,241 @@
+/* ── Gallery ── */
+.galleryWrap {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+}
+
+.galleryHeader {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    flex-shrink: 0;
+    border-bottom: 1px solid;
+}
+
+.galleryBackBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+.galleryBackBtn:hover { background: rgba(128,128,128,0.15); }
+
+.galleryTabs {
+    display: flex;
+    flex-shrink: 0;
+    border-bottom: 1px solid;
+}
+
+.galleryTab {
+    flex: 1;
+    padding: 12px 0;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    font-family: inherit;
+}
+
+.galleryScroll {
+    flex: 1;
+    overflow-y: auto;
+    will-change: transform;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.galleryScroll::-webkit-scrollbar {
+    width: 4px;
+}
+
+.galleryScroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.galleryScroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+}
+
+.galleryScroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme="light"] .galleryScroll {
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+[data-theme="light"] .galleryScroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .galleryScroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+/* 3-column image grid */
+.galleryGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    padding: 3px;
+}
+
+.galleryCell {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    cursor: pointer;
+    border-radius: 6px;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 120px;
+    contain: layout paint;
+}
+
+.galleryCell img,
+.galleryCell video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.2s ease;
+}
+
+.galleryCell:hover img,
+.galleryCell:hover video {
+    transform: scale(1.05);
+}
+
+.galleryCellOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0);
+    transition: background 0.2s ease;
+    border-radius: 6px;
+}
+
+.galleryCell:hover .galleryCellOverlay {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.galleryVideoBadge {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+/* Docs list */
+.galleryDocList {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    gap: 4px;
+}
+
+.galleryDocItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: background 0.15s;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 68px;
+    contain: layout paint;
+}
+
+.galleryDocItem:hover { background: rgba(102, 45, 145, 0.1) !important; }
+
+.galleryDocIcon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.galleryDocMeta { min-width: 0; flex: 1; }
+
+.galleryDocName {
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.galleryDocType {
+    font-size: 0.72rem;
+    margin-top: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.galleryDocDownload {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(102, 45, 145, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+.galleryDocItem:hover .galleryDocDownload {
+    background: rgba(102, 45, 145, 0.25);
+}
+
+/* Empty state */
+.galleryEmpty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 60px 20px;
+    opacity: 0.45;
+}
+
+.galleryEmptyIcon {
+    font-size: 2.5rem;
+    line-height: 1;
+}
+
+.galleryEmptyText {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Light mode overrides */
+[data-theme="light"] .galleryDocItem:hover { background: rgba(102, 45, 145, 0.06) !important; }
+[data-theme="light"] .galleryDocDownload { background: rgba(102, 45, 145, 0.08); }
+[data-theme="light"] .galleryDocItem:hover .galleryDocDownload { background: rgba(102, 45, 145, 0.18); }
+
 /* ── Container ── */
 .container {
     display: flex;

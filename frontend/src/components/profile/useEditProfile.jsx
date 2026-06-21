@@ -1,6 +1,9 @@
 // src/hooks/useProfileEdit.js
 import { useState, useRef } from 'react';
 
+const TITLE_DISPLAY_TO_KEY = { 'Doctor': 'dr', 'Professor': 'prof', 'Assistant': 'asst' };
+const normalizeTitle = (v) => TITLE_DISPLAY_TO_KEY[v] || v || '';
+
 export function useProfileEdit({ user, token, API, onSaved }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editView, setEditView] = useState('main');
@@ -52,7 +55,8 @@ export function useProfileEdit({ user, token, API, onSaved }) {
         bio: user?.profile?.bio || '',
         university: user?.university_full_name || '',
         major: user?.major || '',
-        title: user?.academic_title || '',
+        department: user?.department || '',
+        title: normalizeTitle(user?.academic_title),
 
         // Contact
         primaryEmail: user?.profile?.academic_email || '',
@@ -106,7 +110,9 @@ export function useProfileEdit({ user, token, API, onSaved }) {
             fullName: u.profile?.full_name || '',
             university: u.university_full_name || '',
             major: u.major || '',
+            department: u.department || '',
             bio: u.profile?.bio || '',
+            title: normalizeTitle(u.academic_title),
             primaryEmail: u.profile?.academic_email || '',
             secondaryEmail: u.personal_email || '',
             primaryPhone: u.profile?.primary_phone || '',
@@ -120,6 +126,7 @@ export function useProfileEdit({ user, token, API, onSaved }) {
             })),
             educationEntries: u?.education || [],
             teachingPositions: u?.teaching_positions || [],
+            communityPicks: [],
         });
     };
 
@@ -206,11 +213,12 @@ export function useProfileEdit({ user, token, API, onSaved }) {
             fd.append('location', formData.pageAddress || '');     
             fd.append('link', formData.pageWebsite || '');     
 
-            await fetch(`${API}/api/auth/page/profile/update/`, {
+            const pageRes = await fetch(`${API}/api/auth/page/profile/update/`, {
                 method: 'PATCH',
                 headers: { Authorization: `Bearer ${token}` },
                 body: fd,
             });
+            if (pageRes.ok) { onSaved?.(); }
             setIsEditing(false);
             return;
         }
@@ -221,6 +229,7 @@ export function useProfileEdit({ user, token, API, onSaved }) {
             fd.append('username', formData.username);
             fd.append('full_name', formData.fullName);
             fd.append('major', formData.major);
+            fd.append('department', formData.department);
             fd.append('bio', formData.bio);
             fd.append('personal_email', formData.secondaryEmail);
             fd.append('primary_phone', formData.primaryPhone);
@@ -233,6 +242,8 @@ export function useProfileEdit({ user, token, API, onSaved }) {
             else if (removeAvatar) fd.append('remove_avatar', 'true');
             if (coverFile) fd.append('cover', coverFile);
             else if (removeCover) fd.append('remove_cover', 'true');
+
+            if (formData.title) fd.append('academic_title', formData.title);
 
             fd.append('degrees', JSON.stringify(
                 (formData.degrees || []).map(d => ({
@@ -247,6 +258,9 @@ export function useProfileEdit({ user, token, API, onSaved }) {
             }
             if (formData.educationEntries?.length) {
                 fd.append('education', JSON.stringify(formData.educationEntries));
+            }
+            if (formData.communityPicks?.length) {
+                fd.append('community_picks', JSON.stringify(formData.communityPicks.map(c => c.id)));
             }
 
             const res = await fetch(`${API}/api/auth/profile/update/`, {

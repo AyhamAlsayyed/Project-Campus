@@ -268,6 +268,18 @@ def update_profile(request):
         user.student_profile.major = request.data["major"]
         user.student_profile.save()
 
+    if hasattr(user, "instructor_profile"):
+        instructor = user.instructor_profile
+        changed = False
+        if "academic_title" in request.data:
+            instructor.academic_title = request.data["academic_title"]
+            changed = True
+        if "department" in request.data:
+            instructor.department = request.data["department"]
+            changed = True
+        if changed:
+            instructor.save()
+
     user.save()
     return Response({"message": "Profile updated successfully"}, status=status.HTTP_200_OK)
 

@@ -23,6 +23,13 @@ import DefaultBanner from '../../Assets/Pictures/default-community-banner.png';
 
 const DEGREE_OPTIONS = ['High School Diploma', "Bachelor's", "Master's", 'PhD'];
 
+const TITLE_OPTIONS = [
+    { value: 'dr',   label: 'Dr.'   },
+    { value: 'prof', label: 'Prof.' },
+    { value: 'asst', label: 'Asst.' },
+];
+const titleLabel = (val) => TITLE_OPTIONS.find(o => o.value === val)?.label || val || 'Title';
+
 const DegreeSelect = ({ value, onChange, styles }) => {
     const [isOpen, setIsOpen] = useState(false);
     const ref = useRef(null);
@@ -123,11 +130,13 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
         try {
             const res = await fetch(`${API}/api/auth/send_code/`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
                 body: JSON.stringify({
                     personalEmail: formData.secondaryEmail.trim(),
-                    signup: false,
-                })
+                }),
             });
             if (res.ok) {
                 setSecondaryEmailOtpSent(true);
@@ -146,11 +155,14 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
         try {
             const res = await fetch(`${API}/api/auth/verify_code/`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
                 body: JSON.stringify({
                     personalEmail: formData.secondaryEmail.trim(),
                     code: secondaryEmailOtp.trim(),
-                })
+                }),
             });
             if (res.ok) {
                 setSecondaryEmailVerified(true);
@@ -303,10 +315,11 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                             style={{ position: "absolute", bottom: 10, right: 10, top: "auto", left: "auto", transform: "none" }}
                             onClick={(e) => {
                                 e.stopPropagation();
+                                const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
                                 const rect = cameraButtonRef.current.getBoundingClientRect();
                                 setCoverDropdownPos({
-                                    top: rect.bottom + 8,
-                                    left: rect.right,
+                                    top: rect.bottom / z + 8,
+                                    left: rect.right / z,
                                 });
                                 setShowCoverDropdown(p => !p);
                             }}
@@ -451,8 +464,9 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                         ref={titleBtnRef}
                                         onClick={(e) => {
                                             e.stopPropagation();
+                                            const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
                                             const rect = titleBtnRef.current.getBoundingClientRect();
-                                            setTitleDropdownPos({ top: rect.bottom + 8, left: rect.left });
+                                            setTitleDropdownPos({ top: rect.bottom / z + 8, left: rect.left / z });
                                             setShowTitleDropdown(p => !p);
                                         }}
                                         style={{
@@ -463,7 +477,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                             display: "flex", justifyContent: "flex-start"
                                         }}
                                     >
-                                        {formData.title || 'Title'}
+                                        {titleLabel(formData.title)}
                                     </button>
 
                                     {/* Arrow — sits between title and username */}
@@ -472,8 +486,9 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                         alt=""
                                         onClick={(e) => {
                                             e.stopPropagation();
+                                            const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
                                             const rect = titleBtnRef.current.getBoundingClientRect();
-                                            setTitleDropdownPos({ top: rect.bottom + 8, left: rect.left });
+                                            setTitleDropdownPos({ top: rect.bottom / z + 8, left: rect.left / z });
                                             setShowTitleDropdown(p => !p);
                                         }}
                                         style={{
@@ -501,19 +516,19 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                                 boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
                                             }}
                                         >
-                                            {['Mr.', 'Mrs.', 'Dr.', 'Prof.'].map((t, i, arr) => (
-                                                <div key={t}>
+                                            {TITLE_OPTIONS.map(({ value, label }, i, arr) => (
+                                                <div key={value}>
                                                     <button
                                                         onClick={() => {
-                                                            setFormData(p => ({ ...p, title: t }));
+                                                            setFormData(p => ({ ...p, title: value }));
                                                             setShowTitleDropdown(false);
                                                         }}
                                                         className={styles.editFormInput}
-                                                        style={{ borderRadius: 24, padding: "14px 40px 14px 15px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, display: "flex", justifyContent: "flex-start" }}
+                                                        style={{ borderRadius: 24, padding: "14px 40px 14px 15px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, display: "flex", justifyContent: "flex-start", background: formData.title === value ? "rgba(255,255,255,0.06)" : "transparent" }}
                                                         onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                                                        onMouseLeave={e => e.currentTarget.style.background = formData.title === t ? "rgba(255,255,255,0.06)" : "transparent"}
+                                                        onMouseLeave={e => e.currentTarget.style.background = formData.title === value ? "rgba(255,255,255,0.06)" : "transparent"}
                                                     >
-                                                        {t}
+                                                        {label}
                                                     </button>
                                                     {i < arr.length - 1 && (
                                                         <div style={{ height: 1, width: "50%", background: '#4D4D4D', margin: '2px auto' }} />
@@ -543,7 +558,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     onChange={e => setFormData(p => ({ ...p, fullName: e.target.value }))}
                                 />
 
-                                {/* Row 3: University (read-only) + Major */}
+                                {/* Row 3: University (read-only) + Department */}
                                 <div style={{ display: "flex", gap: 12 }}>
                                     <input
                                         readOnly
@@ -555,9 +570,9 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                                     <input
                                         className={styles.editFormInput}
                                         type="text"
-                                        value={formData.major}
-                                        placeholder="Major"
-                                        onChange={e => setFormData(p => ({ ...p, major: e.target.value }))}
+                                        value={formData.department}
+                                        placeholder="Department"
+                                        onChange={e => setFormData(p => ({ ...p, department: e.target.value }))}
                                     />
                                 </div>
                             </>

@@ -140,6 +140,7 @@
     color: rgba(255,255,255,0.85);
     letter-spacing: 0.01em;
     margin-bottom: 14px;
+    padding: 0 28px;
 }
 
 .cardGrid {

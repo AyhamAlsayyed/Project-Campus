@@ -116,9 +116,11 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                 setDrawerNotifications(data.map(item => ({
                     id: item.notification_id || item.id,
                     is_read: item.is_read,
-                    avatar: (item.actor_avatar || item.avatar)?.startsWith('http')
-                        ? (item.actor_avatar || item.avatar)
-                        : `${API}${item.actor_avatar || item.avatar}` || '/default-avatar.png',
+                    avatar: (() => {
+                        const av = item.actor_avatar || item.avatar;
+                        if (!av) return DefaultPfp;
+                        return av.startsWith('http') ? av : `${API}${av}`;
+                    })(),
                     type: item.type || 'Notification',
                     text: item.message || item.content,
                     actor_id: item.actor_id,

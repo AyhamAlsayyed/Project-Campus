@@ -15,8 +15,8 @@ export default function MobileEditView({  styles, edit}) {
     const navigate = useNavigate();
     const {
         formData, setFormData, usernameError,
-        avatarPreview, setAvatarFile, setAvatarPreview,
-        coverPreview, setCoverFile, setCoverPreview,
+        avatarPreview, setAvatarFile, setAvatarPreview, setRemoveAvatar,
+        coverPreview, setCoverFile, setCoverPreview, setRemoveCover,
         showCoverDropdown, setShowCoverDropdown,
         showCalendar, setShowCalendar,
         calViewDate, setCalViewDate,
@@ -78,7 +78,7 @@ export default function MobileEditView({  styles, edit}) {
                             <button
                                 className={`${styles.mediaTextBtn} ${styles.deleteText}`}
                                 style={{ fontSize: "0.75rem" }}
-                                onClick={() => { setAvatarFile(null); setAvatarPreview(null); }}
+                                onClick={() => { setAvatarFile(null); setAvatarPreview(null); setRemoveAvatar(true); }}
                             >
                                 <Trash2 size={12} /> Delete
                             </button>
@@ -122,7 +122,7 @@ export default function MobileEditView({  styles, edit}) {
                                     <Upload size={14} /> Upload
                                 </button>
                                 <button
-                                    onClick={() => { setCoverFile(null); setCoverPreview(null); setShowCoverDropdown(false); }}
+                                    onClick={() => { setCoverFile(null); setCoverPreview(null); setRemoveCover(true); setShowCoverDropdown(false); }}
                                     style={{ background: "none", border: "none", color: "#e91e63", padding: "10px 16px", fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, whiteSpace: "nowrap" }}
                                 >
                                     <Trash2 size={14} /> Delete

@@ -3,7 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import DefaultPfp from '../../Assets/icons/default-pfp.png';
 import styles from './groupInfoPanel.module.css';
 import {
-    Camera, MoreHorizontal, MinusCircle, Edit2, FileText, Check, X, Ban, AlertCircle
+    Camera, MoreHorizontal, MinusCircle, Edit2, FileText, Check, X, Ban, AlertCircle,
+    Play, Download
 } from 'lucide-react';
 
 // Custom Asset PNG Imports
@@ -117,12 +118,29 @@ export default function GroupInfoPanel({
     const [activeTab, _setActiveTab] = useState(searchParams.get('tab') || 'media');
     const setActiveTab = useCallback((tab) => {
         _setActiveTab(tab);
+        setVisibleCount(CHUNK_SIZE);
         setSearchParams(prev => {
             const next = new URLSearchParams(prev);
             if (tab === 'media') next.delete('tab'); else next.set('tab', tab);
             return next;
         }, { replace: true });
     }, [setSearchParams]);
+
+    const CHUNK_SIZE = 40;
+    const [visibleCount, setVisibleCount] = useState(CHUNK_SIZE);
+    const sentinelRef = useRef(null);
+
+    // IntersectionObserver — fires only when sentinel enters view, zero scroll-event re-renders
+    useEffect(() => {
+        const sentinel = sentinelRef.current;
+        if (!sentinel) return;
+        const observer = new IntersectionObserver(
+            entries => { if (entries[0].isIntersecting) setVisibleCount(prev => prev + CHUNK_SIZE); },
+            { threshold: 0.1 }
+        );
+        observer.observe(sentinel);
+        return () => observer.disconnect();
+    }, [visibleCount, activeTab]);
 
     // Search Query Strings State
     const [memberSearch, setMemberSearch] = useState('');
@@ -1269,47 +1287,41 @@ export default function GroupInfoPanel({
                 const galleryDocMetaColor = isLight ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.35)';
                 const galleryGridItemBg = isLight ? '#e0e0e0' : '#111';
 
+                const docIconColor = (name) => {
+                    const ext = (name || '').split('.').pop().toLowerCase();
+                    if (['pdf'].includes(ext)) return { bg: 'rgba(229,57,53,0.15)', color: '#E53935' };
+                    if (['doc','docx'].includes(ext)) return { bg: 'rgba(30,136,229,0.15)', color: '#1E88E5' };
+                    if (['xls','xlsx'].includes(ext)) return { bg: 'rgba(67,160,71,0.15)', color: '#43A047' };
+                    if (['ppt','pptx'].includes(ext)) return { bg: 'rgba(251,140,0,0.15)', color: '#FB8C00' };
+                    return { bg: 'rgba(102,45,145,0.15)', color: '#662D91' };
+                };
+
                 return (
-                    <div style={{
-                        position: 'fixed', inset: 0, zIndex: 9998,
-                        background: galleryBg,
-                        display: 'flex', flexDirection: 'column',
-                    }}>
+                    <div className={styles.galleryWrap} style={{ background: galleryBg }}>
                         {/* Header */}
-                        <div style={{
-                            display: 'flex', alignItems: 'center', gap: 12,
-                            padding: '14px 16px',
-                            borderBottom: `1px solid ${galleryBorderColor}`,
-                            background: galleryHeaderBg, flexShrink: 0,
-                        }}>
-                            <button
-                                onClick={() => setShowMediaGallery(false)}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}
-                            >
+                        <div className={styles.galleryHeader} style={{ borderBottomColor: galleryBorderColor, background: galleryHeaderBg }}>
+                            <button className={styles.galleryBackBtn} onClick={() => setShowMediaGallery(false)}>
                                 <img src={BackArrow} alt="Back" style={{ width: 20, height: 20, filter: isLight ? 'brightness(0)' : 'brightness(0) invert(1)' }} />
                             </button>
-                            <div>
-                                <div style={{ color: galleryTitleColor, fontWeight: 600, fontSize: '1rem' }}>{group.name}</div>
-                                <div style={{ color: gallerySubColor, fontSize: '0.75rem' }}>{extractedMedia.length} items</div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ color: galleryTitleColor, fontWeight: 700, fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{group.name}</div>
+                                <div style={{ color: gallerySubColor, fontSize: '0.72rem', marginTop: 1 }}>
+                                    {galleryImages.length} media · {galleryDocs.length} docs
+                                </div>
                             </div>
                         </div>
 
                         {/* Tabs */}
-                        <div style={{
-                            display: 'flex', borderBottom: `1px solid ${galleryBorderColor}`,
-                            background: galleryHeaderBg, flexShrink: 0,
-                        }}>
+                        <div className={styles.galleryTabs} style={{ borderBottomColor: galleryBorderColor, background: galleryHeaderBg }}>
                             {['media', 'docs'].map(tab => (
                                 <button
                                     key={tab}
+                                    className={styles.galleryTab}
                                     onClick={() => setActiveTab(tab)}
                                     style={{
-                                        flex: 1, padding: '12px 0', background: 'none', border: 'none',
                                         color: activeTab === tab ? galleryTabActive : galleryTabInactive,
                                         fontWeight: activeTab === tab ? 700 : 400,
-                                        fontSize: '0.875rem', cursor: 'pointer',
-                                        borderBottom: activeTab === tab ? `2px solid ${galleryTabActive}` : '2px solid transparent',
-                                        transition: 'all 0.15s',
+                                        borderBottomColor: activeTab === tab ? galleryTabActive : 'transparent',
                                     }}
                                 >
                                     {tab === 'media' ? `Media (${galleryImages.length})` : `Docs (${galleryDocs.length})`}
@@ -1318,69 +1330,83 @@ export default function GroupInfoPanel({
                         </div>
 
                         {/* Content */}
-                        <div style={{ flex: 1, overflowY: 'auto', padding: 2 }}>
+                        <div className={styles.galleryScroll}>
                             {activeTab === 'media' ? (
                                 galleryImages.length === 0 ? (
-                                    <div style={{ textAlign: 'center', color: galleryEmptyColor, padding: 40 }}>No media shared yet</div>
+                                    <div className={styles.galleryEmpty} style={{ color: galleryEmptyColor }}>
+                                        <span className={styles.galleryEmptyIcon}>🖼️</span>
+                                        <span className={styles.galleryEmptyText}>No media shared yet</span>
+                                    </div>
                                 ) : (
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, contentVisibility: 'auto' }}>
-                                        {galleryImages.map(item => (
+                                    <div className={styles.galleryGrid}>
+                                        {galleryImages.slice(0, visibleCount).map(item => (
                                             <div
                                                 key={item.id}
+                                                className={styles.galleryCell}
+                                                style={{ background: galleryGridItemBg }}
                                                 onClick={() => setLightboxUrl(item.url)}
-                                                style={{ aspectRatio: '1', cursor: 'pointer', overflow: 'hidden', background: galleryGridItemBg }}
                                             >
                                                 {item.type === 'video' ? (
-                                                    <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    <video src={item.url} preload="none" />
                                                 ) : (
                                                     <img
                                                         src={item.url}
                                                         alt=""
                                                         loading="lazy"
                                                         decoding="async"
-                                                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                                                         onError={e => { e.currentTarget.style.display = 'none'; }}
                                                     />
                                                 )}
+                                                <div className={styles.galleryCellOverlay} />
+                                                {item.type === 'video' && (
+                                                    <div className={styles.galleryVideoBadge}>
+                                                        <Play size={12} fill="#fff" color="#fff" />
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
+                                        {visibleCount < galleryImages.length && (
+                                            <div ref={sentinelRef} style={{ gridColumn: '1 / -1', height: 1 }} />
+                                        )}
                                     </div>
                                 )
                             ) : (
                                 galleryDocs.length === 0 ? (
-                                    <div style={{ textAlign: 'center', color: galleryEmptyColor, padding: 40 }}>No documents shared yet</div>
+                                    <div className={styles.galleryEmpty} style={{ color: galleryEmptyColor }}>
+                                        <span className={styles.galleryEmptyIcon}>📄</span>
+                                        <span className={styles.galleryEmptyText}>No documents shared yet</span>
+                                    </div>
                                 ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                        {galleryDocs.map(item => (
-                                            <a
-                                                key={item.id}
-                                                href={item.url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', gap: 12,
-                                                    padding: '14px 16px', textDecoration: 'none',
-                                                    borderBottom: `1px solid ${galleryDocBorder}`,
-                                                    background: galleryDocBg,
-                                                }}
-                                            >
-                                                <div style={{
-                                                    width: 42, height: 42, borderRadius: 8, flexShrink: 0,
-                                                    background: 'rgba(229,57,53,0.15)',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                }}>
-                                                    <FileText size={22} color="#E53935" />
-                                                </div>
-                                                <div style={{ minWidth: 0 }}>
-                                                    <div style={{ color: galleryDocNameColor, fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                        {item.name}
+                                    <div className={styles.galleryDocList}>
+                                        {galleryDocs.slice(0, visibleCount).map(item => {
+                                            const { bg, color } = docIconColor(item.name);
+                                            return (
+                                                <a
+                                                    key={item.id}
+                                                    href={item.url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className={styles.galleryDocItem}
+                                                    style={{ background: galleryDocBg, color: 'inherit' }}
+                                                >
+                                                    <div className={styles.galleryDocIcon} style={{ background: bg }}>
+                                                        <FileText size={22} color={color} />
                                                     </div>
-                                                    <div style={{ color: galleryDocMetaColor, fontSize: '0.75rem', marginTop: 2 }}>
-                                                        {item.file_type?.toUpperCase() || 'FILE'}
+                                                    <div className={styles.galleryDocMeta}>
+                                                        <div className={styles.galleryDocName} style={{ color: galleryDocNameColor }}>{item.name}</div>
+                                                        <div className={styles.galleryDocType} style={{ color: galleryDocMetaColor }}>
+                                                            {(item.name || '').split('.').pop().toUpperCase() || 'FILE'}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </a>
-                                        ))}
+                                                    <div className={styles.galleryDocDownload}>
+                                                        <Download size={14} color="#662D91" />
+                                                    </div>
+                                                </a>
+                                            );
+                                        })}
+                                        {visibleCount < galleryDocs.length && (
+                                            <div ref={sentinelRef} style={{ height: 1 }} />
+                                        )}
                                     </div>
                                 )
                             )}

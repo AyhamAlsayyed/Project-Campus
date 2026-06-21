@@ -5,11 +5,14 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import PostCard from '../../components/posts/postCard'
 import styles from './searchResults.module.css'
 import CommunityCard from '../../components/communityCard/communityCard'
+import CommentsModal from '../../components/comments/commentsModal'
 import MobileDrawer from '../../components/mobileDrawer/MobileDrawer';
 import API from '../../config';
 import MobileHeader from '../../components/mobileHeader/mobileHeader';
 import useTheme from '../../hooks/useTheme';
 import { useUser } from '../../context/UserContext';
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
+import DefaultPfpLight from '../../Assets/icons/default-pfp-lightmode.png';
 
 export default function SearchResults() {
     const { theme, toggleTheme } = useTheme();
@@ -70,9 +73,11 @@ export default function SearchResults() {
 
     const totalCount = visiblePeople.length + visibleCommunities.length + visiblePages.length + visiblePosts.length;
 
+    const defaultPfp = theme === 'light' ? DefaultPfpLight : DefaultPfp;
+
     const avatarUrl = (url) => url
         ? url.startsWith("http") ? url : `${API}${url}`
-        : "/default-avatar.png";
+        : defaultPfp;
 
     const resultsContent = (
         <div className={styles.resultsContainer} style={isMobile ? { minWidth: 0, width: "100%" } : {}}>
@@ -117,9 +122,10 @@ export default function SearchResults() {
                                         <div key={person.id} className={styles.personCard} onClick={() => navigate(`/profile/${person.id}`)}>
                                             <img src={(() => {
                                                 const av = person.profile?.avatar || person.profile?.profile_image || person.avatar_url || person.avatar;
-                                                if (!av) return "/default-avatar.png";
+                                                if (!av) return defaultPfp;
                                                 return av.startsWith("http") ? av : `${API}${av}`;
-                                            })()} alt="" className={styles.personAvatar} />
+                                            })()} alt="" className={styles.personAvatar}
+                                            onError={e => { e.currentTarget.src = defaultPfp; }} />
                                             <div className={styles.personName} style={person.role === 'instructor' ? { color: "#E043B5" } : {}}>{person.full_name || person.username}</div>
                                             <div className={styles.personSub}>@{person.username}</div>
                                             {person.university && <div className={styles.personSub}>{person.university}</div>}
@@ -156,11 +162,13 @@ export default function SearchResults() {
                                 <div className={styles.listStack}>
                                     {visiblePages.map(p => (
                                         <div key={p.id} className={styles.listItem} onClick={() => navigate(`/profile/${p.id}`)}>
-                                            {p.profile_image ? (
-                                                <img src={p.profile_image} alt={p.page_full_name} className={styles.listAvatar} style={{ borderRadius: 10, objectFit: 'cover' }} />
-                                            ) : (
-                                                <div className={styles.listAvatarPlaceholder}>📄</div>
-                                            )}
+                                            <img
+                                                src={p.profile_image ? (p.profile_image.startsWith('http') ? p.profile_image : `${API}${p.profile_image}`) : defaultPfp}
+                                                alt={p.page_full_name}
+                                                className={styles.listAvatar}
+                                                style={{ borderRadius: 10, objectFit: 'cover' }}
+                                                onError={e => { e.currentTarget.src = defaultPfp; }}
+                                            />
                                             <div className={styles.listInfo}>
                                                 <div className={styles.listName}>{p.page_full_name}</div>
                                                 <div className={styles.listSub}>Page{p.page_type ? ` · ${p.page_type}` : ""}</div>
@@ -233,6 +241,14 @@ export default function SearchResults() {
                     <SidebarNav />
                     {resultsContent}
                 </div>
+            )}
+
+            {selectedPost && (
+                <CommentsModal
+                    post={selectedPost}
+                    currentUser={user}
+                    onClose={() => setSelectedPost(null)}
+                />
             )}
         </div>
     );

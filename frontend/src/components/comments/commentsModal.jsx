@@ -79,8 +79,8 @@ export default function CommentModal({ post, onClose, currentUser }) {
                     setShareTargets(deduped.map(chat => ({
                         ...chat,
                         avatar: chat.avatar
-                            ? chat.avatar.startsWith("http") ? chat.avatar : `http://localhost:8000${chat.avatar}`
-                            : "/default-avatar.png"
+                            ? chat.avatar.startsWith("http") ? chat.avatar : `${API}${chat.avatar}`
+                            : defaultPfp
                     })));
                 }
             } catch (err) { console.error("Error fetching chats:", err); }
@@ -469,7 +469,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                                 <div className={postStyles.shareAvatarWrapper}>
                                                     {target.is_group || target.isGroup
                                                         ? <div>👥</div>
-                                                        : <img src={target.avatar || "/default-avatar.png"} alt="" className={postStyles.shareAvatarImg} />
+                                                        : <img src={target.avatar || defaultPfp} alt="" className={postStyles.shareAvatarImg} onError={e => { e.currentTarget.src = defaultPfp; }} />
                                                     }
                                                 </div>
                                                 <span className={postStyles.targetName}>{target.name || target.username}</span>

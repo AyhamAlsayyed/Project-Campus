@@ -130,7 +130,9 @@ export function NotificationProvider({ children }) {
 
     // Usechats registers a callback to receive chat message events
     const registerChatListener = useCallback((cb) => {
-        chatListenersRef.current.push(cb);
+        if (!chatListenersRef.current.includes(cb)) {
+            chatListenersRef.current.push(cb);
+        }
         return () => {
             chatListenersRef.current = chatListenersRef.current.filter(c => c !== cb);
         };

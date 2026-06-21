@@ -31,6 +31,7 @@ export default function WeeklyNews({ communityId, useHighlights, isMobile }) {
         }
     };
     useEffect(() => {
+        setIdx(0);
         fetchNews();
     }, [communityId]);
 
@@ -40,7 +41,7 @@ export default function WeeklyNews({ communityId, useHighlights, isMobile }) {
             setIdx(prev => (prev + 1) % items.length);
         }, 60000);
         return () => clearInterval(timer);
-    }, [items.length]);
+    }, [items.length, communityId]);
 
     const prev = () => setIdx(p => (p - 1 + items.length) % items.length);
     const next = () => setIdx(prev => (prev + 1) % items.length);

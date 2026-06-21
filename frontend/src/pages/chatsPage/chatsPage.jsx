@@ -32,6 +32,11 @@ export default function ChatsPage() {
             return next;
         }, { replace: true });
     }, [setSearchParams]);
+
+    // Keep mobileTab in sync if user navigates with browser back/forward
+    useEffect(() => {
+        _setMobileTab(searchParams.get('tab') || 'chats');
+    }, [searchParams]);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     document.documentElement.setAttribute('data-theme', theme);

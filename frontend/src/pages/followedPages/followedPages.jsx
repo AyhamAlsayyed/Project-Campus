@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import Header from '../../components/pagelayout/header/header'
 import SideBarNav from '../../components/pagelayout/sidebarnav/sideBarNav'
 import PostCard from '../../components/posts/postCard'
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -129,7 +130,7 @@ export default function FollowedPages() {
                         ? (p.profile_image.startsWith("http")
                             ? p.profile_image
                             : `${API}${p.profile_image}`)
-                        : "/default-avatar.png",
+                        : DefaultPfp,
                     category: p.page_type || "Page"
                 }));
 
@@ -182,7 +183,7 @@ export default function FollowedPages() {
                     id: p.page_id,
                     avatar: p.profile_image
                         ? (p.profile_image.startsWith("http") ? p.profile_image : `${API}${p.profile_image}`)
-                        : "/default-avatar.png",
+                        : DefaultPfp,
                     name: p.page_full_name || p.page_name || "Unknown Page",
                     category: p.page_type || "Page"
                 }));
