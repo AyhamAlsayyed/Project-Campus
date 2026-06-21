@@ -5,7 +5,12 @@ import DefaultPfp from '../Assets/icons/default-pfp.png';
 const UserContext = createContext(null);
 
 export function UserProvider({ children }) {
-    const [user, setUser]       = useState(null);
+    const [user, setUser] = useState(() => {
+        try {
+            const stored = localStorage.getItem('login_user');
+            return stored ? JSON.parse(stored) : null;
+        } catch { return null; }
+    });
     const [loading, setLoading] = useState(true);
 
     const fetchUser = useCallback(async () => {
@@ -33,6 +38,7 @@ export function UserProvider({ children }) {
             }
 
             setUser(data);
+            localStorage.setItem('login_user', JSON.stringify(data));
         } catch (e) {
             console.error('[UserContext] Failed to fetch user:', e);
         } finally {

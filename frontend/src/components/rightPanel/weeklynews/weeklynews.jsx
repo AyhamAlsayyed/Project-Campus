@@ -45,8 +45,22 @@ export default function WeeklyNews({ communityId, useHighlights, isMobile }) {
     const prev = () => setIdx(p => (p - 1 + items.length) % items.length);
     const next = () => setIdx(prev => (prev + 1) % items.length);
 
-    const goToPost = () => {
+    const handleArrowClick = () => {
         if (!current) return;
+
+        // Weekly news: navigate to the link the backend sends
+        if (!useHighlights) {
+            const link = current.link;
+            if (!link) return;
+            if (link.startsWith('http')) {
+                window.open(link, '_blank', 'noopener,noreferrer');
+            } else {
+                window.location.href = link;
+            }
+            return;
+        }
+
+        // Community highlights: scroll to the post in the feed
         const postId = current.post_id || current.id;
         if (!postId) return;
         const wrapper = document.getElementById(`post-${postId}`);
@@ -62,7 +76,7 @@ export default function WeeklyNews({ communityId, useHighlights, isMobile }) {
     const current = items[Math.min(idx, items.length - 1)];
     const title = current?.title || "";
     const description = current?.desc || current?.description || "";
-    const imageUrl = current?.media?.[0]?.url || current?.img || current?.image_url || null;
+    const imageUrl = current?.image_url || current?.media?.[0]?.url || current?.img || null;
     const endDate = current?.date || "";
     const statusMessage = current?.status_message || "";
     return (
@@ -97,7 +111,7 @@ export default function WeeklyNews({ communityId, useHighlights, isMobile }) {
                                         {statusMessage ? ` · ${statusMessage}` : ""}
                                     </div>
                                 </div>
-                                <button className={styles.bannerArrow} onClick={goToPost} aria-label="View post">
+                                <button className={styles.bannerArrow} onClick={handleArrowClick} aria-label="View post">
                                     <img
                                         src={ArrowRight}
                                         alt="next"

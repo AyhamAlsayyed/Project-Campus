@@ -1633,7 +1633,7 @@
 .emptyState {
     padding: 40px 20px;
     text-align: center;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
     display: flex;
     flex-direction: column;
@@ -1642,23 +1642,24 @@
     flex: 1;
     min-height: 200px;
     user-select: none;
+    gap: 4px;
 }
 
 [data-theme="light"] .emptyState {
-    color: rgba(0, 0, 0, 0.4);
+    color: rgba(0, 0, 0, 0.45);
 }
 
 .emptyStateIcon {
-    width: 38px;
-    height: 38px;
-    margin-bottom: 10px;
-    opacity: 0.55;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 12px;
+    opacity: 0.5;
     filter: brightness(0) invert(1);
 }
 
 [data-theme="light"] .emptyStateIcon {
-    filter: brightness(0) saturate(100%) invert(28%) sepia(50%) saturate(800%) hue-rotate(255deg) brightness(90%) contrast(90%);
-    opacity: 1;
+    filter: brightness(0) saturate(100%) invert(30%) sepia(60%) saturate(700%) hue-rotate(255deg) brightness(85%);
+    opacity: 0.75;
 }
 
 /* ── Mobile ── */

@@ -820,11 +820,15 @@ body {
 }
 
 .emptyStateText {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     color: #808080;
     font-size: 0.9rem;
-    padding: 20px 0;
+    padding: 40px 0;
     margin: 0;
+    width: 100%;
 }
 /* Radio Button Container */
 .radioGroup {

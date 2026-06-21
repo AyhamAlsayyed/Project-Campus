@@ -17,8 +17,9 @@ import BinIcon from '../../Assets/icons/bin.png'
 import AddFriendIcon from '../../Assets/icons/add-friend.png';
 import RemovePersonIcon from '../../Assets/icons/remove-person.png';
 import MessagesIcon from '../../Assets/icons/messages.png';
-import InfoIcon from '../../Assets/icons/info.png';
+import NewsIcon from '../../Assets/icons/notifications.png';
 import EducationIcon from '../../Assets/icons/education.png';
+import UniversityIcon from '../../Assets/icons/university.png';
 import API from '../../config';
 import useTheme from '../../hooks/useTheme';
 import { useUser } from '../../context/UserContext';
@@ -414,7 +415,6 @@ export default function Universities() {
                         </div>
                     </div>
 
-                    
                     <div style={{
                         background: "linear-gradient(-90deg, rgba(166,39,156,0.95), rgba(49,32,169,0.95))",
                         paddingTop: 6, borderRadius: "20px 20px 0 0"
@@ -430,7 +430,7 @@ export default function Universities() {
                                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                                     {news.length === 0 && (
                                         <div className={styles.emptyState}>
-                                            <img src={InfoIcon} alt="" className={styles.emptyStateIcon} />
+                                            <img src={NewsIcon} alt="" className={styles.emptyStateIcon} />
                                             <div style={{ fontWeight: 600, marginBottom: 4 }}>No news posted yet</div>
                                             <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Announcements you post will appear here.</div>
                                         </div>
@@ -520,8 +520,8 @@ export default function Universities() {
                                     ))}
                                 </div>
                             ) : news.length === 0 ? (
-                                <div className={styles.emptyState}>
-                                    <img src={InfoIcon} alt="" className={styles.emptyStateIcon} />
+                                <div className={styles.emptyState} style={{ minHeight: 220, width: '100%' }}>
+                                    <img src={NewsIcon} alt="" className={styles.emptyStateIcon} />
                                     <div style={{ fontWeight: 600, marginBottom: 4 }}>No news yet</div>
                                     <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Your university hasn&apos;t posted any announcements yet.</div>
                                 </div>
@@ -602,14 +602,14 @@ export default function Universities() {
 
                         {/* ── Latest News ── */}
                         <div className={styles.latestNews}>
-                            <div className={styles.innerContainer} style={{ minHeight: isUniversity ? "530px" : "300px", borderRadius: isUniversity ? "30px 30px 0 0" : "30px" }}>
+                            <div className={styles.innerContainer} style={{ minHeight: isUniversity ? "530px" : "510px", borderRadius: isUniversity ? "30px 30px 0 0" : "30px" }}>
                                 <h2 className={styles.sectionTitle}>LATEST NEWS</h2>
 
                                 {isUniversity ? (
                                     <div className={styles.announcementsContainer} style={{ minHeight: "460px" }}>
                                         {news.length === 0 && (
                                             <div className={styles.emptyState}>
-                                                <img src={InfoIcon} alt="" className={styles.emptyStateIcon} />
+                                                <img src={NewsIcon} alt="" className={styles.emptyStateIcon} />
                                                 <div style={{ fontWeight: 600, marginBottom: 4 }}>No news posted yet</div>
                                                 <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Announcements you post will appear here.</div>
                                             </div>
@@ -692,8 +692,8 @@ export default function Universities() {
                                         ))}
                                     </div>
                                 ) : news.length === 0 ? (
-                                    <div className={styles.emptyState}>
-                                        <img src={InfoIcon} alt="" className={styles.emptyStateIcon} />
+                                    <div className={styles.emptyState} style={{ minHeight: 400, width: '96%', margin: '0 auto' }}>
+                                        <img src={NewsIcon} alt="" className={styles.emptyStateIcon} />
                                         <div style={{ fontWeight: 600, marginBottom: 4 }}>No news yet</div>
                                         <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>Your university hasn&apos;t posted any announcements yet.</div>
                                     </div>

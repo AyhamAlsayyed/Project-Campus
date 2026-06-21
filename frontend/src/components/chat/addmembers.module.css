@@ -353,10 +353,15 @@
     opacity: 0.8;
 }
 .loadingState, .emptyState {
-    padding: 32px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
     text-align: center;
     color: rgba(255, 255, 255, 0.4);
     font-size: 0.875rem;
+    width: 100%;
 }
 
 .errorBanner {

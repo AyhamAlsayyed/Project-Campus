@@ -69,9 +69,14 @@
 }
 
 .emptyText {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: rgba(255, 255, 255, 0.4);
-  margin-top: 40px;
+  padding: 40px 0;
   font-size: 0.95rem;
+  text-align: center;
+  width: 100%;
 }
 
 /* =========================================
