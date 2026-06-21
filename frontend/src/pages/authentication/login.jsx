@@ -59,7 +59,7 @@ export default function Login() {
                 const res = await fetch(`${API}/api/auth/send_code/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: resetEmail }),
+                    body: JSON.stringify({ email: resetEmail, signup: false }),
                 });
                 const data = await res.json();
                 if (!res.ok) {

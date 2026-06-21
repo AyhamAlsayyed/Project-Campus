@@ -214,7 +214,7 @@ export default function MobileProfileView({
                             </>
                         ) : user?.role === 'instructor' ? (
                             <>
-                                <h2 className={styles.mobileUsername}>{username}</h2>
+                                <h2 className={styles.mobileUsername} style={{ color: "#E043B5" }}>{username}</h2>
                                 <div className={styles.mobileMetaRowWrap}>
                                     {user?.department && <span>{user.department}</span>}
                                     {user?.employment_type && <><span>·</span><span>{user.employment_type}</span></>}

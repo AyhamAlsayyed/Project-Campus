@@ -40,7 +40,6 @@ def send_code(request):
     personal_email = (request.data.get("personalEmail") or "").strip().lower()
     recovery_email = (request.data.get("recoveryEmail") or "").strip().lower()
     reset_email = (request.data.get("resetEmail") or "").strip().lower()
-
     target_email = academic_email or personal_email or recovery_email or reset_email
     is_authenticated = request.user and request.user.is_authenticated
 

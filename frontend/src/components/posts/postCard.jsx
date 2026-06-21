@@ -488,7 +488,7 @@ export default function PostCard({
                   <Link
                     to={post.author?.type === 'page' ? `/page/${post.author?.id || post.author_id}` : `/profile/${post.author?.id || post.author_id}`}
                     className={styles.name}
-                    style={{ textDecoration: 'none' }}
+                    style={{ textDecoration: 'none', color: post.author?.role === 'instructor' ? "#E043B5" : undefined }}
                   >{post.author?.username || "User"}</Link>
                   <span className={styles.time}>·</span>
                   <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>

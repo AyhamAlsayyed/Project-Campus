@@ -371,10 +371,17 @@ export default function MembersTab({ communityId, onBack, currentUserRole = 'mem
                                         {displayRole}
                                     </span>
                                     <div className={styles.nameRow}>
-                                        <h4 className={`${styles.memberName} ${(memberIsOwner || memberIsAdmin) ? styles.nameAdmin : ''}`}>
+                                        <h4
+                                            className={`${styles.memberName} ${(memberIsOwner || memberIsAdmin) ? styles.nameAdmin : ''}`}
+                                            style={member.profile_role === 'instructor' ? { color: "#E043B5" } : {}}
+                                        >
                                             {memberName}
                                         </h4>
-                                        <span className={styles.userType}>{member.type}</span>
+                                        {member.profile_role && (
+                                            <span className={styles.userType}>
+                                                {member.profile_role.charAt(0).toUpperCase() + member.profile_role.slice(1)}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>

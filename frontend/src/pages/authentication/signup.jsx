@@ -40,7 +40,11 @@ export default function Signup() {
     });
 
     const [error, setError] = useState('');
-    
+    const [showPersonalEmailPopup, setShowPersonalEmailPopup] = useState(false);
+    const [personalEmailOtp, setPersonalEmailOtp] = useState('');
+    const [personalEmailOtpError, setPersonalEmailOtpError] = useState('');
+    const [personalEmailOtpLoading, setPersonalEmailOtpLoading] = useState(false);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
@@ -71,7 +75,7 @@ export default function Signup() {
             const response = await fetch(`${API}/api/auth/send_code/`, {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: form.username, academicEmail: form.academicEmail })
+                body: JSON.stringify({ username: form.username, academicEmail: form.academicEmail, signup: false })
             });
             const data = await response.json().catch(() => { });
             if (!response.ok) {
@@ -123,6 +127,80 @@ export default function Signup() {
             setError('Passwords do not match.');
             return;
         }
+
+        // If personal email provided, send verification code and show popup
+        if (form.personalEmail) {
+            setLoading(true);
+            try {
+                const response = await fetch(`${API}/api/auth/send_code/`, {
+                    method: 'POST',
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username: form.username, personalEmail: form.personalEmail, signup: true })
+                });
+                const data = await response.json().catch(() => { });
+                if (!response.ok) {
+                    setError(data?.message || 'Failed to send verification code to personal email.');
+                    return;
+                }
+                setPersonalEmailOtp('');
+                setPersonalEmailOtpError('');
+                setShowPersonalEmailPopup(true);
+            } catch {
+                setError('An error occurred. Please try again later.');
+            } finally {
+                setLoading(false);
+            }
+            return;
+        }
+
+        await doCreateAccount();
+    };
+
+    const resendPersonalEmailCode = async () => {
+        setPersonalEmailOtpError('');
+        setPersonalEmailOtpLoading(true);
+        try {
+            const response = await fetch(`${API}/api/auth/send_code/`, {
+                method: 'POST',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: form.username, personalEmail: form.personalEmail, signup: true })
+            });
+            const data = await response.json().catch(() => { });
+            if (!response.ok) {
+                setPersonalEmailOtpError(data?.message || 'Failed to resend code.');
+            }
+        } catch {
+            setPersonalEmailOtpError('An error occurred. Please try again later.');
+        } finally {
+            setPersonalEmailOtpLoading(false);
+        }
+    };
+
+    const verifyPersonalEmailAndComplete = async () => {
+        if (personalEmailOtp.length < 6) return;
+        setPersonalEmailOtpLoading(true);
+        setPersonalEmailOtpError('');
+        try {
+            const response = await fetch(`${API}/api/auth/verify_code/`, {
+                method: 'POST',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ personalEmail: form.personalEmail, code: personalEmailOtp })
+            });
+            const data = await response.json().catch(() => { });
+            if (!response.ok) {
+                setPersonalEmailOtpError(data?.message || 'Invalid code. Please try again.');
+                return;
+            }
+            setShowPersonalEmailPopup(false);
+            await doCreateAccount();
+        } catch {
+            setPersonalEmailOtpError('An error occurred. Please try again later.');
+        } finally {
+            setPersonalEmailOtpLoading(false);
+        }
+    };
+
+    const doCreateAccount = async () => {
         setLoading(true);
         try {
             const response = await fetch(`${API}/api/auth/signup/`, {
@@ -140,7 +218,7 @@ export default function Signup() {
                 setError(data?.message || 'Signup failed.');
                 return;
             }
-        } catch (error) {
+        } catch {
             setError('An error occurred. Please try again later.');
         } finally {
             setLoading(false);
@@ -158,6 +236,7 @@ export default function Signup() {
                 body: JSON.stringify({
                     username: form.username,
                     academicEmail: form.academicEmail,
+                    signup: false,
                 })
             });
             const data = await response.json().catch(() => { });
@@ -351,6 +430,95 @@ export default function Signup() {
             </div>
 
             <div className={`${styles.footer}  lg:!block`}></div>
+
+            {showPersonalEmailPopup && (
+                <div style={{ position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)" }} onClick={() => setShowPersonalEmailPopup(false)} />
+                    <div style={{
+                        position: "relative", background: "#1e1e1e", borderRadius: 20,
+                        padding: 32, width: 420, boxShadow: "0 20px 50px rgba(0,0,0,0.7)",
+                        border: "1px solid rgba(255,255,255,0.08)"
+                    }}>
+                        <h3 style={{ margin: "0 0 8px", color: "white", fontWeight: 700, fontSize: "1.05rem" }}>
+                            Verify your email{" "}
+                            <span style={{ color: "#c084fc" }}>
+                                {form.personalEmail?.replace(/(.{2}).*(@.*)/, '$1***$2')}
+                            </span>
+                        </h3>
+                        <p style={{ margin: "0 0 24px", color: "#777", fontSize: "0.85rem", lineHeight: 1.5 }}>
+                            A verification code was sent to your personal email. Do not share that code with anyone!
+                        </p>
+
+                        <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 16 }}>
+                            {Array.from({ length: 6 }).map((_, i) => (
+                                <input
+                                    key={i}
+                                    type="text"
+                                    maxLength={1}
+                                    inputMode="numeric"
+                                    value={personalEmailOtp[i] || ''}
+                                    onChange={e => {
+                                        const val = e.target.value.replace(/\D/g, '');
+                                        const arr = personalEmailOtp.split('');
+                                        arr[i] = val;
+                                        const next = arr.join('').slice(0, 6);
+                                        setPersonalEmailOtp(next);
+                                        setPersonalEmailOtpError('');
+                                        if (val && i < 5) {
+                                            const inputs = e.target.closest('div').querySelectorAll('input');
+                                            inputs[i + 1]?.focus();
+                                        }
+                                    }}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Backspace' && !personalEmailOtp[i] && i > 0) {
+                                            const inputs = e.target.closest('div').querySelectorAll('input');
+                                            inputs[i - 1]?.focus();
+                                        }
+                                    }}
+                                    style={{
+                                        width: 52, height: 56,
+                                        background: personalEmailOtp[i] ? "rgba(139,45,255,0.12)" : "transparent",
+                                        border: `2px solid ${personalEmailOtp[i] ? "rgba(139,45,255,0.7)" : "rgba(139,45,255,0.45)"}`,
+                                        borderRadius: 12, color: "white", fontSize: "1.3rem",
+                                        fontWeight: 700, textAlign: "center", outline: "none",
+                                        transition: "border-color 0.15s, background 0.15s"
+                                    }}
+                                />
+                            ))}
+                        </div>
+
+                        {personalEmailOtpError && (
+                            <p style={{ color: "#ff4b4b", fontSize: "0.8rem", textAlign: "center", margin: "0 0 12px" }}>
+                                {personalEmailOtpError}
+                            </p>
+                        )}
+
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
+                            <button
+                                onClick={resendPersonalEmailCode}
+                                disabled={personalEmailOtpLoading}
+                                style={{ background: "none", border: "none", color: "#888", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}
+                            >
+                                Resend
+                            </button>
+                            <button
+                                onClick={verifyPersonalEmailAndComplete}
+                                disabled={personalEmailOtpLoading || personalEmailOtp.length < 6}
+                                style={{
+                                    background: "linear-gradient(30deg, #5E23A4, #9C269D)",
+                                    border: "none", color: "white", borderRadius: 20,
+                                    padding: "10px 36px", fontWeight: 600,
+                                    cursor: (personalEmailOtpLoading || personalEmailOtp.length < 6) ? "not-allowed" : "pointer",
+                                    fontSize: "0.9rem",
+                                    opacity: (personalEmailOtpLoading || personalEmailOtp.length < 6) ? 0.6 : 1
+                                }}
+                            >
+                                {personalEmailOtpLoading ? '…' : 'Verify'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

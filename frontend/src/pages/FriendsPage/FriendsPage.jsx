@@ -264,7 +264,7 @@ export default function FriendsPage() {
                                             </span>
                                         </div>
                                         <div className={styles.friendInfo}>
-                                            <div className={styles.friendName}>{friend.username}</div>
+                                            <div className={styles.friendName} style={friend.role === 'instructor' ? { color: "#E043B5" } : {}}>{friend.username}</div>
                                             <div className={styles.friendMajor}>{friend.major || "No Major Set"}</div>
                                         </div>
                                     </div>
@@ -444,7 +444,7 @@ export default function FriendsPage() {
                                                     </span>
                                                 </div>
                                                 <div className={styles.friendInfo}>
-                                                    <div className={styles.friendName}>{friend.username}</div>
+                                                    <div className={styles.friendName} style={friend.role === 'instructor' ? { color: "#E043B5" } : {}}>{friend.username}</div>
                                                     <div className={styles.friendMajor}>{friend.major || "No Major Set"}</div>
                                                 </div>
                                             </div>

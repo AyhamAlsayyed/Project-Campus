@@ -513,7 +513,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                         <div className={styles.commentContent}>
                                             <div className={styles.commentBubbleWrap}>
                                                 <div className={`${styles.commentBubble} ${highlightedId === c.id ? styles.highlighted : ''}`}>
-                                                    <div className={styles.commentAuthor}>{c.user}</div>
+                                                    <div className={styles.commentAuthor} style={c.author?.role === 'instructor' ? { color: "#E043B5" } : {}}>{c.user}</div>
                                                     <p>
                                                         {c.text}
                                                         {c.is_edited && (
@@ -562,7 +562,7 @@ export default function CommentModal({ post, onClose, currentUser }) {
                                             <div className={styles.replyContent}>
                                                 <div className={styles.commentBubbleWrap}>
                                                     <div className={`${styles.replyBubble} ${highlightedId === reply.id ? styles.highlighted : ''}`}>
-                                                        <b>{reply.user}</b>
+                                                        <b style={reply.author?.role === 'instructor' ? { color: "#E043B5" } : {}}>{reply.user}</b>
                                                         <p>
                                                             <span className={styles.replyingTo}>@{reply.replying_to || c.user}</span>{" "}
                                                             {reply.text}

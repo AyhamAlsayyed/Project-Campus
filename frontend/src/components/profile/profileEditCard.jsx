@@ -126,6 +126,7 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     personalEmail: formData.secondaryEmail.trim(),
+                    signup: false,
                 })
             });
             if (res.ok) {

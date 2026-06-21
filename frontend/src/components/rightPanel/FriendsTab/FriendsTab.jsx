@@ -46,7 +46,7 @@ export default function FriendsTab({ friends = { mutual: [], all: [] } }) {
                                                 className={styles.friendImg}
                                             />
                                         </div>
-                                        <span className={styles.friendName}>{friend.username}</span>
+                                        <span className={styles.friendName} style={friend.role === 'instructor' ? { color: "#E043B5" } : {}}>{friend.username}</span>
                                     </div>
                                 ))}
                             </div>
@@ -73,7 +73,7 @@ export default function FriendsTab({ friends = { mutual: [], all: [] } }) {
                                         className={styles.friendImg}
                                     />
                                 </div>
-                                <span className={styles.friendName}>{friend.username}</span>
+                                <span className={styles.friendName} style={friend.role === 'instructor' ? { color: "#E043B5" } : {}}>{friend.username}</span>
                             </div>
                         ))}
                     </div>

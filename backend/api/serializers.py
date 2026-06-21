@@ -358,10 +358,11 @@ class UserMinimalSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
     user_type = serializers.SerializerMethodField()
+    role = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "full_name", "avatar", "user_type"]
+        fields = ["id", "username", "full_name", "avatar", "user_type", "role"]
 
     def get_full_name(self, obj):
         if hasattr(obj, "page") and obj.page:
@@ -389,6 +390,13 @@ class UserMinimalSerializer(serializers.ModelSerializer):
         if hasattr(obj, "page") and obj.page:
             return "page"
         return "user"
+
+    def get_role(self, obj):
+        if hasattr(obj, "page") and obj.page:
+            return "page"
+        if hasattr(obj, "instructor_profile"):
+            return "instructor"
+        return "student"
 
 
 class UserDegreeSerializer(serializers.ModelSerializer):
@@ -973,12 +981,14 @@ class PostSerializer(serializers.ModelSerializer):
             if request:
                 avatar = request.build_absolute_uri(avatar)
 
+        role = "instructor" if hasattr(user, "instructor_profile") else "student"
         return {
             "id": user.id,
             "type": "user",
             "username": user.username,
             "avatar": avatar,
             "tag": None,
+            "role": role,
         }
 
     def get_top_3comments_avatar(self, obj):

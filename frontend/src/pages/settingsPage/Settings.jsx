@@ -270,7 +270,8 @@ export default function Settings() {
                     academicEmail: newEmail,
                     username: currentUser?.username,
                     academicLevel: currentUser?.profile?.academic_level,
-                    major: currentUser?.profile?.major
+                    major: currentUser?.profile?.major,
+                    signup: false,
                 })
 
             });

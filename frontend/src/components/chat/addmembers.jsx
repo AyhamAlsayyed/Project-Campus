@@ -246,7 +246,7 @@ export default function AddMembers({
                                                 <span className={styles.roleLabel}>
                                                     {isInstructor ? 'Instructor' : 'Student'}
                                                 </span>
-                                                <span className={styles.contactName}>
+                                                <span className={styles.contactName} style={isInstructor ? { color: "#E043B5" } : {}}>
                                                     {contact.name || contact.username}
                                                 </span>
                                                 {contact.email && (

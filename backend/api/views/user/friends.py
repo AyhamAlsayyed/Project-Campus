@@ -203,11 +203,14 @@ def user_friends_list(request, user_id):
         if profile and profile.profile_image:
             avatar_url = request.build_absolute_uri(profile.profile_image.url)
 
+        instructor_profile = getattr(friend, "instructor_profile", None)
+        role = "instructor" if instructor_profile else "student"
         friend_data = {
             "id": friend.id,
             "username": friend.username,
             "avatar_url": avatar_url,
             "major": student_profile.major if student_profile else None,
+            "role": role,
         }
 
         all_friends.append(friend_data)

@@ -120,7 +120,7 @@ export default function SearchResults() {
                                                 if (!av) return "/default-avatar.png";
                                                 return av.startsWith("http") ? av : `${API}${av}`;
                                             })()} alt="" className={styles.personAvatar} />
-                                            <div className={styles.personName}>{person.full_name || person.username}</div>
+                                            <div className={styles.personName} style={person.role === 'instructor' ? { color: "#E043B5" } : {}}>{person.full_name || person.username}</div>
                                             <div className={styles.personSub}>@{person.username}</div>
                                             {person.university && <div className={styles.personSub}>{person.university}</div>}
                                         </div>
