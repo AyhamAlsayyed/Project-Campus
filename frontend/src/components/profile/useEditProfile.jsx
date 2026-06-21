@@ -12,8 +12,10 @@ export function useProfileEdit({ user, token, API, onSaved }) {
     const [calViewDate, setCalViewDate] = useState(new Date());
     const [avatarFile, setAvatarFile] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(null);
+    const [removeAvatar, setRemoveAvatar] = useState(false);
     const [coverFile, setCoverFile] = useState(null);
     const [coverPreview, setCoverPreview] = useState(null);
+    const [removeCover, setRemoveCover] = useState(false);
     const [verifyTarget, setVerifyTarget] = useState('');
     const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
     const [otpError, setOtpError] = useState('');
@@ -97,6 +99,8 @@ export function useProfileEdit({ user, token, API, onSaved }) {
         const rawCover = u?.profile?.cover || u?.cover;
         setAvatarPreview(rawAvatar ? (rawAvatar.startsWith('http') ? rawAvatar : `${API}${rawAvatar}`) : null);
         setCoverPreview(rawCover ? (rawCover.startsWith('http') ? rawCover : `${API}${rawCover}`) : null);
+        setRemoveAvatar(false);
+        setRemoveCover(false);
         setFormData({
             username: u.username || '',
             fullName: u.profile?.full_name || '',
@@ -226,7 +230,9 @@ export function useProfileEdit({ user, token, API, onSaved }) {
             if (day && month && year) fd.append('birthday', `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
 
             if (avatarFile) fd.append('avatar', avatarFile);
+            else if (removeAvatar) fd.append('remove_avatar', 'true');
             if (coverFile) fd.append('cover', coverFile);
+            else if (removeCover) fd.append('remove_cover', 'true');
 
             fd.append('degrees', JSON.stringify(
                 (formData.degrees || []).map(d => ({
@@ -267,8 +273,10 @@ export function useProfileEdit({ user, token, API, onSaved }) {
         calViewDate, setCalViewDate,
         avatarFile, setAvatarFile,
         avatarPreview, setAvatarPreview,
+        removeAvatar, setRemoveAvatar,
         coverFile, setCoverFile,
         coverPreview, setCoverPreview,
+        removeCover, setRemoveCover,
         verifyTarget, otpDigits, otpError, otpLoading,
         avatarInputRef, coverInputRef, otpRefs,
         formData, setFormData,

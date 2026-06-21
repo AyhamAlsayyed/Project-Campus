@@ -1,4 +1,5 @@
 import styles from './communityPage.module.css'
+import ArrowLeft from '../../Assets/icons/arrow-left.png'
 import Header from '../../components/pagelayout/header/header'
 import WeeklyNews from '../../components/rightPanel/weeklynews/weeklynews';
 import DesktopCreatePost from '../../components/createPost/DesktopCreatePost/desktopCreatePost'
@@ -31,11 +32,26 @@ export default function CommunityPage() {
     const { theme, toggleTheme } = useTheme();
     const [posts, setPosts] = useState([]);
     const [searchParams, setSearchParams] = useSearchParams();
-    const [filter, _setFilter] = useState(searchParams.get('filter') || "recent");
+    const _currentParam = searchParams.get('filter') || "recent";
+    const showMyPosts = _currentParam === 'my_approved' || _currentParam === 'my_pending';
+    const myPostsSubFilter = showMyPosts ? _currentParam : 'my_approved';
+    const [filter, _setFilter] = useState(showMyPosts ? "recent" : _currentParam);
     const setFilter = useCallback((f) => {
         _setFilter(f);
         setSearchParams(f !== 'recent' ? { filter: f } : {}, { replace: true });
     }, [setSearchParams]);
+
+    const updateMyPostsSubFilter = useCallback((sub) => {
+        setSearchParams({ filter: sub }, { replace: true });
+    }, [setSearchParams]);
+
+    const toggleMyPosts = useCallback(() => {
+        if (showMyPosts) {
+            setSearchParams(filter !== 'recent' ? { filter } : {}, { replace: true });
+        } else {
+            setSearchParams({ filter: 'my_approved' }, { replace: false });
+        }
+    }, [showMyPosts, filter, setSearchParams]);
     const [community, setCommunity] = useState(null);
     const { id } = useParams();
     const navigate = useNavigate();
@@ -60,6 +76,7 @@ export default function CommunityPage() {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [activeSettingsTab, setActiveSettingsTab] = useState('Settings');
     const [prevSettingsTab, setPrevSettingsTab] = useState('Settings');
+    const [pendingCount, setPendingCount] = useState(0);
 
     useEffect(() => {
         if (activeSettingsTab !== 'Delete') {
@@ -182,7 +199,8 @@ export default function CommunityPage() {
     };
 
     const fetchPosts = async () => {
-        const res = await fetch(`${API}/api/communities/${id}/posts/?filter=${filter}`, {
+        const f = showMyPosts ? myPostsSubFilter : filter;
+        const res = await fetch(`${API}/api/communities/${id}/posts/?filter=${f}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -190,8 +208,18 @@ export default function CommunityPage() {
     };
 
     useEffect(() => {
+        if (!showMyPosts) { setPendingCount(0); return; }
+        fetch(`${API}/api/communities/${id}/posts/?filter=my_pending`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then(r => r.json())
+            .then(data => setPendingCount(Array.isArray(data) ? data.length : 0))
+            .catch(() => setPendingCount(0));
+    }, [id, showMyPosts]);
+
+    useEffect(() => {
         fetchPosts(); fetchCommunity(); fetchWeather();
-    }, [id, filter]);
+    }, [id, filter, showMyPosts, myPostsSubFilter]);
 
     const handleMediaUpload = (e) => { setImages(prev => [...prev, ...Array.from(e.target.files)]); };
     const handleFileUpload = (e) => { setFiles(prev => [...prev, ...Array.from(e.target.files)]); };
@@ -219,8 +247,6 @@ export default function CommunityPage() {
         { key: "recent", label: "Most Recent" },
         { key: "popular", label: "Popular" },
         { key: "trending", label: "Trending" },
-        ...(!canManage ? [{ key: "my_pending", label: "My Pending" }] : []),
-        { key: "my_approved", label: "By You" },
     ];
     
     useEffect(() => {
@@ -284,46 +310,60 @@ export default function CommunityPage() {
                                     gap: 12
                                 }}
                             >
-                                <h1
-                                    style={{
-                                        margin: 0,
-                                        lineHeight: 1.2,
-                                        display: "flex",
-                                        alignItems: "baseline",
-                                        gap: 8,
-                                        flexWrap: "wrap"
-                                    }}
-                                >
-                                    <span
+                                {showMyPosts ? (
+                                    <h1 className={styles.title} style={{ margin: 0 }}>
+                                        Your <span className={styles.highlight}>Posts</span>
+                                    </h1>
+                                ) : (
+                                    <h1
                                         style={{
-                                            fontSize: "2rem",
-                                            fontWeight: 800,
-                                            background: "linear-gradient(30deg, #c72cff, #8b2dff)",
-                                            WebkitBackgroundClip: "text",
-                                            WebkitTextFillColor: "transparent"
+                                            margin: 0,
+                                            lineHeight: 1.2,
+                                            display: "flex",
+                                            alignItems: "baseline",
+                                            gap: 8,
+                                            flexWrap: "wrap"
                                         }}
                                     >
-                                        {community?.name}
-                                    </span>
-
-                                    <span
-                                        style={{
-                                            fontSize: "1.1rem",
-                                            fontWeight: 500,
-                                            color: "var(--text-muted)"
-                                        }}
-                                    >
-                                        community
-                                    </span>
-                                </h1>
+                                        <span
+                                            style={{
+                                                fontSize: "2rem",
+                                                fontWeight: 800,
+                                                background: "linear-gradient(30deg, #c72cff, #8b2dff)",
+                                                WebkitBackgroundClip: "text",
+                                                WebkitTextFillColor: "transparent"
+                                            }}
+                                        >
+                                            {community?.name}
+                                        </span>
+                                        <span
+                                            style={{
+                                                fontSize: "1.1rem",
+                                                fontWeight: 500,
+                                                color: "var(--text-muted)"
+                                            }}
+                                        >
+                                            community
+                                        </span>
+                                    </h1>
+                                )}
 
                                 <div
                                     style={{
                                         display: "flex",
                                         alignItems: "center",
-                                        gap: 20
+                                        gap: 12
                                     }}
                                 >
+                                    <div
+                                        onClick={toggleMyPosts}
+                                        style={{ color: 'var(--text-primary, #fff)', fontSize: 14, cursor: 'pointer', fontWeight: 500, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4 }}
+                                    >
+                                        {showMyPosts && <img src={ArrowLeft} alt="back" style={{ width: 16, height: 16, filter: 'invert(28%) sepia(80%) saturate(600%) hue-rotate(265deg) brightness(80%)' }} />}
+                                        <span style={{ color: '#B925A5', borderBottom: '1.5px solid currentColor' }}>
+                                            {showMyPosts ? 'Back' : 'Your Posts'}
+                                        </span>
+                                    </div>
                                     <button
                                         onClick={handleToggleNotification}
                                         style={{
@@ -384,16 +424,37 @@ export default function CommunityPage() {
                             
                             <div style={{ padding: "10px 14px 0" }}>
                                 <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, scrollbarWidth: "none", msOverflowStyle: "none" }}>
-                                    {mobileFilters.map(f => (
-                                        <button
-                                            key={f.key}
-                                            onClick={() => setFilter(f.key)}
-                                            className={`${styles.filterBtn} ${filter === f.key ? styles.active : ''}`}
-                                            style={{ flexShrink: 0, fontSize: "0.82rem" }}
-                                        >
-                                            {f.label}
-                                        </button>
-                                    ))}
+                                    {showMyPosts ? (
+                                        <>
+                                            <button
+                                                className={`${styles.filterBtn} ${myPostsSubFilter === 'my_approved' ? styles.active : ''}`}
+                                                onClick={() => updateMyPostsSubFilter('my_approved')}
+                                                style={{ flexShrink: 0, fontSize: "0.82rem" }}
+                                            >
+                                                Posted
+                                            </button>
+                                            {pendingCount > 0 && (
+                                                <button
+                                                    className={`${styles.filterBtn} ${myPostsSubFilter === 'my_pending' ? styles.active : ''}`}
+                                                    onClick={() => updateMyPostsSubFilter('my_pending')}
+                                                    style={{ flexShrink: 0, fontSize: "0.82rem" }}
+                                                >
+                                                    Pending
+                                                </button>
+                                            )}
+                                        </>
+                                    ) : (
+                                        mobileFilters.map(f => (
+                                            <button
+                                                key={f.key}
+                                                onClick={() => setFilter(f.key)}
+                                                className={`${styles.filterBtn} ${filter === f.key ? styles.active : ''}`}
+                                                style={{ flexShrink: 0, fontSize: "0.82rem" }}
+                                            >
+                                                {f.label}
+                                            </button>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         </>
@@ -442,14 +503,15 @@ export default function CommunityPage() {
                                         </p>
                                     ) : (
                                         posts.map(post => (
-                                            <PostCard
-                                                key={post.id}
-                                                post={post}
-                                                openComments={openComments}
-                                                isAdmin={canManage}
-                                                communityContext={true}
-                                                communityId={id}
-                                            />
+                                            <div key={post.post_id || post.id} id={`post-${post.post_id || post.id}`}>
+                                                <PostCard
+                                                    post={post}
+                                                    openComments={openComments}
+                                                    isAdmin={canManage}
+                                                    communityContext={true}
+                                                    communityId={id}
+                                                />
+                                            </div>
                                         ))
                                     )}
                                 </>
@@ -503,17 +565,51 @@ export default function CommunityPage() {
                         <>
                             <div className={styles.mainContent}>
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                    <h1 className={styles.title}>
-                                        <span className={styles.highlight}>{community?.name}</span> community
-                                    </h1>
+                                    {showMyPosts ? (
+                                        <h1 className={styles.title}>
+                                            Your <span className={styles.highlight}>Posts</span>
+                                        </h1>
+                                    ) : (
+                                        <h1 className={styles.title}>
+                                            <span className={styles.highlight}>{community?.name}</span> community
+                                        </h1>
+                                    )}
+                                    <div
+                                        onClick={toggleMyPosts}
+                                        style={{ color: 'var(--text-primary, #fff)', fontSize: 14, cursor: 'pointer', fontWeight: 500, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4 }}
+                                    >
+                                        {showMyPosts && <img src={ArrowLeft} alt="back" style={{ width: 16, height: 16, filter: 'invert(28%) sepia(80%) saturate(600%) hue-rotate(265deg) brightness(80%)' }} />}
+                                        <span style={{ color: '#B925A5', borderBottom: '1.5px solid currentColor' }}>
+                                            {showMyPosts ? 'Back' : 'Your Posts'}
+                                        </span>
+                                    </div>
                                 </div>
                                 <div className={styles.settingsContainer} style={{ display: "flex", justifyContent: "space-between" }}>
                                     <div className={styles.filters}>
-                                        {mobileFilters.map(f => (
-                                            <button key={f.key} className={`${styles.filterBtn} ${filter === f.key ? styles.active : ""}`} onClick={() => setFilter(f.key)}>
-                                                {f.label}
-                                            </button>
-                                        ))}
+                                        {showMyPosts ? (
+                                            <>
+                                                <button
+                                                    className={`${styles.filterBtn} ${myPostsSubFilter === 'my_approved' ? styles.active : ''}`}
+                                                    onClick={() => updateMyPostsSubFilter('my_approved')}
+                                                >
+                                                    Posted
+                                                </button>
+                                                {pendingCount > 0 && (
+                                                    <button
+                                                        className={`${styles.filterBtn} ${myPostsSubFilter === 'my_pending' ? styles.active : ''}`}
+                                                        onClick={() => updateMyPostsSubFilter('my_pending')}
+                                                    >
+                                                        Pending
+                                                    </button>
+                                                )}
+                                            </>
+                                        ) : (
+                                            mobileFilters.map(f => (
+                                                <button key={f.key} className={`${styles.filterBtn} ${filter === f.key ? styles.active : ""}`} onClick={() => setFilter(f.key)}>
+                                                    {f.label}
+                                                </button>
+                                            ))
+                                        )}
                                     </div>
                                     <div style={{ display: "flex", alignItems: "center", gap: 50 }}>
                                         <button onClick={handleToggleNotification} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
@@ -534,14 +630,15 @@ export default function CommunityPage() {
                                     <div className={styles.communityPostsContainer} style={{ flex: 1, width: "100%" }}>
                                         <div className={styles.innerContainer} style={{ width: "100%" }}>
                                             {posts.map(post => (
-                                                <PostCard
-                                                    key={post.id}
-                                                    post={post}
-                                                    openComments={openComments}
-                                                    isAdmin={canManage}
-                                                    communityContext={true}
-                                                    communityId={id}
-                                                />
+                                                <div key={post.post_id || post.id} id={`post-${post.post_id || post.id}`}>
+                                                    <PostCard
+                                                        post={post}
+                                                        openComments={openComments}
+                                                        isAdmin={canManage}
+                                                        communityContext={true}
+                                                        communityId={id}
+                                                    />
+                                                </div>
                                             ))}
                                         </div>
                                     </div>

@@ -1,3 +1,4 @@
+
 .darkContainer {
     min-height: 100vh;
     box-sizing: border-box;
@@ -112,7 +113,7 @@
 .rightSection {
   position: sticky;
   top: 100px;
-  flex: 0 0 425px;
+  flex: 0 0 420px;
   width: 25%;
   margin: 2% 0 0 0;
   gap: 70px;

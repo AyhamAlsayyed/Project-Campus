@@ -186,9 +186,11 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
         if (deleteConfirm.target === 'avatar') {
             setAvatarFile(null);
             setAvatarPreview(null);
+            setRemoveAvatar(true);
         } else if (deleteConfirm.target === 'cover') {
             setCoverFile(null);
             setCoverPreview(null);
+            setRemoveCover(true);
             setShowCoverDropdown(false);
         }
         setDeleteConfirm({ isOpen: false, target: null });
@@ -196,8 +198,8 @@ export default function ProfileEditCard({ styles, edit, setIsEditing, user, API,
 
     const {
         formData, setFormData, usernameError,
-        avatarPreview, setAvatarFile, setAvatarPreview,
-        coverPreview, setCoverFile, setCoverPreview,
+        avatarPreview, setAvatarFile, setAvatarPreview, setRemoveAvatar,
+        coverPreview, setCoverFile, setCoverPreview, setRemoveCover,
         showCoverDropdown, setShowCoverDropdown,
         showCalendar, setShowCalendar,
         calViewDate, setCalViewDate,

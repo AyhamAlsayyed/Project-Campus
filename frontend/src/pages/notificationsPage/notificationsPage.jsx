@@ -115,6 +115,7 @@ export default function NotificationsPage() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [isDeletingAll, setIsDeletingAll] = useState(false);
     const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+    const [bucketFilter, setBucketFilter] = useState('all');
     const [openMenuId, setOpenMenuId] = useState(null);
     const [menuRect, setMenuRect] = useState(null);
     const menuBtnRef = useRef(null);
@@ -317,13 +318,18 @@ export default function NotificationsPage() {
 
     // ── Buckets ──
     const filtered = useMemo(() => {
-        if (activeFilter === 'All') return notifications;
-        const f = activeFilter.toLowerCase();
-        return notifications.filter(n => (n.type || '').toLowerCase().includes(f));
-    }, [notifications, activeFilter]);
+        let result = notifications;
+        if (activeFilter !== 'All') {
+            const f = activeFilter.toLowerCase();
+            result = result.filter(n => (n.type || '').toLowerCase().includes(f));
+        }
+        if (bucketFilter === 'week') result = result.filter(n => n.bucket === 'week');
+        else if (bucketFilter === 'month') result = result.filter(n => n.bucket === 'month');
+        return result;
+    }, [notifications, activeFilter, bucketFilter]);
 
-    const thisWeek = useMemo(() => filtered.filter(n => n.bucket === 'week'), [filtered]);
-    const thisMonth = useMemo(() => filtered.filter(n => n.bucket === 'month'), [filtered]);
+    const thisWeek = useMemo(() => notifications.filter(n => n.bucket === 'week'), [notifications]);
+    const thisMonth = useMemo(() => notifications.filter(n => n.bucket === 'month'), [notifications]);
     const earlier = useMemo(() => filtered.filter(n => n.bucket === 'earlier'), [filtered]);
     const unreadCount = useMemo(() => notifications.filter(n => !n.is_read).length, [notifications]);
 
@@ -445,9 +451,9 @@ export default function NotificationsPage() {
                         </div>
                     ) : (
                         <>
-                            {renderSection('This week', thisWeek)}
-                            {renderSection('This month', thisMonth)}
-                            {renderSection('Earlier', earlier)}
+                            {renderSection('This week', filtered.filter(n => n.bucket === 'week'))}
+                            {renderSection('This month', filtered.filter(n => n.bucket === 'month'))}
+                            {bucketFilter === 'all' && renderSection('Earlier', earlier)}
                         </>
                     )}
                 </div>
@@ -523,16 +529,24 @@ export default function NotificationsPage() {
                             <span className={styles.summaryLabel}>Unread</span>
                             <span className={`${styles.summaryValue} ${styles.summaryUnread}`}>{unreadCount}</span>
                         </div>
-                        <div className={styles.summaryRow}>
-                            <span className={styles.summaryLabel}>This week</span>
-                            <span className={styles.summaryValue}>{thisWeek.length}</span>
+                        <div
+                            className={styles.summaryRow}
+                            onClick={() => setBucketFilter(f => f === 'week' ? 'all' : 'week')}
+                            style={{ cursor: 'pointer', borderRadius: 8, padding: '4px 6px', margin: '0 -6px', background: bucketFilter === 'week' ? 'rgba(139,45,255,0.12)' : 'transparent', transition: 'background 0.15s' }}
+                        >
+                            <span className={styles.summaryLabel} style={bucketFilter === 'week' ? { color: '#c084fc' } : {}}>This week</span>
+                            <span className={styles.summaryValue} style={bucketFilter === 'week' ? { color: '#c084fc' } : {}}>{thisWeek.length}</span>
                         </div>
-                        <div className={styles.summaryRow}>
-                            <span className={styles.summaryLabel}>This month</span>
-                            <span className={styles.summaryValue}>{thisMonth.length}</span>
+                        <div
+                            className={styles.summaryRow}
+                            onClick={() => setBucketFilter(f => f === 'month' ? 'all' : 'month')}
+                            style={{ cursor: 'pointer', borderRadius: 8, padding: '4px 6px', margin: '0 -6px', background: bucketFilter === 'month' ? 'rgba(139,45,255,0.12)' : 'transparent', transition: 'background 0.15s' }}
+                        >
+                            <span className={styles.summaryLabel} style={bucketFilter === 'month' ? { color: '#c084fc' } : {}}>This month</span>
+                            <span className={styles.summaryValue} style={bucketFilter === 'month' ? { color: '#c084fc' } : {}}>{thisMonth.length}</span>
                         </div>
                         <div className={styles.rightDivider} />
-                        <button className={styles.manageBtn} onClick={() => navigate('/settings')}>
+                        <button className={styles.manageBtn} onClick={() => navigate('/settings?tab=Notifications')}>
                             Manage Preferences
                         </button>
                     </div>

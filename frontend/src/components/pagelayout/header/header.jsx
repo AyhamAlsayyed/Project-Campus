@@ -390,6 +390,17 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
   // ── Notification actions ──
   const handleNotificationClick = useCallback((n) => {
     setShowNotifications(false);
+
+    if (!n.is_read) {
+      setNotifications(prev => prev.map(notif => notif.id === n.id ? { ...notif, is_read: true } : notif));
+      const token = localStorage.getItem("access");
+      fetch(`${API}/api/notifications/${n.id}/`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ is_read: true }),
+      }).catch(() => {});
+    }
+
     const type = (n.type || "").toLowerCase();
 
     const communityId = n.link?.community_id || n.link?.community?.id;
@@ -451,7 +462,13 @@ export default function Header({ theme, toggleTheme, user, onOpenPost }) {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ user_id: actorId }),
       });
-      if (res.ok) setNotifications(prev => prev.filter(n => n.id !== notifId));
+      if (res.ok) {
+        setNotifications(prev => prev.filter(n => n.id !== notifId));
+        fetch(`${API}/api/notifications/${notifId}/`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {});
+      }
     } catch (e) { console.error(e); }
   }, []);
 

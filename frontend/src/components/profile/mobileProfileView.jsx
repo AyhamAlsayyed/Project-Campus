@@ -16,6 +16,7 @@ import BellOn from '../../Assets/icons/notifications-active.png';
 import BellOff from '../../Assets/icons/notifications.png';
 import VerifiedBadge from '../../Assets/icons/verified-mark.png';
 import StarIcon from '../../Assets/icons/star.png';
+import DefaultBanner from '../../Assets/Pictures/default-community-banner.png';
 
 const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS_SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -134,7 +135,7 @@ export default function MobileProfileView({
 
             {/* ── Cover ── */}
             <div className={styles.mobileCoverWrap} style={{ position: 'relative' }}>
-                {coverUrl && <img src={coverUrl} alt="cover" className={styles.mobileCoverImg} />}
+                <img src={coverUrl || DefaultBanner} alt="cover" className={styles.mobileCoverImg} />
                 {/* Issue 4: 3-dot cover menu for non-own profiles */}
                 {!isOwnProfile && (
                     <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 10 }}>

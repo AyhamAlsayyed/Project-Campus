@@ -210,11 +210,15 @@ const ChatRow = React.memo(({
                                         <MaskIcon src={BinIcon} />
                                         Delete chat
                                     </button>
-                                    <Divider />
-                                    <button className={`${styles.menuItem} ${styles.destructive}`} onClick={(e) => { e.stopPropagation(); onBlockUser(chat.id); close(); }}>
-                                        <MaskIcon src={Block} color="#D4145A" />
-                                        {chat.is_blocked ? 'Unblock user' : 'Block user'}
-                                    </button>
+                                    {!chat.is_group && (
+                                        <>
+                                            <Divider />
+                                            <button className={`${styles.menuItem} ${styles.destructive}`} onClick={(e) => { e.stopPropagation(); onBlockUser(chat.id); close(); }}>
+                                                <MaskIcon src={Block} color="#D4145A" />
+                                                {chat.is_blocked ? 'Unblock user' : 'Block user'}
+                                            </button>
+                                        </>
+                                    )}
                                     <Divider />
                                     <button className={`${styles.menuItem} ${styles.destructive}`} onClick={(e) => {
                                         e.stopPropagation();
@@ -222,7 +226,7 @@ const ChatRow = React.memo(({
                                         close();
                                     }}>
                                         <MaskIcon src={Report} color="#D4145A" />
-                                        Report user
+                                        {chat.is_group ? 'Report group chat' : 'Report user'}
                                     </button>
                                 </div>,
                                 document.body
@@ -235,7 +239,7 @@ const ChatRow = React.memo(({
             {reportTargetId && (
                 <ReportModal
                     contentId={reportTargetId}
-                    contentType="user"
+                    contentType={chat.is_group ? "conversation" : "user"}
                     onClose={() => setReportTargetId(null)}
                 />
             )}

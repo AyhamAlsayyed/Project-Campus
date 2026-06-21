@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import styles from "./weeklynews.module.css";
-import { createPortal } from "react-dom";
+import ArrowLeft from '../../../Assets/icons/arrow-left.png'
 import ArrowRight from '../../../Assets/icons/arrow-right.png'
 import NeutralReview from '../../../Assets/icons/neutral-review.png'
 import API from "../../../config";
@@ -8,7 +8,6 @@ export default function WeeklyNews({ communityId, useHighlights, isMobile }) {
     const [items, setItems] = useState([]);
     const [idx, setIdx] = useState(0);
     const [news, setNews] = useState([]);
-    const [showPopup, setShowPopup] = useState(false);
     const fetchNews = async () => {
         try {
             let url = "";
@@ -43,13 +42,27 @@ export default function WeeklyNews({ communityId, useHighlights, isMobile }) {
         return () => clearInterval(timer);
     }, [items.length]);
 
-    const next = () => {
-        setIdx((prev) => (prev + 1) % items.length);
+    const prev = () => setIdx(p => (p - 1 + items.length) % items.length);
+    const next = () => setIdx(prev => (prev + 1) % items.length);
+
+    const goToPost = () => {
+        if (!current) return;
+        const postId = current.post_id || current.id;
+        if (!postId) return;
+        const wrapper = document.getElementById(`post-${postId}`);
+        if (!wrapper) return;
+        const card = wrapper.firstElementChild || wrapper;
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.style.animation = 'none';
+        card.getBoundingClientRect();
+        card.style.animation = 'communityHighlightPulse 1.5s ease-out';
+        setTimeout(() => { card.style.animation = ''; }, 1600);
     };
+
     const current = items[Math.min(idx, items.length - 1)];
-    const title = current?.title || "No Title";
-    const description = current?.desc || current?.description || "No Description";
-    const imageUrl = current?.img || current?.image_url || "https://via.placeholder.com/400x200?text=No+Image";
+    const title = current?.title || "";
+    const description = current?.desc || current?.description || "";
+    const imageUrl = current?.media?.[0]?.url || current?.img || current?.image_url || null;
     const endDate = current?.date || "";
     const statusMessage = current?.status_message || "";
     return (
@@ -72,16 +85,19 @@ export default function WeeklyNews({ communityId, useHighlights, isMobile }) {
                     ) : (
                         <>
                             <div className={styles.banner}>
-                                <img src={imageUrl} alt={title} className={styles.image} />
+                                {imageUrl
+                                    ? <img src={imageUrl} alt={title} className={styles.image} />
+                                    : <div className={styles.imagePlaceholder} />
+                                }
                                 <div className={styles.bannerTint} />
                                 <div className={styles.bannerText}>
-                                    <div className={styles.bannerTitle}>{title}</div>
+                                    {title && <div className={styles.bannerTitle}>{title}</div>}
                                     <div className={styles.bannerDate}>
                                         {endDate ? `Ending ${endDate}` : ""}
                                         {statusMessage ? ` · ${statusMessage}` : ""}
                                     </div>
                                 </div>
-                                <button className={styles.bannerArrow} onClick={next} aria-label="Next">
+                                <button className={styles.bannerArrow} onClick={goToPost} aria-label="View post">
                                     <img
                                         src={ArrowRight}
                                         alt="next"
@@ -95,64 +111,37 @@ export default function WeeklyNews({ communityId, useHighlights, isMobile }) {
                                 </button>
                             </div>
 
-                            <div className={styles.descCard}>
-                                <div className={styles.descLabel}>Description</div>
-                                <div className={styles.descText}>{description}</div>
-                                <button className={styles.readMore} onClick={() => setShowPopup(true)}>read more</button>
-                            </div>
-
-                            <div className={styles.dots}>
-                                {items.map((_, i) => (
-                                    <button
-                                        key={i}
-                                        className={`${styles.dot} ${i === idx ? styles.dotActive : ""}`}
-                                        onClick={() => setIdx(i)}
-                                        aria-label={`News ${i + 1}`}
-                                    />
-                                ))}
-                            </div>
+                            {description && (
+                                <div className={styles.descCard}>
+                                    <div className={styles.descLabel}>Description</div>
+                                    <div className={styles.descText}>{description}</div>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
-            </div>
-            {showPopup && createPortal(
-                <div
-                    style={{
-                        position: "fixed", inset: 0, zIndex: 9999,
-                        background: "rgba(0,0,0,0.6)", backdropFilter: "blur(5px)",
-                        display: "flex", alignItems: "center", justifyContent: "center"
-                    }}
-                    onClick={() => setShowPopup(false)}
-                >
-                    <div
-                        style={{
-                            background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.1)",
-                            borderRadius: 20, padding: 32, width: "90%", maxWidth: 500,
-                            position: "relative", boxShadow: "0 10px 40px rgba(0,0,0,0.5)"
-                        }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <button
-                            onClick={() => setShowPopup(false)}
-                            style={{
-                                position: "absolute", top: 16, right: 16,
-                                background: "none", border: "none",
-                                color: "rgba(255,255,255,0.5)", fontSize: 20, cursor: "pointer"
-                            }}
-                        >✕</button>
-                        <h3 style={{ color: "#fff", fontSize: 24, fontWeight: 800, margin: "0 0 16px" }}>
-                            {title}
-                        </h3>
-                        <p style={{
-                            color: "rgba(255,255,255,0.85)", fontSize: 15,
-                            lineHeight: 1.6, margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word"
-                        }}>
-                            {description}
-                        </p>
+
+                {items.length > 1 && (
+                    <div className={styles.paginationRow}>
+                        <button className={styles.navArrow} onClick={prev} disabled={idx === 0}>
+                            <img src={ArrowLeft} alt="prev" className={styles.navArrowImg} style={{ opacity: idx === 0 ? 0.3 : 1 }} />
+                        </button>
+                        <div className={styles.dots}>
+                            {items.map((_, i) => (
+                                <button
+                                    key={i}
+                                    className={`${styles.dot} ${i === idx ? styles.dotActive : ""}`}
+                                    onClick={() => setIdx(i)}
+                                    aria-label={`Highlight ${i + 1}`}
+                                />
+                            ))}
+                        </div>
+                        <button className={styles.navArrow} onClick={next} disabled={idx === items.length - 1}>
+                            <img src={ArrowRight} alt="next" className={styles.navArrowImg} style={{ opacity: idx === items.length - 1 ? 0.3 : 1 }} />
+                        </button>
                     </div>
-                </div>,
-                document.body
-            )}
+                )}
+            </div>
         </div>
     )
 }

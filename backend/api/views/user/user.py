@@ -171,8 +171,13 @@ def update_profile(request):
 
         if "avatar" in request.FILES:
             profile.profile_image = request.FILES["avatar"]
+        elif request.data.get("remove_avatar") == "true":
+            profile.profile_image = None
+
         if "cover" in request.FILES:
             profile.banner_image = request.FILES["cover"]
+        elif request.data.get("remove_cover") == "true":
+            profile.banner_image = None
 
         profile.save()
 
