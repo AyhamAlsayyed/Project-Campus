@@ -64,13 +64,12 @@ def login(request):
                     status=status.HTTP_403_FORBIDDEN,
                 )
 
-            tier = user.page.subscription.tier
+            if user.page.page_type == Page.PageType.UNIVERSITY:
+                user_type = "university"
 
+            tier = user.page.subscription.tier
             if tier in [Subscription.Tier.PREMIUM, Subscription.Tier.UNIVERSITY]:
                 is_premium = True
-
-            if tier == Subscription.Tier.UNIVERSITY:
-                user_type = "university"
 
             if getattr(user.page, "profile_image", None):
                 try:
