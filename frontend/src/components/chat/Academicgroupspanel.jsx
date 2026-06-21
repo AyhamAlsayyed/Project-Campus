@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { BarChart2 } from 'lucide-react';
 import styles from '../../pages/chatsPage/chatspage.module.css';
 import { getSenderName, timeAgo, API } from '../../pages/chatsPage/chatUtils';
 import DefaultPfp from '../../Assets/icons/default-pfp.png';
@@ -6,12 +7,12 @@ import EducationIcon from '../../Assets/icons/education.png';
 
 // ── MarqueeText ───────────────────────────────────────────────────────────────
 // Simple overflow-ellipsis span; memoised to avoid re-renders from parent.
-const MarqueeText = React.memo(({ text, className }) => (
+const MarqueeText = React.memo(({ text, children, className }) => (
     <span
         className={className}
         style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
     >
-        {text}
+        {children ?? text}
     </span>
 ));
 MarqueeText.displayName = 'MarqueeText';
@@ -30,6 +31,13 @@ const AcademicGroupItem = React.memo(({ chat, user, onSelect, isLast }) => {
         chat.last_sender || chat.last_message_sender || chat.sender || ''
     );
     const senderLabel = isMineSender ? 'You' : lastSender;
+    const prefix = senderLabel ? `${senderLabel}: ` : '';
+
+    const rawPreview = chat.preview || '';
+    const colonIdx = rawPreview.indexOf(': ');
+    const jsonCandidate = colonIdx !== -1 ? rawPreview.slice(colonIdx + 2) : rawPreview;
+    let isPoll = false;
+    try { const p = JSON.parse(jsonCandidate || ''); if (p._type === 'poll') isPoll = true; } catch {}
 
     const previewText = isAttachment
         ? `${senderLabel}: sent an attachment`
@@ -53,10 +61,11 @@ const AcademicGroupItem = React.memo(({ chat, user, onSelect, isLast }) => {
                 <div className={styles.academicChatInfo}>
                     <div className={styles.academicTopRow}>
                         <span className={styles.academicTeacherName}>{chat.conversations_owner}</span>
-                        <MarqueeText
-                            text={previewText}
-                            className={styles.academicMessagePreview}
-                        />
+                        <MarqueeText className={styles.academicMessagePreview}>
+                            {isPoll
+                                ? <>{prefix}<BarChart2 size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> sent a poll</>
+                                : previewText}
+                        </MarqueeText>
                     </div>
                     <div className={styles.academicBottomRow}>
                         <MarqueeText text={chat.name} className={styles.academicGroupName} />

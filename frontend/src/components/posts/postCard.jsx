@@ -68,7 +68,7 @@ export default function PostCard({
   const [isFollowed, setIsFollowed] = useState(post?.author?.is_followed);
   const [isNotified, setIsNotified] = useState(post?.author?.is_notified || false);
   const [isHighlighted, setIsHighlighted] = useState(!!post?.is_highlighted);
-  const [lightboxUrl, setLightboxUrl] = useState(null);
+  const [lightboxIndex, setLightboxIndex] = useState(null);
   const [pollOptions, setPollOptions] = useState(post?.poll_options || []);
   const [pollVotedId, setPollVotedId] = useState(
     (post?.poll_options || []).find(o => o.is_voted)?.id ?? null
@@ -410,6 +410,10 @@ export default function PostCard({
   }) || [];
 
   const files = validMedia.filter(m => m.type === "file");
+  const displayMedia = validMedia.filter(m => m.type === 'image' || m.type === 'video');
+  const MAX_GRID = 4;
+  const visibleMedia = displayMedia.slice(0, MAX_GRID);
+  const extraCount = displayMedia.length > MAX_GRID ? displayMedia.length - MAX_GRID : 0;
   const nextSlide = () => setCurrent((prev) => (prev + 1) % validMedia.length);
   const prevSlide = () => setCurrent((prev) => (prev === 0 ? validMedia.length - 1 : prev - 1));
 
@@ -663,79 +667,59 @@ export default function PostCard({
       )}
 
       {/* Media Rendering */}
-      {validMedia.length > 0 && validMedia[current]?.type !== "file" && (
+      {post.post_type === 'advertisement' && validMedia.length > 0 && validMedia[0]?.type !== 'file' && (
         <div className={styles.media}>
-          {validMedia.length > 1 && (
-            <button className={styles.leftArrow} onClick={prevSlide}>
-              <img src={ArrowLeft} alt="prev" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} />
-            </button>
-          )}
-
-          {/* ADDED: Image Ad Banner Override */}
-          {validMedia[current]?.type === "image" && (
+          {validMedia[0]?.type === 'image' && (
             <div className={styles.imageWrapper}>
-              <img
-                src={validMedia[current].url}
-                alt=""
-                className={styles.mediaItem}
-                style={post.post_type !== 'advertisement' ? { cursor: 'zoom-in' } : {}}
-                onClick={post.post_type !== 'advertisement' ? () => setLightboxUrl(validMedia[current].url) : undefined}
-              />
-              {post.post_type === "advertisement" && (
-                <a
-                  href={post.ad_url || "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.adOverlay}
-                >
-                  <div className={styles.adTextContent}>
-                    <h3 className={styles.adTitle}>
-                      {post.title}
-                    </h3>
-                    <div className={styles.adDescRow}>
-                      <p className={styles.adDesc}>
-                        {post.description}
-                      </p>
-                      <div className={styles.adArrowWrapper}>
-                        <img
-                          src={ArrowRight}
-                          alt="Learn more"
-                          className={styles.adArrow}
-                        />
-                      </div>
+              <img src={validMedia[0].url} alt="" className={styles.mediaItem} />
+              <a href={post.ad_url || '#'} target="_blank" rel="noopener noreferrer" className={styles.adOverlay}>
+                <div className={styles.adTextContent}>
+                  <h3 className={styles.adTitle}>{post.title}</h3>
+                  <div className={styles.adDescRow}>
+                    <p className={styles.adDesc}>{post.description}</p>
+                    <div className={styles.adArrowWrapper}>
+                      <img src={ArrowRight} alt="Learn more" className={styles.adArrow} />
                     </div>
                   </div>
-                </a>
-              )}
+                </div>
+              </a>
             </div>
           )}
+        </div>
+      )}
 
-          {validMedia[current]?.type === "video" && (
-            <video
-              controls
-              className={styles.mediaItem}
-              preload="metadata"
-              playsInline
-              style={{ display: 'block', width: '100%', maxHeight: 480, borderRadius: 18, background: '#000', objectFit: 'contain' }}
-            >
-              <source src={validMedia[current].url} type="video/mp4" />
-              <source src={validMedia[current].url} type="video/webm" />
-            </video>
-          )}
-
-          {validMedia.length > 1 && (
-            <button className={styles.rightArrow} onClick={nextSlide}>
-              <img src={ArrowRight} alt="next" style={{ width: 18, height: 18, filter: "brightness(0) invert(1)" }} />
-            </button>
-          )}
-
-          {validMedia.length > 1 && (
-            <div className={styles.dots}>
-              {validMedia.map((_, index) => (
-                <span key={index} className={`${styles.dot} ${index === current ? styles.activeDot : ""}`} />
-              ))}
-            </div>
-          )}
+      {/* Facebook-style grid for non-ad posts */}
+      {post.post_type !== 'advertisement' && displayMedia.length > 0 && (
+        <div className={styles.mediaGrid} style={{
+          gridTemplateColumns: displayMedia.length === 1 ? '1fr' : '1fr 1fr',
+          gridTemplateRows: displayMedia.length === 1 ? 'auto'
+            : displayMedia.length === 2 ? '240px'
+            : '240px 240px',
+        }}>
+          {visibleMedia.map((item, idx) => {
+            const isLastVisible = idx === visibleMedia.length - 1;
+            const showOverlay = isLastVisible && extraCount > 0;
+            const spanTwoRows = displayMedia.length === 3 && idx === 0;
+            return (
+              <div
+                key={idx}
+                className={styles.mediaGridCell}
+                style={{ gridRow: spanTwoRows ? 'span 2' : 'auto' }}
+                onClick={() => setLightboxIndex(idx)}
+              >
+                {item.type === 'video' ? (
+                  <video src={item.url} className={styles.mediaGridImg} muted />
+                ) : (
+                  <img src={item.url} alt="" className={styles.mediaGridImg} />
+                )}
+                {showOverlay && (
+                  <div className={styles.mediaGridOverlay}>
+                    <span>+{extraCount}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -1040,39 +1024,88 @@ export default function PostCard({
         />
       )}
 
-      {lightboxUrl && createPortal(
+      {lightboxIndex !== null && createPortal(
         <div
-          onClick={() => setLightboxUrl(null)}
+          onClick={() => setLightboxIndex(null)}
           style={{
             position: 'fixed', inset: 0, zIndex: 99999,
-            background: 'rgba(0,0,0,0.9)',
+            background: 'rgba(0,0,0,0.95)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'zoom-out',
           }}
         >
-          <img
-            src={lightboxUrl}
-            alt=""
-            onClick={e => e.stopPropagation()}
-            style={{
-              maxWidth: '90vw', maxHeight: '90vh',
-              borderRadius: 12,
-              objectFit: 'contain',
-              boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
-              cursor: 'default',
-            }}
-          />
+          {/* Close */}
           <button
-            onClick={() => setLightboxUrl(null)}
+            onClick={() => setLightboxIndex(null)}
             style={{
-              position: 'fixed', top: 20, right: 24,
-              background: 'rgba(255,255,255,0.1)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              borderRadius: '50%', width: 40, height: 40,
+              position: 'fixed', top: 20, right: 24, zIndex: 100000,
+              background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: '50%', width: 44, height: 44,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', color: '#fff', fontSize: 20,
             }}
           >✕</button>
+
+          {/* Left arrow */}
+          {displayMedia.length > 1 && (
+            <button
+              onClick={e => { e.stopPropagation(); setLightboxIndex(prev => (prev - 1 + displayMedia.length) % displayMedia.length); }}
+              style={{
+                position: 'fixed', left: 16, top: '50%', transform: 'translateY(-50%)', zIndex: 100000,
+                background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '50%', width: 52, height: 52,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+              }}
+            >
+              <img src={ArrowLeft} alt="prev" style={{ width: 22, height: 22, filter: 'brightness(0) invert(1)' }} />
+            </button>
+          )}
+
+          {/* Media */}
+          {displayMedia[lightboxIndex]?.type === 'video' ? (
+            <video
+              src={displayMedia[lightboxIndex].url}
+              controls autoPlay
+              onClick={e => e.stopPropagation()}
+              style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 12, cursor: 'default' }}
+            />
+          ) : (
+            <img
+              src={displayMedia[lightboxIndex]?.url}
+              alt=""
+              onClick={e => e.stopPropagation()}
+              style={{
+                maxWidth: '90vw', maxHeight: '90vh', borderRadius: 12,
+                objectFit: 'contain', boxShadow: '0 8px 40px rgba(0,0,0,0.6)', cursor: 'default',
+              }}
+            />
+          )}
+
+          {/* Right arrow */}
+          {displayMedia.length > 1 && (
+            <button
+              onClick={e => { e.stopPropagation(); setLightboxIndex(prev => (prev + 1) % displayMedia.length); }}
+              style={{
+                position: 'fixed', right: 16, top: '50%', transform: 'translateY(-50%)', zIndex: 100000,
+                background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '50%', width: 52, height: 52,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+              }}
+            >
+              <img src={ArrowRight} alt="next" style={{ width: 22, height: 22, filter: 'brightness(0) invert(1)' }} />
+            </button>
+          )}
+
+          {/* Counter */}
+          {displayMedia.length > 1 && (
+            <div style={{
+              position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 100000,
+              background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '5px 18px',
+              borderRadius: 999, fontSize: '0.9rem', pointerEvents: 'none',
+            }}>
+              {lightboxIndex + 1} / {displayMedia.length}
+            </div>
+          )}
         </div>,
         document.body
       )}

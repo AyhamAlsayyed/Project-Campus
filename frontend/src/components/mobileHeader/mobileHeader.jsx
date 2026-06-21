@@ -140,20 +140,30 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
             });
             if (res.ok) {
                 const data = await res.json();
-                setDrawerChats(data.map(chat => ({
-                    id: chat.id,
-                    name: chat.name || chat.user_name || 'Unknown User',
-                     userId: chat.other_member_id || chat.user_id || null,
-                    avatar: chat.avatar ? (chat.avatar.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`) : DefaultPfp,
-                    message: chat.preview || chat.last_message || 'No messages yet',
-                    status: chat.is_online ? 'online' : 'offline',
-                    dotStyle: chat.is_online ? 'online' : 'offline',
-                    isGroup: chat.is_group || false,
-                    isPage: chat.is_page || false,
-                    unread: chat.unread_count || 0,
-                    time: timeAgo(chat.last_message_time),
-                    left_at: chat.left_at || null,
-                })));
+                setDrawerChats(data.map(chat => {
+                    const raw = chat.preview || chat.last_message || 'No messages yet';
+                    const colonIdx = (raw || '').indexOf(': ');
+                    const pollPrefix = colonIdx !== -1 ? raw.slice(0, colonIdx + 2) : '';
+                    const jsonCandidate = colonIdx !== -1 ? raw.slice(colonIdx + 2) : raw;
+                    let isPoll = false;
+                    try { const p = JSON.parse(jsonCandidate || ''); if (p._type === 'poll') isPoll = true; } catch {}
+                    return {
+                        id: chat.id,
+                        name: chat.name || chat.user_name || 'Unknown User',
+                        userId: chat.other_member_id || chat.user_id || null,
+                        avatar: chat.avatar ? (chat.avatar.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`) : DefaultPfp,
+                        message: isPoll ? `${pollPrefix}sent a poll` : raw,
+                        isPoll,
+                        pollPrefix,
+                        status: chat.is_online ? 'online' : 'offline',
+                        dotStyle: chat.is_online ? 'online' : 'offline',
+                        isGroup: chat.is_group || false,
+                        isPage: chat.is_page || false,
+                        unread: chat.unread_count || 0,
+                        time: timeAgo(chat.last_message_time),
+                        left_at: chat.left_at || null,
+                    };
+                }));
             }
         } catch (e) { console.error('Chat fetch failed', e); }
         finally { setDrawerChatsLoading(false); }

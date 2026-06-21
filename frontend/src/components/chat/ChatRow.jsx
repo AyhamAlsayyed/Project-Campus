@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, BarChart2 } from 'lucide-react';
 import styles from '../../pages/chatsPage/chatspage.module.css';
 import MaskIcon from './MaskIcon';
 import Pin from '../../Assets/icons/pin.png';
@@ -118,13 +118,19 @@ const ChatRow = React.memo(({
                     chat.status === 'dnd' ? 'Do Not Disturb' :
                         'Offline';
 
-    const previewText = (() => {
+    const previewContent = (() => {
         if (chat.last_message_type === 'media' || chat.has_attachment) return '📎 sent an attachment';
+        const raw = chat.preview || '';
+        const colonIdx = raw.indexOf(': ');
+        const prefix = colonIdx !== -1 ? raw.slice(0, colonIdx + 2) : '';
+        const jsonCandidate = colonIdx !== -1 ? raw.slice(colonIdx + 2) : raw;
         try {
-            const parsed = JSON.parse(chat.preview || '');
-            if (parsed._type === 'poll') return `📊 Poll: ${parsed.question}`;
+            const parsed = JSON.parse(jsonCandidate);
+            if (parsed._type === 'poll') return (
+                <>{prefix}<BarChart2 size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> sent a poll</>
+            );
         } catch {}
-        return chat.preview;
+        return raw;
     })();
 
 
@@ -160,7 +166,7 @@ const ChatRow = React.memo(({
                         {chat.is_muted && <MaskIcon src={Mute} size={25} color={maskColor} />}
                     </div>
                     <div className={styles.chatDetails}>
-                        <span className={styles.chatPreview}>{previewText}</span>
+                        <span className={styles.chatPreview}>{previewContent}</span>
                         <div className={styles.chatDetailsTop}>
                             <span className={styles.chatTime}>{chat.time}</span>
                         </div>

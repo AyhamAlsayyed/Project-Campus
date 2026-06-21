@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Search, Check } from "lucide-react";
+import { Search, Check, BarChart2 } from "lucide-react";
 import styles from './DrawerStyles.module.css';
 import StatusDot from '../presence/StatusDot';
 import { usePresence } from '../../context/presenceContext';
@@ -107,7 +107,11 @@ export default function ChatsBottomSheet({
                         </div>
                         <div className={styles.chatGrid}>
                             {!chat.isGroup && <ChatStatusLabel userId={chat.userId} />}
-                            <span className={styles.chatPreview}>{chat.message}</span>
+                            <span className={styles.chatPreview}>
+                                {chat.isPoll
+                                    ? <>{chat.pollPrefix}<BarChart2 size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> sent a poll</>
+                                    : chat.message}
+                            </span>
                             <span className={styles.chatName}>{chat.name}</span>
                             <div className={styles.chatTimeContainer}>
                                 {chat.unread > 0 && <span className={styles.chatUnread}>{chat.unread}</span>}

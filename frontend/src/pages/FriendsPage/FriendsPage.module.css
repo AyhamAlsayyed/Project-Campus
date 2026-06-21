@@ -244,6 +244,29 @@
     gap: 4px;
     padding-right: 4px;
     padding-bottom: 110px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.rightList::-webkit-scrollbar,
+.popupList::-webkit-scrollbar {
+    width: 4px;
+}
+
+.rightList::-webkit-scrollbar-track,
+.popupList::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.rightList::-webkit-scrollbar-thumb,
+.popupList::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+}
+
+.rightList::-webkit-scrollbar-thumb:hover,
+.popupList::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
 }
 
 .friendWrapper {
@@ -668,6 +691,11 @@
 
 [data-theme="light"] .noDataText {
     color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .rightList::-webkit-scrollbar-thumb,
+[data-theme="light"] .popupList::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
 }
 
 [data-theme="light"] .popupContent {

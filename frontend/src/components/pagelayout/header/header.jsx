@@ -105,21 +105,23 @@ function formatNotif(item) {
 }
 
 function formatChat(chat) {
+  const raw = typeof chat.preview === "string" ? chat.preview
+    : typeof chat.last_message === "string" ? chat.last_message
+      : chat.last_message?.content || chat.last_message?.text || "No messages yet";
+  const colonIdx = (raw || '').indexOf(': ');
+  const pollPrefix = colonIdx !== -1 ? raw.slice(0, colonIdx + 2) : '';
+  const jsonCandidate = colonIdx !== -1 ? raw.slice(colonIdx + 2) : raw;
+  let isPoll = false;
+  try { const p = JSON.parse(jsonCandidate || ''); if (p._type === 'poll') isPoll = true; } catch {}
+
   return {
     id: chat.id,
     userId: chat.other_member_id || chat.user_id || null,
     name: chat.name || chat.user_name || "Unknown User",
     avatar: resolveAvatar(chat.avatar, ProfilePicture),
-    message: (() => {
-      const raw = typeof chat.preview === "string" ? chat.preview
-        : typeof chat.last_message === "string" ? chat.last_message
-          : chat.last_message?.content || chat.last_message?.text || "No messages yet";
-      try {
-        const parsed = JSON.parse(raw || '');
-        if (parsed._type === 'poll') return `📊 Poll: ${parsed.question}`;
-      } catch {}
-      return raw;
-    })(),
+    message: isPoll ? `${pollPrefix}sent a poll` : raw,
+    isPoll,
+    pollPrefix,
     status: chat.is_online ? "online" : "offline",
     dotStyle: chat.is_online ? "online" : "offline",
     isGroup: chat.is_group || false,

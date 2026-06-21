@@ -576,6 +576,7 @@ export default function ActiveChat({
                 const newMsg = await res.json();
                 setMessages(prev => {
                     const [nm] = normalizeMessages([newMsg]);
+                    if (prev.some(m => m.id === nm.id)) return prev;
                     return [...prev, nm];
                 });
             }
@@ -935,7 +936,7 @@ export default function ActiveChat({
                                                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(166,39,156,0.08)', pointerEvents: 'none', borderRadius: 8, zIndex: 0 }} />
                                                 )}
                                                 <div
-                                                    className={`${styles.messageWrapper} ${isMine ? styles.messageMineWrapper : styles.messageOtherWrapper} ${isGrouped ? styles.messageGrouped : ''}`}
+                                                    className={`${styles.messageWrapper} ${isMine ? styles.messageMineWrapper : styles.messageOtherWrapper} ${isGrouped ? styles.messageGrouped : ''} ${isLastInGroup ? styles.messageLastInGroup : ''}`}
                                                     onClick={selectionMode ? () => toggleMessageSelection(msg.id) : undefined}
                                                     style={selectionMode ? { cursor: 'pointer', userSelect: 'none', position: 'relative', zIndex: 1 } : undefined}
                                                 >

@@ -1649,6 +1649,10 @@
     margin-bottom: 3px;
 }
 
+.messageLastInGroup {
+    margin-bottom: 16px;
+}
+
 .bubbleGrouped::after {
     display: none !important;
 }
