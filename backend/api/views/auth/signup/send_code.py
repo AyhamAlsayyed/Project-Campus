@@ -40,6 +40,8 @@ def send_code(request):
     personal_email = (request.data.get("personalEmail") or "").strip().lower()
     recovery_email = (request.data.get("recoveryEmail") or "").strip().lower()
     reset_email = (request.data.get("resetEmail") or "").strip().lower()
+    is_signup_flow = request.data.get("signup", False)
+
     target_email = academic_email or personal_email or recovery_email or reset_email
     is_authenticated = request.user and request.user.is_authenticated
 
@@ -62,6 +64,16 @@ def send_code(request):
                 )
             username_to_save = found_user.username
 
+        elif is_signup_flow and personal_email:
+            if not is_valid_personal_email_format(personal_email):
+                return Response({"message": "Personal email format is invalid."}, status=status.HTTP_400_BAD_REQUEST)
+
+            if User.objects.filter(email__iexact=personal_email).exists():
+                return Response(
+                    {"message": "This personal email is already registered."}, status=status.HTTP_400_BAD_REQUEST
+                )
+            username_to_save = username_input
+
         else:
             if not academic_email or not username_input:
                 return Response(
@@ -75,12 +87,14 @@ def send_code(request):
                 )
             if User.objects.filter(username__iexact=username_input).exists():
                 return Response({"message": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
+
             if not is_valid_academic_email_domain(academic_email):
                 return Response(
                     {"message": "Academic email domain is invalid or not supported."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            if User.objects.filter(email__iexact=academic_email).exists():
+
+            if User.objects.filter(profile__academic_email__iexact=academic_email).exists():
                 return Response(
                     {"message": "This academic email is already registered."}, status=status.HTTP_400_BAD_REQUEST
                 )
@@ -116,7 +130,7 @@ def send_code(request):
                 return Response({"message": "Recovery email format is invalid."}, status=status.HTTP_400_BAD_REQUEST)
 
     last_request = EmailVerification.objects.filter(academic_email=target_email).order_by("-created_at").first()
-    if last_request and (timezone.now() - last_request.created_at).total_seconds() < 0:
+    if last_request and (timezone.now() - last_request.created_at).total_seconds() < 60:
         return Response(
             {"message": "Please wait before requesting another code."}, status=status.HTTP_429_TOO_MANY_REQUESTS
         )
@@ -140,7 +154,7 @@ def send_code(request):
             subject="ProjectCampus - Security Verification Code",
             message=message_body,
             from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[str(target_email or "")],
+            recipient_list=[target_email],
             fail_silently=False,
         )
         return Response({"message": "Verification code sent successfully."}, status=status.HTTP_200_OK)

@@ -62,7 +62,7 @@ def feed(request, community_id=None):
     # user profile feed
     if user_id:
         if int(user_id) == user.id:
-            qs = qs.filter(author_id=user_id)
+            qs = qs.filter(author_id=user_id, is_approved=True)
         else:
             qs = qs.filter(author_id=user_id, is_approved=True)
 

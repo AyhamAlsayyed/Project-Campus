@@ -896,17 +896,21 @@ class PostSerializer(serializers.ModelSerializer):
                 try:
                     profile_pic = vote.user.profile.profile_image
                     if profile_pic:
-                        voter_avatars.append(request.build_absolute_uri(profile_pic.url) if request else profile_pic.url)
+                        voter_avatars.append(
+                            request.build_absolute_uri(profile_pic.url) if request else profile_pic.url
+                        )
                 except Exception:
                     pass
-            result.append({
-                "id": opt.id,
-                "text": opt.text,
-                "votes_count": count,
-                "percentage": round((count / total_votes * 100) if total_votes else 0, 1),
-                "is_voted": opt.id == voted_option_id,
-                "voter_avatars": voter_avatars,
-            })
+            result.append(
+                {
+                    "id": opt.id,
+                    "text": opt.text,
+                    "votes_count": count,
+                    "percentage": round((count / total_votes * 100) if total_votes else 0, 1),
+                    "is_voted": opt.id == voted_option_id,
+                    "voter_avatars": voter_avatars,
+                }
+            )
         return result
 
     def get_community_name(self, obj):
@@ -1617,6 +1621,7 @@ class NewsItemSerializer(serializers.ModelSerializer):
             "news_id",
             "title",
             "description",
+            "link",
             "image_url",
             "start_date",
             "end_date",

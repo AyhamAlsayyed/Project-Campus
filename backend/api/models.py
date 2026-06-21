@@ -1522,7 +1522,7 @@ class NewsItem(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     image = models.ImageField(upload_to="news_banners/")
-
+    link = models.URLField(blank=True, null=True)
     start_date = models.DateTimeField(default=timezone.now)
     end_date = models.DateTimeField()
 
