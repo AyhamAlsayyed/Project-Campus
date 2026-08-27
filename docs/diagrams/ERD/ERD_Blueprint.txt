@@ -1,0 +1,249 @@
+PROJECT CAMPUS — FULL ERD BLUEPRINT (Chen Notation)
+====================================================
+Legend: [Entity] = rectangle | (attribute) = oval | <relationship> = diamond
+Underlined attribute = primary key (PK). Crow/Chen cardinality shown as 1 / N / M.
+
+NOTE ON USER: Django's built-in User is the spine of the system.
+[User] attributes: (user_id PK), (username), (email), (password), (is_active)
+
+==================================================================
+GROUP 1 — USERS, PROFILES & ROLES
+==================================================================
+
+[User] (user_id PK)(username)(email)(password)(is_active)
+
+[UserProfile] (user_id PK/FK)(full_name)(academic_email)(recovery_email)
+              (profile_image)(banner_image)(bio)(birth_date)(privacy)
+              (friends_list_privacy)(message_privacy)(status)
+              (primary_phone)(secondary_phone)(created_at)
+   <has> : User 1 --- 1 UserProfile
+
+[UserDegree] (id PK)(degree_type)(major)(institution)
+   <earns> : User 1 --- N UserDegree
+
+[EmailVerification] (id PK)(username)(academic_email)(code)(is_verified)
+                    (expires_at)(created_at)
+   (standalone - matched by email, no hard FK)
+
+[Student] (user_id PK/FK)(major)(academic_level)
+   <is a> : User 1 --- 1 Student
+   <enrolled in> : Student N --- 1 Page(university)
+
+[Instructor] (user_id PK/FK)(academic_title)(department)(instructor_type)
+   <is a> : User 1 --- 1 Instructor
+   <teaches at> : Instructor N --- 1 Page(university)
+   <picks> : Instructor M --- N Community   (community_picks)
+
+[TeachingPosition] (position_id PK)(institution_name)(employment_type)
+   <holds> : Instructor 1 --- N TeachingPosition
+
+[Admin] (user_id PK/FK)
+   <is a> : User 1 --- 1 Admin
+
+==================================================================
+GROUP 2 — PAGES, SUBSCRIPTIONS & RATINGS
+==================================================================
+
+[Page] (page_id PK)(page_full_name)(page_name_arabic)(page_branch)
+       (page_type)(description)(profile_image)(banner_image)(phone)
+       (email)(location)(link)(verified)(created_at)
+   <owns> : User 1 --- 1 Page   (optional / nullable)
+
+[Subscription] (subscription_id PK)(tier)(price)(billing_cycle)
+               (is_active)(start_date)(end_date)
+   <subscribes> : Page 1 --- 1 Subscription
+
+[PageRating] (id PK)(score)(created_at)
+   <rates> : User N --- 1 Page  (via PageRating; unique per user+page)
+   -- PageRating connects [User] and [Page]
+
+[UniversityDomain] (id PK)(domain)(is_active)
+   <maps> : Page 1 --- N UniversityDomain
+
+==================================================================
+GROUP 3 — COMMUNITIES
+==================================================================
+
+[Community] (community_id PK)(name)(description)(privacy)
+            (requires_post_approval)(created_at)(banner_image)(verified)
+            (can_pages_post)(can_instructors_post)(can_students_post)
+   <owns> : User 1 --- N Community  (owner)
+
+[CommunityMember] (id PK)(role)(status)(joined_at)(is_muted)
+   <member of> : connects User N --- N Community
+   -- Community 1 --- N CommunityMember ; User 1 --- N CommunityMember
+
+[CommunityRequest] (request_id PK)(name)(description)(privacy)
+                   (purpose_statement)(status)(rejection_reason)
+                   (created_at)(updated_at)
+   <requests> : User 1 --- N CommunityRequest
+
+==================================================================
+GROUP 4 — POSTS & INTERACTIONS
+==================================================================
+
+[Post] (post_id PK)(title)(content_text)(description)(post_type)
+       (created_at)(end_at)(is_approved)(is_highlighted)(highlighted_at)(is_pinned)
+   <writes> : User 1 --- N Post  (author)
+   <posted in> : Post N --- 1 Community  (optional)
+
+[PostMedia] (media_id PK)(media_type)(media_file)(media_url)(order_index)
+   <attached to> : Post 1 --- N PostMedia
+
+[Comment] (comment_id PK)(content)(created_at)
+   <on> : Post 1 --- N Comment
+   <writes> : User 1 --- N Comment  (author)
+   <replies to> : Comment 1 --- N Comment  (parent_comment, self)
+
+[PostReaction] (post_reaction_id PK)
+   <reacts> : connects User N --- N Post (unique per user+post)
+
+[CommentReaction] (comment_reaction_id PK)
+   <reacts> : connects User N --- N Comment (unique per user+comment)
+
+[PostAdReaction] (id PK)(reaction_type: good/neutral/bad)(created_at)
+   <feedback> : connects User N --- N Post (advertisement posts)
+
+[SavedPost] (id PK)(created_at)
+   <saves> : connects User N --- N Post (unique per user+post)
+
+[PollOption] (id PK)(text)(order_index)
+   <has> : Post 1 --- N PollOption
+
+[PollVote] (id PK)(created_at)
+   <votes> : connects User N --- N PollOption (unique per user+option)
+   -- PollOption 1 --- N PollVote ; User 1 --- N PollVote
+
+==================================================================
+GROUP 5 — MESSAGING
+==================================================================
+
+[Conversation] (conversation_id PK)(name)(image)(description)(created_at)
+               (is_group)(is_private)(is_academic)(status)
+               (allow_members_to_edit_settings)(allow_members_to_send_messages)
+               (allow_members_to_add_others)
+   <creates> : User 1 --- N Conversation  (created_by)
+
+[ConversationMember] (id PK)(role)(is_pinned)(is_muted)(last_read_at)
+                     (cleared_at)(joined_at)
+   <participates> : connects User N --- N Conversation
+   -- Conversation 1 --- N ConversationMember ; User 1 --- N ConversationMember
+
+[Message] (message_id PK)(content)(sent_at)
+   <in> : Conversation 1 --- N Message
+   <sends> : User 1 --- N Message  (sender)
+   <replies to> : Message 1 --- N Message  (parent_message, self)
+   <shares> : Message N --- 1 Post  (shared_post, optional)
+   -- Conversation 1 --- 1 Message (last_message pointer)
+
+[MessageMedia] (media_id PK)(media_type)(media_file)(media_url)(order_index)
+   <attached to> : Message 1 --- N MessageMedia
+
+[MessageReaction] (message_reaction_id PK)(message_reaction_type)
+   <reacts> : connects User N --- N Message (unique per user+message+type)
+
+==================================================================
+GROUP 6 — EVENTS
+==================================================================
+
+[Event] (event_id PK)(title)(description)(image)(start_date)(end_date)
+        (location)(is_verified)
+   <hosts> : Page 1 --- N Event
+
+[EventReminder] (reminder_id PK)(reminder_time)
+   <sets> : connects User N --- N Event (unique per user+event)
+   -- Event 1 --- N EventReminder ; User 1 --- N EventReminder
+
+==================================================================
+GROUP 7 — RELATIONSHIPS
+==================================================================
+
+[Friendship] (friendship_id PK)(status)(relation_type)(is_muted)
+   <connects> : User (user1) N --- N User (user2)
+   -- relation_type covers user-to-user, user-to-page, page-to-page (following)
+
+==================================================================
+GROUP 8 — ANNOUNCEMENTS, PROMOTIONS & NOTIFICATIONS
+==================================================================
+
+[NewsItem] (news_id PK)(title)(description)(image)(start_date)(end_date)(created_at)
+   (standalone - Latest News items)
+
+[Promotion] (promotion_id PK)(start_date)(end_date)(duration)(duration_idx)
+            (cost)(status)
+   <runs> : User 1 --- N Promotion  (promoted_by)
+   <promotes> : Promotion --- (generic) --> any content (Event/Community/Post)
+
+[Notification] (notification_id PK)(type)(content)(is_read)(created_at)
+   <receives> : User 1 --- N Notification  (receiver)
+   <triggered by> : User 1 --- N Notification  (actor)
+   <about> : Notification --- (generic) --> any content (optional)
+
+[NotificationSetting] (user_id PK/FK)(enable_all)(friend_request)(post_reacted)
+                      (post_commented)(comment_replied)(community_new_post)
+                      (community_join_request_status)(new_event)
+                      (event_updated_cancelled)(page_announcement)
+                      (dm_existing_chat)(dm_new_request)(group_chat)
+                      (password_changed)(email_updated)
+   <configures> : User 1 --- 1 NotificationSetting
+
+==================================================================
+GROUP 9 — MODERATION & SUPPORT
+==================================================================
+
+[Report] (report_id PK)(content_type)(reason)(final_action)(created_at)
+   <files> : User 1 --- N Report  (reporter)
+   <against> : Report --- (generic) --> any content (Post/Comment/User/etc.)
+   <routed to> : Report N --- 1 Page  (university_page, optional)
+
+[ContactTicket] (ticket_id PK)(subject)(message)(screenshot)(created_at)
+   <submits> : User 1 --- N ContactTicket
+
+[BugReport] (bug_id PK)(message)(action_track)(screenshot)(created_at)
+   <submits> : User 1 --- N BugReport
+
+==================================================================
+RELATIONSHIP SUMMARY (the diamonds)
+==================================================================
+User--has--UserProfile (1:1)
+User--earns--UserDegree (1:N)
+User--is_a--Student / Instructor / Admin (1:1 each)
+User--owns--Page (1:1, optional)
+User--owns--Community (1:N)
+User--writes--Post (1:N)
+User--writes--Comment (1:N)
+User--creates--Conversation (1:N)
+User--sends--Message (1:N)
+User--files--Report (1:N)
+User--receives/actor--Notification (1:N)
+User--configures--NotificationSetting (1:1)
+User--submits--ContactTicket / BugReport (1:N)
+User--N:N--Community (via CommunityMember)
+User--N:N--Conversation (via ConversationMember)
+User--N:N--Post (via PostReaction / SavedPost / PostAdReaction)
+User--N:N--Comment (via CommentReaction)
+User--N:N--Message (via MessageReaction)
+User--N:N--Event (via EventReminder)
+User--N:N--PollOption (via PollVote)
+User--N:N--User (via Friendship)
+User--N:1--Page (via PageRating)
+Page--has--Subscription (1:1)
+Page--has--UniversityDomain (1:N)
+Page--hosts--Event (1:N)
+Page--employs--Instructor (1:N)
+Page--enrolls--Student (1:N)
+Instructor--holds--TeachingPosition (1:N)
+Instructor--M:N--Community (community_picks)
+Community--has--CommunityMember (1:N)
+Community--has--Post (1:N)
+Post--has--PostMedia / Comment / PollOption (1:N each)
+Post--has--Reactions / SavedPost (1:N each)
+Comment--has--CommentReaction (1:N)
+Comment--replies--Comment (self 1:N)
+Conversation--has--ConversationMember / Message (1:N each)
+Message--has--MessageMedia / MessageReaction (1:N each)
+Message--replies--Message (self 1:N)
+Message--shares--Post (N:1, optional)
+Event--has--EventReminder (1:N)
+PollOption--has--PollVote (1:N)
+Promotion--promoted_by--User (N:1)
