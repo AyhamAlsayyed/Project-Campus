@@ -1,187 +1,141 @@
-from django.contrib.contenttypes.models import ContentType
+from django.shortcuts import get_object_or_404
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Comment, Notification, Page
+from ...models import Comment, CommentReaction, Post
+from ...serializers import CommentSerializer
+from ...utils.blocked_users import get_blocked_user_sets, is_normal_post
+from ...utils.notifications import send_global_notification
 
 
-def get_comment_author_data(request, c):
-    if c.author_user:
-        user = c.author_user
-        profile = getattr(user, "profile", None)
-
-        avatar = None
-        if profile and getattr(profile, "profile_image", None):
-            avatar = request.build_absolute_uri(profile.profile_image.url)
-
-        return {
-            "id": user.id,
-            "type": "user",
-            "username": user.username,
-            "avatar": avatar,
-        }
-
-    elif c.author_page:
-        page = c.author_page
-
-        avatar = None
-        if getattr(page, "profile_image", None):
-            avatar = request.build_absolute_uri(page.profile_image.url)
-
-        return {
-            "id": page.page_id,
-            "type": "page",
-            "username": page.page_name,
-            "avatar": avatar,
-            "tag": page.page_type,
-        }
-
-    return None
-
-
-def handle_comment_notification(comment, parent_comment, actor_user, actor_page):
-    post = comment.post
-
-    # if parent_comment then its a replay to a comment if not it a comment on a post
-    if parent_comment:
-        receiver_user = parent_comment.author_user
-        receiver_page = parent_comment.author_page
-    else:
-        receiver_user = post.author_user
-        receiver_page = post.author_page
-
-    # dont send if the user commented on his own post or comment
-    if actor_user and receiver_user and actor_user == receiver_user:
-        return
-
-    if actor_page and receiver_page and actor_page == receiver_page:
-        return
-
-    actor_name = actor_user.username if actor_user else actor_page.page_name
-
-    if parent_comment:
-        text = f"{actor_name} replied to your comment"
-    else:
-        text = f"{actor_name} commented on your post"
-
-    # ---- CREATE ----
-    Notification.objects.create(
-        receiver_user=receiver_user,
-        receiver_page=receiver_page,
-        actor_user=actor_user,
-        actor_page=actor_page,
-        type=Notification.Type.COMMENT,
-        content=text,
-        content_type=ContentType.objects.get_for_model(comment),
-        object_id=comment.comment_id,
-    )
-
-
-@api_view(["GET", "POST"])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def comment_list(request, post_id):
+    user = request.user
+
+    try:
+        post = Post.objects.get(post_id=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
     comments = (
         Comment.objects.filter(post_id=post_id)
-        .select_related(
-            "author_user",
-            "author_page",
-            "parent_comment__author_user",
-            "parent_comment__author_page",
-        )
+        .select_related("author__profile", "parent_comment__author")
         .order_by("-created_at")
     )
 
-    data = []
-    for c in comments:
-        author = get_comment_author_data(request, c)
+    if is_normal_post(post):
+        users_blocked_by_me, users_who_blocked_me = get_blocked_user_sets(user)
+        all_blocked_users = users_blocked_by_me | users_who_blocked_me
 
-        # derive replying_to from parent_comment
-        replying_to = None
-        if c.parent_comment:
-            parent = c.parent_comment
-            if parent.author_user:
-                replying_to = parent.author_user.username
-            elif parent.author_page:
-                replying_to = parent.author_page.page_name
+        if all_blocked_users:
+            comments = comments.exclude(author_id__in=all_blocked_users)
 
-        data.append(
-            {
-                "id": c.comment_id,
-                "text": c.content,
-                "user": author["username"],
-                "user_avatar": author["avatar"],
-                "user_id": author["id"],
-                "created_at": c.created_at.isoformat(),
-                "parent_comment": c.parent_comment_id,
-                "replying_to": replying_to,
-            }
-        )
-
-    return Response(data, status=200)
+    serializer = CommentSerializer(comments, many=True, context={"request": request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_comment(request, post_id):
+    author = request.user
     text = request.data.get("text")
     parent_id = request.data.get("parent_comment")
-    page_id = request.data.get("page_id")
 
     if not text:
-        return Response({"error": "Text is required"}, status=400)
+        return Response({"error": "Text is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        post = Post.objects.get(post_id=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
     parent_comment = None
     if parent_id:
         parent_comment = Comment.objects.filter(comment_id=parent_id, post_id=post_id).first()
 
-    author_user = None
-    author_page = None
-
-    if page_id:
-        try:
-            author_page = Page.objects.get(page_id=page_id)
-        except Page.DoesNotExist:
-            return Response({"error": "Page not found"}, status=404)
-    else:
-        author_user = request.user
-
     comment = Comment.objects.create(
         post_id=post_id,
-        author_user=author_user,
-        author_page=author_page,
+        author=author,
         content=text,
         parent_comment=parent_comment,
     )
-    # --------notification----------
-    handle_comment_notification(
-        comment=comment,
-        parent_comment=parent_comment,
-        actor_user=author_user,
-        actor_page=author_page,
+
+    send_global_notification(
+        sender=author,
+        receiver=parent_comment.author if parent_comment else post.author,
+        notification_type="COMMENT" if parent_comment else "COMMENTED ON YOUR POST",
+        target_object=comment,
     )
 
-    # response
-    author = get_comment_author_data(request, comment)
+    serializer = CommentSerializer(comment, context={"request": request})
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    replying_to = None
-    if parent_comment:
-        if parent_comment.author_user:
-            replying_to = parent_comment.author_user.username
-        elif parent_comment.author_page:
-            replying_to = parent_comment.author_page.page_name
+
+@api_view(["PUT", "PATCH"])
+@permission_classes([IsAuthenticated])
+def edit_comment(request, comment_id):
+    user = request.user
+    new_text = request.data.get("text", "").strip()
+
+    if not new_text:
+        return Response({"error": "Comment text cannot be empty."}, status=status.HTTP_400_BAD_REQUEST)
+
+    comment = get_object_or_404(Comment, comment_id=comment_id)
+
+    if comment.author != user:
+        return Response(
+            {"detail": "You do not have permission to edit this comment."}, status=status.HTTP_403_FORBIDDEN
+        )
+
+    comment.content = new_text
+    comment.save(update_fields=["content"])
+
+    serializer = CommentSerializer(comment, context={"request": request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_comment(request, comment_id):
+    """
+    Deletes a comment.
+    Allows deletion if the requesting user is the comment author OR the post owner.
+    """
+    comment = get_object_or_404(Comment, comment_id=comment_id)
+
+    is_comment_author = comment.author == request.user
+    is_post_owner = comment.post.author == request.user
+
+    if not (is_comment_author or is_post_owner):
+        return Response(
+            {"detail": "You do not have permission to delete this comment."}, status=status.HTTP_403_FORBIDDEN
+        )
+
+    comment.delete()
 
     return Response(
-        {
-            "id": comment.comment_id,
-            "text": comment.content,
-            "user": author["username"],
-            "user_id": author["id"],
-            "user_avatar": author["avatar"],
-            "type": author["type"],
-            "created_at": comment.created_at.isoformat(),
-            "parent_comment": comment.parent_comment_id,
-            "replying_to": replying_to,
-        },
-        status=201,
+        {"message": "Comment and all its nested replies were successfully deleted."}, status=status.HTTP_200_OK
     )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def toggle_comment_like(request, comment_id):
+    """
+    Toggles a like reaction on a specific comment for the authenticated user.
+    If the reaction already exists, it unlikes it (deletes the record).
+    """
+    user = request.user
+    comment = get_object_or_404(Comment, pk=comment_id)
+
+    existing_reaction = CommentReaction.objects.filter(comment=comment, user=user).first()
+
+    if existing_reaction:
+        existing_reaction.delete()
+        return Response({"message": "Comment unliked successfully.", "is_liked": False}, status=status.HTTP_200_OK)
+    else:
+        CommentReaction.objects.create(comment=comment, user=user)
+        return Response({"message": "Comment liked successfully.", "is_liked": True}, status=status.HTTP_201_CREATED)

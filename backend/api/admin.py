@@ -2,43 +2,59 @@ from django.contrib import admin
 
 from .models import (
     Admin,
+    BugReport,
     Comment,
     CommentReaction,
     Community,
     CommunityMember,
+    CommunityRequest,
+    ContactTicket,
     Conversation,
     ConversationMember,
     EmailVerification,
     Event,
     EventReminder,
-    FollowPage,
     Friendship,
     Instructor,
     Message,
     MessageMedia,
     MessageReaction,
+    NewsItem,
     Notification,
+    NotificationSetting,
     Page,
+    PageRating,
     Post,
+    PostAdReaction,
     PostMedia,
     PostReaction,
+    Promotion,
     Report,
     SavedPost,
     Student,
+    Subscription,
+    TeachingPosition,
     UniversityDomain,
     UserDegree,
     UserProfile,
 )
 
+admin.site.register(ContactTicket)
+admin.site.register(BugReport)
 admin.site.register(UserProfile)
+admin.site.register(PostAdReaction)
 admin.site.register(EmailVerification)
 admin.site.register(Page)
+admin.site.register(Subscription)
+admin.site.register(PageRating)
 admin.site.register(Admin)
 admin.site.register(Instructor)
+admin.site.register(TeachingPosition)
 admin.site.register(Student)
 admin.site.register(Friendship)
 admin.site.register(Notification)
 admin.site.register(Community)
+admin.site.register(CommunityRequest)
 admin.site.register(CommunityMember)
 admin.site.register(Event)
 admin.site.register(EventReminder)
@@ -48,7 +64,6 @@ admin.site.register(PostMedia)
 admin.site.register(Comment)
 admin.site.register(PostReaction)
 admin.site.register(CommentReaction)
-admin.site.register(FollowPage)
 admin.site.register(Conversation)
 admin.site.register(ConversationMember)
 admin.site.register(Message)
@@ -57,3 +72,6 @@ admin.site.register(MessageReaction)
 admin.site.register(Report)
 admin.site.register(UniversityDomain)
 admin.site.register(UserDegree)
+admin.site.register(NotificationSetting)
+admin.site.register(Promotion)
+admin.site.register(NewsItem)

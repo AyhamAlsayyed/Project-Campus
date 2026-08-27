@@ -1,0 +1,419 @@
+.postsContainer {
+    background-color: #333333;
+    border-radius: 30px 30px 0 0;
+    padding: 32px;
+    color: #E6E6E6;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    min-height: 800px;
+}
+
+/* ── HEADER ── */
+.headerRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+.backBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+}
+
+/* ── FIX: icons now render as #E6E6E6 ── */
+.backArrow {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    filter: brightness(0) invert(0.9);
+}
+
+.helpIcon {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    cursor: pointer;
+    filter: brightness(0) invert(0.9);
+    transition: opacity 0.2s;
+}
+
+.helpIcon:hover { opacity: 0.7; }
+
+.headerTitle {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #CCCCCC;
+}
+
+/* ── DIVIDER ── */
+.centeredDivider {
+    width: 75%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 28px auto;
+}
+
+/* ── CONTENT LAYOUT ── */
+.contentWrapper {
+    width: 90%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.inlineInfo {
+    display: flex;
+    align-items: center;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.sectionRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+.sectionTitle {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #E6E6E6;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.sectionSubtext {
+    font-size: 0.6rem;
+    color: #808080;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* ── CHECKBOXES IN A COLUMN ── */
+.checkboxColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+    flex-shrink: 0;
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #CCCCCC;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.customCheckbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #666666;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+    margin: 0;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.customCheckbox:checked {
+    background-color: #c72cff;
+    border-color: #c72cff;
+}
+
+.customCheckbox:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* ── TOGGLE SWITCH ── */
+.toggleWrapper {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.toggleInput {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggleSlider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #4D4D4D;
+    border-radius: 24px;
+    transition: 0.3s;
+}
+
+.toggleSlider::before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #E6E6E6;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.toggleInput:checked + .toggleSlider { background-color: #c72cff; }
+.toggleInput:checked + .toggleSlider::before { transform: translateX(20px); }
+
+/* ── BUTTONS & STATS ── */
+.actionGroup {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+.countText {
+    color: #B3B3B3;
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.actionBtn {
+    background-color: #4D4D4D;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 20px;
+    color: #CCCCCC;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    white-space: nowrap;
+}
+
+.actionBtn:hover { background-color: #666666; }
+
+
+/* ── MODALS / POPUPS ── */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.65);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+/* Styled identically to postsContainer */
+.modalContent {
+    background-color: #333333;
+    border-radius: 24px;
+    padding: 32px;
+    color: #E6E6E6;
+    width: 90%;
+    max-width: 650px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #4D4D4D;
+}
+
+.closeBtn {
+    background: none;
+    border: none;
+    color: #808080;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.closeBtn:hover {
+    color: #E6E6E6;
+}
+
+.modalBody {
+    flex: 1;
+    overflow-y: auto;
+    
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-right: 8px; /* Room for scrollbar */
+}
+
+/* Custom Scrollbar for Modal Body */
+.modalBody::-webkit-scrollbar {
+    width: 6px;
+}
+.modalBody::-webkit-scrollbar-track {
+    background: #262626;
+    border-radius: 10px;
+}
+.modalBody::-webkit-scrollbar-thumb {
+    background: #4D4D4D;
+    border-radius: 10px;
+}
+.modalBody::-webkit-scrollbar-thumb:hover {
+    background: #666666;
+}
+.modalBody > * {
+    flex-shrink: 0;
+}
+/* ── LIGHT MODE ── */
+[data-theme="light"] .postsContainer {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .headerTitle {
+  color: #662D91;
+}
+
+[data-theme="light"] .backArrow,
+[data-theme="light"] .helpIcon {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .centeredDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .sectionTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .sectionSubtext {
+  color: #888888;
+}
+
+[data-theme="light"] .checkboxLabel {
+  color: #333333;
+}
+
+[data-theme="light"] .customCheckbox {
+  border-color: #662D91;
+}
+
+[data-theme="light"] .customCheckbox:checked {
+  background-color: #662D91;
+  border-color: #662D91;
+}
+
+[data-theme="light"] .toggleSlider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .toggleSlider::before {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .toggleInput:checked + .toggleSlider {
+  background-color: #662D91;
+}
+
+[data-theme="light"] .countText {
+  color: #666666;
+}
+
+[data-theme="light"] .actionBtn {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .actionBtn:hover {
+  background-color: #e9d5ff;
+}
+
+/* ── MODAL LIGHT MODE ── */
+[data-theme="light"] .modalOverlay {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .modalContent {
+  background-color: #ffffff;
+  color: #333333;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .modalHeader {
+  border-bottom-color: #e0e0e0;
+}
+
+[data-theme="light"] .closeBtn {
+  color: #aaaaaa;
+}
+
+[data-theme="light"] .closeBtn:hover {
+  color: #333333;
+}
+
+[data-theme="light"] .modalBody::-webkit-scrollbar-track {
+  background: #f3e8ff;
+}
+
+[data-theme="light"] .modalBody::-webkit-scrollbar-thumb {
+  background: #c084fc;
+}
+
+[data-theme="light"] .modalBody::-webkit-scrollbar-thumb:hover {
+  background: #662D91;
+}
+
+@media (max-width: 1023px) {
+  .postsContainer {
+    padding: 16px 12px;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .headerRow {
+    font-size: 1.4rem;
+  }
+
+  .controlsRow {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}

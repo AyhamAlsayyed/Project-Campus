@@ -1,24 +1,15 @@
 @tailwind utilities;
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
-
-
+@keyframes homeFeedSpin {
+  to { transform: rotate(360deg); }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@keyframes communityHighlightPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(158, 39, 157, 0.8); }
+  50%  { box-shadow: 0 0 0 14px rgba(158, 39, 157, 0.25); }
+  100% { box-shadow: 0 0 0 0 rgba(158, 39, 157, 0); }
 }
+
 @font-face {
   font-family: "Aktiv Grotesk";
   src: url("./Assets/Fonts/AktivGrotesk-Regular.ttf") format("truetype");
@@ -38,4 +29,74 @@ code {
   src: url("./Assets/Fonts/AktivGrotesk-Black.ttf") format("truetype");
   font-weight: 900;
   font-style: normal;
+}
+
+@font-face {
+  font-family: "Aktiv Grotesk";
+  src: url("./Assets/Fonts/AktivGrotesk-Black.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: "Aktiv Grotesk", -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+    'Helvetica Neue', sans-serif;
+}
+
+
+button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, span, a, li {
+  font-family: inherit;
+}
+body {
+  background-color: var(--bg-main);
+  transition: background-color 0.3s ease;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+:root {
+    --bg-main: #1b1b1d;
+    --bg-secondary: #2f2f31;
+    --bg-card: #333333;
+    --bg-input: #262626;
+    --text-primary: rgba(255,255,255,0.9);
+    --text-secondary: #999;
+    --text-muted: rgba(255,255,255,0.4);
+    --border-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="light"] {
+    --bg-main: #f0f0f0;
+    --bg-secondary: #e4e4e4;
+    --bg-card: #ffffff;
+    --bg-input: #f5f5f5;
+    --text-primary: #1a1a1a;
+    --text-secondary: #555;
+    --text-muted: rgba(0,0,0,0.4);
+    --border-color: rgba(0,0,0,0.1);
+}
+
+/* Swap default avatar for light mode */
+[data-theme="light"] img.defaultPfp {
+  content: url('./Assets/icons/default-pfp-lightmode.png');
+}
+
+@media (min-width: 2300px) {
+  html { zoom: 1.25; }
+}
+@media (min-width: 2560px) {
+  html { zoom: 1.4; }
+}
+@media (min-width: 3440px) {
+  html { zoom: 1.8; }
+}
+@media (min-width: 3840px) {
+  html { zoom: 2.0; }
 }

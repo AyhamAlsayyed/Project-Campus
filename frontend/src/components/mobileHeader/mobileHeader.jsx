@@ -1,22 +1,29 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, Menu, Volume2, Calendar, UserPlus, Heart, Home } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useNotificationContext } from '../../context/NotificationContext';
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
 import darkModeIcon from '../../Assets/Pictures/LogoDarkMode.png';
 import MessageSquareIcon from '../../Assets/icons/messages.png';
 import BellIcon from '../../Assets/icons/notifications.png';
 import BellActiveIcon from '../../Assets/icons/notifications-active.png';
 import NotifsBottomSheet from '../dropDownMenus/NotificationsBottomSheet';
 import ChatsBottomSheet from '../dropDownMenus/ChatsBottomSheet';
-
+import headerStyles from './mobileHeader.module.css';
+import { createPortal } from 'react-dom';
+import { Users, User, BookOpen, X } from 'lucide-react';
 export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token, API, homeMode = false }) {
     const navigate = useNavigate();
+    const location = useLocation();
+    const isOnProfilePage = location.pathname.startsWith('/profile/') || location.pathname.startsWith('/page/');
     const avatarDropdownRef = useRef(null);
+    const { registerChatListener, liveNotifications, clearLiveNotifCount } = useNotificationContext();
 
     // ── UI state ──
     const [showAvatarDropdown, setShowAvatarDropdown] = useState(false);
     const [showDrawerChats, setShowDrawerChats] = useState(false);
     const [showDrawerNotifs, setShowDrawerNotifs] = useState(false);
-    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
     // ── Notifications state ──
     const [drawerNotifications, setDrawerNotifications] = useState([]);
@@ -27,7 +34,45 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
     const [drawerChats, setDrawerChats] = useState([]);
     const [drawerChatsLoading, setDrawerChatsLoading] = useState(false);
     const [drawerSearchQuery, setDrawerSearchQuery] = useState('');
+    //search results are filtered client-side from drawerChats
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState(null);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+    const [searchBoxRect, setSearchBoxRect] = useState(null);
+    const searchInputRef = useRef(null);
+    const searchTimer = useRef(null);
+    const fetchSearch = async (query) => {
+        setSearchLoading(true);
+        try {
+            const res = await fetch(
+                `${API}/api/search/?q=${encodeURIComponent(query)}&dropdown=true`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (res.ok) setSearchResults(await res.json());
+        } catch (e) { console.error(e); }
+        finally { setSearchLoading(false); }
+    };
 
+    const handleSearchChange = (e) => {
+        const val = e.target.value;
+
+        setSearchQuery(val);
+        setSearchBoxRect(searchInputRef.current?.getBoundingClientRect());
+        if (!val.trim()) { setSearchResults(null); setShowSearchDropdown(false); return; }
+        setShowSearchDropdown(true);
+        clearTimeout(searchTimer.current);
+        searchTimer.current = setTimeout(() => fetchSearch(val.trim()), 350);
+    };
+
+    const handleResultClick = (type, item) => {
+        setShowSearchDropdown(false);
+        setSearchQuery('');
+        setSearchResults(null);
+        if (type === 'person' || type === 'page') navigate(`/profile/${item.id}`);
+        else if (type === 'community') navigate(`/communities/${item.id}`);
+        else if (type === 'all') navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+    };
     // ── Helpers ──
     const timeAgo = (dateString) => {
         if (!dateString) return '';
@@ -63,7 +108,7 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
         if (!token) return;
         setDrawerNotifsLoading(true);
         try {
-            const res = await fetch(`${API}/api/notifications`, {
+            const res = await fetch(`${API}/api/notifications/`, {
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
             if (res.ok) {
@@ -71,9 +116,11 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                 setDrawerNotifications(data.map(item => ({
                     id: item.notification_id || item.id,
                     is_read: item.is_read,
-                    avatar: (item.actor_avatar || item.avatar)?.startsWith('http')
-                        ? (item.actor_avatar || item.avatar)
-                        : `${API}${item.actor_avatar || item.avatar}` || '/default-avatar.png',
+                    avatar: (() => {
+                        const av = item.actor_avatar || item.avatar;
+                        if (!av) return DefaultPfp;
+                        return av.startsWith('http') ? av : `${API}${av}`;
+                    })(),
                     type: item.type || 'Notification',
                     text: item.message || item.content,
                     actor_id: item.actor_id,
@@ -95,21 +142,51 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
             });
             if (res.ok) {
                 const data = await res.json();
-                setDrawerChats(data.map(chat => ({
-                    id: chat.id,
-                    name: chat.name || chat.user_name || 'Unknown User',
-                    avatar: chat.avatar?.startsWith('http') ? chat.avatar : `${API}${chat.avatar}` || '/default-avatar.png',
-                    message: chat.preview || chat.last_message || 'No messages yet',
-                    status: chat.is_online ? 'online' : 'offline',
-                    dotStyle: chat.is_online ? 'online' : 'offline',
-                    isGroup: chat.is_group || false,
-                    unread: chat.unread_count || 0,
-                    time: timeAgo(chat.last_message_time),
-                })));
+                setDrawerChats(data.map(chat => {
+                    const raw = chat.preview || chat.last_message || 'No messages yet';
+                    const colonIdx = (raw || '').indexOf(': ');
+                    const pollPrefix = colonIdx !== -1 ? raw.slice(0, colonIdx + 2) : '';
+                    const jsonCandidate = colonIdx !== -1 ? raw.slice(colonIdx + 2) : raw;
+                    let isPoll = false;
+                    try { const p = JSON.parse(jsonCandidate || ''); if (p._type === 'poll') isPoll = true; } catch {}
+                    return {
+                        id: chat.id,
+                        name: chat.name || chat.user_name || 'Unknown User',
+                        userId: chat.other_member_id || chat.user_id || null,
+                        avatar: chat.avatar ? (chat.avatar.startsWith('http') ? chat.avatar : `${API}${chat.avatar}`) : DefaultPfp,
+                        message: isPoll ? `${pollPrefix}sent a poll` : raw,
+                        isPoll,
+                        pollPrefix,
+                        status: chat.is_online ? 'online' : 'offline',
+                        dotStyle: chat.is_online ? 'online' : 'offline',
+                        isGroup: chat.is_group || false,
+                        isPage: chat.is_page || false,
+                        unread: chat.unread_count || 0,
+                        time: timeAgo(chat.last_message_time),
+                        left_at: chat.left_at || null,
+                    };
+                }));
             }
         } catch (e) { console.error('Chat fetch failed', e); }
         finally { setDrawerChatsLoading(false); }
     };
+
+    // ── Real-time chat updates via WebSocket ──
+    useEffect(() => {
+        const unregister = registerChatListener((data) => {
+            const { conversation_id, preview, sender_username } = data;
+            setDrawerChats(prev => prev.map(chat => {
+                if (chat.id !== conversation_id) return chat;
+                if (chat.left_at) return chat;
+                return {
+                    ...chat,
+                    unread: (chat.unread || 0) + 1,
+                    message: preview ? `${sender_username}: ${preview}` : chat.message,
+                };
+            }));
+        });
+        return unregister;
+    }, [registerChatListener]);
 
     // ── Handlers ──
     const handleMarkAsRead = async (id) => {
@@ -140,10 +217,20 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
     };
 
     const handleNotificationClick = (n) => {
-        if (n.event_id) navigate(`/events/${n.event_id}`);
-        else if (n.post_id) navigate(`/posts/${n.post_id}`);
-        else if (n.actor_id) navigate(`/profile/${n.actor_id}`);
         setShowDrawerNotifs(false);
+        const type = (n.type || '').toLowerCase();
+        const link = n.link || {};
+        const communityId = link.community_id;
+        const eventId = link.event_id || n.event_id;
+        const postId = typeof link === 'number' ? link : (link.post?.post_id || link.post_id || n.post_id);
+        const actorId = typeof link === 'number' ? link : n.actor_id;
+
+        if (communityId) { navigate(`/communities/${communityId}`); return; }
+        if (type.includes('friend')) { if (actorId) navigate(`/profile/${actorId}`); return; }
+        if (type.includes('dm')) { navigate('/chats'); return; }
+        if (postId) { navigate('/home', { state: { openPost: { postId } } }); return; }
+        if (eventId) { navigate(`/events/${eventId}`); return; }
+        if (actorId) navigate(`/profile/${actorId}`);
     };
 
     // ── Effects ──
@@ -159,8 +246,33 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
     }, [showDrawerChats]);
 
     useEffect(() => {
-        if (showDrawerNotifs) { fetchNotifications(); }
+        if (showDrawerNotifs) { fetchNotifications(); clearLiveNotifCount(); }
     }, [showDrawerNotifs]);
+
+    // Sync real-time WebSocket notifications into drawer list
+    useEffect(() => {
+        if (!liveNotifications || liveNotifications.length === 0) return;
+        setDrawerNotifications(prev => {
+            const existingIds = new Set(prev.map(n => n.id));
+            const newNotifs = liveNotifications
+                .filter(n => !existingIds.has(n.notification_id || n.id))
+                .map(item => ({
+                    id: item.notification_id || item.id,
+                    is_read: false,
+                    avatar: (item.actor_avatar || item.avatar)?.startsWith('http')
+                        ? (item.actor_avatar || item.avatar)
+                        : `${API}${item.actor_avatar || item.avatar}`,
+                    type: item.type || 'Notification',
+                    text: item.message || item.content,
+                    actor_id: item.actor_id,
+                    post_id: item.post_id,
+                    event_id: item.event_id,
+                    time: timeAgo(item.time) || item.time,
+                }));
+            if (newNotifs.length === 0) return prev;
+            return [...newNotifs, ...prev];
+        });
+    }, [liveNotifications]);
 
     // Outside-click: only close avatar dropdown when no sub-panel is open
     useEffect(() => {
@@ -183,165 +295,202 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
 
     return (
         <>
-            <div style={{
-                position: "sticky", top: 0, zIndex: 500,
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "10px 14px",
-                background: "#1a1a1a",
-                borderBottom: "1px solid rgba(255,255,255,0.07)",
-                boxSizing: "border-box", width: "100%"
-            }}>
+            <div className={headerStyles.headerBar}>
                 {/* Hamburger */}
-                <button
-                    onClick={() => setMobileMenuOpen(true)}
-                    style={{
-                        flexShrink: 0, width: 38, height: 38,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        background: "transparent", border: "none", cursor: "pointer",
-                        borderRadius: "50%"
-                    }}
-                >
-                    <Menu size={22} color="white" />
+                <button className={headerStyles.hamburgerBtn} onClick={() => setMobileMenuOpen(true)}>
+                    <Menu size={22} className={headerStyles.hamburgerIcon} />
                 </button>
 
                 {/* Logo */}
-                <img src={darkModeIcon} alt="Logo" style={{ height: 32, flexShrink: 0 }} />
+                <img src={darkModeIcon} alt="Logo" className={headerStyles.logo} onClick={() => navigate('/home')} style={{ cursor: 'pointer' }} />
 
                 {/* Search bar */}
-                <div style={{
-                    flex: 1, display: "flex", alignItems: "center", gap: 8,
-                    background: "#535353", borderRadius: 999, padding: "7px 14px",
-                    minWidth: 0
-                }}>
-                    <Search size={15} color="rgba(255,255,255,0.6)" style={{ flexShrink: 0 }} />
+                <div className={headerStyles.searchBar}>
+                    <Search size={15}  style={{ flexShrink: 0 }} />
                     <input
-                        style={{
-                            flex: 1, background: "transparent", border: "none",
-                            outline: "none", color: "#fff", fontSize: "0.85rem", minWidth: 0
-                        }}
+                        ref={searchInputRef}
+                        className={headerStyles.searchInput}
                         placeholder="Search..."
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        onFocus={() => {
+                            if (searchQuery.trim()) {
+                                setShowSearchDropdown(true);
+                                setSearchBoxRect(searchInputRef.current?.getBoundingClientRect());
+                            }
+                        }}
                     />
+                    {searchQuery && (
+                        <button className={headerStyles.clearBtn}
+                            onClick={() => { setSearchQuery(''); setSearchResults(null); setShowSearchDropdown(false); }}>
+                            <X size={14} />
+                        </button>
+                    )}
                 </div>
 
-                {/* Avatar — opens 3-option dropdown */}
-                <div ref={avatarDropdownRef} style={{ position: "relative", flexShrink: 0 }}>
+                {/* Avatar */}
+                <div className={headerStyles.avatarWrap} ref={avatarDropdownRef}>
                     <button
                         onClick={() => setShowAvatarDropdown(p => !p)}
-                        style={{
-                            width: 36, height: 36, borderRadius: "50%",
-                            border: homeMode ? "1px solid rgba(255,255,255,0.12)" : "2px solid rgba(255,255,255,0.2)",
-                            padding: 0, background: homeMode ? "rgba(255,255,255,0.07)" : "transparent",
-                            cursor: "pointer",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            overflow: "hidden"
-                        }}
+                        className={`${headerStyles.avatarBtn} ${homeMode ? headerStyles.avatarBtnHome : headerStyles.avatarBtnDefault}`}
                     >
                         {homeMode
-                            ? <Home size={20} color="white" />
-                            : <img src={avatarSrc} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            ? <Home size={20} />
+                            : <img src={avatarSrc} alt="Profile" className={headerStyles.avatarImg} />
                         }
                     </button>
 
                     {showAvatarDropdown && (
-                        <div style={{
-                            position: "absolute", top: "calc(100% + 8px)", right: 0,
-                            background: "#2a2a2a", border: "1px solid rgba(255,255,255,0.1)",
-                            borderRadius: 16, padding: 8, zIndex: 600,
-                            boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
-                            display: "flex", flexDirection: "column", gap: 4, minWidth: 160
-                        }}>
-                            {/* Profile / Home — depends on page */}
+                        <div className={headerStyles.avatarDropdown}>
                             {homeMode ? (
-                                <button
-                                    onClick={() => { navigate('/home'); setShowAvatarDropdown(false); }}
-                                    style={{
-                                        display: "flex", alignItems: "center", gap: 10,
-                                        background: "transparent", border: "none", color: "#fff",
-                                        padding: "10px 12px", borderRadius: 10, cursor: "pointer",
-                                        fontSize: "0.9rem", fontWeight: 500, textAlign: "left"
-                                    }}
-                                >
-                                    <Home size={20} color="white" />
+                                <button className={headerStyles.dropdownItem}
+                                    onClick={() => { navigate('/home'); setShowAvatarDropdown(false); }}>
+                                    <Home size={20} />
+                                    Home
+                                </button>
+                            ) : isOnProfilePage ? (
+                                <button className={headerStyles.dropdownItem}
+                                    onClick={() => { navigate('/home'); setShowAvatarDropdown(false); }}>
+                                    <Home size={20} />
                                     Home
                                 </button>
                             ) : (
-                                <button
-                                    onClick={() => { navigate(`/profile/${user?.id}`); setShowAvatarDropdown(false); }}
-                                    style={{
-                                        display: "flex", alignItems: "center", gap: 10,
-                                        background: "transparent", border: "none", color: "#fff",
-                                        padding: "10px 12px", borderRadius: 10, cursor: "pointer",
-                                        fontSize: "0.9rem", fontWeight: 500, textAlign: "left"
-                                    }}
-                                >
-                                    <img src={avatarSrc} alt=""
-                                        style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" }} />
+                                <button className={headerStyles.dropdownItem}
+                                    onClick={() => {
+                                        const loggedInType = localStorage.getItem('user_type');
+                                        const isPageUser = loggedInType === 'page' || loggedInType === 'university';
+                                        const id = isPageUser ? user?.page_id : user?.id;
+                                        if (!id) return;
+                                        navigate(isPageUser ? `/page/${id}` : `/profile/${id}`);
+                                        setShowAvatarDropdown(false);
+                                    }}>
+                                    <img src={avatarSrc} alt="" className={headerStyles.dropdownAvatarImg} />
                                     Profile
                                 </button>
                             )}
 
-                            <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "2px 0" }} />
+                            <div className={headerStyles.dropdownDivider} />
 
-                            {/* Messages */}
-                            <button
+                            <button className={headerStyles.dropdownItem}
                                 onClick={(e) => {
                                     const rect = e.currentTarget.getBoundingClientRect();
-                                    setDropdownPosition({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+                                    const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1; setDropdownPosition({ top: rect.bottom / z + 8, left: rect.right / z });
                                     setShowDrawerChats(prev => !prev);
                                     setShowDrawerNotifs(false);
-                                }}
-                                style={{
-                                    display: "flex", alignItems: "center", gap: 10,
-                                    background: "transparent", border: "none", color: "#fff",
-                                    padding: "10px 12px", borderRadius: 10, cursor: "pointer",
-                                    fontSize: "0.9rem", fontWeight: 500, textAlign: "left",
-                                    position: "relative"
-                                }}
-                            >
-                                <img src={MessageSquareIcon} width={22} height={22} alt="" style={{ filter: "invert(1)" }} />
+                                }}>
+                                <img src={MessageSquareIcon} width={22} height={22} alt="" className={headerStyles.dropdownIcon} />
                                 Messages
                                 {drawerUnreadChats > 0 && (
-                                    <span style={{
-                                        marginLeft: "auto", background: "#ff4d4d", color: "#fff",
-                                        fontSize: 10, fontWeight: 700, width: 18, height: 18,
-                                        borderRadius: "50%", display: "grid", placeItems: "center"
-                                    }}>{drawerUnreadChats}</span>
+                                    <span className={`${headerStyles.unreadBadge} ${headerStyles.unreadBadgeMessages}`}>
+                                        {drawerUnreadChats}
+                                    </span>
                                 )}
                             </button>
 
-                            <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "2px 0" }} />
+                            <div className={headerStyles.dropdownDivider} />
 
-                            {/* Notifications */}
-                            <button
+                            <button className={headerStyles.dropdownItem}
                                 onClick={(e) => {
                                     const rect = e.currentTarget.getBoundingClientRect();
-                                    setDropdownPosition({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+                                    const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1; setDropdownPosition({ top: rect.bottom / z + 8, left: rect.right / z });
                                     setShowDrawerNotifs(prev => !prev);
                                     setShowDrawerChats(false);
-                                }}
-                                style={{
-                                    display: "flex", alignItems: "center", gap: 10,
-                                    background: "transparent", border: "none", color: "#fff",
-                                    padding: "10px 12px", borderRadius: 10, cursor: "pointer",
-                                    fontSize: "0.9rem", fontWeight: 500, textAlign: "left"
-                                }}
-                            >
-                                <img
-                                    src={drawerUnreadCount > 0 ? BellActiveIcon : BellIcon}
-                                    width={22} height={22} alt="" style={{ filter: "invert(1)" }}
-                                />
+                                }}>
+                                <img src={drawerUnreadCount > 0 ? BellActiveIcon : BellIcon}
+                                    width={22} height={22} alt="" className={headerStyles.dropdownIcon} />
                                 Notifications
                                 {drawerUnreadCount > 0 && (
-                                    <span style={{
-                                        marginLeft: "auto", background: "#ff4d94", color: "#fff",
-                                        fontSize: 10, fontWeight: 700, width: 18, height: 18,
-                                        borderRadius: "50%", display: "grid", placeItems: "center"
-                                    }}>{drawerUnreadCount}</span>
+                                    <span className={`${headerStyles.unreadBadge} ${headerStyles.unreadBadgeNotifs}`}>
+                                        {drawerUnreadCount}
+                                    </span>
                                 )}
                             </button>
                         </div>
                     )}
                 </div>
+
+                {/* Search portal */}
+                {showSearchDropdown && searchQuery.trim() && searchBoxRect && createPortal(
+                    <div className={headerStyles.searchPortal} style={{
+                        top: searchBoxRect.bottom + 6,
+                        left: searchBoxRect.left + 8,
+                        width: `calc(${searchBoxRect.width}px - 16px)`,
+                        maxWidth: '500px',
+                    }}>
+                        <div className={headerStyles.seeAllRow} onMouseDown={() => handleResultClick('all')}>
+                            <div className={headerStyles.seeAllIconWrap}><Search size={14} color="white" /></div>
+                            <span className={headerStyles.seeAllText}>
+                                See all results for "<span className={headerStyles.seeAllHighlight}>{searchQuery}</span>"
+                            </span>
+                        </div>
+
+                        {searchLoading ? (
+                            <div className={headerStyles.searchStatus}>Searching…</div>
+                        ) : searchResults ? (
+                            <>
+                                {searchResults.people?.length > 0 && (
+                                    <div>
+                                        <div className={headerStyles.sectionLabel}>People</div>
+                                        {searchResults.people.slice(0, 3).map(person => {
+                                            const av = person.profile?.profile_image || person.avatar_url || person.avatar;
+                                            const src = !av ? DefaultPfp : av.startsWith('http') ? av : `${API}${av}`;
+                                            return (
+                                                <div key={person.id} className={headerStyles.resultRow}
+                                                    onMouseDown={() => handleResultClick('person', person)}>
+                                                    <img src={src} alt="" className={`${headerStyles.resultAvatar}${!av ? ' defaultPfp' : ''}`} onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp'); }} />
+                                                    <div className={headerStyles.resultInfo}>
+                                                        <div className={headerStyles.resultName}>{person.profile?.full_name || person.full_name || person.username}</div>
+                                                        <div className={headerStyles.resultSub}>@{person.username}</div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                                {searchResults.communities?.length > 0 && (
+                                    <div>
+                                        <div className={headerStyles.sectionLabel}>Communities</div>
+                                        {searchResults.communities.slice(0, 3).map(community => (
+                                            <div key={community.id} className={headerStyles.resultRow}
+                                                onMouseDown={() => handleResultClick('community', community)}>
+                                                {community.avatar
+                                                    ? <img src={community.avatar.startsWith('http') ? community.avatar : `${API}${community.avatar}`} alt="" className={headerStyles.resultAvatarSquare} />
+                                                    : <div className={headerStyles.resultAvatarPlaceholderPurple}><Users size={16} color="#c084fc" /></div>
+                                                }
+                                                <div className={headerStyles.resultInfo}>
+                                                    <div className={headerStyles.resultName}>{community.name}</div>
+                                                    <div className={headerStyles.resultSub}>{community.is_joined ? '✓ Joined' : community.is_private ? '🔒 Private' : 'Not joined'}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {searchResults.pages?.length > 0 && (
+                                    <div>
+                                        <div className={headerStyles.sectionLabel}>Pages</div>
+                                        {searchResults.pages.slice(0, 3).map(page => (
+                                            <div key={page.id} className={headerStyles.resultRow}
+                                                onMouseDown={() => handleResultClick('page', page)}>
+                                                {page.profile_image
+                                                    ? <img src={page.profile_image.startsWith('http') ? page.profile_image : `${API}${page.profile_image}`} alt="" className={headerStyles.resultAvatarSquare} />
+                                                    : <div className={headerStyles.resultAvatarPlaceholderGray}><BookOpen size={16} color="rgba(255,255,255,0.5)" /></div>
+                                                }
+                                                <div className={headerStyles.resultInfo}>
+                                                    <div className={headerStyles.resultName}>{page.page_full_name || page.page_name || page.name}</div>
+                                                    <div className={headerStyles.resultSub}>{page.page_type || 'Page'}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {!searchResults.people?.length && !searchResults.communities?.length && !searchResults.pages?.length && (
+                                    <div className={headerStyles.searchStatus}>No results found</div>
+                                )}
+                            </>
+                        ) : null}
+                    </div>,
+                    document.body
+                )}
             </div>
 
             {/* Dropdowns — rendered outside sticky bar so they're never clipped */}
@@ -354,6 +503,7 @@ export default function MobileHeader({ avatarSrc, user, setMobileMenuOpen, token
                     drawerChatsLoading={drawerChatsLoading}
                     filteredDrawerChats={filteredDrawerChats}
                     navigate={navigate}
+                    onChatClick={(id) => setDrawerChats(prev => prev.map(c => c.id === id ? { ...c, unread: 0 } : c))}
                 />
             )}
             {showDrawerNotifs && (

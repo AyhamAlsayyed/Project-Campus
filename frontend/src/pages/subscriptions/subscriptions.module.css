@@ -1,0 +1,428 @@
+﻿
+.darkContainer {
+    min-height: 100%;
+    box-sizing: border-box;
+    font-family: "Aktiv Grotesk", sans-serif;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: visible;
+}
+
+.page {
+    width: min(1800px, 90%);
+    margin: 0 auto;
+    --left-col: 300px;
+    --right-col: 380px;
+    --col-gap: 65px;
+}
+
+.header {
+    display: flex;
+    margin-top: 2%;
+    height: 110px;
+    width: 100%;
+}
+
+.content {
+    display: flex;
+    width: min(1800px, 100%);
+    margin: 20px auto 0 auto;
+    gap: var(--col-gap);
+    align-items: flex-start;
+}
+
+.rightSection {
+    position: sticky;
+    top: 100px;
+    align-self: flex-start;
+    flex: 0 0 425px;
+    width: 25%;
+    margin: 20px 0 0 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==========================================================================
+   ADDED RULES BELOW (ALL DIMENSIONS, PADDINGS, AND FONTS SCALED BY 1.2x)
+   ========================================================================== */
+
+.subscriptionsContainer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-self: stretch;
+    padding: 0 36px;
+    margin-top: 40px;
+}
+
+/* Active Progress Info Header */
+.statusSection {
+    width: 100%;
+    max-width: 650px;
+    padding-left: 12px;
+}
+
+.statusHeaderRow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 36px;
+}
+
+/* Color filter matching #C43BB8 perfectly for PNG assets */
+.starsIcon {
+    width: 38.4px;
+    height: 38.4px;
+    filter: invert(37%) sepia(42%) saturate(4174%) hue-rotate(282deg) brightness(85%) contrast(89%);
+}
+
+.premiumTitle {
+    color: #FFFFFF;
+    font-size: 33.6px;
+    font-weight: 700;
+}
+
+.subscriptionText {
+    color: #999999;
+    font-size: 16.8px;
+    font-weight: 400;
+}
+
+/* Days Remaining Text Styles */
+.daysLeftRow {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    margin-bottom: 14.4px;
+}
+
+.daysLeftText {
+    color: #B3B3B3;
+    font-size: 28.8px;
+    font-weight: 700;
+}
+
+.endingDateText {
+    color: #999999;
+    font-size: 14.4px;
+}
+
+.progressBarBackground {
+    width: 100%;
+    max-width: 456px;
+    height: 25px;
+    background-color: #4D4D4D;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.progressBarFill {
+    width: 65%;
+    height: 100%;
+    background: linear-gradient(90deg, #622598 0%, #952892 100%);
+    border-radius: 12px;
+}
+
+
+.basicCard {
+    background-color: #333333;
+    border-radius: 28.8px;
+    padding: 36px 48px;
+    position: relative;
+    width: 100%;
+    max-width: 650px;
+    box-sizing: border-box;
+    margin-top: 60px;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+}
+
+/* Grey mask layer indicating an active subscription higher rank status */
+.activeSubscriptionOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(60, 60, 60, 0.45);
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+.basicTitle {
+    color: #FFFFFF;
+    font-size: 28.8px;
+    font-weight: 700;
+}
+
+/* Shared Reusable Feature List Rules */
+.featuresList {
+    list-style-type: disc;
+    padding-left: 24px;
+    margin: 0;
+    color: #FFFFFF;
+    font-size: 15.6px;
+    line-height: 2.4;
+    position: relative;
+    z-index: 2;
+}
+
+.featuresList li::marker {
+    color: #FFFFFF;
+    font-size: 16.8px;
+}
+
+.priceContainerBasic {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+/* Reusable Gradient Purple Action Button */
+.priceBtn {
+    background: linear-gradient(90deg, #622598 0%, #952892 100%);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 24px;
+    padding: 7.2px 16.8px;
+    font-size: 14.4px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.perMonthText {
+    color: #999999;
+    font-size: 15.6px;
+}
+
+
+.premiumCard {
+    background-color: #333333;
+    border-radius: 28.8px;
+    padding: 36px;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+}
+
+.starsIconSmall {
+    width: 26.4px;
+    height: 26.4px;
+    filter: invert(37%) sepia(42%) saturate(4174%) hue-rotate(282deg) brightness(85%) contrast(89%);
+}
+
+.premiumTitleCard {
+    color: #FFFFFF;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.divider {
+    width: 50%;
+    height: 1.2px;
+    background-color: #4D4D4D;
+    margin: 24px auto;
+}
+
+/* Pink Sublist Modification Styling overrides */
+.pinkList {
+    color: #C43BB8;
+}
+
+.pinkList li::marker {
+    color: #C43BB8;
+}
+
+/* Premium Footer Alignment configuration */
+.premiumFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    align-items: flex-end;
+    margin-top: 42px;
+}
+
+.cancelBtn {
+    background-color: #616161;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 24px;
+    padding: 9.6px 19.2px;
+    font-size: 13.2px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.cancelBtn:hover {
+    background-color: #757575;
+}
+
+.premiumPriceBox {
+    display: flex;
+    align-items: flex-end;
+    gap: 9.6px;
+}
+
+.priceColumn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4.8px;
+}
+
+.oldPrice {
+    color: #999999;
+    font-size: 13.2px;
+    text-decoration: line-through;
+}
+.priceBtnDisabled {
+    background: rgba(100, 100, 100, 0.55) !important;
+    color: rgba(255, 255, 255, 0.75) !important;
+    cursor: not-allowed;
+}
+.basicFooter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    width: 100%;
+    margin-top: auto;
+}
+/* ════════════════════════════════════════
+   LIGHT MODE — SUBSCRIPTIONS
+   ════════════════════════════════════════ */
+[data-theme="light"] .darkContainer {
+    background: linear-gradient(135deg, #f5f5f5, #ffffff);
+}
+
+[data-theme="light"] .basicCard {
+    background-color: #ffffff;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .premiumCard {
+    background-color: #ffffff;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .basicTitle {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .premiumTitleCard {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .premiumTitle {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .subscriptionText {
+    color: #666666;
+}
+
+[data-theme="light"] .featuresList {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .featuresList li::marker {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .pinkList {
+    color: #C43BB8;
+}
+
+[data-theme="light"] .pinkList li::marker {
+    color: #C43BB8;
+}
+
+[data-theme="light"] .daysLeftText {
+    color: #333333;
+}
+
+[data-theme="light"] .endingDateText {
+    color: #666666;
+}
+
+[data-theme="light"] .progressBarBackground {
+    background-color: #e0e0e0;
+}
+
+[data-theme="light"] .divider {
+    background-color: #e0e0e0;
+}
+
+[data-theme="light"] .perMonthText {
+    color: #666666;
+}
+
+[data-theme="light"] .cancelBtn {
+    background-color: #e0e0e0;
+    color: #333333;
+}
+
+[data-theme="light"] .cancelBtn:hover {
+    background-color: #d0d0d0;
+}
+
+[data-theme="light"] .oldPrice {
+    color: #888888;
+}
+
+[data-theme="light"] .activeSubscriptionOverlay {
+    background: rgba(200, 200, 200, 0.45);
+}
+[data-theme="light"] .progressBarFill {
+    background: linear-gradient(90deg, #8625A0 0%, #C43BB8 100%);
+}
+
+
+@media (min-width: 2560px) {
+  .darkContainer {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+}
+
+@media (min-width: 3440px) {
+  .darkContainer {
+    padding-left: 72px;
+    padding-right: 72px;
+  }
+}
+@media (min-width: 3840px) {
+  .darkContainer {
+    padding-left: 96px;
+    padding-right: 96px;
+  }
+}
+
+/* ── Mobile ── */
+@media (max-width: 1023px) {
+  .page { width: 100%; padding: 0 12px; box-sizing: border-box; }
+  .content { gap: 0; flex-direction: column; margin-top: 8px; }
+  .subscriptionsContainer { padding: 0 4px; margin-top: 12px; }
+  .basicCard { padding: 24px 20px; max-width: 100%; margin-top: 24px; }
+  .premiumCard { padding: 24px 20px; max-width: 100%; }
+  .basicTitle { font-size: 1.4rem; }
+  .premiumTitleCard { font-size: 1.2rem; }
+  .premiumTitle { font-size: 1.5rem; }
+  .daysLeftText { font-size: 1.4rem; }
+  .featuresList { font-size: 0.88rem; }
+  .rightSection { display: none; }
+  .premiumFooter { flex-direction: column; align-items: stretch; gap: 10px; }
+  .basicFooter { flex-direction: column; align-items: stretch; gap: 10px; }
+  .priceBtn { text-align: center; width: 100%; }
+  .cancelBtn { text-align: center; width: 100%; }
+  .progressBarBackground { max-width: 100%; }
+}

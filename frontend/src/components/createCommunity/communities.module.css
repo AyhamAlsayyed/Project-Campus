@@ -1,0 +1,547 @@
+/* --- Shared / Create Community --- */
+.createCommunityCard {
+    background-color: #333333;
+    border-radius: 35px 35px 0 0;
+    padding: 30px;
+    width: 93.5%;
+}
+
+.ccHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ccHeaderLeft,
+.ccHeaderRight {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.ccIcon {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) saturate(100%) invert(98%) sepia(0%) saturate(478%) hue-rotate(189deg) brightness(96%) contrast(85%);
+    /* #E6E6E6 */
+}
+
+.ccTitle {
+    color: #CCCCCC;
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.createBtn {
+    background-color: #3D3D3D;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.createBtnActive {
+    background: linear-gradient(to right, #6823A3, #A0279D);
+    cursor: pointer;
+}
+
+.ccDivider,
+.permDivider {
+    width: 75%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 20px auto;
+}
+
+.sectionLabel {
+    font-size: 1.5rem;
+    color: #CCCCCC;
+    margin: 0;
+}
+
+.star {
+    color: #D4145A;
+}
+
+.smallText {
+    color: #ADADAD;
+    font-size: 0.65rem;
+    max-width: 400px;
+}
+
+.smallTextAlt {
+    color: #ADADAD;
+    font-size: 0.65rem;
+    margin: 5px 0 10px 0;
+}
+
+.ccTitleRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.bannerPreviewWrapper {
+    margin-top: 15px;
+    border-radius: 30px;
+    overflow: hidden;
+    position: relative;
+}
+
+.cameraIconContainer {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    z-index: 5;
+}
+
+.cameraIconContainer:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.cameraIcon {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) invert(1);
+}
+
+.ccBannerImg {
+    width: 100%;
+    border-radius: 30px;
+    height: 150px;
+    object-fit: cover;
+}
+
+.ccInput {
+    width: 50%;
+    background-color: #262626;
+    border: none;
+    border-radius: 25px;
+    padding: 12px 15px;
+    color: white;
+    outline: none;
+}
+
+.textareaWrapper {
+    position: relative;
+    width: 70%;
+}
+
+.ccTextarea {
+    width: 100%;
+    height: 100px;
+    background-color: #262626;
+    border: none;
+    border-radius: 16px;
+    padding: 15px;
+    color: white;
+    resize: none;
+    outline: none;
+}
+
+.charCounter {
+    position: absolute;
+    bottom: 10px;
+    right: 15px;
+    font-size: 0.7rem;
+    color: #ADADAD;
+}
+
+/* Privacy Dropdown fix */
+.ccPrivacyRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dropdownWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.ccSelect {
+    background-color: #292929;
+    color: white;
+    border: none;
+    padding: 10px 40px 10px 15px;
+    border-radius: 12px;
+    appearance: none;
+}
+
+.outsideArrow {
+    width: 16px;
+    transform: rotate(-90deg);
+    margin-left: 10px;
+    filter: invert(0.8);
+}
+
+/* --- Permissions Section --- */
+.permissionInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+}
+
+.permissionsCard {
+    background-color: #333333;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    border-radius: 24px;
+    z-index: 2;
+    padding: 40px 35px;
+    position: relative;
+}
+
+.permTitle {
+    color: #CCCCCC;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.permDescSmaller {
+    color: #ADADAD;
+    font-size: 0.65rem;
+    margin: 5px 0 0 0;
+}
+
+.permissionRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.inlineTitleRow {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 5px;
+}
+
+.smallTextInline {
+    color: #ADADAD;
+    font-size: 0.65rem;
+    margin: 0;
+}
+
+/* Custom Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 100px;
+    height: 25px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 80px;
+    height: 25px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: transparent;
+    /* Transparent when OFF */
+    border: 2px solid #4A4A4A;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 25px;
+    width: 25px;
+    left: -2px;
+    bottom: -2px;
+    background-color: white;
+    /* Stays white when OFF */
+    transition: .4s cubic-bezier(0.4, 0.0, 0.2, 1);
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: #A4279C;
+   
+    border-color: #A4279C;
+
+}
+
+input:checked+.slider:before {
+    background-color: white;
+
+    transform: translateX(25px);
+  
+}
+
+/* Radio / Check Options */
+.checkOptionsGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.checkItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.customCheckbox {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #B82CA4;
+    border-radius: 4px;
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+    background-color: transparent;
+}
+
+.customCheckbox:checked::before {
+    content: "✓";
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.customCheckbox:checked {
+    background-color: #B82CA4;
+}
+
+.checkLabel {
+    color: white;
+    font-size: 0.9rem;
+}
+
+.pill {
+    position: absolute;
+    top: -45px;
+    left: 10px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 18px 18px 0 0;
+    font-weight: 800;
+    height: 25px;
+    width: 35%;
+    letter-spacing: 0.6px;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.92);
+    background-color: rgba(61, 60, 60, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+}
+
+.pillContainer {
+    position: relative;
+    margin-bottom: -25px;
+    z-index: 1;
+}
+
+.privacySelectorWrapper {
+    position: relative;
+}
+
+.privacySelector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.privacyBtn {
+    background-color: #292929;
+    border-radius: 10px;
+    padding: 13px 50px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #E6E6E6;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.privacySelector:hover .privacyBtn {
+    background-color: #383838;
+}
+
+.privacyDropdown {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-top: 8px;
+    background-color: #292929;
+    border-radius: 12px;
+    padding: 8px 0;
+    width: 100%;
+    min-width: 150px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    z-index: 10;
+    overflow: hidden;
+}
+
+.dropdownItem {
+    padding: 12px 20px;
+    color: #E6E6E6;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s ease;
+}
+
+.dropdownItem:hover {
+    background-color: #404040;
+}
+/* === CREATE COMMUNITY LIGHT MODE === */
+
+[data-theme="light"] .createCommunityCard {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .ccTitle {
+  color: #662D91;
+}
+
+[data-theme="light"] .ccIcon {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .ccDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .sectionLabel {
+  color: #333333;
+}
+
+[data-theme="light"] .smallTextAlt,
+[data-theme="light"] .smallTextInline,
+[data-theme="light"] .smallText {
+  color: #666666;
+}
+
+[data-theme="light"] .ccInput {
+  background-color: #f3e8ff;
+  color: #333333;
+}
+
+[data-theme="light"] .ccTextarea {
+  background-color: #f3e8ff;
+  color: #333333;
+}
+
+[data-theme="light"] .charCounter {
+  color: #888888;
+}
+
+[data-theme="light"] .privacyBtn {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .privacySelector:hover .privacyBtn {
+  background-color: #e9d5ff;
+}
+
+[data-theme="light"] .privacyDropdown {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .dropdownItem {
+  color: #333333;
+}
+
+[data-theme="light"] .dropdownItem:hover {
+  background-color: #f3e8ff;
+}
+
+/* === PERMISSIONS LIGHT MODE === */
+
+[data-theme="light"] .permissionsCard {
+  background-color: #ffffff;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .permTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .permDescSmaller {
+  color: #666666;
+}
+
+[data-theme="light"] .permDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .checkLabel {
+  color: #333333;
+}
+
+[data-theme="light"] .pill {
+  background-color: #662D91;
+  color: #ffffff;
+  border-color: transparent;
+}
+
+[data-theme="light"] .slider {
+  border-color: #c084fc;
+}
+[data-theme="light"] .slider:before {
+  background-color: #C8C8C8;
+}
+
+[data-theme="light"] input:checked + .slider:before {
+  background-color: #ffffff;
+}
+[data-theme="light"] .createBtn {
+  background-color: #ffffff;
+  color: #662D91;
+}
+[data-theme="light"] .createBtnActive{
+    color: white;
+}
+.privacyArrow {
+  filter: brightness(0) saturate(100%) invert(1);
+}
+
+[data-theme="light"] .privacyArrow {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}

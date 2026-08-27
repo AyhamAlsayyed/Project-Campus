@@ -1,0 +1,318 @@
+/* Main create post card */
+.createPostSection {
+  background-color: #333333;
+  width: 90%;
+  border-radius: 30px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--text-accent);
+  cursor: pointer;
+  transition: background 0.2s;
+ box-shadow: 0 18px 40px rgba(0, 0, 0, 0.15);
+}
+
+.createPostSection:hover {
+  background-color: #303030;
+}
+
+.greetingRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.greetingText {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.greeting {
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.92);
+}
+
+.question {
+  font-size: 16px;
+  margin: 0;
+}
+
+.weatherBadge {
+  display: flex;
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center; 
+  font-family: "Aktiv Grotesk", sans-serif; 
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9); 
+  border-radius: 12px; 
+  padding: 10px; 
+  gap: 4px;
+  min-width: 55px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-sizing: border-box; 
+}
+
+/* Profile image */
+.userProfilePicture {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Secondary Greeting text definition from your code */
+.greeting {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+/* Secondary Question text definition from your code */
+.question {
+  margin: 0;
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+.actionsRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+
+.actionButton {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+  position: relative;
+}
+
+.actionButton + .actionButton::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: rgba(255,255,255,0.12);
+}
+
+.communitySelector {
+  position: relative;
+  margin-left: auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.communitySelectBtn {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  padding: 2px 8px;
+  color: rgba(255,255,255,0.4);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+
+.communitySelectBtn:hover {
+  color: rgba(255,255,255,0.7);
+}
+
+.communitySelectLabel {
+  position: relative;
+  z-index: 0;
+  margin-right: -15px;
+  background: #262626;
+  border-radius: 20px;
+  padding: 1px 30px 1px 15px; 
+  color: rgba(255,255,255,0.45);
+  font-size: 12px;
+  transition: background 0.2s;
+  display: block;
+  text-align: left; 
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%; 
+  box-sizing: border-box;
+}
+
+.communityChevron {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+  background: linear-gradient(-90deg, rgba(166,39,156,0.9), rgba(49,32,169,0.9));
+  border-radius: 50%;
+  font-size: 20px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.communityDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  background: #2a2a2a;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 6px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+.communityDropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.75);
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.communityDropdownItem:hover {
+  background: rgba(255,255,255,0.07);
+  color: white;
+}
+
+.communityDropdownItemActive {
+  background: rgba(168,85,247,0.15);
+  color: #c084fc;
+}
+
+.communityDropdownAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.actionButton:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+/* Post text input */
+.postInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border-radius: 20px;
+  border: none;
+  outline: none;
+  background-color:#262626 ;
+  color: var(--text-accent);
+  font-size: 14px;
+  cursor: pointer;
+  pointer-events: none;
+}
+
+.postInput::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+.actionIcon {
+  width: 16px;
+  height: 16px;
+  filter: brightness(0) invert(0.55);
+}
+
+.actionIconSvg {
+  color: rgba(255,255,255,0.55);
+}
+
+/* ── Light mode overrides ── */
+[data-theme="light"] .createPostSection {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .createPostSection:hover {
+  background-color: #f7f7f7;
+}
+
+[data-theme="light"] .greeting {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .question {
+  color: rgba(0,0,0,0.6);
+}
+
+[data-theme="light"] .actionButton {
+  color: rgba(0,0,0,0.6);
+}
+
+[data-theme="light"] .actionButton + .actionButton::before {
+  background: rgba(0,0,0,0.12);
+}
+
+[data-theme="light"] .actionIcon {
+  filter: brightness(0) saturate(100%) invert(18%) sepia(60%) saturate(1200%) hue-rotate(265deg) brightness(85%) contrast(95%);
+}
+
+[data-theme="light"] .actionIconSvg {
+  color: #662D91;
+}
+
+[data-theme="light"] .communitySelectLabel {
+  background: #F2F2F2;
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .postInput {
+  background-color: #F2F2F2;
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .postInput::placeholder {
+  color: rgba(0,0,0,0.35);
+}
+
+[data-theme="light"] .weatherBadge {
+  color: rgba(0,0,0,0.7);
+}
+
+[data-theme="light"] .communityDropdown {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .communityDropdownItem {
+  color: rgba(0,0,0,0.75);
+}
+
+[data-theme="light"] .communityDropdownItem:hover {
+  background: rgba(0,0,0,0.05);
+  color: #1a1a1a;
+}

@@ -1,9 +1,10 @@
-from django.db.models import OuterRef, Prefetch, Subquery
+from django.db.models import OuterRef, Q, Subquery
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from ...models import Conversation, ConversationMember, Message
+from ...models import ConversationMember, Message
+from ...serializers import ConversationSerializer
 
 
 @api_view(["GET"])
@@ -11,62 +12,25 @@ from ...models import Conversation, ConversationMember, Message
 def recently_contacted(request):
     user = request.user
 
-    last_message_qs = Message.objects.filter(conversation=OuterRef("pk")).order_by("-sent_at")
-
-    conversations = (
-        Conversation.objects.filter(members__user=user)
-        .annotate(
-            last_message_content=Subquery(last_message_qs.values("content")[:1]),
-            last_message_time=Subquery(last_message_qs.values("sent_at")[:1]),
-            last_sender_id=Subquery(last_message_qs.values("sender_user_id")[:1]),
-        )
-        .prefetch_related(
-            Prefetch(
-                "members",
-                queryset=ConversationMember.objects.select_related("user__profile"),
-            )
-        )
-        .order_by("-last_message_time")
+    last_message_qs_time = (
+        Message.objects.filter(conversation=OuterRef("conversation_id")).order_by("-sent_at").values("sent_at")[:1]
     )
 
-    result = []
+    inbox_visibility_filter = Q(conversation__status="accepted") | Q(
+        conversation__status="pending", conversation__created_by=user
+    )
 
-    for conv in conversations:
-        members = [m.user for m in conv.members.all() if m.user]
-
-        # GROUP
-        if conv.is_group:
-            name = conv.name if conv.name else f"Group ({len(members)})"
-            avatar = request.build_absolute_uri(conv.image.url)
-            status = None
-
-        # DM
-        else:
-            other = next((u for u in members if u != user), None)
-            if not other:
-                continue
-
-            profile = getattr(other, "profile", None)
-
-            name = other.username
-
-            avatar = None
-            status = profile.status
-
-            if profile:
-                if profile.profile_image:
-                    avatar = request.build_absolute_uri(profile.profile_image.url)
-
-        result.append(
-            {
-                "id": conv.conversation_id,
-                "name": name,
-                "avatar": avatar,
-                "status": status,
-                "message": conv.last_message_content or "",
-                "time": conv.last_message_time,
-                "is_group": conv.is_group
-            }
+    memberships = (
+        ConversationMember.objects.filter(
+            inbox_visibility_filter,
+            user=user,
         )
+        .select_related("conversation", "conversation__last_message", "conversation__created_by")
+        .prefetch_related("conversation__members__user__profile")
+        .annotate(last_msg_time=Subquery(last_message_qs_time))
+        .order_by("-last_msg_time", "-conversation__created_at")
+    )
 
-    return Response(result)
+    serializer = ConversationSerializer(memberships, many=True, context={"request": request})
+
+    return Response(serializer.data)

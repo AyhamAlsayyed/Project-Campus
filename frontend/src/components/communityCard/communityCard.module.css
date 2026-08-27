@@ -4,23 +4,30 @@
   border-radius: 30px;
   padding: 24px 30px;
   overflow: hidden;
-  background-size: cover;
-  background-position: center;
   display: flex;
   align-items: center;
-
   border: 1px solid rgba(255, 255, 255, 0.04);
   min-height: 110px;
 }
 
+.bgImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+}
+.fullWidth {
+  width: 100%;
+}
 .overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right,
-      rgba(25, 25, 25, 0.95) 10%,
-      /* much stronger on the left */
-      rgba(25, 25, 25, 0.7) 40%,
-      rgba(25, 25, 25, 0.2) 100%);
+  background: rgba(20, 20, 20, 0.75);
+  border-radius: inherit;
+  z-index: 1;
 }
 
 .content {
@@ -166,10 +173,7 @@
 
 .popupOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(5px);
   display: flex;
@@ -190,7 +194,12 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   animation: popIn 0.2s ease-out;
 }
-
+.right{
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+}
 .closeBtn {
   position: absolute;
   top: 16px;
@@ -225,7 +234,11 @@
   overflow-wrap: break-word;
  
 }
-
+.settingsIcon {
+  filter: brightness(0) saturate(100%) invert(80%);
+  cursor: pointer;
+  flex-shrink: 0;
+}
 @keyframes popIn {
   from {
     opacity: 0;
@@ -237,13 +250,22 @@
     transform: scale(1);
   }
 }
+.settingsNavText {
+  font-size: 1.15rem;
+  transition: transform 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
 
 .small {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  padding: 0;
-  gap: 12px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    gap: 12px;
+    min-height: 80px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 16px;
+    overflow: hidden;
 }
 
 
@@ -323,4 +345,34 @@
 }
 .small .joinBtn {
   background: linear-gradient(90deg, #a855f7, #d946ef);
+}
+[data-theme="light"] .viewBtn {
+  background: #ffffff;
+  color: #662D91;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="light"] .joinBtn {
+  background: #8E2794;
+  color: white;
+  border: 1px solid white;
+}
+
+[data-theme="light"] .requestedDisabled {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.35) !important;
+  border: 1px solid transparent !important;
+  cursor: not-allowed !important;
+}
+[data-theme="light"] .overlay {
+  background: rgba(40, 20, 100, 0.75);
+}
+
+.joinedByText { font-size: 11px; color: rgba(255,255,255,0.5); }
+.joinedByLabel { font-weight: 600; color: rgba(255,255,255,0.7); }
+
+[data-theme="light"] .joinedByText { color: #4D4D4D; }
+[data-theme="light"] .joinedByLabel { color: #4D4D4D; }
+[data-theme="light"] .settingsIcon {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
 }

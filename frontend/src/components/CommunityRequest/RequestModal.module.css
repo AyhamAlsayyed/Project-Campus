@@ -1,0 +1,413 @@
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modalContainer {
+    background-color: #333333;
+    border-radius: 24px;
+    width: 640px;
+    max-width: 95%;
+    padding: 32px 0;
+    box-sizing: border-box;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+}
+
+.modalContentInner {
+    padding: 0 40px;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+
+.paletteIcon {
+    width: 26px;
+    height: 26px;
+    display: inline-block;
+    background-color: #F2F2F2;
+    -webkit-mask-image: var(--icon-url);
+    mask-image: var(--icon-url);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+/* ── Back button (Step 2/3 header) ── */
+.headerLeftIconAndText {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 15px;
+}
+
+.backBtn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-right: 2%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.backArrowImg {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+    opacity: 0.85;
+}
+
+.headerTitle {
+    color: #FFFFFF;
+    font-size: 22px;
+    margin: 0;
+    font-weight: 600;
+}
+
+.headerRight {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+}
+
+.cancelBtn {
+    background: none;
+    border: none;
+    color: #D4145A;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.nextBtn {
+    background: none;
+    border: none;
+    color: #777777;
+    font-size: 15px;
+    cursor: not-allowed;
+    padding: 0;
+    transition: color 0.2s ease;
+}
+
+.nextActive {
+    color: #FFFFFF;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* ── Submit Button (Step 3) ── */
+.submitBtn {
+    background: transparent;
+    border: none;
+    color: #FFFFFF;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 20px;
+    border-radius: 20px;
+    transition: background-color 0.2s ease;
+}
+
+.submitBtn:hover {
+    background-color: #404040;
+}
+
+.divider {
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 24px auto;
+    width: 90%;
+}
+
+.adminNotice {
+    color: #8C8C8C;
+    width: 100%;
+    font-size: 12px;
+    margin: 0 0 28px -1.4%;
+    line-height: 1.4;
+}
+
+.formBody {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.fieldGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.label {
+    color: #CCCCCC;
+    font-size: 25px;
+    font-weight: 600;
+}
+
+.requiredStar {
+    color: #D4145A;
+    margin-left: 4px;
+}
+
+.hintText {
+    color: #777777;
+    font-size: 10px;
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+}
+
+.textInput,
+.textArea {
+    background-color: #262626;
+    border: 1px solid transparent;
+    border-radius: 25px;
+    padding: 18px 20px;
+    color: #FFFFFF;
+    font-size: 13px;
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.textInput {
+    width: 70%;
+}
+
+.textInput::placeholder {
+    color: #555555;
+}
+
+.textInput:focus,
+.textArea:focus {
+    border-color: #4D4D4D;
+}
+
+/* Step 1 textarea wrapper */
+.textareaWrapper {
+    position: relative;
+    width: 85%;
+}
+
+.textArea {
+    min-height: 120px;
+    resize: none;
+    padding-bottom: 34px;
+}
+
+/* ── Step 2: large full-width textarea ── */
+.textareaWrapperLarge {
+    position: relative;
+    width: 100%;
+}
+
+.textAreaLarge {
+    background-color: #262626;
+    border: 1px solid transparent;
+    border-radius: 25px;
+    padding: 18px 20px 18px;
+    padding-bottom: 40px;
+    color: #FFFFFF;
+    font-size: 13px;
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    min-height: 200px;
+    resize: none;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #4D4D4D #262626;
+}
+
+.textAreaLarge::-webkit-scrollbar {
+    width: 6px;
+}
+
+.textAreaLarge::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 0 25px 25px 0;
+}
+
+.textAreaLarge::-webkit-scrollbar-thumb {
+    background-color: #4D4D4D;
+    border-radius: 3px;
+}
+
+.textAreaLarge:focus {
+    border-color: #4D4D4D;
+}
+
+.wordCounter {
+    position: absolute;
+    bottom: 14px;
+    right: 20px;
+    color: #555555;
+    font-size: 12px;
+}
+
+/* Step 1 privacy row */
+.privacyGroup {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.privacyText {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dropdownArrow {
+    width: 14px;
+    height: 14px;
+    transform: rotate(90deg);
+    filter: brightness(0) invert(0.8);
+    cursor: pointer;
+}
+
+/* Pagination Dots */
+.paginationDots {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #555555;
+    transition: background-color 0.2s ease;
+}
+
+.activeDot {
+    background-color: #FFFFFF;
+}
+
+.privacyDropdownWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.privacyBtn {
+    display: flex;
+    align-items: center;
+    background: #262626;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 50px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 100px;
+    justify-content: space-between;
+    font-family: inherit;
+}
+
+.privacyMenu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: #333333;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 6px 0;
+    min-width: 140px;
+    z-index: 9999;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.privacyOption {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.privacyOption:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.privacyOptionActive {
+    color: white;
+    font-weight: 600;
+}
+
+.privacyDivider {
+    height: 1px;
+    width: 60%;
+    background: #4D4D4D;
+    margin: 4px auto;
+}
+
+/* ── Step 3 (Review) Styles ── */
+.reviewLabel {
+    color: #CCCCCC;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.reviewValue {
+    color: #808080;
+    font-size: 20px;
+    margin-left: 6px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.shortDivider {
+    height: 1px;
+    background-color: #4D4D4D;
+    width: 50%; /* Much smaller width as requested */
+    margin: 10px 0;
+}
+
+.reviewDescription {
+    background-color: transparent;
+    color: #808080;
+    font-size: 15px;
+    margin-top: 8px;
+    line-height: 1.5;
+    word-break: break-all;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}

@@ -1,134 +1,32 @@
-from datetime import timedelta
-
-from django.db.models import (
-    Case,
-    Count,
-    Exists,
-    F,
-    IntegerField,
-    OuterRef,
-    Q,
-    Value,
-    When,
-)
-from django.db.models.expressions import ExpressionWrapper
-from django.db.models.functions import Now
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Case, Exists, F, IntegerField, OuterRef, Q, Value, When
+from django.utils.timezone import now
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from ...models import (
     Comment,
+    Community,
     CommunityMember,
-    FollowPage,
     Friendship,
     Post,
     PostReaction,
+    Promotion,
     SavedPost,
+    Subscription,
 )
-
-
-def _get_user_university_page_id(user):
-    student = getattr(user, "student_profile", None)
-    if student and student.university_page_id:
-        return student.university_page_id
-
-    instructor = getattr(user, "instructor_profile", None)
-    if instructor and instructor.university_page_id:
-        return instructor.university_page_id
-
-    return None
-
-
-def file_url(request, f):
-    if not f:
-        return None
-    try:
-        return request.build_absolute_uri(f.url)
-    except Exception:
-        return None
-
-
-def get_author_data(request, post):
-    if post.author_user:
-        profile = getattr(post.author_user, "profile", None)
-        return {
-            "id": post.author_user_id,
-            "type": "user",
-            "username": post.author_user.username,
-            "avatar": file_url(request, getattr(profile, "profile_image", None)),
-            "tag": None,
-        }
-
-    if post.author_page:
-        return {
-            "id": post.author_page_id,
-            "type": "page",
-            "username": post.author_page.page_name,
-            "avatar": file_url(request, getattr(post.author_page, "profile_image", None)),
-            "tag": post.author_page.page_type,
-        }
-
-    return None
-
-
-def serialize_post(request, p):
-    author = get_author_data(request, p)
-
-    media_items = [
-        {
-            "type": (m.media_type or "").lower(),
-            "url": file_url(request, m.media_file) or file_url(request, m.media_url),
-        }
-        for m in p.media.all().order_by("order_index")
-    ]
-
-    return {
-        "id": p.post_id,
-        "content": p.content_text,
-        "post_type": p.post_type,
-        "created_at": p.created_at.isoformat(),
-        "author": author,
-        "media": media_items,
-        "likes_count": p.reactions_count,
-        "comments_count": p.comments_count,
-        "is_liked": p.is_liked,
-        "is_saved": p.is_saved,
-    }
-
-
-def base_annotations(user):
-    return {
-        "reactions_count": Count("reactions", filter=Q(reactions__user__isnull=False), distinct=True),
-        "comments_count": Count("comments", distinct=True),
-        "is_liked": Exists(PostReaction.objects.filter(post_id=OuterRef("post_id"), user=user)),
-        "is_saved": Exists(SavedPost.objects.filter(post_id=OuterRef("post_id"), user=user)),
-    }
-
-
-def engagement_annotations():
-    return {
-        "p_engagement": ExpressionWrapper(
-            (F("reactions_count") * Value(2)) + F("comments_count"),
-            output_field=IntegerField(),
-        ),
-        "p_engagement_capped": Case(
-            When(p_engagement__gte=20, then=Value(20)),
-            default=F("p_engagement"),
-            output_field=IntegerField(),
-        ),
-        "p_fresh": Case(
-            When(created_at__gte=Now() - timedelta(hours=6), then=Value(20)),
-            When(created_at__gte=Now() - timedelta(hours=24), then=Value(10)),
-            When(created_at__gte=Now() - timedelta(days=3), then=Value(5)),
-            default=Value(0),
-            output_field=IntegerField(),
-        ),
-    }
+from ...serializers import PostSerializer
+from ...utils.blocked_users import get_blocked_user_sets
+from ...utils.feed import base_annotations, engagement_annotations
+from ...utils.uni_page import get_user_university
 
 
 def get_friendship_sets(user):
-    friendships = Friendship.objects.filter(Q(user1=user) | Q(user2=user)).values("user1_id", "user2_id", "status")
+    friendships = Friendship.objects.filter(
+        Q(user1=user) | Q(user2=user), relation_type=Friendship.RelationType.USER_TO_USER
+    ).values("user1_id", "user2_id", "status")
 
     accepted = set()
     blocked = set()
@@ -152,42 +50,146 @@ def feed(request, community_id=None):
 
     community_id = community_id or request.GET.get("community_id")
     user_id = request.GET.get("user")
+    page_id = request.GET.get("page")
     filter_type = request.GET.get("filter", "recommended")
 
     qs = Post.objects.all().annotate(**base_annotations(user))
 
+    # get blocked users
+    users_blocked_by_me, users_who_blocked_me = get_blocked_user_sets(user)
+    all_blocked_users = users_blocked_by_me | users_who_blocked_me
+
     # user profile feed
     if user_id:
-        qs = qs.filter(author_user_id=user_id).order_by("-created_at")
+        if int(user_id) == user.id:
+            qs = qs.filter(author_id=user_id, is_approved=True)
+        else:
+            qs = qs.filter(author_id=user_id, is_approved=True)
+
+        qs = qs.order_by("-is_pinned", "-created_at")
+
+    # page profile feed
+    elif page_id:
+        if int(page_id) == user.id:
+            qs = qs.filter(author_id=page_id)
+        else:
+            qs = qs.filter(author_id=page_id, is_approved=True)
+
+        qs = qs.order_by("-created_at")
+
+    # friends feed
+    elif filter_type == "friends":
+        accepted_users, _ = get_friendship_sets(user)
+        if not accepted_users:
+            qs = Post.objects.none()
+        else:
+            qs = qs.filter(author_id__in=accepted_users, is_approved=True).order_by("-created_at")
+
+    # followed feed
+    elif filter_type == "follow_page":
+        followed_user_ids = Friendship.objects.filter(
+            user1=user, status=Friendship.Status.FOLLOWING, relation_type=Friendship.RelationType.USER_TO_PAGE
+        ).values_list("user2_id", flat=True)
+        if not followed_user_ids:
+            qs = Post.objects.none()
+        else:
+            qs = qs.filter(author_id__in=followed_user_ids, is_approved=True).order_by("-created_at")
 
     # community feed
     elif community_id:
         qs = qs.filter(community_id=community_id)
 
-        if filter_type != "latest":
+        is_privileged_moderator = False
+        try:
+            community_obj = Community.objects.get(pk=community_id)
+            if community_obj.owner == user:
+                is_privileged_moderator = True
+            else:
+                is_privileged_moderator = CommunityMember.objects.filter(
+                    community_id=community_id,
+                    user=user,
+                    status=CommunityMember.Status.APPROVED,
+                    role__in=[CommunityMember.Role.OWNER, CommunityMember.Role.ADMIN],
+                ).exists()
+        except Community.DoesNotExist:
+            return Response({"error": "Community not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if filter_type == "pending":
+            if not is_privileged_moderator:
+                return Response(
+                    {"error": "You do not have administrative permissions to view pending posts."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            qs = qs.filter(is_approved=False)
+
+        elif filter_type == "my_pending":
+            qs = qs.filter(author=user, is_approved=False)
+
+        # my approved community posts filter
+        elif filter_type == "my_approved":
+            qs = qs.filter(author=user, is_approved=True)
+
+        else:
+            qs = qs.filter(is_approved=True)
+
+        if filter_type in ["recommended", "popular", "trending"]:
             qs = qs.annotate(**engagement_annotations())
+
+        if filter_type in ["recent", "pending", "my_pending", "my_approved"]:
+            qs = qs.order_by("-created_at")
+        elif filter_type == "popular":
+            qs = qs.order_by("-p_engagement", "-created_at")
+        elif filter_type == "trending":
+            qs = qs.annotate(trending_score=F("p_engagement_capped") + (F("p_fresh") * Value(2))).order_by(
+                "-trending_score", "-created_at"
+            )
+        elif filter_type == "recommended":
             qs = qs.annotate(score=F("p_engagement_capped") + F("p_fresh")).order_by("-score", "-created_at")
         else:
             qs = qs.order_by("-created_at")
 
     # home feeed
     else:
+        qs = qs.filter(is_approved=True)
+
         community_ids = CommunityMember.objects.filter(user=user).values_list("community_id", flat=True)
-        followed_pages = FollowPage.objects.filter(user=user).values_list("page_id", flat=True)
-
+        followed_user_ids = Friendship.objects.filter(
+            user1=user, status=Friendship.Status.FOLLOWING, relation_type=Friendship.RelationType.USER_TO_PAGE
+        ).values_list("user2_id", flat=True)
         accepted_users, blocked_users = get_friendship_sets(user)
+        uni_page = get_user_university(user)
+        if uni_page is not None:
+            uni_page_user_id = uni_page.user.id
+        else:
+            uni_page_user_id = None
 
-        uni_page_id = _get_user_university_page_id(user)
-
-        qs = qs.exclude(author_user_id__in=blocked_users).exclude(author_user_id=user.id)
+        # exclude own and blocked users posts
+        qs = qs.exclude(author_id=user.id)
+        if all_blocked_users:
+            qs = qs.exclude(Q(community__isnull=True) & Q(author_id__in=all_blocked_users))
 
         if filter_type != "latest":
             qs = qs.annotate(**engagement_annotations())
 
+            post_content_type = ContentType.objects.get_for_model(Post)
+            active_promotions = Promotion.objects.filter(
+                content_type_obj=post_content_type,
+                object_id=OuterRef("pk"),
+                status=Promotion.Status.ACTIVE,
+                start_date__lte=now(),
+                end_date__gte=now(),
+            )
+
+            premium_subscriptions = Subscription.objects.filter(
+                page__user_id=OuterRef("author_id"),
+                is_active=True,
+                tier__in=[Subscription.Tier.PREMIUM, Subscription.Tier.UNIVERSITY],
+            )
+
             qs = (
                 qs.annotate(
                     p_university=Case(
-                        When(author_page_id=uni_page_id, then=Value(50)),
+                        When(author_id=uni_page_user_id, then=Value(60)),
                         default=Value(0),
                         output_field=IntegerField(),
                     ),
@@ -197,12 +199,27 @@ def feed(request, community_id=None):
                         output_field=IntegerField(),
                     ),
                     p_following=Case(
-                        When(author_page_id__in=followed_pages, then=Value(20)),
+                        When(author_id__in=followed_user_ids, then=Value(35)),
                         default=Value(0),
                         output_field=IntegerField(),
                     ),
                     p_friendship=Case(
-                        When(author_user_id__in=accepted_users, then=Value(30)),
+                        When(author_id__in=accepted_users, then=Value(35)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    ),
+                    p_ad=Case(
+                        When(post_type=Post.PostType.ADVERTISEMENT, then=Value(35)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    ),
+                    p_promoted=Case(
+                        When(Exists(active_promotions), then=Value(45)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    ),
+                    p_premium=Case(
+                        When(Exists(premium_subscriptions), then=Value(25)),
                         default=Value(0),
                         output_field=IntegerField(),
                     ),
@@ -212,6 +229,9 @@ def feed(request, community_id=None):
                     + F("p_community")
                     + F("p_following")
                     + F("p_friendship")
+                    + F("p_ad")
+                    + F("p_promoted")
+                    + F("p_premium")
                     + F("p_engagement_capped")
                     + F("p_fresh")
                 )
@@ -220,9 +240,12 @@ def feed(request, community_id=None):
         else:
             qs = qs.order_by("-created_at")
 
-    qs = qs.select_related("author_user__profile", "author_page", "community").prefetch_related("media")[:limit]
+    qs = qs.select_related("author__profile", "author__page", "community").prefetch_related(
+        "media", "poll_options__votes__user__profile"
+    )[:limit]
 
-    return Response([serialize_post(request, p) for p in qs])
+    serializer = PostSerializer(qs, many=True, context={"request": request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
@@ -230,36 +253,51 @@ def feed(request, community_id=None):
 def get_saved_posts(request):
     user = request.user
 
+    users_blocked_by_me, users_who_blocked_me = get_blocked_user_sets(user)
+    all_blocked_users = users_blocked_by_me | users_who_blocked_me
+
     saved = SavedPost.objects.filter(user=user).order_by("-created_at")
 
-    post_map = {
-        p.post_id: p
-        for p in Post.objects.filter(post_id__in=[s.post_id for s in saved])
-        .annotate(**base_annotations(user))
-        .select_related("author_user__profile", "author_page")
-        .prefetch_related("media")
-    }
+    post_ids = [s.post.post_id for s in saved]
 
-    ordered_posts = [post_map[s.post_id] for s in saved if s.post_id in post_map]
+    posts_qs = Post.objects.filter(post_id__in=post_ids).annotate(**base_annotations(user))
 
-    return Response([serialize_post(request, p) for p in ordered_posts])
+    # exclude normal posts
+    if all_blocked_users:
+        posts_qs = posts_qs.exclude(Q(community__isnull=True) & Q(author_id__in=all_blocked_users))
+
+    posts_qs = posts_qs.select_related("author__profile", "author__page").prefetch_related(
+        "media", "poll_options__votes__user__profile"
+    )
+
+    serializer = PostSerializer(posts_qs, many=True, context={"request": request})
+    return Response(serializer.data)
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_activity_posts(request):
+    """Activity posts - exclude posts from blocked users (normal posts only)"""
     user = request.user
 
+    users_blocked_by_me, users_who_blocked_me = get_blocked_user_sets(user)
+    all_blocked_users = users_blocked_by_me | users_who_blocked_me
+
     liked_ids = PostReaction.objects.filter(user=user).values_list("post_id", flat=True)
-    commented_ids = Comment.objects.filter(author_user=user).values_list("post_id", flat=True)
+    commented_ids = Comment.objects.filter(author=user).values_list("post_id", flat=True)
 
     posts = (
         Post.objects.filter(Q(post_id__in=liked_ids) | Q(post_id__in=commented_ids))
         .annotate(**base_annotations(user))
-        .select_related("author_user__profile", "author_page")
-        .prefetch_related("media")
+        .select_related("author__profile", "author__page")
+        .prefetch_related("media", "poll_options__votes__user__profile")
         .order_by("-created_at")
         .distinct()
     )
 
-    return Response([serialize_post(request, p) for p in posts])
+    # filter out normal posts from blocked users in activity
+    if all_blocked_users:
+        posts = posts.exclude(Q(community__isnull=True) & Q(author_id__in=all_blocked_users))
+
+    serializer = PostSerializer(posts, many=True, context={"request": request})
+    return Response(serializer.data)

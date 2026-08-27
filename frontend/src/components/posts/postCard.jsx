@@ -1,17 +1,99 @@
-import styles from "./posts.module.css";
 import { useState, useRef, useEffect } from "react";
-import { Share2, MoreHorizontal, Bookmark, Ban, Flag } from "lucide-react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
-import Like from '../../Assets/icons/like.png';
-import LikeActive from '../../Assets/icons/like-active.png'
+import { Trash2, MoreHorizontal, Bookmark, Check, X } from "lucide-react";
+import styles from "./posts.module.css";
+import ReportModal from "./ReportModal";
 
-export default function PostCard({ post, openComments }) {
+// Icons
+import Like from '../../Assets/icons/like.png';
+import LikeActive from '../../Assets/icons/like-active.png';
+import Share from '../../Assets/icons/share.png';
+import Pin from '../../Assets/icons/pin.png';
+import GoodReview from '../../Assets/icons/good-review.png';
+import BadReview from '../../Assets/icons/bad-review.png';
+import NatrualReview from '../../Assets/icons/neutral-review.png';
+import ArrowRight from '../../Assets/icons/arrow-right.png';
+import ArrowLeft from '../../Assets/icons/arrow-left.png';
+import XIcon from '../../Assets/icons/x.png';
+import BinIcon from '../../Assets/icons/bin.png';
+import LeaveIcon from '../../Assets/icons/leave.png';
+import InfoIcon from '../../Assets/icons/info.png';
+import HighLight from '../../Assets/icons/star.png';
+import DeletePost from '../../Assets/icons/bin.png';
+import Block from '../../Assets/icons/block.png';
+import Report from '../../Assets/icons/info.png';
+import SaveIcon from '../../Assets/icons/save-icon.png';
+import BellOn from '../../Assets/icons/notifications.png';
+import SearchIcon from '../../Assets/icons/search.png';
+import BellOff from '../../Assets/icons/mute.png';
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
+import API from "../../config";
+export default function PostCard({
+  post, openComments, isOwnProfile, hasPinnedPost, onPinChange,
+  isRequestMode, onAcceptPost, onRejectPost, isReportedMode,
+  onDismiss, onReportDelete, onKick, onReportAction, isAdmin,
+  communityContext, communityId, currentUser
+}) {
+  const [isLight, setIsLight] = useState(
+    () => document.documentElement.getAttribute('data-theme') === 'light'
+  );
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsLight(document.documentElement.getAttribute('data-theme') === 'light');
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
   const [current, setCurrent] = useState(0);
   const [isLiked, setIsLiked] = useState(post?.is_liked || post?.has_liked || false);
   const [isSaved, setIsSaved] = useState(post?.is_saved || false);
   const [likesCount, setLikesCount] = useState(post?.likes_count || 0);
+  const [showPinConfirm, setShowPinConfirm] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [isPinned, setIsPinned] = useState(!!post?.is_pinned);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showReportDeleteConfirm, setShowReportDeleteConfirm] = useState(false);
+  const [shareSearch, setShareSearch] = useState("");
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [shareTargets, setShareTargets] = useState([]);
+  const [isLoadingChats, setIsLoadingChats] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [isKicked, setIsKicked] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const [isBlocked, setIsBlocked] = useState(post?.author?.is_blocked || false);
+  const [adReaction, setAdReaction] = useState(post?.ad_reaction || null);
+  const [showReport, setShowReport] = useState(false);
+  const [isFollowed, setIsFollowed] = useState(post?.author?.is_followed);
+  const [isNotified, setIsNotified] = useState(post?.author?.is_notified || false);
+  const [isHighlighted, setIsHighlighted] = useState(!!post?.is_highlighted);
+  const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [pollOptions, setPollOptions] = useState(post?.poll_options || []);
+  const [pollVotedId, setPollVotedId] = useState(
+    (post?.poll_options || []).find(o => o.is_voted)?.id ?? null
+  );
+  const [isVoting, setIsVoting] = useState(false);
+
+  const shareMenuRef = useRef(null);
   const menuRef = useRef(null);
+
+  const loginUserRaw = localStorage.getItem("login_user");
+  const loginUserObj = loginUserRaw ? JSON.parse(loginUserRaw) : null;
+  const loggedInUserId = loginUserObj?.id;
+  const loggedInUserType = localStorage.getItem("user_type");
+  const isPageOrUniViewer = loggedInUserType === 'page' || loggedInUserType === 'university';
+  const isOwnPost = String(post.author?.id || post.author_id) === String(loggedInUserId) ||
+    (isPageOrUniViewer && String(post.author?.id || post.author_id) === String(loginUserObj?.page_id));
+  const CHAR_LIMIT = 150;
+
+  const [commenterAvatars, setCommenterAvatars] = useState(
+    (post?.top_3comments_avatar || []).map(c => {
+      const avatar = c.author_avatar || c.avatar;
+      if (!avatar) return null;
+      return avatar.startsWith("http") ? avatar : `${API}${avatar}`;
+    }).filter(Boolean)
+  );
 
   const formatTimeAgo = (dateString) => {
     const now = new Date();
@@ -27,13 +109,152 @@ export default function PostCard({ post, openComments }) {
     return past.toLocaleDateString();
   };
 
+  const formatText = (text) => {
+    return text.split('\n').map((line, i, arr) => {
+      if (line.trim() === '') return <br key={i} />;
+      return (
+        <span key={i}>
+          {line}
+          {i < arr.length - 1 && arr[i + 1]?.trim() !== '' && <br />}
+        </span>
+      );
+    });
+  };
+
+  const handleAdReaction = async (reaction) => {
+    const token = localStorage.getItem("access");
+    const postId = post.id || post.post_id;
+    const prev = adReaction;
+    const newReaction = adReaction === reaction ? null : reaction;
+    setAdReaction(newReaction);
+    try {
+      const res = await fetch(`${API}/api/posts/${postId}/react/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ reaction: newReaction }),
+      });
+      if (!res.ok) setAdReaction(prev);
+    } catch { setAdReaction(prev); }
+  };
+
+  const handleFollow = async () => {
+    const token = localStorage.getItem("access");
+    const prevFollowed = isFollowed;
+    const prevNotified = isNotified;
+
+    setIsFollowed(!prevFollowed);
+    if (prevFollowed) setIsNotified(false);
+
+    try {
+      const res = await fetch(`${API}/api/pages/${post.author.id}/follow/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const newFollowed = data.is_followed !== undefined ? data.is_followed : !prevFollowed;
+        const newNotified = newFollowed ? isNotified : false;
+        setIsFollowed(newFollowed);
+        if (!newFollowed) setIsNotified(false);
+
+        window.dispatchEvent(new CustomEvent("page-follow-changed", {
+          detail: { pageId: post.author.id, is_followed: newFollowed, is_notified: newNotified }
+        }));
+      } else {
+        setIsFollowed(prevFollowed);
+        setIsNotified(prevNotified);
+      }
+    } catch {
+      setIsFollowed(prevFollowed);
+      setIsNotified(prevNotified);
+    }
+  };
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (String(e.detail.pageId) === String(post.author?.id)) {
+        setIsFollowed(e.detail.is_followed);
+        if (!e.detail.is_followed) setIsNotified(false);
+      }
+    };
+    window.addEventListener("page-follow-changed", handler);
+    return () => window.removeEventListener("page-follow-changed", handler);
+  }, [post.author?.id]);
+
+  const handleNotify = async () => {
+    const token = localStorage.getItem("access");
+    const prev = isNotified;
+    setIsNotified(!prev);
+    try {
+      const res = await fetch(`${API}/api/pages/${post.author.id}/notify/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) setIsNotified(prev);
+    } catch { setIsNotified(prev); }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) setShowMenu(false);
+      if (shareMenuRef.current && !shareMenuRef.current.contains(event.target)) setShowShareMenu(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!showMenu) return;
+    const handleScroll = () => setShowMenu(false);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => window.removeEventListener("scroll", handleScroll, true);
+  }, [showMenu]);
+
+  useEffect(() => {
+    if (!showShareMenu) return;
+
+    const fetchActiveChats = async () => {
+      const token = localStorage.getItem("access");
+      if (!token) return;
+
+      setIsLoadingChats(true);
+      try {
+        const res = await fetch(`${API}/api/chats/`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const deduped = data.reduce((acc, chat) => {
+            const key = (chat.name || chat.username || "").toLowerCase().trim();
+            const existingIndex = acc.findIndex(c => (c.name || c.username || "").toLowerCase().trim() === key);
+
+            if (existingIndex === -1) {
+              acc.push(chat);
+            } else {
+              const existing = acc[existingIndex];
+              if (chat.last_message_time && (!existing.last_message_time || new Date(chat.last_message_time) > new Date(existing.last_message_time))) {
+                acc[existingIndex] = chat;
+              }
+            }
+            return acc;
+          }, []);
+
+          const formatted = deduped.map(chat => ({
+            ...chat,
+            avatar: chat.avatar ? chat.avatar.startsWith("http") ? chat.avatar : `${API}${chat.avatar}` : DefaultPfp
+          }));
+          setShareTargets(formatted);
+        }
+      } catch (err) {
+        console.error("Error fetching chats:", err);
+      } finally {
+        setIsLoadingChats(false);
+      }
+    };
+    fetchActiveChats();
+  }, [showShareMenu]);
 
   const handleLike = async () => {
     const token = localStorage.getItem("access");
@@ -42,7 +263,8 @@ export default function PostCard({ post, openComments }) {
     setIsLiked(!isLiked);
     setLikesCount(prev => (isLiked ? prev - 1 : prev + 1));
     try {
-      const res = await fetch(`http://localhost:8000/api/posts/${post.id}/like/`, {
+      const postId = post.id || post.post_id;
+      const res = await fetch(`${API}/api/posts/${postId}/like/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
@@ -52,13 +274,128 @@ export default function PostCard({ post, openComments }) {
 
   const handleMenuAction = async (actionType) => {
     const token = localStorage.getItem("access");
+    if (actionType === 'block') {
+      const postId = post.id || post.post_id;
+      const newBlocked = !isBlocked;
+      setIsBlocked(newBlocked);
+      setShowMenu(false);
+      try {
+        await fetch(`${API}/api/posts/${postId}/block/`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (err) { setIsBlocked(!newBlocked); }
+      return;
+    }
+
     setShowMenu(false);
+
+    if (actionType === 'delete') { setShowDeleteConfirm(true); return; }
+
+    if (actionType === 'pin') {
+      if (!isPinned && hasPinnedPost) {
+        setShowMenu(false);
+        setShowPinConfirm(true);
+        return;
+      }
+      try {
+        const postId = post.id || post.post_id;
+        const res = await fetch(`${API}/api/posts/${postId}/pin/`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setIsPinned(Boolean(data.is_pinned));
+          if (data.is_pinned) onPinChange?.(postId);
+        }
+      } catch (err) { console.error("Failed to pin post"); }
+      return;
+    }
+
+    if (actionType === 'save') setIsSaved(prev => !prev);
+    if (actionType === 'highlight') setIsHighlighted(prev => !prev);
+
     try {
-      await fetch(`http://localhost:8000/api/posts/${post.id}/${actionType}/`, {
-        method: "POST", headers: { Authorization: `Bearer ${token}` },
+      const postId = post.id || post.post_id;
+      const res = await fetch(`${API}/api/posts/${postId}/${actionType}/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: actionType === 'highlight' && communityId ? JSON.stringify({ community_id: communityId }) : null,
       });
+      if (!res.ok) {
+        if (actionType === 'pin') setIsPinned(prev => !prev);
+        if (actionType === 'save') setIsSaved(prev => !prev);
+        if (actionType === 'highlight') setIsHighlighted(prev => !prev);
+      }
     } catch (err) { console.error(`Failed to ${actionType} post`); }
   };
+
+  const confirmDelete = async () => {
+    const token = localStorage.getItem("access");
+    const postId = post.id || post.post_id;
+    try {
+      const res = await fetch(`${API}/api/posts/${postId}/`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) window.location.reload();
+    } catch (err) { console.error("Delete failed", err); }
+    setShowDeleteConfirm(false);
+  };
+
+  const confirmPin = async () => {
+    const token = localStorage.getItem("access");
+    const postId = post.id || post.post_id;
+    try {
+      const res = await fetch(`${API}/api/posts/${postId}/pin/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setIsPinned(Boolean(data.is_pinned));
+        onPinChange?.(postId);
+      }
+    } catch (err) { console.error("Failed to pin post"); }
+    setShowPinConfirm(false);
+  };
+
+  const handleShareToTarget = async (targetId) => {
+    const token = localStorage.getItem("access");
+    if (!token) return;
+    setIsSharing(true);
+    try {
+      const res = await fetch(`${API}/api/messages/send/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipient_id: targetId,
+          post_id: post.id || post.post_id,
+          content: "Shared a post",
+          shared_post: {
+            id: post.id || post.post_id,
+            content_text: post.content_text,
+            image: post.image,
+            media: post.media,
+            author: post.author,
+            created_at: post.created_at,
+            likes_count: post.likes_count,
+            comments_count: post.comments_count,
+            is_liked: post.is_liked,
+            is_saved: post.is_saved,
+          }
+        }),
+      });
+      if (res.ok) setShowShareMenu(false);
+    } catch (err) {
+      console.error("Error during share processing step:", err);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  if (!post || !post.author) return null;
 
   const validMedia = post?.media?.map((item) => {
     const url = item.url || "";
@@ -73,65 +410,320 @@ export default function PostCard({ post, openComments }) {
   }) || [];
 
   const files = validMedia.filter(m => m.type === "file");
+  const displayMedia = validMedia.filter(m => m.type === 'image' || m.type === 'video');
+  const MAX_GRID = 4;
+  const visibleMedia = displayMedia.slice(0, MAX_GRID);
+  const extraCount = displayMedia.length > MAX_GRID ? displayMedia.length - MAX_GRID : 0;
   const nextSlide = () => setCurrent((prev) => (prev + 1) % validMedia.length);
   const prevSlide = () => setCurrent((prev) => (prev === 0 ? validMedia.length - 1 : prev - 1));
 
+  const menuItemStyle = {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    width: "100%",
+    padding: "10px 16px",
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    textAlign: "left",
+    transition: "background 0.15s ease",
+    borderRadius: 0,
+  };
+
+  const MenuDivider = () => (
+    <div className={styles.menuDividerWrap}>
+      <div className={styles.menuDividerLine} />
+    </div>
+  );
+
   return (
     <article className={styles.card}>
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className={styles.modalOverlay} onClick={() => setShowDeleteConfirm(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalContent}>
+              <h3 className={styles.modalTitle}>Delete this post?</h3>
+              <p className={styles.modalText}>Once you delete this post, it can't be restored.</p>
+            </div>
+            <div className={styles.modalActions}>
+              <button className={styles.cancelBtn} onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+              <button className={styles.deleteConfirmBtn} onClick={confirmDelete}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReportDeleteConfirm && (
+        <div className={styles.modalOverlay} onClick={() => setShowReportDeleteConfirm(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalContent}>
+              <h3 className={styles.modalTitle}>Delete this post?</h3>
+              <p className={styles.modalText}>This will permanently delete the reported post.</p>
+            </div>
+            <div className={styles.modalActions}>
+              <button className={styles.cancelBtn} onClick={() => setShowReportDeleteConfirm(false)}>Cancel</button>
+              <button className={styles.deleteConfirmBtn} onClick={() => { onReportDelete?.(post.id || post.post_id); setShowReportDeleteConfirm(false); }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pin Confirmation Modal */}
+      {showPinConfirm && (
+        <div className={styles.modalOverlay} onClick={() => setShowPinConfirm(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalContent}>
+              <h3 className={styles.modalTitle}>Replace pinned post?</h3>
+              <p className={styles.modalText}>You already have a pinned post. Pinning this will unpin the other one.</p>
+            </div>
+            <div className={styles.modalActions}>
+              <button className={styles.cancelBtn} onClick={() => setShowPinConfirm(false)}>Cancel</button>
+              <button className={styles.deleteConfirmBtn} onClick={confirmPin}>Pin anyway</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Top Bar: User Info & Actions */}
+      {/* Top Bar: User Info & Actions */}
       <div className={styles.topRow}>
         <div className={styles.user}>
-          <Link to={(post.author?.id || post.author_id) ? `/profile/${post.author?.id || post.author_id}` : "#"}>
-            <img className={styles.avatar} src={post.author?.avatar || "/default-avatar.png"} alt="" />
+          <Link to={
+            post.author?.type === 'page'
+              ? `/page/${post.author?.id || post.author_id}`
+              : `/profile/${post.author?.id || post.author_id}`
+          }>
+            <img className={`${styles.avatar}${!post.author?.avatar ? ' defaultPfp' : ''}`} src={post.author?.avatar || DefaultPfp} alt="" onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp'); }} />
           </Link>
+
           <div className={styles.userMeta}>
             <div className={styles.nameLine}>
-              <span className={styles.name}>{post.author?.username || "User"}</span>
+              <div className={styles.nameHeaderWrapper}>
+                <div className={styles.nameRow}>
+                  <Link
+                    to={post.author?.type === 'page' ? `/page/${post.author?.id || post.author_id}` : `/profile/${post.author?.id || post.author_id}`}
+                    className={styles.name}
+                    style={{ textDecoration: 'none', color: post.author?.role === 'instructor' ? "#E043B5" : undefined }}
+                  >{post.author?.username || "User"}</Link>
+                  <span className={styles.time}>·</span>
+                  <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>
+                  {post.post_type === "academy" && <><span className={styles.time}>·</span><span className={styles.time}>Educational</span></>}
+                  {post.post_type === "announcement" && <><span className={styles.time}>·</span><span className={styles.time}>Announcement</span></>}
+                </div>
+
+                {post.author?.type === 'page' && (
+                  <span className={styles.pageType}>{post.author?.page_type || 'Page'}</span>
+                )}
+
+                {post.community_name && (
+                  <span className={styles.communityBadge}>
+                    {post.community_name}
+                  </span>
+                )}
+              </div>
+
               {post.tag && <span className={styles.tag}>{post.tag}</span>}
+              {isPinned && isOwnProfile && (
+                <>
+                  <img src={Pin} alt="pinned" width={20} height={20} className={styles.pinnedIcon} />
+                  <span className={styles.pinnedText}>Pinned</span>
+                </>
+              )}
             </div>
-            <span className={styles.time}>{formatTimeAgo(post.created_at)}</span>
           </div>
         </div>
 
-        <div className={styles.menuContainer} ref={menuRef}>
-          <button className={styles.menuBtn} onClick={() => setShowMenu(prev => !prev)} aria-label="menu">
-            <MoreHorizontal size={20} />
-          </button>
-          {showMenu && (
-            <div className={styles.dropdownMenu}>
-              <button className={styles.menuItem}><Bookmark size={16} onClick={() => handleMenuAction('save')} /> Save</button>
-              <div className={styles.menuDivider} />
-              <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('block')}><Ban size={16} /> Block</button>
-              <div className={styles.menuDivider} />
-              <button className={`${styles.menuItem} ${styles.danger}`} onClick={() => handleMenuAction('report')}><Flag size={16} /> Report</button>
+        {/* Right side actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          {post.author?.type === 'page' && !isOwnPost && (
+            <div className={styles.headerActions}>
+              {isFollowed && (
+                <button className={styles.bellBtn} onClick={handleNotify}>
+                  <img src={isNotified ? BellOn : BellOff} alt="notifications"
+                    width={isNotified ? 16 : 20} height={isNotified ? 18 : 20}
+                    className={styles.bellIcon} />
+                </button>
+              )}
+              {currentUser?.university_full_name && post.author?.username === currentUser.university_full_name ? (
+                <button className={styles.followedBtn} style={{ cursor: 'default', opacity: 0.7 }}>
+                  Followed
+                </button>
+              ) : (
+                <button className={isFollowed ? styles.followedBtn : styles.followBtn} onClick={handleFollow}>
+                  {isFollowed ? 'Followed' : 'Follow'}
+                </button>
+              )}
             </div>
           )}
+
+          <div className={styles.menuContainer} ref={menuRef}>
+            {!isReportedMode && (
+              <button
+                className={styles.menuBtn}
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+                  setMenuPosition({ top: rect.bottom / z + 6, left: rect.right / z });
+                  setShowMenu(prev => !prev);
+                }}
+                aria-label="menu"
+              >
+                <MoreHorizontal size={30} strokeWidth={4} />
+              </button>
+            )}
+            {showMenu && document.body && createPortal(
+              <div
+                className={styles.postMenu}
+                style={{ position: 'fixed', top: menuPosition.top, left: menuPosition.left, transform: 'translateX(-100%)', zIndex: 999999 }}
+                onMouseDown={e => e.stopPropagation()}
+              >
+                <button className={styles.postMenuItem} onClick={() => handleMenuAction('save')}>
+                  <img src={SaveIcon} alt="" width={16} height={16} />
+                  {isSaved ? 'Unsave post' : 'Save post'}
+                </button>
+                <MenuDivider />
+
+                {isOwnPost && (
+                  <>
+                    <button className={styles.postMenuItem} onClick={() => handleMenuAction('pin')}>
+                      <img src={Pin} alt="" width={16} height={16} />
+                      {isPinned ? 'Unpin post' : 'Pin post'}
+                    </button>
+                    <MenuDivider />
+                  </>
+                )}
+
+                {communityContext && isAdmin && (
+                  <>
+                    <button className={styles.postMenuItem} onClick={() => handleMenuAction('highlight')}>
+                      <img src={HighLight} alt="" width={16} height={16} />
+                      {isHighlighted ? 'Remove highlight' : 'Highlight post'}
+                    </button>
+                    <MenuDivider />
+                  </>
+                )}
+
+                {!isOwnPost && (
+                  <>
+                    <button className={styles.postMenuItem} onClick={() => handleMenuAction('block')}>
+                      <img src={Block} alt="" width={16} height={16} />
+                      {isBlocked ? 'Unblock user' : 'Block user'}
+                    </button>
+                    <MenuDivider />
+                    {communityContext && isAdmin && (
+                      <>
+                        <button className={`${styles.postMenuItem} ${styles.postMenuItemDestructive}`}
+                          onClick={() => handleMenuAction('delete')}>
+                          <img src={DeletePost} alt="" width={16} height={16} />
+                          Delete post
+                        </button>
+                        <MenuDivider />
+                      </>
+                    )}
+                    <button className={`${styles.postMenuItem} ${styles.postMenuItemDestructive}`}
+                      onClick={() => { setShowReport(true); setShowMenu(false); }}>
+                      <img src={Report} alt="" width={16} height={16} />
+                      Report post
+                    </button>
+                  </>
+                )}
+
+                {isOwnPost && (
+                  <>
+
+                    <button className={`${styles.postMenuItem} ${styles.postMenuItemDestructive}`}
+                      onClick={() => handleMenuAction('delete')}>
+                      <img src={DeletePost} alt="" width={16} height={16} />
+                      Delete post
+                    </button>
+                  </>
+                )}
+              </div>,
+              document.body
+            )}
+          </div>
         </div>
       </div>
 
-      {post.content && <p className={styles.text}>{post.content}</p>}
+      {/* Post Text Content */}
+      {post.content_text && (
+        <p className={styles.text}>
+          {post.content_text.length > CHAR_LIMIT && !isExpanded ? (
+            <>
+              {formatText(post.content_text.substring(0, CHAR_LIMIT))}...{' '}
+              <span className={styles.readMore} onClick={() => setIsExpanded(true)}>read more</span>
+            </>
+          ) : (
+            <>
+              {formatText(post.content_text)}
+              {post.content_text.length > CHAR_LIMIT && (
+                <span className={styles.readMore} onClick={() => setIsExpanded(false)} style={{ marginLeft: 6 }}>show less</span>
+              )}
+            </>
+          )}
+        </p>
+      )}
 
-      {validMedia.length > 0 && validMedia[current]?.type !== "file" && (
+      {/* Media Rendering */}
+      {post.post_type === 'advertisement' && validMedia.length > 0 && validMedia[0]?.type !== 'file' && (
         <div className={styles.media}>
-          {validMedia.length > 1 && <button className={styles.leftArrow} onClick={prevSlide}>◀</button>}
-          {validMedia[current]?.type === "image" && (
-            <img src={validMedia[current].url} alt="" className={styles.mediaItem} />
-          )}
-          {validMedia[current]?.type === "video" && (
-            <video controls className={styles.mediaItem}>
-              <source src={validMedia[current].url} type="video/mp4" />
-            </video>
-          )}
-          {validMedia.length > 1 && <button className={styles.rightArrow} onClick={nextSlide}>▶</button>}
-          {validMedia.length > 1 && (
-            <div className={styles.dots}>
-              {validMedia.map((_, index) => (
-                <span key={index} className={`${styles.dot} ${index === current ? styles.activeDot : ""}`} />
-              ))}
+          {validMedia[0]?.type === 'image' && (
+            <div className={styles.imageWrapper}>
+              <img src={validMedia[0].url} alt="" className={styles.mediaItem} />
+              <a href={post.ad_url || '#'} target="_blank" rel="noopener noreferrer" className={styles.adOverlay}>
+                <div className={styles.adTextContent}>
+                  <h3 className={styles.adTitle}>{post.title}</h3>
+                  <div className={styles.adDescRow}>
+                    <p className={styles.adDesc}>{post.description}</p>
+                    <div className={styles.adArrowWrapper}>
+                      <img src={ArrowRight} alt="Learn more" className={styles.adArrow} />
+                    </div>
+                  </div>
+                </div>
+              </a>
             </div>
           )}
         </div>
       )}
 
+      {/* Facebook-style grid for non-ad posts */}
+      {post.post_type !== 'advertisement' && displayMedia.length > 0 && (
+        <div className={styles.mediaGrid} style={{
+          gridTemplateColumns: displayMedia.length === 1 ? '1fr' : '1fr 1fr',
+          gridTemplateRows: displayMedia.length === 1 ? 'auto'
+            : displayMedia.length === 2 ? '240px'
+            : '240px 240px',
+        }}>
+          {visibleMedia.map((item, idx) => {
+            const isLastVisible = idx === visibleMedia.length - 1;
+            const showOverlay = isLastVisible && extraCount > 0;
+            const spanTwoRows = displayMedia.length === 3 && idx === 0;
+            return (
+              <div
+                key={idx}
+                className={styles.mediaGridCell}
+                style={{ gridRow: spanTwoRows ? 'span 2' : 'auto' }}
+                onClick={() => setLightboxIndex(idx)}
+              >
+                {item.type === 'video' ? (
+                  <video src={item.url} className={styles.mediaGridImg} muted />
+                ) : (
+                  <img src={item.url} alt="" className={styles.mediaGridImg} />
+                )}
+                {showOverlay && (
+                  <div className={styles.mediaGridOverlay}>
+                    <span>+{extraCount}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Attached Files */}
       {files.length > 0 && (
         <div className={styles.filesContainer}>
           {files.map((file, i) => (
@@ -142,60 +734,381 @@ export default function PostCard({ post, openComments }) {
         </div>
       )}
 
-      {post.poll_options && post.poll_options.length > 0 && (
+      {/* Poll Options */}
+      {pollOptions && pollOptions.length > 0 && (
         <div className={styles.pollBox}>
-          {post.poll_options.map((opt, i) => (
-            <button key={i} className={styles.pollOption}>{opt}</button>
-          ))}
+          {pollOptions.map((opt) => {
+            const isVoted = opt.id === pollVotedId;
+            const hasVoted = pollVotedId !== null;
+            const avatars = opt.voter_avatars || [];
+            const extraCount = (opt.votes_count || 0) - avatars.length;
+            const handleVote = async () => {
+              if (isVoting) return;
+              setIsVoting(true);
+              try {
+                const token = localStorage.getItem("access");
+                const res = await fetch(`${API}/api/posts/${post.id || post.post_id}/vote/`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ option_id: opt.id }),
+                });
+                if (res.ok) {
+                  const data = await res.json();
+                  setPollOptions(data.poll_options.map(o => ({ ...o, is_voted: o.id === data.voted_option_id })));
+                  setPollVotedId(data.voted_option_id);
+                }
+              } catch (_) {}
+              setIsVoting(false);
+            };
+            return (
+              <div key={opt.id} className={styles.pollOptionRow}>
+                {/* Label + count + avatars row */}
+                <div className={styles.pollLabelRow}>
+                  <span className={styles.pollOptionLabel}>{opt.text}</span>
+                  {hasVoted && (
+                    <div className={styles.pollVoterGroup}>
+                      {avatars.length > 0 && <span className={styles.pollVoterPlus}>+</span>}
+                      {avatars.map((av, idx) => (
+                        <img key={idx} src={av} className={styles.pollVoterAvatar} style={idx === 0 ? { marginLeft: 4 } : {}} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                      ))}
+                      <span className={styles.pollVoteCount}>{opt.votes_count || 0}</span>
+                    </div>
+                  )}
+                </div>
+                {/* Radio + bar on same line */}
+                <div className={styles.pollBarRow}>
+                  <button
+                    className={`${styles.pollRadio} ${isVoted ? styles.pollRadioVoted : ''}`}
+                    disabled={isVoting}
+                    onClick={handleVote}
+                  />
+                  <div className={styles.pollTrack} onClick={handleVote} style={{ cursor: 'pointer' }}>
+                    <div
+                      className={`${styles.pollBar} ${isVoted ? styles.pollBarVoted : ''}`}
+                      style={{ width: hasVoted ? `${opt.percentage || 0}%` : '0%' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          <div className={styles.pollFooter}>
+            <span className={styles.pollTotalVotes}>
+              {pollOptions.reduce((s, o) => s + (o.votes_count || 0), 0)} votes
+            </span>
+            <span className={styles.pollViewVotes}>View votes</span>
+          </div>
         </div>
       )}
 
-      <div className={`${styles.actions} flex flex-nowrap items-center justify-between gap-2`}>
-        <div className={`${styles.leftActions} flex flex-nowrap items-center gap-2 flex-1 min-w-0 overflow-hidden`}
-          style={{ width: "auto" }}>
-
-          <button
-            className={`${styles.iconBtn} flex-shrink-0 ${isLiked ? styles.liked : ""}`}
-            onClick={handleLike}
-            type="button"
-          >
+      {/* Bottom Actions based on context modes */}
+      {isReportedMode ? (
+        <div className={styles.reportedActions}>
+          <button onClick={() => onDismiss?.(post.id || post.post_id)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+            <img src={XIcon} alt="Dismiss" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
+            Dismiss
+          </button>
+          <button onClick={() => setShowReportDeleteConfirm(true)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+            <img src={BinIcon} alt="Delete" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
+            Delete
+          </button>
+          <button onClick={() => onKick?.(post.id || post.post_id)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+            <img src={LeaveIcon} alt="Kick" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
+            Kick
+          </button>
+          <button onClick={() => onReportAction?.(post.id || post.post_id)} style={{ background: 'transparent', border: 'none', color: '#CCC', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+            <img src={InfoIcon} alt="Report" style={{ width: 18, height: 18, filter: 'brightness(0) invert(0.8)' }} />
+            Report
+          </button>
+        </div>
+      ) : isRequestMode ? (
+        <div className={styles.postRequestActions}>
+          <button className={styles.acceptPostBtn} onClick={() => onAcceptPost?.(post.id || post.post_id)}>
+            <Check size={18} strokeWidth={3} className={styles.acceptIcon} />
+            Accept
+          </button>
+          <div className={styles.verticalDivider}></div>
+          <button className={styles.rejectPostBtn} onClick={() => onRejectPost?.(post.id || post.post_id)}>
+            <X size={18} strokeWidth={3} color="#D4145A" />
+            Reject
+          </button>
+        </div>
+      ) : (
+        <div className={styles.actions}>
+          {/* Reaction Button */}
+          <button className={`${styles.iconBtn} ${isLiked ? styles.liked : ""}`} onClick={handleLike} type="button">
             <span className={styles.heart}>
               {isLiked
                 ? <img src={LikeActive} alt="liked" className={styles.likeActive} width={22} height={22} />
                 : <img src={Like} alt="like" className={styles.like} width={22} height={22} />
               }
             </span>
-            <span className={styles.count}>{likesCount}</span>
+            {likesCount > 0 && <span className={styles.count}>{likesCount}</span>}
           </button>
 
-          {post.post_type === "advertisement" && (
-            <>
-              <span className={`${styles.prompt} hidden sm:inline`}>how do you feel about this ad?</span>
-              <div className={styles.reactions}>
-                <button className={styles.reactionBtn}>🙂</button>
-                <button className={styles.reactionBtn}>😐</button>
-                <button className={styles.reactionBtn}>🙁</button>
+          {/* Advertisement Sentiments / Comment Component */}
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {post.post_type === "advertisement" ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span className={styles.prompt}>how do you feel about this ad?</span>
+                <div className={styles.reactions}>
+                  {(() => {
+                    return [
+                      { key: 'good',    src: GoodReview,    lightBg: '#6455BB' },
+                      { key: 'neutral', src: NatrualReview, lightBg: 'linear-gradient(135deg, #9158B6, #B55AB2)' },
+                      { key: 'bad',     src: BadReview,     lightBg: '#B95AB2' },
+                    ].map(({ key, src, lightBg }) => {
+                      const isSelected      = adReaction === key;
+                      const isDeemphasized  = adReaction && adReaction !== key;
+                      return (
+                        <button
+                          key={key}
+                          className={styles.reactionBtn}
+                          onClick={() => handleAdReaction(key)}
+                          style={{
+                            transform: isSelected ? 'scale(1.3)' : 'scale(1)',
+                            background: 'transparent',
+                            boxShadow: 'none',
+                            transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                          }}
+                        >
+                          {isLight ? (
+                            <div
+                              style={{
+                                width: 30,
+                                height: 30,
+                                background: isSelected
+                                  ? 'rgba(0,0,0,0.4)'
+                                  : lightBg,
+                                WebkitMaskImage: `url(${src})`,
+                                WebkitMaskSize: '100% 100%',
+                                WebkitMaskRepeat: 'no-repeat',
+                                maskImage: `url(${src})`,
+                                maskSize: '100% 100%',
+                                maskRepeat: 'no-repeat',
+                                opacity: isDeemphasized ? 0.3 : 1,
+                                transition: 'background 0.2s ease, opacity 0.2s ease',
+                              }}
+                            />
+                          ) : (
+                            <img
+                              src={src}
+                              alt={key}
+                              width={30}
+                              height={30}
+                              style={{
+                                filter: isSelected
+                                  ? 'brightness(0) invert(1) opacity(0.55)'
+                                  : isDeemphasized
+                                    ? 'grayscale(1) opacity(0.3)'
+                                    : 'brightness(0) saturate(100%) invert(32%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(96%)',
+                                transition: 'filter 0.2s ease',
+                              }}
+                            />
+                          )}
+                        </button>
+                      );
+                    });
+                  })()}
+                </div>
               </div>
-            </>
+            ) : (
+              <div
+                className={styles.commentInputPill}
+                style={{ maxWidth: "200px", display: "flex", alignItems: "center", padding: "0 8px 0 16px" }}
+                onClick={() => openComments({ ...post, is_liked: isLiked, likes_count: likesCount })}
+              >
+                <span className={styles.placeholderText}>Add a comment ...</span>
+                {commenterAvatars.length > 0 && (
+                  <div style={{ display: "flex", alignItems: "center", marginLeft: "auto", width: 20 }}>
+                    {commenterAvatars.map((avatar, i) => (
+                      <img
+                        key={i}
+                        src={avatar}
+                        alt=""
+                        style={{
+                          width: 34, height: 34, borderRadius: "50%", objectFit: "cover",
+                          border: "2px solid #262626",
+                          marginLeft: i === 0 ? 0 : -10,
+                          zIndex: 3 - i, position: "relative"
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Share Block */}
+          <div className={styles.shareContainer} ref={shareMenuRef} style={{ position: 'relative' }}>
+            <button className={styles.shareBtn} type="button" onClick={() => setShowShareMenu(!showShareMenu)}>
+              <img src={Share} alt="share" width={18} height={18} className={styles.shareIcon} />
+              <span className={styles.shareText}>Share</span>
+            </button>
+
+            {showShareMenu && createPortal(
+              <div className={styles.shareOverlay} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
+                <div className={styles.shareModal} onClick={e => e.stopPropagation()} ref={shareMenuRef}>
+
+                  <div className={styles.shareHeader}>
+                    <p className={styles.shareTitle}>Share post</p>
+                    <button className={styles.closeBtn} onClick={() => { setShowShareMenu(false); setShareSearch(""); }}>
+                      <img src={XIcon} alt="close" width={14} height={14} style={{ filter: "brightness(0) invert(1)" }} />
+                    </button>
+                  </div>
+
+                  <div className={styles.shareSearchWrapper}>
+                    <div className={styles.shareSearchInner}>
+                      <img src={SearchIcon} alt="" className={styles.shareSearchIcon} />
+                      <input
+                        className={styles.shareInput}
+                        placeholder="Search people or chats..."
+                        value={shareSearch}
+                        onChange={e => setShareSearch(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.shareListContainer}>
+                    {isLoadingChats ? (
+                      <div className={styles.shareStatus}>Loading...</div>
+                    ) : shareTargets.filter(t =>
+                      (t.name || t.username || "").toLowerCase().includes(shareSearch.toLowerCase())
+                    ).length === 0 ? (
+                      <div className={styles.shareStatus}>No chats found</div>
+                    ) : (
+                      <>
+                        <div className={styles.sectionHeader}>Chats</div>
+                        {shareTargets
+                          .filter(t => (t.name || t.username || "").toLowerCase().includes(shareSearch.toLowerCase()))
+                          .map(target => (
+                            <button
+                              key={target.id}
+                              className={styles.shareItem}
+                              onClick={() => handleShareToTarget(target.id)}
+                              disabled={isSharing}
+                            >
+                              <div className={styles.shareAvatarWrapper}>
+                                <img
+                                  src={target.avatar}
+                                  alt=""
+                                  className={styles.shareAvatarImg}
+                                  onError={e => { e.currentTarget.src = DefaultPfp; }}
+                                />
+                              </div>
+                              <span className={styles.targetName}>
+                                {target.name || target.username}
+                              </span>
+                              <span className={styles.sendLabel}>Send</span>
+                            </button>
+                          ))
+                        }
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>,
+              document.body
+            )}
+          </div>
+        </div>
+      )}
+
+      {showReport && (
+        <ReportModal
+          contentId={post.id || post.post_id}
+          contentType="post"
+          onClose={() => setShowReport(false)}
+        />
+      )}
+
+      {lightboxIndex !== null && createPortal(
+        <div
+          onClick={() => setLightboxIndex(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 99999,
+            background: 'rgba(0,0,0,0.95)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'zoom-out',
+          }}
+        >
+          {/* Close */}
+          <button
+            onClick={() => setLightboxIndex(null)}
+            style={{
+              position: 'fixed', top: 20, right: 24, zIndex: 100000,
+              background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: '50%', width: 44, height: 44,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: '#fff', fontSize: 20,
+            }}
+          >✕</button>
+
+          {/* Left arrow */}
+          {displayMedia.length > 1 && (
+            <button
+              onClick={e => { e.stopPropagation(); setLightboxIndex(prev => (prev - 1 + displayMedia.length) % displayMedia.length); }}
+              style={{
+                position: 'fixed', left: 16, top: '50%', transform: 'translateY(-50%)', zIndex: 100000,
+                background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '50%', width: 52, height: 52,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+              }}
+            >
+              <img src={ArrowLeft} alt="prev" style={{ width: 22, height: 22, filter: 'brightness(0) invert(1)' }} />
+            </button>
           )}
 
-          {post.post_type !== "advertisement" && (
-            <div
-              className={`${styles.commentInputPill} flex-1 min-w-0`}
-              style={{ maxWidth: "200px" , margin: "0 auto 0 auto" }}
-              onClick={() => openComments(post)}
+          {/* Media */}
+          {displayMedia[lightboxIndex]?.type === 'video' ? (
+            <video
+              src={displayMedia[lightboxIndex].url}
+              controls autoPlay
+              onClick={e => e.stopPropagation()}
+              style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 12, cursor: 'default' }}
+            />
+          ) : (
+            <img
+              src={displayMedia[lightboxIndex]?.url}
+              alt=""
+              onClick={e => e.stopPropagation()}
+              style={{
+                maxWidth: '90vw', maxHeight: '90vh', borderRadius: 12,
+                objectFit: 'contain', boxShadow: '0 8px 40px rgba(0,0,0,0.6)', cursor: 'default',
+              }}
+            />
+          )}
+
+          {/* Right arrow */}
+          {displayMedia.length > 1 && (
+            <button
+              onClick={e => { e.stopPropagation(); setLightboxIndex(prev => (prev + 1) % displayMedia.length); }}
+              style={{
+                position: 'fixed', right: 16, top: '50%', transform: 'translateY(-50%)', zIndex: 100000,
+                background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '50%', width: 52, height: 52,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+              }}
             >
-              <span className={styles.placeholderText}>Add a comment ...</span>
+              <img src={ArrowRight} alt="next" style={{ width: 22, height: 22, filter: 'brightness(0) invert(1)' }} />
+            </button>
+          )}
+
+          {/* Counter */}
+          {displayMedia.length > 1 && (
+            <div style={{
+              position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 100000,
+              background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '5px 18px',
+              borderRadius: 999, fontSize: '0.9rem', pointerEvents: 'none',
+            }}>
+              {lightboxIndex + 1} / {displayMedia.length}
             </div>
           )}
-        </div>
-
-        <button className={`${styles.shareBtn} flex-shrink-0`} type="button">
-          <Share2 size={14} />
-          <span className="hidden xs:inline ml-1">Share</span>
-          <span className="sm:hidden ml-1">Share</span>
-        </button>
-      </div>
+        </div>,
+        document.body
+      )}
     </article>
   );
 }

@@ -76,14 +76,6 @@ const en = {
             copyright: "© 2024 Project Campus. All rights reserved."
         }
     }
-
-
-
-
-
-
-}
-
-
+};
 
 export default en;

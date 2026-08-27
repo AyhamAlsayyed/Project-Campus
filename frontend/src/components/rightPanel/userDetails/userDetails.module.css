@@ -1,0 +1,173 @@
+/* ── Outer wrapper ── */
+.userDetailsRoot {
+    width: 100%;
+    height: auto;
+}
+
+.detailsWrap {
+    position: relative;
+    width: 100%;
+    margin-top: 45px;
+}
+
+.detailsWrap.noBorder {
+    margin-top: 0;
+}
+
+/* ── Pill label ── */
+.detailsPill {
+    position: absolute;
+    top: -45px;
+    left: 10px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 18px 18px 0 0;
+    font-weight: 800;
+    height: 25px;
+    width: fit-content;
+    min-width: 80px;
+    letter-spacing: 0.6px;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.92);
+    background-color: #424243;
+    border: 1px solid #424243;
+}
+
+.detailsPill p {
+    margin: 0;
+}
+
+/* ── Card shell ── */
+.detailsCard {
+    position: relative;
+    border-radius: 26px;
+    padding: 18px 10px 18px 18px;
+    background: #333333;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+    z-index: 2;
+    max-height: 420px;
+    overflow: hidden;
+    display: flex;
+}
+
+.detailsCard.transparent {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+.detailsCard.darker {
+    background: #2a2a2a;
+}
+
+/* ── Scrollable list ── */
+.sectionList {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+.sectionList::-webkit-scrollbar { width: 4px; }
+.sectionList::-webkit-scrollbar-track { background: transparent; }
+.sectionList::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+}
+
+/* ── Section block ── */
+.section {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.section:last-child {
+    border-bottom: none;
+}
+
+.section.noDivider {
+    border-bottom: none;
+}
+
+/* ── Section content ── */
+.sectionContent {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sectionTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 4px 0;
+    letter-spacing: 0.2px;
+}
+
+.sectionRow {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.4;
+}
+
+/* ── Degree row ── */
+.degreeRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.degreeLabel {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.4;
+}
+
+/* ── Light mode ── */
+[data-theme="light"] .detailsCard {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.06);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .detailsCard.darker {
+    background: #ffffff;
+}
+
+[data-theme="light"] .detailsPill {
+    background-color: #662D91;
+    border-color: #662D91;
+    color: #ffffff;
+}
+
+[data-theme="light"] .section {
+    border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .sectionTitle {
+    color: #662D91;
+}
+
+[data-theme="light"] .sectionRow {
+    color: rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="light"] .degreeLabel {
+    color: rgba(0, 0, 0, 0.65);
+}

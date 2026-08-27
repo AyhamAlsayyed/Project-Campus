@@ -1,9 +1,13 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from ...models import Page, Subscription
+
+User = get_user_model()
 
 
 @api_view(["POST"])
@@ -19,6 +23,18 @@ def login(request):
         )
 
     user = authenticate(request, username=username, password=password)
+
+    if not user:
+        try:
+            potential_user = User.objects.get(username__iexact=username)
+
+            if potential_user.check_password(password) and not potential_user.is_active:
+                potential_user.is_active = True
+                potential_user.save(update_fields=["is_active"])
+                user = potential_user
+        except User.DoesNotExist:
+            pass
+
     if not user:
         return Response(
             {"message": "Invalid credentials"},
@@ -31,28 +47,60 @@ def login(request):
             status=status.HTTP_403_FORBIDDEN,
         )
 
+    is_page = False
+    is_premium = False
+    user_type = "user"
+    avatar = None
+
+    try:
+        if hasattr(user, "page") and user.page:
+            is_page = True
+            user_type = "page"
+
+            has_sub = hasattr(user.page, "subscription")
+            if not has_sub or not user.page.subscription.is_active:
+                return Response(
+                    {"message": "Access denied. This page does not have an active subscription plan."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            if user.page.page_type == Page.PageType.UNIVERSITY:
+                user_type = "university"
+
+            tier = user.page.subscription.tier
+            if tier in [Subscription.Tier.PREMIUM, Subscription.Tier.UNIVERSITY]:
+                is_premium = True
+
+            if getattr(user.page, "profile_image", None):
+                try:
+                    avatar = request.build_absolute_uri(user.page.profile_image.url)
+                except Exception:
+                    avatar = None
+    except Page.DoesNotExist:
+        is_page = False
+
+    if not is_page:
+        profile = getattr(user, "profile", None)
+        if profile and getattr(profile, "profile_image", None):
+            try:
+                avatar = request.build_absolute_uri(profile.profile_image.url)
+            except Exception:
+                avatar = None
+
     refresh = RefreshToken.for_user(user)
     access = refresh.access_token
-
-    profile = getattr(user, "profile", None)
-
-    avatar = None
-    if profile and getattr(profile, "profile_image", None):
-        try:
-            avatar = request.build_absolute_uri(profile.profile_image.url)
-        except Exception:
-            avatar = None
 
     return Response(
         {
             "message": "Login successful",
-            # This is the JWT token
             "access": str(access),
             "refresh": str(refresh),
             "user": {
                 "id": user.id,
                 "username": user.username,
                 "avatar": avatar,
+                "user_type": user_type,
+                "is_premium": is_premium,
             },
         },
         status=status.HTTP_200_OK,

@@ -1,0 +1,392 @@
+.infoPanelContainer {
+  background-color: #333333;
+  border-radius: 30px 30px 0 0;
+  padding: 32px;
+  color: #E6E6E6;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.infoHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.infoHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.infoTitle {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #CCCCCC;
+}
+
+.infoHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.saveBtn {
+  background-color: #404040;
+  border: none;
+  border-radius: 20px;
+  color: #B3B3B3;
+  padding: 8px 24px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: not-allowed;
+  height: 36px;
+  min-width: 70px;
+  transition: background 0.2s ease;
+}
+.saveBtnActive {
+  background: linear-gradient(90deg, #612886, #892A82);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+
+.centeredDivider {
+  width: 75%;
+  height: 1px;
+  background-color: #4D4D4D;
+  margin: 0 auto 28px auto;
+}
+
+.sectionWrapper {
+  margin-bottom: 28px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 14px;
+}
+
+.sectionHeaderBanner {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 14px;
+  gap: 10px;
+}
+
+.sectionHeaderDescription {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #CCCCCC;
+  font-weight: 600;
+}
+
+.requiredAsterisk {
+  color: #D4145A;
+  margin-left: 2px;
+}
+
+.sectionHelperText {
+  font-size: 0.65rem;
+  color: #B3B3B3;
+  opacity: 0.85;
+  line-height: 1.3;
+}
+
+.sectionHelperTextBanner {
+  font-size: 0.65rem;
+  color: #B3B3B3;
+  opacity: 0.85;
+  line-height: 1.3;
+  max-width: 70%;
+  text-align: right;
+}
+
+.bannerContainer {
+  width: 100%;
+  height: 140px;
+  border-radius: 30px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  transition: background-image 0.3s ease;
+}
+
+.cameraBtn {
+  margin: 0 20px 14px 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.cameraBtn:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.nameRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.nameWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.communityName {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #595959;
+}
+
+.communityMeta {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #595959;
+  font-weight: 500;
+}
+
+.descriptionInputWrapper {
+  position: relative;
+  width: 65%; 
+}
+
+.descriptionTextarea {
+  width: 100%; 
+  height: 120px;
+  background-color: #262626;
+  border: none;
+  border-radius: 25px;
+  padding: 16px 16px 36px 16px; 
+  color: #E6E6E6;
+  font-size: 0.92rem;
+  font-family: inherit;
+  resize: none;
+  box-sizing: border-box; 
+  outline: none;
+}
+
+.charCounter {
+  position: absolute;
+  bottom: 12px;
+  right: 16px;
+  font-size: 0.75rem;
+  color: #666666;
+  font-weight: 500;
+}
+
+.privacyContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.privacyInfo {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  max-width: 70%;
+}
+
+.privacyTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #CCCCCC;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.privacySelectorWrapper {
+  position: relative;
+}
+
+.privacySelector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.privacyBtn {
+  background-color: #292929;
+  border-radius: 10px;
+  padding: 13px 50px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #E6E6E6;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.privacySelector:hover .privacyBtn {
+  background-color: #383838;
+}
+
+.privacyDropdown {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-top: 8px;
+  background-color: #292929;
+  border-radius: 12px;
+  padding: 8px 0;
+  width: 100%;
+  min-width: 150px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  overflow: hidden;
+}
+
+.dropdownItem {
+  padding: 12px 20px;
+  color: #E6E6E6;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.2s ease;
+}
+
+.dropdownItem:hover {
+  background-color: #404040;
+}
+[data-theme="light"] .infoPanelContainer {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .infoTitle {
+  color: #662D91;
+}
+
+[data-theme="light"] .sectionTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .privacyTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .sectionHelperText,
+[data-theme="light"] .sectionHelperTextBanner {
+  color: #666666;
+}
+
+[data-theme="light"] .centeredDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .descriptionTextarea {
+  background-color: #f3e8ff;
+  color: #333333;
+}
+
+[data-theme="light"] .privacyBtn {
+  background-color: #f3e8ff;
+  color: #662D91;
+}
+
+[data-theme="light"] .privacySelector:hover .privacyBtn {
+  background-color: #e9d5ff;
+}
+
+[data-theme="light"] .privacyDropdown {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .dropdownItem {
+  color: #333333;
+}
+
+[data-theme="light"] .dropdownItem:hover {
+  background-color: #f3e8ff;
+}
+.iconBack,
+.iconHelp,
+.iconCamera,
+.iconVerified,
+.iconEdit,
+.iconArrow {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) saturate(100%) invert(1);
+  display: block;
+}
+
+.iconHelp { width: 22px; height: 22px; cursor: pointer; }
+.iconCamera { width: 18px; height: 18px; }
+.iconVerified { width: 18px; height: 18px; }
+.iconEdit { width: 18px; height: 18px; cursor: pointer; }
+.iconArrow { width: 16px; height: 16px; }
+
+[data-theme="light"] .iconBack,
+[data-theme="light"] .iconHelp,
+[data-theme="light"] .iconArrow,
+[data-theme="light"] .iconEdit {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+
+[data-theme="light"] .iconVerified {
+  filter: invert(28%) sepia(44%) saturate(800%) hue-rotate(255deg) brightness(85%);
+}
+[data-theme="light"] .saveBtn {
+  background-color: #ffffff;
+  color: #662D91;
+  border: 1.5px solid #662D91;
+}
+
+[data-theme="light"] .saveBtnActive {
+  background: linear-gradient(90deg, #612886, #892A82);
+  color: #ffffff;
+  border: none;
+}
+
+@media (max-width: 1023px) {
+  .infoPanelContainer {
+    padding: 20px 16px;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .infoTitle {
+    font-size: 1.4rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.2rem;
+  }
+
+  .descriptionInputWrapper {
+    width: 100%;
+  }
+
+  .centeredDivider {
+    width: 100%;
+  }
+
+  .infoHeaderLeft {
+    gap: 12px;
+  }
+}

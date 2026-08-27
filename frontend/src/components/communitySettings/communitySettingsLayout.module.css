@@ -1,0 +1,21 @@
+.layoutContainer {
+    display: flex;
+    gap: 24px;
+    width: 100%;
+}
+
+.mainContent {
+    flex: 1;
+}
+
+.layoutContainerMobile {
+    flex-direction: column;
+    gap: 0;
+}
+
+@media (max-width: 1023px) {
+    .layoutContainer {
+        flex-direction: column;
+        gap: 0;
+    }
+}

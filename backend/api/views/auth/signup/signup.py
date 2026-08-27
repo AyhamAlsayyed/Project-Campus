@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from ....models import (
@@ -35,32 +36,52 @@ def resolve_role_from_domain(domain: str) -> str:
 
 
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def signup(request):
     username = (request.data.get("username") or "").strip().lower()
     academic_email = (request.data.get("academicEmail") or "").strip().lower()
     personal_email = (request.data.get("personalEmail") or "").strip().lower()
     password = request.data.get("password")
 
-    if User.objects.filter(username=username).exists():
+    if not username or not academic_email or not personal_email or not password:
+        return Response(
+            {"message": "username, academicEmail, personalEmail, and password are required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if User.objects.filter(username__iexact=username).exists():
         return Response(
             {"message": "Username already taken"},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    print(academic_email)
-    verification = (
+
+    # 1. Verify Academic Email token presence
+    academic_verification = (
         EmailVerification.objects.filter(academic_email=academic_email, is_verified=True)
         .order_by("-created_at")
         .first()
     )
 
-    if not verification:
+    if not academic_verification:
         return Response(
-            {"message": "Academic email is not verified"},
+            {"message": "Academic email is not verified. Please complete verification first."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # 2. 🛠️ FIXED: Enforce checking validation token status for Personal Email step
+    personal_verification = (
+        EmailVerification.objects.filter(academic_email=personal_email, is_verified=True)
+        .order_by("-created_at")
+        .first()
+    )
+
+    if not personal_verification:
+        return Response(
+            {"message": "Personal email verification missing. Please confirm OTP session code first."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
     uni_row = get_university_row_from_email(academic_email)
-
     if not uni_row:
         return Response(
             {"message": "Unsupported academic email domain"},
@@ -70,27 +91,39 @@ def signup(request):
     uni_page = uni_row.page
     role = resolve_role_from_domain(uni_row.domain)
 
-    with transaction.atomic():
+    try:
+        with transaction.atomic():
+            user = User.objects.create_user(
+                username=username,
+                email=personal_email,
+                password=password,
+            )
 
-        user = User.objects.create_user(
-            username=username,
-            email=personal_email,
-            password=password,
+            UserProfile.objects.create(
+                user=user,
+                academic_email=academic_email,
+            )
+
+            if role == "student":
+                Student.objects.create(user=user, university_page=uni_page)
+            else:
+                Instructor.objects.create(user=user, university_page=uni_page)
+
+            # 🛠️ FIXED: Drop both temporary validation records cleanly
+            academic_verification.delete()
+            personal_verification.delete()
+
+    except Exception as e:
+        return Response(
+            {"message": f"Signup failed: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-
-        UserProfile.objects.create(
-            user=user,
-            academic_email=academic_email,
-        )
-
-        if role == "student":
-            Student.objects.create(user=user, university_page=uni_page)
-        else:
-            Instructor.objects.create(user=user, university_page=uni_page)
-
-        verification.delete()
 
     return Response(
-        {"message": "Signup successful"},
+        {
+            "message": "Signup successful",
+            "username": username,
+            "email": academic_email,
+        },
         status=status.HTTP_201_CREATED,
     )

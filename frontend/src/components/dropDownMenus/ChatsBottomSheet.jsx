@@ -1,7 +1,20 @@
 import React, { useEffect, useRef } from 'react';
-import { Search, Check } from "lucide-react";
+import { Search, Check, BarChart2 } from "lucide-react";
 import styles from './DrawerStyles.module.css';
+import StatusDot from '../presence/StatusDot';
+import { usePresence } from '../../context/presenceContext';
+import DefaultPfp from '../../Assets/icons/default-pfp.png';
 
+function ChatStatusLabel({ userId }) {
+    const { onlineUsers } = usePresence();
+    const status = onlineUsers[String(userId)] ?? 'offline';
+
+    return (
+        <span className={styles.chatStatusText}>
+            {status === 'online' ? 'Online' : status === 'away' ? 'Away' : status === 'dnd' ? 'Do Not Disturb' : 'Offline'}
+        </span>
+    );
+}
 export default function ChatsBottomSheet({
     setShowDrawerChats,
     dropdownPosition,
@@ -9,7 +22,8 @@ export default function ChatsBottomSheet({
     setDrawerSearchQuery,
     drawerChatsLoading,
     filteredDrawerChats,
-    navigate
+    navigate,
+    onChatClick,
 }) {
     const dropdownRef = useRef(null);
 
@@ -47,7 +61,7 @@ export default function ChatsBottomSheet({
                     <span
                         className={styles.viewAll}
                         onClick={(e) => {
-                            e.stopPropagation(); // Stops click from bubbling up
+                            e.stopPropagation();
                             navigate("/chats");
                             setShowDrawerChats(false);
                         }}
@@ -69,31 +83,35 @@ export default function ChatsBottomSheet({
 
             <div className={styles.chatListWrapper}>
                 {drawerChatsLoading ? (
-                    <div style={{ padding: "20px", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</div>
+                    <div className={styles.emptyText}>Loading...</div>
                 ) : filteredDrawerChats.length === 0 ? (
-                    <div style={{ padding: "20px", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No chats found</div>
+                    <div className={styles.emptyText}>No chats found</div>
                 ) : filteredDrawerChats.map(chat => (
                     <div
                         key={chat.id}
                         className={styles.chatItem}
                         onClick={(e) => {
                             e.stopPropagation();
+                            onChatClick?.(chat.id);
                             navigate(`/chats/${chat.id}`);
                             setShowDrawerChats(false);
                         }}
                     >
-                        <div className={styles.chatAvatarWrap}>
-                            <img src={chat.avatar} alt="" className={styles.chatAvatar} />
-                            {!chat.isGroup && (
-                                <span className={`${styles.statusDot} ${chat.dotStyle === 'online' ? styles.dotOnline :
-                                    chat.dotStyle === 'dnd' ? styles.dotDnd :
-                                        styles.dotOffline
-                                    }`} />
+                        <div className={styles.chatAvatarWrap} style={{ position: 'relative', flexShrink: 0 }}>
+                            <img src={chat.avatar || DefaultPfp} alt="" className={`${styles.chatAvatar}${!chat.avatar ? ' defaultPfp' : ''}`} onError={e => { e.currentTarget.src = DefaultPfp; e.currentTarget.classList.add('defaultPfp'); }} />
+                            {!chat.isGroup && !chat.isPage && chat.userId && (
+                                <span style={{ position: 'absolute', bottom: 0, right: 0, borderRadius: '50%' }}>
+                                    <StatusDot userId={chat.userId} size="sm" />
+                                </span>
                             )}
                         </div>
                         <div className={styles.chatGrid}>
-                            {!chat.isGroup && <span className={styles.chatStatus}>{chat.status}</span>}
-                            <span className={styles.chatPreview}>{chat.message}</span>
+                            {!chat.isGroup && <ChatStatusLabel userId={chat.userId} />}
+                            <span className={styles.chatPreview}>
+                                {chat.isPoll
+                                    ? <>{chat.pollPrefix}<BarChart2 size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> sent a poll</>
+                                    : chat.message}
+                            </span>
                             <span className={styles.chatName}>{chat.name}</span>
                             <div className={styles.chatTimeContainer}>
                                 {chat.unread > 0 && <span className={styles.chatUnread}>{chat.unread}</span>}

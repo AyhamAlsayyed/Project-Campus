@@ -1,4 +1,4 @@
-html {
+﻿html {
     height: auto;
     min-height: auto;
     display: flow-root;
@@ -10,7 +10,7 @@ body {
     padding: 0;
     min-height: 100vh;
     background: transparent;
-    background: linear-gradient(135deg, var(--bg-main), var(--bg-secondary));
+    background: linear-gradient(315deg, var(--bg-main), var(--bg-secondary));
     background-attachment: fixed;
     background-size: cover;
 }
@@ -30,7 +30,7 @@ body {
     margin: 0 auto;
     --left-col: 300px;
     --right-col: 380px;
-    --col-gap: 40px;
+    --col-gap: 65px;
 }
 
 .header {
@@ -43,6 +43,7 @@ body {
 
 .content {
     display: flex;
+    width: min(1800px, 100%);
     margin: 20px auto 0 auto;
     gap: var(--col-gap);
     margin-top: 20px;
@@ -59,113 +60,136 @@ body {
 
 .title {
     font-size: 25px;
-    font-weight: 600;
+    font-weight: lighter;
     color: rgba(255, 255, 255, 0.85);
 }
 
 .highlight {
     font-size: 40px;
-    background: linear-gradient(30deg, #c72cff, #8b2dff);
+    font-weight: 600;
+    background: #93278F;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
+
 .postContainer {
     background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
     width: 100%;
-    padding-top: 10px;
+    padding-top: 6px;
     flex: 1;
     border-radius: 30px;
     height: auto;
     z-index: 1;
-    min-width: 900px;
+    min-width: 850px;
     position: relative;
     margin: 2% 0 0 0;
 }
+
 .innerContainer {
-  background-color: #333333;
-  border-radius: 30px 30px 0 0;
-  padding-top: 30px;
-  
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  top: 10px;
-  z-index: 10;
+    background-color: #333333;
+    border-radius: 30px 30px 0 0;
+    padding-top: 30px;
+    min-height: calc(100vh - 305px);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    top: 10px;
+    z-index: 10;
 }
 
 
 
 .itemWrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  gap: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 30px;
 
 }
+
 .dividerOne {
     width: 60%;
     height: 1px;
-    margin: 20px auto 30px auto; 
-    
-    background: linear-gradient(
-        90deg, 
-        transparent 0%, 
-        rgba(255, 255, 255, 0.2) 50%, 
-        transparent 100%
-    );
+    margin: 20px auto 30px auto;
+
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.2) 50%,
+            transparent 100%);
     position: relative;
     z-index: 5;
 }
 
 .rightSection {
-  position: relative;
-  flex: 0 0 435px;
-  width: 25%;
-  margin: 5% 0 0 0;
-  gap: 70px;
-  display: flex;
-  flex-direction: column;
+    position: sticky;
+    top: 100px;
+    flex: 0 0 420px;
+    width: 25%;
+    margin: 5% 0 0 0;
+    gap: 70px;
+    display: flex;
+    flex-direction: column;
 }
-.rightCard{
-  position: relative;
-  z-index: 2;
 
-
-}
-.pill {
-   position: absolute;
-  top: -45px;
-  left: 10px;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  padding: 12px 20px;
-  border-radius: 18px 18px 0 0;
-  font-weight: 800  ;
-  height: 25px;
-  letter-spacing: 0.6px;
-  font-size: 0.95rem;
-  color: rgba(255,255,255,0.92);
-  background-color: rgba(61, 60, 60, 0.95);
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow: 0 0 0 10px rgba(0,0,0,0);
-}
 .rightCard {
-  display: flex;
-  flex-direction: column;
-  background: #333333;
-  border-radius: 24px;
-  padding: 16px;
-  border: 1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 2;
+
+
 }
-.rightList{
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
+
+.pill {
+    position: absolute;
+    top: -45px;
+    left: 10px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 18px 18px 0 0;
+    font-weight: 800;
+    height: 25px;
+    letter-spacing: 0.6px;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.92);
+    background-color: rgba(61, 60, 60, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+}
+
+.rightCard {
+    display: flex;
+    flex-direction: column;
+    background: #333333;
+    border-radius: 24px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    min-height: 580px;       
+    overflow-y: auto;      
+    scrollbar-width: thin;  
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;  
+     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+.rightCard::-webkit-scrollbar {
+    width: 4px;
+}
+
+.rightCard::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+.rightCard::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.rightList {
+    display: flex;
+    flex-direction: column;
+
+    gap: 30px;
 }
 
 
@@ -176,10 +200,125 @@ body {
     width: 50%;
     height: 1px;
     margin: 20px auto 0 auto;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.1),
-        transparent
-    );
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.1),
+            transparent);
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 400px;
+    gap: 12px;
+    text-align: center;
+}
+
+.emptyIcon {
+    font-size: 48px;
+    opacity: 0.6;
+}
+
+.emptyTitle {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #ccc;
+    margin: 0;
+}
+
+.emptySubtitle {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0;
+}
+/* ════════════════════════════════════════
+   LIGHT MODE — JOINED COMMUNITIES
+   ════════════════════════════════════════ */
+
+[data-theme="light"] .darkContainer {
+    background: linear-gradient(135deg, #f5f5f5, #ffffff);
+}
+
+[data-theme="light"] .title {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .innerContainer {
+    background-color: #ffffff;
+}
+
+[data-theme="light"] .postContainer {
+    background: linear-gradient(-90deg, #A0279C, #6923A2);
+}
+
+[data-theme="light"] .dividerOne {
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+}
+
+[data-theme="light"] .rightCard {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(102, 45, 145, 0.1);
+    backdrop-filter: none;
+}
+
+[data-theme="light"] .pill {
+    background-color: #662D91;
+    border-color: #662D91;
+    color: #ffffff;
+}
+
+[data-theme="light"] .dividerTwo {
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+}
+
+[data-theme="light"] .emptyTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .emptySubtitle {
+    color: #888888;
+}
+
+/* ════════════════════════════════════════
+   MOBILE RESPONSIVE
+   ════════════════════════════════════════ */
+@media (max-width: 1023px) {
+    .postContainer {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .followedCommunitiesPosts {
+        margin-top: 0;
+    }
+}
+
+
+@media (min-width: 2560px) {
+  .darkContainer {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+  .postContainer {
+    min-width: 0;
+  }
+  .rightSection {
+    flex: 0 0 400px;
+  }
+}
+
+@media (min-width: 3440px) {
+  .darkContainer {
+    padding-left: 72px;
+    padding-right: 72px;
+  }
+}
+@media (min-width: 3840px) {
+  .darkContainer {
+    padding-left: 96px;
+    padding-right: 96px;
+  }
 }

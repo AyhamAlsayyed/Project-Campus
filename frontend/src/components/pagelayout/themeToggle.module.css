@@ -44,7 +44,7 @@
   display: inline-block;
 }
 .toggleLight {
-  background: rgba(255, 255, 255, 0.25);
+  background: #C8C8C8;
 }
 
 .toggleCircle {

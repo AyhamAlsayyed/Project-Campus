@@ -1,0 +1,417 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal {
+  width: 500px;
+  background: #242526;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 24px;
+  color: var(--text-accent);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.closeButton {
+  position: absolute;
+  right: 0;
+  top: -5px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  color: #b0b3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.leftSide {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+  min-width: 0;
+}
+
+.userProfilePicture {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.modalInput {
+  width: 100%;
+  height: 120px;
+  margin-top: 15px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-accent);
+  font-size: 1.1rem;
+  resize: none;
+}
+
+.modalInput::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.previewContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.previewWrapper {
+  position: relative;
+}
+
+.previewImage {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.removeImage,
+.removeFile {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.removeImage:hover,
+.removeFile:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+.filePreviewContainer {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fileItem {
+  position: relative;
+  padding: 10px;
+  background: #2a2a2a;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.actionsRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: nowrap;
+  margin-top: 10px;
+}
+
+.actionButton {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+  position: relative;
+}
+
+.actionButton + .actionButton::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.actionButton:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.actionIcon {
+  width: 16px;
+  height: 16px;
+  filter: brightness(0) invert(0.55);
+}
+
+.actionIconSvg {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.pollContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.pollOptionRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pollInput {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-accent);
+}
+
+.pollInput::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.removeOption {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 16px;
+  transition: 0.2s;
+}
+
+.removeOption:hover {
+  color: red;
+}
+
+.addOption {
+  background: transparent;
+  border: none;
+  color: #b38cff;
+  cursor: pointer;
+  font-size: 0.8rem;
+  text-align: left;
+  padding: 4px 0;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 25px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switchSlider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: transparent;
+  border: 2px solid #4A4A4A;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.switchSlider:before {
+  position: absolute;
+  content: "";
+  height: 25px;
+  width: 25px;
+  left: -2px;
+  bottom: -2px;
+  background-color: white;
+  transition: .4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  border-radius: 50%;
+}
+
+.switch input:checked + .switchSlider {
+  background-color: #A4279C;
+  border-color: #A4279C;
+}
+
+.switch input:checked + .switchSlider:before {
+  transform: translateX(35px);
+}
+
+.postButton {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
+  color: white;
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.postButton:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.postButton:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.3);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Light mode ── */
+[data-theme="light"] .modalOverlay {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .modal {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .modalHeader h3 {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .closeButton {
+  background: rgba(0, 0, 0, 0.06);
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .closeButton:hover {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .modalInput {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .modalInput::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .actionsRow {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .actionButton {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="light"] .actionButton:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .actionButton + .actionButton::before {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .actionIcon {
+  filter: brightness(0) saturate(100%) invert(18%) sepia(60%) saturate(1200%) hue-rotate(265deg) brightness(85%) contrast(95%);
+}
+
+[data-theme="light"] .actionIconSvg {
+  color: #662D91;
+}
+
+[data-theme="light"] .pollInput {
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .pollInput::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .addOption {
+  color: #7B2FBE;
+}
+
+[data-theme="light"] .removeOption {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .removeOption:hover {
+  color: #d63b6e;
+}
+
+[data-theme="light"] .fileItem {
+  background: #f0f0f0;
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .switchSlider {
+  background-color: #C8C8C8;
+  border-color: #C8C8C8;
+}
+
+[data-theme="light"] .switchSlider:before {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .postButton:disabled {
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.25);
+}

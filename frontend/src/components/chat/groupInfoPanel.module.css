@@ -1,0 +1,1956 @@
+/* ── Gallery ── */
+.galleryWrap {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+}
+
+.galleryHeader {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    flex-shrink: 0;
+    border-bottom: 1px solid;
+}
+
+.galleryBackBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+.galleryBackBtn:hover { background: rgba(128,128,128,0.15); }
+
+.galleryTabs {
+    display: flex;
+    flex-shrink: 0;
+    border-bottom: 1px solid;
+}
+
+.galleryTab {
+    flex: 1;
+    padding: 12px 0;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    font-family: inherit;
+}
+
+.galleryScroll {
+    flex: 1;
+    overflow-y: auto;
+    will-change: transform;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.galleryScroll::-webkit-scrollbar {
+    width: 4px;
+}
+
+.galleryScroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.galleryScroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+}
+
+.galleryScroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme="light"] .galleryScroll {
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+[data-theme="light"] .galleryScroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .galleryScroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+/* 3-column image grid */
+.galleryGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    padding: 3px;
+}
+
+.galleryCell {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    cursor: pointer;
+    border-radius: 6px;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 120px;
+    contain: layout paint;
+}
+
+.galleryCell img,
+.galleryCell video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.2s ease;
+}
+
+.galleryCell:hover img,
+.galleryCell:hover video {
+    transform: scale(1.05);
+}
+
+.galleryCellOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0);
+    transition: background 0.2s ease;
+    border-radius: 6px;
+}
+
+.galleryCell:hover .galleryCellOverlay {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.galleryVideoBadge {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+/* Docs list */
+.galleryDocList {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    gap: 4px;
+}
+
+.galleryDocItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: background 0.15s;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 68px;
+    contain: layout paint;
+}
+
+.galleryDocItem:hover { background: rgba(102, 45, 145, 0.1) !important; }
+
+.galleryDocIcon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.galleryDocMeta { min-width: 0; flex: 1; }
+
+.galleryDocName {
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.galleryDocType {
+    font-size: 0.72rem;
+    margin-top: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.galleryDocDownload {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(102, 45, 145, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+.galleryDocItem:hover .galleryDocDownload {
+    background: rgba(102, 45, 145, 0.25);
+}
+
+/* Empty state */
+.galleryEmpty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 60px 20px;
+    opacity: 0.45;
+}
+
+.galleryEmptyIcon {
+    font-size: 2.5rem;
+    line-height: 1;
+}
+
+.galleryEmptyText {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Light mode overrides */
+[data-theme="light"] .galleryDocItem:hover { background: rgba(102, 45, 145, 0.06) !important; }
+[data-theme="light"] .galleryDocDownload { background: rgba(102, 45, 145, 0.08); }
+[data-theme="light"] .galleryDocItem:hover .galleryDocDownload { background: rgba(102, 45, 145, 0.18); }
+
+/* ── Container ── */
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #333333;
+    color: #f0f0f0;
+
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    border-radius: 30px 30px 0 0;
+    overflow: hidden;
+}
+
+/* ── Header ── */
+.header {
+    display: flex;
+    align-items: center;
+    padding: 30px 32px;
+    flex-shrink: 0;
+    gap: 24px;
+}
+
+.backBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.85);
+    padding: 6px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+.backBtn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.headerTitle {
+    flex: 1;
+    font-size: 1.9rem;
+    font-weight: 600;
+    color: #B3B3B3;
+}
+
+.headerIcons {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.iconBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.72);
+    padding: 6px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+}
+
+.iconBtn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+/* ── Header Line Divider ── */
+.headerDivider {
+    width: 73%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.12);
+    margin: 0 auto;
+    flex-shrink: 0;
+}
+
+/* ── Body ── */
+.body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 48px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+}
+
+/* ── Top card: Flex Layout ── */
+.topCard {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+
+    width: 100%;
+}
+
+
+.infoAndPictureWrapper {
+    display: flex;
+    align-items: center;
+    gap: 70px;
+
+    width: 100%;
+}
+
+.descriptionAndButtonsWrapper {
+    display: flex;
+    align-items: stretch;
+    gap: 40px;
+}
+
+/* Avatar Area */
+.avatarRing {
+    position: relative;
+    width: 115px;
+    height: 115px;
+    flex-shrink: 0;
+}
+
+.avatar {
+    width: 115px;
+    height: 115px;
+    border-radius: 50%;
+    background: #2a2a2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 2.5px solid rgba(255, 255, 255, 0.15);
+}
+
+.avatarImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatarInitials {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.cameraBtn {
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #3a3a3a;
+    border: 2px solid #333333;
+    color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.cameraBtn:hover {
+    background: #4a4a4a;
+}
+
+/* Buttons Container Area */
+.buttonsContainer {
+    width: 140px;
+    flex-shrink: 0;
+    display: flex;
+    margin-top: 15px;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.shareBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 40px 10px 40px;
+    border-radius: 22px;
+    background: #4D4D4D;
+    border: none;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.83rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, transform 0.1s;
+    width: 100%;
+    justify-content: center;
+}
+
+.shareBtn:hover {
+    background: #5a5a5a;
+}
+
+.shareBtn:active {
+    transform: scale(0.97);
+}
+
+.addMemberBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 22px;
+    background: linear-gradient(90deg, #612886, #892A82);
+    border: none;
+    color: #fff;
+    font-size: 0.83rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s, transform 0.1s;
+    width: 100%;
+    justify-content: center;
+}
+
+.addMemberBtn:hover {
+    opacity: 0.88;
+}
+
+.addMemberBtn:active {
+    transform: scale(0.97);
+}
+
+/* Identity Area */
+.identityBlock {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    justify-content: center;
+    min-width: 0;
+    /* Prevents text from breaking out of the container */
+}
+
+.typeBadge {
+    display: inline-block;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(90deg, #3C268B, #852A82);
+    letter-spacing: 0.03em;
+    width: fit-content;
+}
+
+.nameRow {
+    display: flex;
+    align-items: center;
+    gap: 70px;
+}
+
+.groupName {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.editBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.55);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.84rem;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+
+.editBtn:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+}
+
+.createdBy {
+    font-size: 1rem;
+    color: #B3B3B3;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Bio Box Area */
+.bioBox {
+    flex: 1;
+    background: #262626;
+    border-radius: 18px;
+    /* Smooth, modern corners */
+    padding: 24px 28px;
+    /* Plush inner padding */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 110px;
+    min-width: 0;
+    box-sizing: border-box;
+    /* Ensures padding doesn't affect the 100% width stretch */
+}
+
+.bioText {
+    margin: 0;
+    font-size: 0.86rem;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.5;
+}
+
+.memberCount {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.36);
+    align-self: flex-end;
+    margin-top: 6px;
+}
+
+/* 75% Section Divider */
+.sectionDivider {
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 12px auto;
+    /* Added vertical breathing room around lines */
+    flex-shrink: 0;
+}
+
+/* ── Section headings ── */
+.detailsHeading {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+.sectionTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #B3B3B3;
+}
+
+.sectionTitleWrapper {
+    display: flex;
+    align-items: center;
+}
+
+.sectionSub {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.38);
+    line-height: 1.4;
+}
+
+/* ── Media card ── */
+.mediaCard {
+    background: #262626;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.mediaCardHeader {
+    padding: 13px 16px 11px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+}
+
+.mediaHeaderLine {
+    flex: 1;
+    /* This is the magic property that makes it stretch to the right edge */
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    /* The color of the line */
+}
+
+.mediaCardTitle {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.88);
+    white-space: wrap;
+}
+
+.mediaGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    /* FIX: Gives all 4 columns perfectly identical widths */
+    gap: 14px;
+    /* Adds the missing space between each card item */
+    padding: 16px;
+    /* Insets the cards cleanly away from the container boundaries */
+}
+
+.pdfTile,
+.imageTile,
+.viewAllTile {
+    min-height: 100px;
+    border-radius: 14px;
+    /* FIX: Adds smooth corners to the items */
+}
+
+.pdfTile {
+    background: #1c1c1c;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 16px 10px;
+    min-height: 100px;
+}
+
+.pdfName {
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.85);
+    text-align: center;
+    line-height: 1.3;
+}
+
+.pdfMeta {
+    font-size: 0.62rem;
+    color: rgba(255, 255, 255, 0.38);
+    text-align: center;
+}
+
+.imageTile {
+    min-height: 100px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.viewAllTile {
+    background: rgba(255, 255, 255, 0.04);
+    border: none;
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    text-align: center;
+    transition: background 0.15s;
+}
+
+.viewAllTile:hover {
+    background: rgba(255, 255, 255, 0.09);
+}
+
+/* ── Members section ── */
+.membersSection {
+    display: flex;
+    flex-direction: column;
+}
+
+.membersSectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.membersSectionLeft {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.memberDot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.memberCountLabel {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.42);
+}
+
+.viewAllBtn {
+    background: #4D4D4D;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.78rem;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.viewAllBtn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Member rows */
+.memberRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+
+    position: relative;
+}
+
+.memberRow:last-child {
+    border-bottom: none;
+}
+
+.memberAvatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #2d2d2d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.memberAvatarImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.memberInitials {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.memberInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.adminBadge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #392287, #81277F);
+    color: #fff;
+    width: fit-content;
+}
+
+.memberBadge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: #3A3A3A;
+    color: rgba(255, 255, 255, 0.65);
+    width: fit-content;
+}
+
+.memberNameRow {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.adminName {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #E043B5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.memberName {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.88);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.memberRoleLabel {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.36);
+    flex-shrink: 0;
+}
+
+.memberMenuWrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.memberMenuBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.42);
+    padding: 6px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    transition: background 0.15s, color 0.15s;
+}
+
+.memberMenuBtn:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.memberDropdown {
+    position: fixed;
+    max-width: 165px;
+    z-index: 9999;
+    right: 0;
+    top: calc(100% + 4px);
+    background: #2c2c2c;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 6px 0;
+    min-width: 165px;
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.memberMenuItem {
+    width: 100%;
+    background: none;
+    border: none;
+    text-align: left;
+    padding: 9px 16px;
+    font-size: 0.84rem;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: background 0.12s;
+}
+
+.memberMenuItem:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.destructiveMI {
+    color: #f87171 !important;
+}
+
+.destructiveMI:hover {
+    background: rgba(248, 113, 113, 0.1) !important;
+}
+
+.menuDivider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.07);
+    margin: 4px 0;
+}
+
+/* ── Other section ── */
+.otherSection {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 4px;
+}
+
+.otherBtn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 13px 4px;
+    cursor: pointer;
+
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.92rem;
+    font-weight: 500;
+    transition: background 0.15s;
+}
+
+.otherBtn:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.otherIcon {
+    color: rgba(255, 255, 255, 0.48);
+}
+
+.destructiveBtn {
+    color: #f87171;
+    border-bottom: none;
+}
+
+.destructiveBtn:hover {
+    background: rgba(248, 113, 113, 0.07);
+}
+
+/* ── Search Popup Configurations (Provided Classes) ── */
+.searchContactWrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 999px;
+    padding: 12px 16px;
+    margin-bottom: 22px;
+}
+
+.contactWrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.searchIcon {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.searchInput {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    color: #ffffff;
+    /* Fallback for var(--text-accent) to maintain clarity */
+    font-size: 0.95rem;
+}
+
+.searchInput::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* ── Popup Overlay Styles ── */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modalContent {
+    background: #232323;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    width: min(440px, 90%);
+    padding: 24px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.modalTitle {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+}
+
+.modalCloseBtn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 50%;
+    transition: background 0.2s, color 0.2s;
+}
+
+.modalCloseBtn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+}
+
+/* ── Clipboard Widget Styles ── */
+.copyWidgetContainer {
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+.copyWidgetInput {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.copyWidgetBtn {
+    background: #ffffff;
+    color: #1a1a1a;
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.copyWidgetBtn:hover {
+    opacity: 0.9;
+}
+
+/* ── Row items within Popups ── */
+.popupScrollList {
+    max-height: 260px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-right: 4px;
+}
+
+.popupScrollList::-webkit-scrollbar {
+    width: 5px;
+}
+
+.popupScrollList::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.popupItemRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 10px;
+    transition: background 0.15s;
+}
+
+.popupItemRow:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.popupItemLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.popupItemAvatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.popupItemAvatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.popupItemName {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.popupActionButton {
+    background: linear-gradient(90deg, #612886, #892A82);
+    color: white;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 25px;
+    cursor: pointer;
+}
+
+.popupActionButton:hover {
+    filter: brightness(1.08);
+}
+
+.popupEmptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 16px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.35);
+    width: 100%;
+}
+
+.emptyMediaMsg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 16px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.35);
+    width: 100%;
+}
+
+/* --- WhatsApp Group Permissions UI --- */
+
+.permissionsContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #333333;
+    /* Matches your main container background */
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.permissionsHeader {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.permissionsTitle {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #e9edef;
+    margin: 0;
+}
+
+.permissionsScroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 0 30px 0;
+}
+
+.sectionHeading {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #8696a0;
+    /* WhatsApp secondary text color */
+    padding: 15px 20px 8px 20px;
+    margin: 0;
+}
+
+.permissionBlock {
+    background: transparent;
+    /* Slightly darker to contrast with main bg */
+    display: flex;
+    flex-direction: column;
+}
+
+.permissionItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.permissionItem:last-child {
+    border-bottom: none;
+}
+
+.permissionText {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-right: 20px;
+    max-width: 85%;
+}
+
+.permissionLabel {
+    font-size: 1.05rem;
+    color: #e9edef;
+}
+
+.permissionDesc {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: #8696a0;
+}
+
+/* --- Custom iOS/WhatsApp Toggle Switch --- */
+
+.toggleSwitch {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.toggleSwitch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggleSlider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #5a5a5a;
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.toggleSlider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggleSwitch input:checked+.toggleSlider {
+    background: linear-gradient(90deg, #612886, #892A82);
+}
+
+.toggleSwitch input:checked+.toggleSlider:before {
+    transform: translateX(18px);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- VIEW ALL MODAL SPECIFIC STYLES --- */
+.viewAllModalContent {
+    background-color: #333333;
+    /* Requested background */
+    width: 100%;
+    max-width: 450px;
+    border-radius: 25px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+}
+
+.viewAllTitle {
+    color: #B3B3B3;
+    /* Requested title color */
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* User Provided Search Bar Styles */
+.searchWrapper {
+    flex-grow: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.searchInput {
+    width: 100%;
+    background-color: #262626;
+    border: none;
+    border-radius: 20px;
+    padding: 12px 16px 12px 48px;
+    color: #E6E6E6;
+    font-size: 0.95rem;
+    outline: none;
+}
+
+.searchInput::placeholder {
+    color: #808080;
+}
+/* --- EXIT CONFIRMATION MODAL --- */
+.exitModalOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(3px); /* Adds a premium frosted glass effect */
+}
+
+.exitModalContent {
+    background: #1c1c1e; /* Sleek Apple-like dark gray */
+    border-radius: 18px;
+    padding: 24px;
+    width: 90%;
+    max-width: 360px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+}
+
+.exitModalTitle {
+    color: #ffffff;
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+}
+
+.exitModalText {
+    color: #98989f;
+    font-size: 0.9rem;
+    margin: 0 0 28px 0;
+    line-height: 1.5;
+}
+
+.exitButtonGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+/* Button 1: Cancel */
+.exitCancelBtn {
+    background: transparent;
+    border: none;
+    color: #34c759; /* Bright green */
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.exitCancelBtn:hover {
+    background: rgba(52, 199, 89, 0.1); /* Subtle green background on hover */
+}
+
+.exitCancelBtn:active {
+    opacity: 0.6;
+}
+
+/* Button 2: Outline Red */
+.exitOutlineBtn {
+    background: transparent;
+    border: 1px solid #3a3a3c;
+    color: #ff453a; /* Vibrant red */
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    padding: 12px 24px;
+    border-radius: 24px; /* Pill shape */
+    transition: all 0.2s ease;
+}
+
+.exitOutlineBtn:hover {
+    background: rgba(255, 69, 58, 0.1);
+    border-color: #ff453a; /* Border lights up on hover */
+}
+
+.exitOutlineBtn:active {
+    transform: scale(0.97); /* Satisfying "click" press down */
+}
+
+/* Button 3: Solid Red */
+.exitSolidBtn {
+    background: #ff453a;
+    color: #1a1a1a; /* Dark text */
+    border: none;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    padding: 12px 24px;
+    border-radius: 24px; /* Pill shape */
+    transition: all 0.2s ease;
+}
+
+.exitSolidBtn:hover {
+    background: #ff5c53; /* Slightly brighter red on hover */
+    box-shadow: 0 4px 14px rgba(255, 69, 58, 0.4); /* Red glow */
+    transform: translateY(-1px);
+}
+
+.exitSolidBtn:active {
+    transform: translateY(0) scale(0.97); /* Satisfying "click" press down */
+    box-shadow: none;
+}
+/* ══════════════════════════════════════
+   GROUP INFO PANEL — MOBILE
+══════════════════════════════════════ */
+
+@media (max-width: 600px) {
+    .header {
+        padding: 16px 16px;
+        gap: 12px;
+    }
+
+    .headerTitle {
+        font-size: 1.3rem;
+    }
+
+    .headerIcons {
+        gap: 8px;
+    }
+
+    .body {
+        padding: 16px 16px 32px;
+        gap: 20px;
+    }
+
+    .infoAndPictureWrapper {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        text-align: center;
+    }
+
+    .avatarRing {
+        width: 90px;
+        height: 90px;
+    }
+
+    .avatar {
+        width: 90px;
+        height: 90px;
+    }
+
+    .identityBlock {
+        align-items: center;
+        width: 100%;
+    }
+
+    .nameRow {
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .groupName {
+        font-size: 1.4rem;
+    }
+
+    .createdBy {
+        font-size: 0.85rem;
+    }
+
+    .descriptionAndButtonsWrapper {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .buttonsContainer {
+        width: 100%;
+        flex-direction: row;
+        margin-top: 0;
+        gap: 8px;
+    }
+
+    .shareBtn,
+    .addMemberBtn {
+        flex: 1;
+        padding: 10px 12px;
+    }
+
+    .bioBox {
+        padding: 16px;
+        min-height: 80px;
+    }
+
+    .mediaGrid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .mediaCardTitle {
+        font-size: 1.2rem;
+    }
+
+    .sectionTitle {
+        font-size: 1.1rem;
+    }
+
+    .memberRow {
+        padding: 8px 0;
+    }
+
+    .otherBtn {
+        padding: 11px 2px;
+        font-size: 0.85rem;
+    }
+
+    .permissionLabel {
+        font-size: 0.95rem;
+    }
+
+    .permissionDesc {
+        font-size: 0.8rem;
+    }
+
+    .modalContent {
+        width: min(95vw, 440px);
+        padding: 18px;
+    }
+
+    .viewAllModalContent {
+        border-radius: 18px;
+        padding: 18px;
+    }
+}
+
+/* ══════════════════════════════════════
+   GROUP INFO PANEL — LIGHT MODE
+══════════════════════════════════════ */
+
+[data-theme="light"] .container {
+    background: #ffffff;
+    color: #333333;
+}
+
+[data-theme="light"] .backBtn {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="light"] .backBtn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .headerTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .iconBtn {
+    color: rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="light"] .iconBtn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #333333;
+}
+
+[data-theme="light"] .headerDivider {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .body::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .avatar {
+    background: #f3e8ff;
+    border-color: rgba(102, 45, 145, 0.2);
+}
+
+[data-theme="light"] .avatarInitials {
+    color: #662D91;
+}
+
+[data-theme="light"] .cameraBtn {
+    background: #f3e8ff;
+    border-color: #ffffff;
+    color: #662D91;
+}
+
+[data-theme="light"] .cameraBtn:hover {
+    background: #e9d5ff;
+}
+
+[data-theme="light"] .shareBtn {
+    background: #f3e8ff;
+    color: #662D91;
+}
+
+[data-theme="light"] .shareBtn:hover {
+    background: #e9d5ff;
+}
+
+[data-theme="light"] .permissionsContainer {
+    background: #ffffff;
+}
+
+[data-theme="light"] .permissionsHeader {
+    border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .permissionsTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .sectionHeading {
+    color: #888888;
+}
+
+[data-theme="light"] .permissionItem {
+    border-bottom-color: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .permissionLabel {
+    color: #333333;
+}
+
+[data-theme="light"] .permissionDesc {
+    color: #888888;
+}
+
+[data-theme="light"] .toggleSlider {
+    background-color: #cccccc;
+}
+
+[data-theme="light"] .viewAllModalContent {
+    background-color: #ffffff;
+}
+
+[data-theme="light"] .viewAllTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .searchInput {
+    background-color: #f3e8ff;
+    color: #333333;
+    border: 1px solid rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .searchInput::placeholder {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .exitModalContent {
+    background: #ffffff;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .exitModalTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .exitModalText {
+    color: #666666;
+}
+
+[data-theme="light"] .exitOutlineBtn {
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+
+/* ── Light mode: section titles & subtitles ── */
+[data-theme="light"] .sectionTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .sectionSub {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .sectionDivider {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+/* ── Light mode: group name & meta ── */
+[data-theme="light"] .groupName {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .createdBy {
+    color: #666666;
+}
+
+[data-theme="light"] .editBtn {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .editBtn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1a1a1a;
+}
+
+/* ── Light mode: bio box ── */
+[data-theme="light"] .bioBox {
+    background: #f3e8ff;
+    border: 1px solid rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .bioText {
+    color: rgba(0, 0, 0, 0.65);
+}
+
+/* ── Light mode: media card ── */
+[data-theme="light"] .mediaCard {
+    background: #f3f3f3;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .mediaCardTitle {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .mediaHeaderLine {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .pdfTile {
+    background: #e8e8e8;
+}
+
+[data-theme="light"] .pdfName {
+    color: rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="light"] .pdfMeta {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .imageTile {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .viewAllTile {
+    background: rgba(102, 45, 145, 0.06);
+    color: #662D91;
+}
+
+[data-theme="light"] .viewAllTile:hover {
+    background: rgba(102, 45, 145, 0.12);
+}
+
+/* ── Light mode: members section ── */
+[data-theme="light"] .memberAvatar {
+    background: #f3e8ff;
+}
+
+[data-theme="light"] .memberInitials {
+    color: #662D91;
+}
+
+[data-theme="light"] .memberBadge {
+    background: #e8e8e8;
+    color: rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="light"] .memberName {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .memberCountLabel {
+    color: rgba(0, 0, 0, 0.42);
+}
+
+[data-theme="light"] .memberDot {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .viewAllBtn {
+    background: #f3e8ff;
+    border-color: rgba(102, 45, 145, 0.15);
+    color: #662D91;
+}
+
+[data-theme="light"] .viewAllBtn:hover {
+    background: #e9d5ff;
+}
+
+[data-theme="light"] .memberMenuBtn {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .memberMenuBtn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .memberDropdown {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .memberMenuItem {
+    color: #333333;
+}
+
+[data-theme="light"] .memberMenuItem:hover {
+    background: rgba(102, 45, 145, 0.06);
+}
+
+[data-theme="light"] .menuDivider {
+    background: rgba(0, 0, 0, 0.07);
+}
+
+/* ── Light mode: other section buttons ── */
+[data-theme="light"] .otherBtn {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="light"] .otherBtn:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .otherIcon {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+/* ── Light mode: modals ── */
+[data-theme="light"] .modalContent {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .modalTitle {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .modalCloseBtn {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .modalCloseBtn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .copyWidgetContainer {
+    background: #f3e8ff;
+    border-color: rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .copyWidgetInput {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .searchContactWrap {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .popupItemAvatar {
+    background: #f3e8ff;
+    color: #662D91;
+}
+
+[data-theme="light"] .popupItemName {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .popupItemRow:hover {
+    background: rgba(102, 45, 145, 0.04);
+}
+
+[data-theme="light"] .popupEmptyState {
+    color: rgba(0, 0, 0, 0.35);
+}

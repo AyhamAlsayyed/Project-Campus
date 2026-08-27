@@ -2,7 +2,10 @@ import styles from './communityCard.module.css'
 import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { createPortal } from 'react-dom';
-export default function CommunityCard({ community, variant = "large", setCommunities }) {
+import Settings from '../../Assets/icons/setting.png';
+import API from '../../config';
+import DefaultBanner from '../../Assets/Pictures/default-community-banner.png';
+export default function CommunityCard({ community, variant = "large", setCommunities, fullWidth, isOwned, onSettingsClick }) {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const navigate = useNavigate();
     const handleReadMoreClick = (e) => {
@@ -10,6 +13,7 @@ export default function CommunityCard({ community, variant = "large", setCommuni
         e.stopPropagation();
         setIsPopupOpen(true);
     };
+    const isLight = document.documentElement.getAttribute("data-theme") === "light";
 
     const closePopup = (e) => {
         e.preventDefault();
@@ -26,9 +30,9 @@ export default function CommunityCard({ community, variant = "large", setCommuni
         try {
             let url = "";
             if (community.is_private) {
-                url = `http://localhost:8000/api/communities/${community.id}/request/`;
+                url = `${API}/api/communities/${community.id}/request/`;
             } else {
-                url = `http://localhost:8000/api/communities/${community.id}/join/`;
+                url = `${API}/api/communities/${community.id}/join/`;
             }
 
             const res = await fetch(url, {
@@ -64,11 +68,10 @@ export default function CommunityCard({ community, variant = "large", setCommuni
     return (
         <>
             <div
-                className={`${styles.communityItem} ${variant === "small" ? styles.small : ""}`}
-                style={{
-                    backgroundImage: `linear-gradient(to right, rgba(25, 25, 25, 0.95) 10%, rgba(25, 25, 25, 0.7) 40%, rgba(25, 25, 25, 0.2) 100%), url(${community.image})`
-                }}
-            >
+                className={`${styles.communityItem} ${variant === "small" ? styles.small : ""} ${fullWidth ? styles.fullWidth : ""}`}
+             >
+                <img src={community.image || DefaultBanner} alt="" className={styles.bgImage} />
+                <div className={styles.overlay} />
                 <div className={styles.content}>
                     <div className={styles.left}>
                         <h3 className={styles.communityName}>
@@ -80,7 +83,6 @@ export default function CommunityCard({ community, variant = "large", setCommuni
                                 </svg>
                             )}
                         </h3>
-
                         <p className={`${styles.descriptionText} ${variant === "small" ? styles.truncated : ""}`}>
                             {displayedText}
                             {shouldTruncate && (
@@ -90,24 +92,42 @@ export default function CommunityCard({ community, variant = "large", setCommuni
                             )}
                         </p>
                     </div>
+                    <div className={styles.right}>
+                        <button
+                            className={`${styles.actionBtn} ${community.is_joined || community.request_sent ? styles.viewBtn : styles.joinBtn} ${community.request_sent ? styles.requestedDisabled : ''}`}
+                            disabled={community.is_requested}
+                            onClick={() => !community.is_requested && handleAction(community)}
+                        >
+                            {community.is_joined ? "View" : community.request_sent ? "Requested" : "Join"}
+                        </button>
+                        {isOwned && (
+                            <img
+                                src={Settings}
+                                alt="settings"
+                                width={20}
+                                height={20}
+                                onClick={(e) => { e.stopPropagation(); onSettingsClick?.(community); }}
+                                className={styles.settingsIcon}
+                            />
+                        )}
+                    </div>
 
-                    <button
-                        className={`
-                             ${styles.actionBtn} 
-                             ${community.is_joined || community.request_sent ? styles.viewBtn : styles.joinBtn}
-                            ${community.request_sent ? styles.requestedDisabled : ''}
-                         `}
-                        disabled={community.is_requested}
-                        onClick={() => !community.is_requested && handleAction(community)}
-                         >
-                        {community.is_joined
-                            ? "View"
-                            : community.request_sent
-                                ? "Requested"
-                                : "Join"}
-                    </button>
                 </div>
             </div>
+
+
+            {variant === "small" && community.sample_members?.length > 0 && (
+                <div style={{ padding: '6px 4px 0', textAlign: 'center' }}>
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
+                        <span className={styles.joinedByLabel}>Joined by: </span>
+                        {community.sample_members.map(f => f.username).join(', ')}
+                        {community.members_count > community.sample_members.length
+                            ? ` and ${community.members_count - community.sample_members.length} others.`
+                            : '.'}
+                    </span>
+                </div>
+            )}
+
             {isPopupOpen && createPortal(
                 <div className={styles.popupOverlay} onClick={closePopup}>
                     <div className={styles.popupContent} onClick={(e) => e.stopPropagation()}>
@@ -119,6 +139,5 @@ export default function CommunityCard({ community, variant = "large", setCommuni
                 document.body
             )}
         </>
-
     );
 }

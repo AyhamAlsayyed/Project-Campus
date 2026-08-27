@@ -36,12 +36,22 @@ db_password = os.environ.get("db_password")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "9j7q7x4h-8000.uks1.devtunnels.ms",
+    "mv8f3wcb-8000.euw.devtunnels.ms",
+    "9j7q7x4h-8000.uks1.devtunnels.ms",
+]
 
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
+    "channels",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -55,6 +65,12 @@ INSTALLED_APPS = [
     "api",
 ]
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
 }
@@ -63,6 +79,8 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "https://9j7q7x4h-3000.uks1.devtunnels.ms",
+    "https://mv8f3wcb-3000.euw.devtunnels.ms",
 ]
 
 SIMPLE_JWT = {
@@ -112,7 +130,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "backend.wsgi.application"
-
+ASGI_APPLICATION = "backend.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases

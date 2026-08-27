@@ -5,17 +5,18 @@
   border-radius: 30px;
   position: sticky;
   padding: 40px 28px;
-  padding-right: 45px;
+  padding-right: 70px;
   top: 100px;
   gap: 18px;
   background-color: #333333;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
   height: 600px;
   margin: 2% 0 0 0;
 }
 
 .divider {
   height: 1px;
-  width: 88%;
+  width: 60%;
   background: rgba(255, 255, 255, 0.28);
   margin: 10px auto;
 }
@@ -62,3 +63,48 @@
   font-size: 0.72rem;
   padding-top: 20px;
 }
+/* ── Light mode overrides ── */
+[data-theme="light"] .sideBarNav {
+  background-color: #ffffff;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .divider {
+  background: rgba(0,0,0,0.12);
+}
+
+[data-theme="light"] .sideBarButton {
+  color: #1a1a1a;
+}
+
+[data-theme="light"] .sideBarButton img {
+  filter: brightness(0) !important;
+}
+
+[data-theme="light"] .sideBarButton:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+[data-theme="light"] .copyright {
+  color: rgba(0,0,0,0.35);
+}
+
+[data-theme="light"] .active {
+  color: #662D91;
+}
+
+[data-theme="light"] .active img {
+  filter: brightness(0) saturate(100%) invert(18%) sepia(60%) saturate(1200%) hue-rotate(265deg) brightness(85%) contrast(95%) !important;
+}
+
+[data-theme="light"] .active::before {
+  border-left-color: #662D91;
+}
+[data-theme="light"] .sideBarButton:not(.active) {
+  color: #666666;
+}
+
+[data-theme="light"] .sideBarButton:not(.active) img {
+  filter: brightness(0) saturate(100%) invert(40%) !important;
+}
+

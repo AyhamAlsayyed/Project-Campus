@@ -1,0 +1,1152 @@
+﻿/* ── MAIN CONTENT (MIDDLE COLUMN) ── */
+.innerContainer {
+    background-color: #333333;
+    border-radius: 30px 30px 0 0;
+    padding: 30px 40px;
+    min-height: calc(100vh - 170px);
+    box-sizing: border-box;
+    position: relative;
+}
+
+html {
+    height: auto;
+    min-height: auto;
+    display: flow-root;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: transparent;
+    background: linear-gradient(315deg, var(--bg-main), var(--bg-secondary));
+    background-attachment: fixed;
+    background-size: cover;
+}
+
+.darkContainer {
+    min-height: 100%;
+    box-sizing: border-box;
+    font-family: "Aktiv Grotesk", sans-serif;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: visible;
+}
+
+.page {
+    width: min(1800px, 95%);
+    margin: 0 auto;
+    --left-col: 300px;
+    --right-col: 380px;
+    --col-gap: 65px;
+}
+
+.header {
+    display: flex;
+    margin-top: 2%;
+    height: 110px;
+    width: 100%;
+}
+
+.rightSection {
+    position: sticky;
+    top: 100px;
+    flex: 0 0 420px;
+    width: 25%;
+    margin: 2% 0 0 0;
+    gap: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.content {
+    display: flex;
+    width: min(1800px, 100%);
+    margin: 20px auto 0 auto;
+    gap: var(--col-gap);
+    margin-top: 20px;
+    align-items: flex-start;
+}
+
+.settingsMainContainer {
+       background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
+    width: 100%;
+    padding-top: 6px;
+    flex: 1;
+    border-radius: 30px;
+    height: auto;
+    z-index: 1;
+    max-width: 850px;
+    position: relative;
+    margin: 2% 0 0 0;
+}
+
+
+.sectionHeading {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 30px;
+    color: #CCCCCC;
+}
+
+.settingsFormGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* SETTING ROWS: Guaranteed transparent with zero borders */
+.settingRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+    padding: 12px 0;
+    border: none;
+}
+
+.settingRowColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: transparent;
+    padding: 12px 0;
+    border: none;
+}
+
+.destructiveRow {
+    border-left: 3px solid #D4145A;
+    padding-left: 14px;
+}
+
+.settingLabel {
+    font-size: 1.15rem; /* Increased size per request */
+    font-weight: 600;
+    color: #CCCCCC; /* Adjusted section label color */
+}
+
+.settingLabelMaster {
+    font-size: 1.25rem; /* Increased size per request */
+    font-weight: 600;
+    color: #CCCCCC; /* Adjusted master label color */
+}
+
+.settingLabelDestructive {
+    font-size: 1.15rem; /* Increased size per request */
+    font-weight: 600;
+    color: #D4145A;
+}
+
+.settingDescription {
+    font-size: 0.85rem;
+    color: #B3B3B3;
+    margin: 4px 0 0 0;
+    line-height: 1.4;
+}
+
+.settingActionBtn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #ffffff;
+    padding: 8px 18px;
+    border-radius: 30px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.settingActionBtn:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.settingActionBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.deleteBtn {
+    background: #D4145A;
+    border: none;
+    color: #ffffff;
+    padding: 8px 18px;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.deleteBtn:hover {
+    background: #f01e6a;
+}
+
+.deleteBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.primaryBtn {
+    background: linear-gradient(to right, #8625A0, #A0279D);
+    border: none;
+    color: #ffffff;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.primaryBtn:hover {
+    opacity: 0.9;
+}
+
+.primaryBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ── CONTROLS (SELECTS & TOGGLES) ── */
+.segmentedSelector {
+    display: flex;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 6px;
+    border-radius: 12px;
+    width: fit-content;
+    gap: 4px;
+}
+
+.segmentedOption {
+    background: transparent;
+    border: none;
+    color: #B3B3B3;
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.segmentedOptionActive {
+    background: #4D4D4D;
+    border: none;
+    color: #ffffff;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+/* ── CUSTOM DROPDOWN COMPONENT CSS ── */
+.customDropdownContainer {
+    position: relative;
+    width: fit-content;
+}
+
+.customDropdownOuter {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Spaces the arrow fully outside the container */
+}
+
+.customDropdownValueBox {
+    background: #2A2A2A;
+    border: 1px solid #4D4D4D;
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+}
+
+.customDropdownArrow {
+    width: 20px;
+    height: 20px;
+    background-color: #B3B3B3;
+    mask-image: url('../../Assets/icons/arrow-left.png');
+    -webkit-mask-image: url('../../Assets/icons/arrow-left.png');
+    mask-size: contain;
+    -webkit-mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-position: center;
+    transform: rotate(-90deg); /* Left arrow points DOWN */
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.customDropdownArrowOpen {
+    transform: rotate(90deg); /* Left arrow points UP */
+}
+
+.customDropdownMenu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: #333333; /* Exact color required */
+    border-radius: 12px; /* Border radius required */
+    width: 100%;
+    min-width: 250px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #4D4D4D;
+    overflow: hidden;
+}
+
+.customDropdownOption {
+    padding: 12px 20px;
+    color: #E6E6E6;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    text-align: center;
+}
+
+.customDropdownOption:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+.customDropdownDivider {
+    width: 50%; /* Divider 50% width required */
+    height: 1px;
+    background: #4D4D4D;
+    margin: 0 auto;
+}
+
+.disabledElement {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ── EXACT #B82CA4 CUSTOM CHECKER DESIGN ── */
+.uiCheckbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border: 2px solid #B82CA4; /* #B82CA4 guaranteed */
+    border-radius: 4px;
+    position: relative;
+    cursor: pointer;
+    background-color: transparent;
+    flex-shrink: 0;
+    outline: none;
+}
+
+.uiCheckbox:checked {
+    background-color: #B82CA4; /* #B82CA4 guaranteed */
+}
+
+.uiCheckbox:checked::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.uiCheckbox:disabled {
+    cursor: default;
+    opacity: 0.9;
+}
+
+
+/* Standard Switch Toggle Implementation with #A6279C when enabled */
+.switchContainer {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.switchContainer input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switchSlider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #555555;
+    transition: .3s;
+    border-radius: 24px;
+}
+
+.switchSlider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+.switchContainer input:checked + .switchSlider {
+    background-color: #A6279C;
+}
+
+.switchContainer input:focus + .switchSlider {
+    box-shadow: 0 0 1px #A6279C;
+}
+
+.switchContainer input:checked + .switchSlider:before {
+    transform: translateX(20px);
+}
+
+.switchContainer input:disabled + .switchSlider {
+    background-color: #2e2e2e;
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ── ADDITIONAL CONTEXT NOTATION TYPOGRAPHY ── */
+.contextualNote, .fieldNote {
+    font-size: 0.85rem;
+    color: #a3a3a3;
+    margin: 4px 0 0 0;
+    font-style: italic;
+    padding-left: 4px;
+}
+
+.verificationRequirementBox {
+    background: rgba(0, 0, 0, 0.15);
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 8px;
+    border-left: 3px solid #8625A0;
+}
+
+/* ── THEMES ── */
+.themeCardGrid {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.themeCard {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.themeCardActive {
+    border-color: #8625A0;
+    background: rgba(134, 37, 160, 0.08);
+}
+
+.swatchDark {
+    width: 100%;
+    height: 50px;
+    background: #222;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.swatchLight {
+    width: 100%;
+    height: 50px;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+/* ── NOTIFICATIONS GRID ── */
+.toggleRowMaster {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #4D4D4D;
+}
+
+.nestedNotificationGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.subGridHeader {
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    color: #CCCCCC;
+    margin: 15px 0 5px 0;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+}
+
+.toggleRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+
+    border-radius: 8px;
+}
+
+.toggleText {
+    color: #E6E6E6;
+    font-size: 0.95rem;
+}
+
+/* ── HELP & SUPPORT ── */
+.faqAccordion {
+    background: rgba(255, 255, 255, 0.04);
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.faqAccordion summary {
+    font-weight: 600;
+    outline: none;
+    list-style-position: inside;
+    color: #FFFFFF;
+}
+
+.faqAccordion p {
+    margin-top: 10px;
+    color: #B3B3B3;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.supportTextArea {
+    background: #2A2A2A;
+    border: 1px solid #4D4D4D;
+    color: #ffffff;
+    padding: 12px;
+    border-radius: 10px;
+    width: 100%;
+    height: 120px;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.formFooterActions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 4px;
+}
+
+.fileUploadLabel {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.fileUploadLabel:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.hiddenFileInput {
+    display: none;
+}
+
+.fileNameText {
+    font-size: 0.85rem;
+    color: #A6279C;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.formSuccessState {
+    background: rgba(134, 37, 160, 0.1);
+    border: 1px dashed #8625A0;
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+    color: #E6E6E6;
+    font-size: 0.95rem;
+}
+
+.aboutPlatformBox {
+    margin-top: 30px;
+    border-top: 1px solid #4D4D4D;
+    padding-top: 20px;
+    color: #B3B3B3;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.policyLink {
+    color: #8625A0;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.tagline {
+    font-style: italic;
+    font-size: 0.85rem;
+    color: #808080;
+    margin-top: 5px;
+}
+
+/* ── SETTINGS NAVIGATION (RIGHT COLUMN) ── */
+.settingsNavContainer {
+    background-color: #333333;
+    border-radius: 24px;
+    padding: 30px 24px 40px 24px;
+    color: #E6E6E6;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.settingsNavHeader {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 16px;
+}
+
+.settingsNavTitle {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    letter-spacing: 0.3px;
+}
+
+.centeredDivider {
+    width: 85%;
+    height: 1px;
+    background-color: #4D4D4D;
+    margin: 0 auto 28px auto;
+}
+
+.settingsNavList {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding-left: 24px;
+}
+
+.settingsNavItem {
+    position: relative;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.settingsNavText {
+    font-size: 1.1rem;
+    transition: transform 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+.navTextActive {
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+.navTextDefault {
+    font-weight: 500;
+    color: #B3B3B3;
+}
+
+.activeArrowWrapper {
+    position: absolute;
+    left: -22px;
+    display: flex;
+    align-items: center;
+}
+
+.activeGradientArrow {
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(to right, #8625A0, #A0279D);
+    -webkit-mask-image: url('../../Assets/icons/arrow-left.png');
+    mask-image: url('../../Assets/icons/arrow-left.png');
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    transform: rotate(180deg);
+    display: inline-block;
+    animation: arrowSlideIn 0.2s ease forwards;
+}
+
+@keyframes arrowSlideIn {
+    from {
+        opacity: 0;
+        transform: rotate(180deg) translateX(6px);
+    }
+    to {
+        opacity: 1;
+        transform: rotate(180deg) translateX(0);
+    }
+}
+
+/* ── MODALS COMPONENT STRUCTURES ── */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+}
+
+.modalContent {
+    background: #333333;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 440px;
+    width: 90%;
+    box-sizing: border-box;
+    color: #ffffff;
+}
+
+.modalContent h3 {
+    margin-top: 0;
+    font-size: 1.35rem;
+    margin-bottom: 12px;
+}
+
+.modalLabel {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    color: #E6E6E6;
+}
+
+.modalInput {
+    width: 100%;
+    background: #2A2A2A;
+    border: 1px solid #4D4D4D;
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    box-sizing: border-box;
+    outline: none;
+    font-size: 0.95rem;
+}
+
+.modalInput:focus {
+    border-color: #8625A0;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+/* PASSWORD STRENGTH UI METRICS */
+.strengthIndicatorContainer {
+    font-size: 0.85rem;
+    margin-top: 6px;
+    color: #B3B3B3;
+}
+
+.strengthLabel {
+    font-weight: 700;
+}
+
+.strengthWeak { color: #D4145A; }
+.strengthMedium { color: #f19e38; }
+.strengthStrong { color: #2ca4b8; }
+
+/* BLOCKED MANAGE INTERFACE POPUP */
+.blockedListContainer {
+    max-height: 220px;
+    overflow-y: auto;
+    margin-top: 16px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    padding: 8px;
+}
+
+.blockedUserRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.blockedUserRow:last-child {
+    border-bottom: none;
+}
+
+.blockedPfp {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #444;
+}
+
+.emptyStateText {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #808080;
+    font-size: 0.9rem;
+    padding: 40px 0;
+    margin: 0;
+    width: 100%;
+}
+/* Radio Button Container */
+.radioGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.radioOption {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 12px 16px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.radioOption:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.radioOption input {
+    display: none;
+}
+
+.radioCircle {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #8625A0;
+    border-radius: 50%;
+    margin-right: 12px;
+    position: relative;
+}
+
+.radioOption input:checked + .radioCircle::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 12px;
+    height: 12px;
+    background: #A0279D;
+    border-radius: 50%;
+}
+
+.radioLabel {
+    color: #E6E6E6;
+    font-weight: 500;
+}
+/* ════════════════════════════════════════
+   LIGHT MODE — SETTINGS
+   ════════════════════════════════════════ */
+[data-theme="light"] .darkContainer {
+    background: linear-gradient(135deg, #f5f5f5, #ffffff);
+}
+[data-theme="light"] .innerContainer {
+    background-color: #ffffff;
+}
+
+[data-theme="light"] .settingsMainContainer {
+    background: linear-gradient(-90deg, #A0279C, #6923A2);
+}
+
+[data-theme="light"] .sectionHeading {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .settingLabel {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .settingLabelMaster {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .settingDescription {
+    color: #555555;
+}
+
+[data-theme="light"] .settingActionBtn {
+    background: rgba(0, 0, 0, 0.08);
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .settingActionBtn:hover {
+    background: rgba(0, 0, 0, 0.14);
+}
+
+[data-theme="light"] .toggleText {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .subGridHeader {
+    color: #333333;
+}
+
+[data-theme="light"] .toggleRowMaster {
+    border-bottom-color: #e0e0e0;
+}
+
+[data-theme="light"] .segmentedSelector {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .segmentedOptionActive {
+    background: #e9d5ff;
+    color: #74419B;
+}
+
+[data-theme="light"] .segmentedOption {
+    color: #555555;
+}
+
+[data-theme="light"] .customDropdownValueBox {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .customDropdownMenu {
+    background: #ffffff;
+    border-color: #d0d0d0;
+}
+
+[data-theme="light"] .customDropdownOption {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .customDropdownOption:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .customDropdownDivider {
+    background: #e0e0e0;
+}
+
+[data-theme="light"] .customDropdownArrow {
+    background-color: #555555;
+}
+
+[data-theme="light"] .settingsNavContainer {
+    background-color: #ffffff;
+    border: 1px solid rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .settingsNavTitle {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .centeredDivider {
+    background-color: #e0e0e0;
+}
+
+[data-theme="light"] .navTextActive {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .navTextDefault {
+    color: #888888;
+}
+
+[data-theme="light"] .contextualNote,
+[data-theme="light"] .fieldNote {
+    color: #666666;
+}
+
+[data-theme="light"] .verificationRequirementBox {
+    background: rgba(134, 37, 160, 0.06);
+}
+
+[data-theme="light"] .faqAccordion {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .faqAccordion summary {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .faqAccordion p {
+    color: #555555;
+}
+
+[data-theme="light"] .supportTextArea {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .modalContent {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .modalContent h3 {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .modalLabel {
+    color: #333333;
+}
+
+[data-theme="light"] .modalInput {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .blockedListContainer {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .blockedUserRow {
+    border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .radioOption:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .radioLabel {
+    color: #1a1a1a;
+}
+
+[data-theme="light"] .aboutPlatformBox {
+    border-top-color: #e0e0e0;
+    color: #555555;
+}
+
+[data-theme="light"] .formSuccessState {
+    color: #1a1a1a;
+}
+[data-theme="light"] .customDropdownArrow {
+    background-color: #74419B;
+}
+
+/* ════════════════════════════════════════
+   MOBILE RESPONSIVE
+   ════════════════════════════════════════ */
+@media (max-width: 1023px) {
+    .darkContainer {
+        overflow-x: hidden;
+    }
+
+    .settingsMainContainer {
+        min-width: 0;
+        width: 100%;
+        margin: 0;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .innerContainer {
+        padding: 20px 16px 40px;
+    }
+
+    .sectionHeading {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
+
+    .settingRow {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .settingActionBtn,
+    .deleteBtn,
+    .primaryBtn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .customDropdownContainer {
+        width: 100%;
+    }
+
+    .customDropdownValueBox {
+        min-width: 0 !important;
+        width: 100%;
+    }
+
+    .segmentedSelector {
+        flex-wrap: wrap;
+    }
+
+    .notificationsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .modalContent {
+        width: 92vw;
+        max-width: none;
+        padding: 24px 18px;
+    }
+}
+
+
+@media (min-width: 2560px) {
+  .darkContainer {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+  .rightSection {
+    flex: 0 0 400px;
+  }
+}
+
+@media (min-width: 3440px) {
+  .darkContainer {
+    padding-left: 72px;
+    padding-right: 72px;
+  }
+}
+@media (min-width: 3840px) {
+  .darkContainer {
+    padding-left: 96px;
+    padding-right: 96px;
+  }
+}

@@ -1,0 +1,185 @@
+.settingsNavContainer {
+  background-color: #333333;
+  border-radius: 24px;
+  padding: 30px 24px 40px 24px;
+  color: #E6E6E6;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.settingsNavHeader {
+  display: flex;
+  align-items: center;
+  gap: 50px;
+  margin-bottom: 16px;
+}
+
+.settingsNavTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: 0.3px;
+}
+
+.centeredDivider {
+  width: 75%;
+  height: 1px;
+  background-color: #4D4D4D;
+  margin: 0 auto 28px auto;
+}
+
+.settingsNavList {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+  padding-left: 24px;
+}
+
+.settingsNavItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settingsNavText {
+  font-size: 1.15rem;
+  transition: transform 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+
+.navTextActive {
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.navTextDefault {
+  font-weight: 500;
+  color: #B3B3B3;
+}
+
+.navTextDelete {
+  font-weight: 500;
+  color: #D4145A;
+}
+
+.activeArrowWrapper {
+  position: absolute;
+  left: -22px;
+  display: flex;
+  align-items: center;
+}
+
+.activeGradientArrow {
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(to right, #8625A0, #A0279D);
+  -webkit-mask-image: url('../../Assets/icons/arrow-left.png');
+  mask-image: url('../../Assets/icons/arrow-left.png');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transform: rotate(180deg);
+  display: inline-block;
+  animation: arrowSlideIn 0.2s ease forwards;
+}
+
+@keyframes arrowSlideIn {
+  from {
+    opacity: 0;
+    transform: rotate(180deg) translateX(6px);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(180deg) translateX(0);
+  }
+}
+[data-theme="light"] .settingsNavContainer {
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .settingsNavTitle {
+  color: #333333;
+}
+
+[data-theme="light"] .centeredDivider {
+  background-color: #e0e0e0;
+}
+
+[data-theme="light"] .navTextDefault {
+  color: #666666;
+}
+
+[data-theme="light"] .navTextActive {
+  color: #662D91;
+}
+
+[data-theme="light"] .settingsNavItem:hover .navTextDefault {
+  color: #662D91;
+}
+
+[data-theme="light"] .settingsNavHeader > div {
+  background-color: #662D91 !important;
+}
+
+/* ── MOBILE TAB BAR ── */
+.mobileTabBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 4px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  width: 100%;
+}
+
+.mobileTabBar::-webkit-scrollbar {
+  display: none;
+}
+
+.mobileTabItem {
+  flex-shrink: 0;
+  background-color: #333333;
+  border: none;
+  border-radius: 20px;
+  color: #B3B3B3;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.mobileTabItemActive {
+  background: linear-gradient(90deg, #612886, #892A82);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.mobileTabItemDelete {
+  color: #D4145A;
+}
+
+.mobileTabItemDelete.mobileTabItemActive {
+  background: linear-gradient(90deg, #8B1A1A, #D4145A);
+  color: #ffffff;
+}
+
+[data-theme="light"] .mobileTabItem {
+  background-color: #f0f0f0;
+  color: #555555;
+}
+
+[data-theme="light"] .mobileTabItemActive {
+  background: linear-gradient(90deg, #612886, #892A82);
+  color: #ffffff;
+}

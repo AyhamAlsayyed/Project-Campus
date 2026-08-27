@@ -1,0 +1,700 @@
+.pageContainer {
+    background: linear-gradient(-90deg, rgba(166, 39, 156, 0.95), rgba(49, 32, 169, 0.95));
+    width: 100%;
+    padding-top: 6px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-radius: 30px;
+    z-index: 1;
+    position: relative;
+    /* Updated top margin to 4% */
+    margin: 4% 0 0 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.createGroupCard {
+    background-color: #333333;
+    width: 100%;
+    height: 100%;
+    border-top-left-radius: 28px;
+    border-top-right-radius: 28px;
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+    position: relative;
+    padding: 30px 60px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+/* --- HEADER --- */
+.header {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.iconBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-right: 20px;
+}
+
+.backIconAsset {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(0.85);
+}
+
+.headerTitle {
+    color: #CCCCCC;
+    font-size: 1.9rem;
+    font-weight: 700;
+    margin: 0;
+    flex: 1;
+}
+
+.headerRight {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.createBtn {
+    background-color: #404040;
+    color: #888888;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: not-allowed;
+    transition: background 0.2s, color 0.2s;
+}
+
+.createBtnActive {
+    background: linear-gradient(90deg, #612886, #892A82) !important;
+    color: #FFFFFF !important;
+    cursor: pointer !important;
+}
+
+.helpIconAsset {
+    width: 28px;
+    height: 28px;
+    filter: brightness(0) invert(0.55);
+}
+
+.sectionDivider {
+    width: 75%;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 30px auto;
+}
+
+/* --- DETAILS SECTION --- */
+.detailsSection {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.photoColumn {
+    width: 200px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.photoCircle {
+    width: 140px;
+    height: 140px;
+    background-color: #4D4D4D;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter 0.2s;
+}
+
+.photoCircle:hover {
+    filter: brightness(1.2);
+}
+
+.uploadedImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.photoTitle {
+    color: #FFFFFF;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 5px 0;
+}
+
+.photoSubtext {
+    color: #AAAAAA;
+    font-size: 0.65rem;
+    line-height: 1.3;
+    margin: 20px 0 0 100% ;
+    text-align: left;
+    width: 300px;
+}
+.asterisk {
+    color: #E043B5;
+}
+
+.inputsColumn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.nameRow {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.inputWrapper {
+    position: relative;
+    flex: 0.6;
+    border-radius: 35px;
+}
+
+.nameInput {
+    width: 100%;
+    background-color: #262626;
+    border: none;
+    border-radius: 35px;
+    padding: 18px 20px;
+    color: #FFFFFF;
+    font-size: 1rem;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.placeholderOverlay {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    color: #777777;
+    pointer-events: none;
+    font-size: 1rem;
+}
+
+.inputHint {
+    flex: 0.4;
+    color: #AAAAAA;
+    font-size: 0.70rem;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.textareaWrapper {
+    position: relative;
+    width: 100%;
+}
+
+.descriptionInput {
+    width: 100%;
+    background-color: #262626;
+    border: none;
+    border-radius: 16px;
+    padding: 18px 20px;
+    color: #FFFFFF;
+    font-size: 1rem;
+    resize: none;
+    height: 130px;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.descriptionInput::placeholder {
+    color: #777777;
+}
+
+.charCount {
+    position: absolute;
+    bottom: 15px;
+    right: 20px;
+    color: #888888;
+    font-size: 0.85rem;
+}
+
+/* --- ACADEMIC SECTION --- */
+.academicSection {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+}
+
+.academicLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 25%;
+}
+
+.academicIconAsset {
+    width: 36px;
+    height: 36px;
+    /* Filter to perfectly match #E043B5 */
+    filter: invert(43%) sepia(93%) saturate(2699%) hue-rotate(285deg) brightness(87%) contrast(99%);
+}
+
+.academicTitle {
+    color: #E043B5;
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+/* Margin-left set to 2% */
+.academicMiddle {
+    width: 45%;
+    margin-left: 2%;
+    color: #CCCCCC;
+    font-size: 0.65rem;
+    line-height: 1.4;
+}
+
+.academicMiddle p {
+    margin: 0;
+}
+
+.academicRight {
+    width: 30%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.instructorOnly {
+    color: #888888;
+    font-size: 0.65rem;
+    text-align: right;
+    line-height: 1.3;
+}
+
+/* --- PERMISSIONS SECTION --- */
+.permissionsHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 25px;
+    padding: 0 10px;
+}
+
+.settingsIconAsset {
+    width: 28px;
+    height: 28px;
+    /* Exactly the same filter color as the backbutton */
+    filter: brightness(0) invert(0.85);
+}
+
+.permissionsTitle {
+    color: #FFFFFF;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.permissionsSubtext {
+    color: #AAAAAA;
+    font-size: 0.65rem;
+    margin-left: 10px;
+}
+
+.permissionsContainer {
+    background-color: #262626;
+    border-radius: 20px;
+    padding: 30px;
+}
+
+.membersHeader {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.membersTitle {
+    color: #FFFFFF;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.membersLine {
+    flex: 1;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.membersSubtext {
+    color: #888888;
+    font-size: 0.70rem;
+    margin: 8px 0 30px 0;
+}
+
+.permissionItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.permissionItemWithDescription {
+    align-items: flex-start;
+}
+
+.permissionLabelBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.permissionLabel {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: #CCCCCC;
+    font-size: 1.1rem;
+}
+
+.adminsCanLabel {
+    color: #888888;
+    font-size: 0.85rem;
+    margin: 25px 0 15px 0;
+    font-weight: 500;
+}
+
+.approvalDescriptionText {
+    color: #888888;
+    font-size: 0.75rem;
+    margin: 0 0 0 35px;
+    line-height: 1.4;
+    max-width: 500px;
+    word-break: break-word;
+}
+
+.learnMoreLink {
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.learnMoreLink:hover {
+    text-decoration: underline;
+}
+
+/* --- TOGGLES --- */
+.toggle {
+    width: 48px;
+    height: 26px;
+    background-color: #1A1A1A;
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    flex-shrink: 0;
+}
+
+/* Prevents clicking when !isInstructor */
+.toggleDisabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.toggleThumb {
+    width: 22px;
+    height: 22px;
+    /* Thumb stays white universally */
+    background-color: #FFFFFF;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s, background-color 0.3s;
+}
+
+/* All on states use #A6279C now */
+.toggleActive {
+    background-color: #A6279C;
+}
+
+.toggleActive .toggleThumb {
+    transform: translateX(22px);
+}
+/* ══════════════════════════════════════
+   CREATE GROUP — LIGHT MODE
+══════════════════════════════════════ */
+
+[data-theme="light"] .createGroupCard {
+    background-color: #ffffff;
+}
+
+[data-theme="light"] .headerTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .backIconAsset {
+    filter: brightness(0) invert(0.3);
+}
+
+[data-theme="light"] .helpIconAsset {
+    filter: brightness(0) invert(0.4);
+}
+
+[data-theme="light"] .sectionDivider {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .photoCircle {
+    background-color: #f3e8ff;
+}
+
+[data-theme="light"] .photoTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .photoSubtext {
+    color: #888888;
+}
+
+[data-theme="light"] .nameInput {
+    background-color: #f3e8ff;
+    color: #333333;
+    border: 1px solid rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .placeholderOverlay {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .inputHint {
+    color: #888888;
+}
+
+[data-theme="light"] .descriptionInput {
+    background-color: #f3e8ff;
+    color: #333333;
+    border: 1px solid rgba(102, 45, 145, 0.1);
+}
+
+[data-theme="light"] .descriptionInput::placeholder {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .charCount {
+    color: #888888;
+}
+
+[data-theme="light"] .academicMiddle {
+    color: #555555;
+}
+
+[data-theme="light"] .instructorOnly {
+    color: #888888;
+}
+
+[data-theme="light"] .permissionsTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .permissionsSubtext {
+    color: #888888;
+}
+
+[data-theme="light"] .settingsIconAsset {
+    filter: brightness(0) invert(0.3);
+}
+
+[data-theme="light"] .permissionsContainer {
+    background-color: #f9f0ff;
+}
+
+[data-theme="light"] .membersTitle {
+    color: #333333;
+}
+
+[data-theme="light"] .membersLine {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .membersSubtext {
+    color: #888888;
+}
+
+[data-theme="light"] .permissionLabel {
+    color: #333333;
+}
+
+[data-theme="light"] .permissionLabel svg {
+    color: #662D91 !important;
+}
+
+[data-theme="light"] .adminsCanLabel {
+    color: #888888;
+}
+
+[data-theme="light"] .approvalDescriptionText {
+    color: #888888;
+}
+
+[data-theme="light"] .toggle {
+    background-color: #cccccc;
+}
+
+[data-theme="light"] .createBtn {
+    background-color: #e0e0e0;
+    color: #888888;
+}
+
+/* ══════════════════════════════════════
+   CREATE GROUP — MOBILE
+══════════════════════════════════════ */
+@media (max-width: 1023px) {
+    .pageContainer {
+        margin: 0;
+        border-radius: 0;
+        padding-top: 6px;
+    }
+
+    .createGroupCard {
+        padding: 20px 16px 40px;
+        border-radius: 0;
+    }
+
+    .headerTitle {
+        font-size: 1.3rem;
+    }
+
+    .createBtn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    /* Stack photo + inputs vertically */
+    .detailsSection {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .photoColumn {
+        width: 100%;
+        align-items: center;
+    }
+
+    /* Fix broken 100% margin trick on subtext */
+    .photoSubtext {
+        margin: 10px 0 0 0;
+        width: 100%;
+        text-align: center;
+    }
+
+    .inputsColumn {
+        width: 100%;
+    }
+
+    /* Stack name input + hint vertically */
+    .nameRow {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .inputWrapper {
+        flex: none;
+        width: 100%;
+    }
+
+    .inputHint {
+        flex: none;
+        font-size: 0.72rem;
+        color: #888888;
+    }
+
+    /* Academic section — stack vertically */
+    .academicSection {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 0;
+    }
+
+    .academicLeft {
+        width: 100%;
+    }
+
+    .academicMiddle {
+        width: 100%;
+        margin-left: 0;
+        font-size: 0.75rem;
+    }
+
+    .academicRight {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .academicTitle {
+        font-size: 1.4rem;
+    }
+
+    /* Permissions */
+    .permissionsHeader {
+        flex-wrap: wrap;
+        padding: 0;
+        gap: 8px;
+    }
+
+    .permissionsTitle {
+        font-size: 1.3rem;
+    }
+
+    .permissionsSubtext {
+        margin-left: 0;
+        width: 100%;
+        font-size: 0.72rem;
+    }
+
+    .permissionsContainer {
+        padding: 20px 16px;
+    }
+
+    .permissionLabel {
+        font-size: 0.95rem;
+    }
+
+    .approvalDescriptionText {
+        max-width: 100%;
+        margin-left: 28px;
+    }
+
+    .sectionDivider {
+        margin: 20px auto;
+        width: 90%;
+    }
+}
